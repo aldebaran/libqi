@@ -1,13 +1,15 @@
-#include <qi/application.hpp>
-#include <gtest/gtest.h>
-#include <qi/scoped.hpp>
-#include <qi/detail/conceptpredicate.hpp>
-#include <qi/range.hpp>
-#include <qi/log.hpp>
 #include <array>
+#include <atomic>
 #include <functional>
-#include <type_traits>
 #include <memory>
+#include <type_traits>
+#include <gtest/gtest.h>
+#include <qi/application.hpp>
+#include <qi/detail/conceptpredicate.hpp>
+#include <qi/log.hpp>
+#include <qi/range.hpp>
+#include <qi/scoped.hpp>
+#include "tools.hpp"
 
 struct Resource
 {
@@ -349,4 +351,166 @@ TEST(Scoped, CorrectOrderingVoid)
   using S = Scoped<void, DummyVoid>;
   std::array<S, 100> arr;
   EXPECT_TRUE(isTotalOrdering(std::less<S>{}, boundedRange(arr)));
+}
+
+TEST(ScopedSetAndRestore, Basic)
+{
+  using namespace qi;
+  const int oldValue = 0x8BADF00D;
+  const int newValue = 0x0DEFACED;
+  int x = oldValue;
+  {
+    auto _ = scopedSetAndRestore(x, newValue);
+    EXPECT_EQ(newValue, x);
+  }
+  EXPECT_EQ(oldValue, x);
+}
+
+TEST(ScopedSetAndRestore, DifferentButCompatibleTypes)
+{
+  using namespace qi;
+  const std::string oldValue{"blibli"};
+  const char* newValue = "bloublou";
+  std::string x = oldValue;
+  {
+    auto _ = scopedSetAndRestore(x, newValue);
+    EXPECT_EQ(newValue, x);
+  }
+  EXPECT_EQ(oldValue, x);
+}
+
+TEST(ScopedSetAndRestore, MoveOnly)
+{
+  using namespace qi;
+  using MoveOnly = test::MoveOnly<int>;
+  const MoveOnly oldValue{1212};
+  MoveOnly newValue0{3434};
+  MoveOnly newValue1{newValue0.value};
+  MoveOnly x{oldValue.value};
+  {
+    auto _ = scopedSetAndRestore(x, std::move(newValue0));
+    EXPECT_EQ(newValue1, x);
+  }
+  EXPECT_EQ(oldValue, x);
+}
+
+namespace test
+{
+  // Allows to know if an instance has been moved.
+  struct MoveAware
+  {
+    int i;
+    bool moved = false;
+    MoveAware(int i) : i(i)
+    {
+    }
+    MoveAware() = default;
+    MoveAware(const MoveAware& x)
+      : i(x.i)
+    {
+    }
+    MoveAware& operator=(const MoveAware& x)
+    {
+      i = x.i;
+      moved = false;
+      return *this;
+    }
+    MoveAware(MoveAware&& x)
+      : i(x.i)
+    {
+      x.moved = true;
+    }
+    MoveAware& operator=(MoveAware&& x)
+    {
+      i = x.i;
+      moved = false;
+      x.moved = true;
+      return *this;
+    }
+    bool operator==(const MoveAware& x) const
+    {
+      return i == x.i; // ignore the `moved` flag.
+    }
+    friend std::ostream& operator<<(std::ostream& o, const MoveAware& x)
+    {
+      return o << x.i;
+    }
+  };
+}
+
+TEST(ScopedSetAndRestore, NewValueIsUntouched)
+{
+  using namespace qi;
+  using namespace test;
+  const int initialNewValue = 2325895;
+  MoveAware oldValue{8736363};
+  MoveAware newValue{initialNewValue};
+  MoveAware x{oldValue.i};
+  {
+    auto _ = scopedSetAndRestore(x, newValue);
+    EXPECT_FALSE(newValue.moved);
+    EXPECT_EQ(newValue.i, initialNewValue);
+    EXPECT_EQ(newValue, x);
+  }
+  EXPECT_EQ(oldValue, x);
+}
+
+TEST(ScopedApplyAndRetract, Action)
+{
+  using namespace qi;
+  using Atomic = std::atomic<int>;
+  auto incr = [](Atomic& x) {++x;};
+  auto decr = [](Atomic& x) {--x;};
+  const int oldValue{7676};
+  const int newValue{oldValue + 1};
+  Atomic x{oldValue};
+  {
+    auto _ = scopedApplyAndRetract(x, incr, decr);
+    EXPECT_EQ(newValue, x.load());
+  }
+  EXPECT_EQ(oldValue, x.load());
+}
+
+namespace test
+{
+  template<typename T>
+  struct Half
+  {
+    void operator()(T& t)
+    {
+      t -= t / 2;
+    }
+  };
+
+  template<typename T>
+  struct Twice
+  {
+  // Action<T>:
+    void operator()(T& t)
+    {
+      t += t;
+    }
+  // RetractableAction<T>:
+    // TODO: Remove this typedef when get rid of VS2013.
+    using retract_type = Half<T>;
+
+    friend Half<T> retract(Twice const&)
+    {
+      return {};
+    }
+  };
+} // namespace test
+
+TEST(ScopedApplyAndRetract, RetractableAction)
+{
+  using namespace qi;
+  using namespace test;
+  const int oldValue{7676};
+  const int newValue{2 * oldValue};
+  int x = oldValue;
+  {
+    auto _ = scopedApplyAndRetract(x, Twice<int>{});
+    EXPECT_EQ(newValue, x);
+  }
+  EXPECT_EQ(oldValue, x);
 }

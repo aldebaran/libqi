@@ -8,6 +8,7 @@
 #include <qi/range.hpp>
 #include <qi/future.hpp>
 #include <qi/type/traits.hpp>
+#include "tools.hpp"
 
 TEST(FunctionalPolymorphicConstantFunction, RegularNonVoid)
 {
@@ -346,4 +347,29 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain)
 
   static_assert(Equal<T, decltype(f())>::value, "");
   ASSERT_TRUE(equal(unit(), f()));
+}
+
+TEST(FunctionalApplyAction, Basic)
+{
+  using namespace qi;
+  int i = 1;
+  auto action = [](int& i) {i = 2*i + 1;};
+  ApplyAction<int, decltype(action)> proc{i, action};
+  ASSERT_EQ(1, i);
+  proc();
+  ASSERT_EQ(3, i);
+  proc();
+  ASSERT_EQ(7, i);
+}
+
+TEST(FunctionalMoveAssign, Basic)
+{
+  using namespace qi;
+  using MoveOnly = test::MoveOnly<int>;
+  const int i = 3;
+  MoveOnly original{i};
+  MoveAssign<MoveOnly> moveAssign{std::move(original)};
+  MoveOnly x{i + 1};
+  moveAssign(x); // x = std::move(original);
+  ASSERT_EQ(i, x.value);
 }

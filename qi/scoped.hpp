@@ -1,4 +1,5 @@
 #pragma once
+#include <qi/functional.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/macroregular.hpp>
 
@@ -163,4 +164,108 @@ namespace qi
   Scoped<void, traits::Decay<F>> scoped(F&& f) {
       return Scoped<void, traits::Decay<F>>{std::forward<F>(f)};
   }
+
+  /// Applies an action and applies its retraction on scope exit.
+  ///
+  /// Example: incrementing an atomic counter and decrementing it on scope exit
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// auto incr = [](std::atomic<int>& x) {++x;};
+  /// auto decr = [](std::atomic<int>& x) {--x;};
+  ///
+  /// // `counter` is a std::atomic<int>
+  /// {
+  ///   auto _ = scopedApplyAndRetract(counter, incr, decr);
+  ///   // here, the counter has been incremented
+  ///   // ...
+  /// }
+  /// // here, the counter has been decremented
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+
+  // Contains workarounds for VS2013.
+  // TODO: Remove this when get rid of VS2013.
+  namespace vs13
+  {
+    template<class T, class U>
+    using Apply = ApplyAction<T, traits::Decay<U>>;
+
+    template<class F>
+    using Retract = typename F::retract_type;
+  }
+
+  /// Action<T> F, Action<T> G
+  template<typename T, typename F, typename G>
+  auto scopedApplyAndRetract(T& value, F&& f, G&& retraction)
+  // TODO: Remove the trailing return when get rid of VS2013.
+  // A lambda is not used because of the non-evaluated decltype context.
+    -> Scoped<void, vs13::Apply<T, G>>
+  {
+    // Apply the action now.
+    std::forward<F>(f)(value);
+
+    // Apply the retraction on scope exit.
+    return scoped(ApplyAction<T, traits::Decay<G>>{value, std::forward<G>(retraction)});
+  }
+
+  /// Applies an action and applies its retraction on scope exit.
+  ///
+  /// The retraction is obtained through the `IsomorphicAction` concept.
+  ///
+  /// IsomorphicAction<T> F
+  template<typename T, typename F>
+  auto scopedApplyAndRetract(T& value, F&& f)
+  // TODO: 1) Get rid of VS2013
+  //       2) Remove the trailing return when we upgrade to C++14 or higher (aka C++14+)
+  // A lambda is not used because of the non-evaluated decltype context.
+    -> Scoped<void, vs13::Apply<T, vs13::Retract<F>>>
+  {
+    return scopedApplyAndRetract(value, std::forward<F>(f), retract(f));
+  }
+
+  /// Restores a value on scope exit.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `depth` is an `int` with a wider scope.
+  ///
+  /// void print(const Element& e)
+  /// {
+  ///   auto _ = scopedSetAndRestore(depth, depth + 1);
+  ///   // Performs:
+  ///   //  auto oldDepth = depth;
+  ///   //  depth = depth + 1;
+  ///   ...
+  /// }
+  /// // On scope exit, performs:
+  /// //  depth = oldDepth;
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Remark: Also works with move-only types.
+  ///
+  /// Warning: As with `scoped` the return value must be stored on the stack.
+  ///   If it is not stored, the value is of course immediately restored.
+  ///
+  /// With T t, U u, the following is valid:
+  ///   t = std::move(u);
+  template<typename T, typename U>
+  auto scopedSetAndRestore(T& value, U&& newValue)
+  // TODO: Remove the trailing return when we upgrade to C++14+
+  // A lambda is not used because of the non-evaluated decltype context.
+    -> decltype(scopedApplyAndRetract(
+      value,
+      makeMoveAssign(std::forward<U>(newValue)),
+      makeMoveAssign(std::move(value))))
+  {
+    return scopedApplyAndRetract(
+      value,
+
+      // Will perform: value = std::move(Decay<U>(std::forward<U>(newValue)));
+      // (c++ is beautiful :D)
+      makeMoveAssign(std::forward<U>(newValue)),
+
+      // Will perform: value = std::move(Decay<T>(std::move(oldValue));
+      // `oldValue` is `value` when entering this procedure.
+      makeMoveAssign(std::move(value)));
+  }
+
 } // namespace qi
