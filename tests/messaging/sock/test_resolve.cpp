@@ -8,6 +8,7 @@
 #include <qi/messaging/sock/resolve.hpp>
 #include <qi/messaging/sock/connect.hpp>
 #include <qi/messaging/sock/networkasio.hpp>
+#include <qi/scoped.hpp>
 #include <qi/future.hpp>
 #include "networkmock.hpp"
 #include "networkcommon.hpp"
@@ -193,7 +194,7 @@ TEST(NetResolveUrlList, Success)
   using namespace qi::sock;
   using namespace mock;
   using mock::Resolver;
-  Resolver::async_resolve = defaultAsyncResolve;
+  auto _ = scopedSetAndRestore(Resolver::async_resolve, defaultAsyncResolve);
   using I = N::resolver_type::iterator;
   Promise<std::pair<Error, I>> promiseResult;
   IoService<N> io;
@@ -230,13 +231,16 @@ TEST(NetResolveUrlList, Cancel)
 
   Promise<std::pair<Error, I>> promiseResolve;
   std::thread threadResolve;
-  Resolver::async_resolve = [&](Resolver::query, Resolver::_anyResolveHandler h) {
-    threadResolve = std::thread{[=]() mutable {
-      // Block until the resolve promise has been set.
-      auto p = promiseResolve.future().value();
-      h(p.first, p.second);
-    }};
-  };
+  auto _ = scopedSetAndRestore(
+    Resolver::async_resolve,
+    [&](Resolver::query, Resolver::_anyResolveHandler h) {
+      threadResolve = std::thread{[=]() mutable {
+        // Block until the resolve promise has been set.
+        auto p = promiseResolve.future().value();
+        h(p.first, p.second);
+      }};
+    }
+  );
   Promise<std::pair<Error, I>> promiseResult;
   Promise<void> promiseCancel;
   IoService<N> io;

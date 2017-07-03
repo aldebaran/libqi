@@ -408,14 +408,16 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
   using namespace mock;
 
   std::thread threadResolve;
-  Resolver::async_resolve = [&](Resolver::query q, Resolver::_anyResolveHandler h) {
-    threadResolve = std::thread{[=] {
-      defaultAsyncResolve(q, h);
-    }};
-  };
-  auto resolveGuard = scoped([&] {
+  auto scopedResolve = scopedSetAndRestore(
+    Resolver::async_resolve,
+    [&](Resolver::query q, Resolver::_anyResolveHandler h) {
+        threadResolve = std::thread{[=] {
+          defaultAsyncResolve(q, h);
+        }};
+    }
+  );
+  auto r = scoped([&] {
     threadResolve.join();
-    Resolver::async_resolve = defaultAsyncResolve;
   });
 
   Promise<void> promiseAsyncConnectStarted;
@@ -423,26 +425,28 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 
   // The async connect waits for a promise to be set before finishing.
   std::thread threadConnect;
-  LowestLayer::async_connect = [&](N::_resolver_entry, N::_anyHandler h) mutable {
-    threadConnect = std::thread{[=]() mutable {
-      promiseAsyncConnectStarted.setValue(0);
-      auto err = promiseAsyncConnectResult.future().value();
-      h(err);
-    }};
-  };
-  auto connectGuard = scoped([&] {
+  auto scopedConnect = scopedSetAndRestore(
+    LowestLayer::async_connect,
+    [&](N::_resolver_entry, N::_anyHandler h) mutable {
+      threadConnect = std::thread{[=]() mutable {
+        promiseAsyncConnectStarted.setValue(0);
+        auto err = promiseAsyncConnectResult.future().value();
+        h(err);
+      }};
+    }
+  );
+  auto c = scoped([&] {
     threadConnect.join();
-    LowestLayer::async_connect = defaultAsyncConnect;
   });
 
   using LowestLayer = N::ssl_socket_type::lowest_layer_type;
-  LowestLayer::shutdown = [=](LowestLayer::shutdown_type, Error) mutable {
-    auto err = operationAborted<Error>();
-    promiseAsyncConnectResult.setValue(err);
-  };
-  auto shutdownGuard = scoped([] {
-    LowestLayer::shutdown = defaultShutdown;
-  });
+  auto scopedShutdown = scopedSetAndRestore(
+    LowestLayer::shutdown,
+    [=](LowestLayer::shutdown_type, Error) mutable {
+      auto err = operationAborted<Error>();
+      promiseAsyncConnectResult.setValue(err);
+    }
+  );
 
   auto socket = boost::make_shared<TcpMessageSocket<N>>();
   Future<void> futConnect = socket->connect(Url{"tcp://10.11.12.13:1234"});
@@ -471,28 +475,38 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   std::vector<std::thread> readThreads, writeThreads;
 
   // Make sure async read and async write block until cancel happens.
-  N::_async_read_next_layer =
+  auto scopedRead = scopedSetAndRestore(
+    N::_async_read_next_layer,
     [=, &readThreads](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       readThreads.push_back(std::thread{[=] {
         h(promiseAsyncReadWrite.future().value(), 0);
       }});
-    };
-  N::_async_write_next_layer =
+    }
+  );
+  auto scopedWrite = scopedSetAndRestore(
+    N::_async_write_next_layer,
     [=, &writeThreads](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
         h(promiseAsyncReadWrite.future().value(), 0);
       }});
-    };
-  N::ssl_socket_type::lowest_layer_type::cancel = [=]() mutable {
-    promiseAsyncReadWrite.setValue(operationAborted<Error>());
-  };
+    }
+  );
+  auto scopedCancel = scopedSetAndRestore(
+    N::ssl_socket_type::lowest_layer_type::cancel,
+    [=]() mutable {
+      promiseAsyncReadWrite.setValue(operationAborted<Error>());
+    }
+  );
 
   Promise<void> promiseShutdownStarted;
   Promise<void> promiseCanShutdown;
-  LowestLayer::shutdown = [=](LowestLayer::shutdown_type, Error) mutable {
+  auto scopedShutdown = scopedSetAndRestore(
+    LowestLayer::shutdown,
+    [=](LowestLayer::shutdown_type, Error) mutable {
       promiseShutdownStarted.setValue(0);
       promiseCanShutdown.future().wait();
-  };
+    }
+  );
 
   auto socket = boost::make_shared<TcpMessageSocket<N>>();
   socket->connect(Url{"tcp://10.11.12.13:1234"});
