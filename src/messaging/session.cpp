@@ -49,9 +49,21 @@ namespace qi {
     setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr(new NullClientAuthenticatorFactory));
   }
 
-  SessionPrivate::~SessionPrivate() {
+  SessionPrivate::~SessionPrivate()
+  {
     destroy();
-    close();
+    try
+    {
+      close();
+    }
+    catch (const std::exception& ex)
+    {
+      qiLogError() << "Exception caught during session destruction: " << ex.what();
+    }
+    catch (...)
+    {
+      qiLogError() << "Unknown exception caught during session destruction";
+    }
   }
 
   void SessionPrivate::onServiceDirectoryClientDisconnected(std::string error) {
