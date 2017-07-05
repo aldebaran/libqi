@@ -203,16 +203,19 @@ TEST(Scoped, DefaultCtor)
   EXPECT_EQ("START|0, 1, 2|exit_of_scope|mufuu|exit_2nd_scope|youpi les amis|END", strLog);
 }
 
-/// Function object that increments by a given step when called.
-struct Incr
+namespace test
 {
-  int step;
-  QI_GENERATE_FRIEND_REGULAR_OPS_1(Incr, step)
-  void operator()(int& i) const
+  /// Function object that increments by a given step when called.
+  struct Incr
   {
-    i += step;
-  }
-};
+    int step;
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(Incr, step)
+    void operator()(int& i) const
+    {
+      i += step;
+    }
+  };
+} // namespace test
 
 // is_copy_constructible and is_copy_assignable are buggy on MSVC 2013 and clang 6.5.
 // MSVC 19 is Visual Studio 2015.
@@ -226,8 +229,8 @@ TEST(Scoped, NoCopyNoAssignment)
 // https://connect.microsoft.com/VisualStudio/feedback/details/819202
 #if QI_TRAITS_COPY_OK
   using namespace qi;
-  static_assert(!std::is_copy_constructible<Scoped<int, Incr>>::value, "");
-  static_assert(!std::is_copy_assignable<Scoped<int, Incr>>::value, "");
+  static_assert(!std::is_copy_constructible<Scoped<int, test::Incr>>::value, "");
+  static_assert(!std::is_copy_assignable<Scoped<int, test::Incr>>::value, "");
 #endif
 }
 
@@ -459,13 +462,11 @@ TEST(ScopedApplyAndRetract, Action)
 {
   using namespace qi;
   using Atomic = std::atomic<int>;
-  auto incr = [](Atomic& x) {++x;};
-  auto decr = [](Atomic& x) {--x;};
   const int oldValue{7676};
   const int newValue{oldValue + 1};
   Atomic x{oldValue};
   {
-    auto _ = scopedApplyAndRetract(x, incr, decr);
+    auto _ = scopedApplyAndRetract(x, Incr<Atomic>{}, Decr<Atomic>{});
     EXPECT_EQ(newValue, x.load());
   }
   EXPECT_EQ(oldValue, x.load());
@@ -513,4 +514,16 @@ TEST(ScopedApplyAndRetract, RetractableAction)
     EXPECT_EQ(newValue, x);
   }
   EXPECT_EQ(oldValue, x);
+}
+
+TEST(ScopedIncrAndDecr, Basic)
+{
+  using namespace qi;
+  const int oldValue = 8376832;
+  int x = oldValue;
+  {
+    auto _ = scopedIncrAndDecr(x);
+    EXPECT_EQ(x, oldValue + 1);
+  }
+  EXPECT_EQ(x, oldValue);
 }

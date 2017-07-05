@@ -309,62 +309,31 @@ namespace qi {
     return {maintainAlive};
   }
 
-  /// Procedure that on call applies an action on an stored reference.
-  ///
-  /// See concept.hpp for a description of the `Action` concept.
-  ///
-  /// Action<T> A
-  template<typename T, typename A>
-  struct ApplyAction
-  {
-    T& value;
-    A action;
-  // Procedure<void ()>:
-    /// Precondition: `value` refers to a valid object
-    void operator()()
-    {
-      action(value);
-    }
-
-    // TODO: Remove this when get rid of VS2013.
-    ApplyAction(T& t, A a)
-      : value(t)
-      , action(std::move(a))
-    {}
-
-    // TODO: Remove this when get rid of VS2013.
-    ApplyAction(ApplyAction&& x)
-      : value(x.value)
-      , action(std::move(x.action))
-    {}
-  };
-
   /// Action that move-assigns a stored value on call.
   ///
   /// Warning: Can be called only once because the value assigned from is moved.
-  template<typename T>
+  ///
+  /// With Src s, Dest d, the following is valid:
+  ///   d = std::move(s);
+  template<typename Dest, typename Src>
   struct MoveAssign
   {
-    T t;
+    Src s;
   // Action<T>:
     /// Precondition: it is the first time this operator is called on this instance
-    ///
-    /// With T t, U u, the following is valid:
-    ///   u = std::move(t);
-    template<typename U>
-    void operator()(U& u)
+    void operator()(Dest& d)
     {
-      u = std::move(t);
+      d = std::move(s);
     }
 
     // TODO: Remove this when get rid of VS2013.
-    MoveAssign(T&& t)
-      : t(std::move(t))
+    MoveAssign(Src&& s)
+      : s(std::move(s))
     {}
 
     // TODO: Remove this when get rid of VS2013.
-    MoveAssign(const T& t)
-      : t(t)
+    MoveAssign(const Src& s)
+      : s(s)
     {}
 
     // TODO: Remove this when get rid of VS2013.
@@ -372,14 +341,85 @@ namespace qi {
 
     // TODO: Remove this when get rid of VS2013.
     MoveAssign(MoveAssign&& x)
-      : t(std::move(x.t))
+      : s(std::move(x.s))
     {}
   };
 
   /// Helper function that performs type deduction for `MoveAssign`.
-  template<typename T>
-  MoveAssign<traits::Decay<T>> makeMoveAssign(T&& t)
+  template<typename Dest, typename Src>
+  MoveAssign<Dest, traits::Decay<Src>> makeMoveAssign(Src&& s)
   {
-    return std::move(MoveAssign<traits::Decay<T>>(std::forward<T>(t)));
+    return std::move(MoveAssign<Dest, traits::Decay<Src>>(std::forward<Src>(s)));
+  }
+
+  template<typename T>
+  struct Incr;
+
+  /// Isomorphic action that decrements its parameter.
+  ///
+  /// See Incr for a use example.
+  ///
+  /// The inverse action is `Incr<T>`
+  ///
+  /// (Arithmetic || BidirectionalIterator) T
+  template<typename T>
+  struct Decr
+  {
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_0(Decr)
+  // Action<Arithmetic || BidirectionalIterator>:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = Incr<T>;
+
+    void operator()(T& x) const
+    {
+      --x;
+    }
+  // IsomorphicAction<Integral || BidirectionalIterator>:
+    template<typename U>
+    friend Incr<U> retract(Decr<U>);
+  };
+
+  /// Isomorphic action that increments its parameter.
+  ///
+  /// Example: with scoped tools
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// void prettyPrint(const Doc& doc, std::ostream& o)
+  /// {
+  ///   // `depth` is an `int` with a wider scope.
+  ///   auto _ = scopedApplyAndRetract(depth, Incr<int>{});
+  ///   // here, the depth has been incremented
+  ///   ...
+  /// }
+  /// // here, the depth has been decremented
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// The inverse action is `Decr<T>`.
+  ///
+  /// (Arithmetic || InputIterator) T
+  template<typename T>
+  struct Incr
+  {
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_0(Incr)
+  // Action<Arithmetic || InputIterator>:
+    void operator()(T& x) const
+    {
+      ++x;
+    }
+  // IsomorphicAction<Integral || BidirectionalIterator>:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = Decr<T>;
+
+    friend Decr<T> retract(Incr)
+    {
+      return {};
+    }
+  };
+
+  template<typename T>
+  Incr<T> retract(Decr<T>)
+  {
+    return {};
   }
 } // namespace qi

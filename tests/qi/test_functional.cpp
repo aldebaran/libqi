@@ -1,8 +1,12 @@
-#include <vector>
-#include <limits>
 #include <cstdlib>
+#include <limits>
+#include <list>
+#include <sstream>
+#include <string>
+#include <vector>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
+#include <qi/detail/conceptpredicate.hpp>
 #include <qi/functional.hpp>
 #include <qi/detail/conceptpredicate.hpp>
 #include <qi/range.hpp>
@@ -349,27 +353,170 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain)
   ASSERT_TRUE(equal(unit(), f()));
 }
 
-TEST(FunctionalApplyAction, Basic)
-{
-  using namespace qi;
-  int i = 1;
-  auto action = [](int& i) {i = 2*i + 1;};
-  ApplyAction<int, decltype(action)> proc{i, action};
-  ASSERT_EQ(1, i);
-  proc();
-  ASSERT_EQ(3, i);
-  proc();
-  ASSERT_EQ(7, i);
-}
-
 TEST(FunctionalMoveAssign, Basic)
 {
   using namespace qi;
   using MoveOnly = test::MoveOnly<int>;
   const int i = 3;
   MoveOnly original{i};
-  MoveAssign<MoveOnly> moveAssign{std::move(original)};
+  MoveAssign<MoveOnly, MoveOnly> moveAssign{std::move(original)};
   MoveOnly x{i + 1};
   moveAssign(x); // x = std::move(original);
   ASSERT_EQ(i, x.value);
+}
+
+TEST(FunctionalIncr, Regular)
+{
+  using namespace qi;
+  using namespace qi::detail;
+  Incr<int> incr;
+  ASSERT_TRUE(isRegular({incr})); // only one possible value because no state
+}
+
+TEST(FunctionalIncr, Arithmetic)
+{
+  using namespace qi;
+  {
+    Incr<int> incr;
+    int x = 0;
+    incr(x);
+    ASSERT_EQ(1, x);
+  }
+  {
+    Incr<double> incr;
+    double x = 0.0;
+    incr(x);
+    ASSERT_EQ(1.0, x);
+  }
+}
+
+TEST(FunctionalIncr, InputIterator)
+{
+  using namespace qi;
+  using namespace std;
+  stringstream ss{"youpi les amis"};
+  using I = istream_iterator<string>;
+  I b(ss);
+  Incr<I> incr;
+  ASSERT_EQ("youpi", *b);
+  incr(b);
+  ASSERT_EQ("les", *b);
+  incr(b);
+  ASSERT_EQ("amis", *b);
+}
+
+TEST(FunctionalDecr, Regular)
+{
+  using namespace qi;
+  using namespace qi::detail;
+  Decr<int> decr;
+  ASSERT_TRUE(isRegular({decr})); // only one possible value because no state
+}
+
+TEST(FunctionalDecr, Arithmetic)
+{
+  using namespace qi;
+  {
+    Decr<int> decr;
+    int x = 1;
+    decr(x);
+    ASSERT_EQ(0, x);
+  }
+  {
+    Decr<double> decr;
+    double x = 1.0;
+    decr(x);
+    ASSERT_EQ(0.0, x);
+  }
+}
+
+TEST(FunctionalDecr, BidirectionalIterator)
+{
+  using namespace qi;
+  using namespace std;
+  Decr<list<string>::iterator> decr;
+  list<string> l{"youpi", "les", "amis"};
+  auto b = end(l);
+  decr(b);
+  ASSERT_EQ("amis", *b);
+  decr(b);
+  ASSERT_EQ("les", *b);
+  decr(b);
+  ASSERT_EQ("youpi", *b);
+}
+
+TEST(FunctionalIncr, IsomorphicIntegral)
+{
+  using namespace qi;
+  {
+    Incr<int> incr;
+    auto inv = retract(incr);
+    int i = 0;
+    incr(i);
+    inv(i);
+    ASSERT_EQ(0, i);
+  }
+  {
+    Incr<int> incr;
+    auto inv = retract(incr);
+    int i = 0;
+    inv(i);
+    incr(i);
+    ASSERT_EQ(0, i);
+  }
+}
+
+TEST(FunctionalIncr, IsomorphicBidirectionalIterator)
+{
+  using namespace qi;
+  using namespace std;
+  Incr<list<string>::iterator> incr;
+  auto inv = retract(incr);
+  list<string> l{"youpi", "les", "amis"};
+  auto b = begin(l);
+  ++b;
+  incr(b);
+  inv(b);
+  ASSERT_EQ("les", *b);
+  inv(b);
+  incr(b);
+  ASSERT_EQ("les", *b);
+}
+
+TEST(FunctionalDecr, IsomorphicIntegral)
+{
+  using namespace qi;
+  {
+    Decr<int> decr;
+    auto inv = retract(decr);
+    int i = 0;
+    decr(i);
+    inv(i);
+    ASSERT_EQ(0, i);
+  }
+  {
+    Decr<int> decr;
+    auto inv = retract(decr);
+    int i = 0;
+    inv(i);
+    decr(i);
+    ASSERT_EQ(0, i);
+  }
+}
+
+TEST(FunctionalDecr, IsomorphicBidirectionalIterator)
+{
+  using namespace qi;
+  using namespace std;
+  Decr<list<string>::iterator> decr;
+  auto inv = retract(decr);
+  list<string> l{"youpi", "les", "amis"};
+  auto b = begin(l);
+  ++b;
+  decr(b);
+  inv(b);
+  ASSERT_EQ("les", *b);
+  inv(b);
+  decr(b);
+  ASSERT_EQ("les", *b);
 }

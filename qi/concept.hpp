@@ -258,8 +258,9 @@ namespace qi
 ///      Action(F, A)
 ///   && retract: F -> G where:
 ///         Action(G, A)
-///      && (forall x in Arg) (f(x), retract(f)(x)) == x
-///      && (forall x in Arg) (retract(f)(x), f(x)) == x
+///      && With g == retract(f):
+///            (forall x in Arg) (f(x), g(x)) == x
+///         && (forall x in Arg) (g(x), f(x)) == x
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// This is an action that can be retracted, i.e. undone, in both directions.
 /// Another way to put it is that it is invertible.

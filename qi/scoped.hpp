@@ -186,9 +186,6 @@ namespace qi
   // TODO: Remove this when get rid of VS2013.
   namespace vs13
   {
-    template<class T, class U>
-    using Apply = ApplyAction<T, traits::Decay<U>>;
-
     template<class F>
     using Retract = typename F::retract_type;
   }
@@ -198,13 +195,13 @@ namespace qi
   auto scopedApplyAndRetract(T& value, F&& f, G&& retraction)
   // TODO: Remove the trailing return when get rid of VS2013.
   // A lambda is not used because of the non-evaluated decltype context.
-    -> Scoped<void, vs13::Apply<T, G>>
+    -> Scoped<std::reference_wrapper<T>, traits::Decay<G>>
   {
     // Apply the action now.
     std::forward<F>(f)(value);
 
     // Apply the retraction on scope exit.
-    return scoped(ApplyAction<T, traits::Decay<G>>{value, std::forward<G>(retraction)});
+    return scoped(std::ref(value), std::forward<G>(retraction));
   }
 
   /// Applies an action and applies its retraction on scope exit.
@@ -217,7 +214,7 @@ namespace qi
   // TODO: 1) Get rid of VS2013
   //       2) Remove the trailing return when we upgrade to C++14 or higher (aka C++14+)
   // A lambda is not used because of the non-evaluated decltype context.
-    -> Scoped<void, vs13::Apply<T, vs13::Retract<F>>>
+    -> Scoped<std::reference_wrapper<T>, vs13::Retract<traits::Decay<F>>>
   {
     return scopedApplyAndRetract(value, std::forward<F>(f), retract(f));
   }
@@ -226,18 +223,16 @@ namespace qi
   ///
   /// Example:
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// // `depth` is an `int` with a wider scope.
-  ///
   /// void print(const Element& e)
   /// {
-  ///   auto _ = scopedSetAndRestore(depth, depth + 1);
+  ///   auto _ = scopedSetAndRestore(flags, flag_hex | flag_pretty);
   ///   // Performs:
-  ///   //  auto oldDepth = depth;
-  ///   //  depth = depth + 1;
+  ///   //  auto oldFlags = flags;
+  ///   //  flags = flag_hex | flag_pretty;
   ///   ...
   /// }
   /// // On scope exit, performs:
-  /// //  depth = oldDepth;
+  /// //  flags = oldFlags;
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Remark: Also works with move-only types.
@@ -253,19 +248,43 @@ namespace qi
   // A lambda is not used because of the non-evaluated decltype context.
     -> decltype(scopedApplyAndRetract(
       value,
-      makeMoveAssign(std::forward<U>(newValue)),
-      makeMoveAssign(std::move(value))))
+      makeMoveAssign<T>(std::forward<U>(newValue)),
+      makeMoveAssign<T>(std::move(value))))
   {
     return scopedApplyAndRetract(
       value,
 
       // Will perform: value = std::move(Decay<U>(std::forward<U>(newValue)));
       // (c++ is beautiful :D)
-      makeMoveAssign(std::forward<U>(newValue)),
+      makeMoveAssign<T>(std::forward<U>(newValue)),
 
       // Will perform: value = std::move(Decay<T>(std::move(oldValue));
       // `oldValue` is `value` when entering this procedure.
-      makeMoveAssign(std::move(value)));
+      makeMoveAssign<T>(std::move(value)));
   }
 
+  /// Increments a value and decrements it on scope exit.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// void T::invoke_maybe(boost::function<void()> f, const boost::system::error_code& erc)
+  /// {
+  ///   if (!erc)
+  ///   {
+  ///     auto _ = scopedIncrAndDecr<Atomic<uint64_t>>(_activeTask);
+  ///     // Here, `_activeTask` has been incremented.
+  ///     ...
+  ///   }
+  ///   // Here, `_activeTask` has been decremented.
+  ///   ...
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// (Integral || BidirectionalIterator) T
+  template<typename T>
+  auto scopedIncrAndDecr(T& value)
+    -> decltype(scopedApplyAndRetract(value, Incr<T>{}))
+  {
+    return scopedApplyAndRetract(value, Incr<T>{});
+  }
 } // namespace qi
