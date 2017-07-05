@@ -12,66 +12,63 @@
 namespace
 {
 const auto usualTimeout = qi::MilliSeconds(500);
+
+std::atomic<bool> gExecuted{false};
+void executeGlobal(){ gExecuted = true; }
+void execute(std::atomic<bool>& executed){ executed = true; }
+
+class TestAsync : public ::testing::Test
+{
+public:
+  void SetUp() override
+  {
+    gExecuted = false;
+  }
+
+  void TearDown() override
+  {
+    ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
+    ASSERT_TRUE(gExecuted);
+  }
+
+  qi::Future<void> executing;
+};
 } // anonymous
 
-TEST(TestAsync, asyncLambda)
+TEST_F(TestAsync, asyncLambda)
 {
-  bool executed = false;
-  auto executing = qi::async([&executed]{executed = true;});
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(executed);
+  executing = qi::async([&]{gExecuted = true;});
 }
 
-bool gExecuted = false;
-void executeGlobal(){ gExecuted = true; }
-void execute(bool& executed){ executed = true; }
-
-TEST(TestAsync, asyncFreeFunction)
+TEST_F(TestAsync, asyncFreeFunction)
 {
-  auto executing = qi::async(executeGlobal);
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(gExecuted);
+  executing = qi::async(executeGlobal);
 }
 
-TEST(TestAsync, asyncStdBoundFunction)
+TEST_F(TestAsync, asyncStdBoundFunction)
 {
-  bool executed = false;
-  auto executing = qi::async(std::bind(execute, std::ref(executed)));
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(gExecuted);
+  executing = qi::async(std::bind(execute, std::ref(gExecuted)));
 }
 
-TEST(TestAsync, asyncBoostBoundFunction)
+TEST_F(TestAsync, asyncBoostBoundFunction)
 {
-  bool executed = false;
-  auto executing = qi::async(boost::bind(execute, std::ref(executed)));
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(gExecuted);
+  executing = qi::async(boost::bind(execute, std::ref(gExecuted)));
 }
 
-TEST(TestAsync, asyncQiBoundFunction)
+TEST_F(TestAsync, asyncQiBoundFunction)
 {
-  bool executed = false;
-  auto executing = qi::async(qi::bind(execute, std::ref(executed)));
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(gExecuted);
+  executing = qi::async(qi::bind(execute, std::ref(gExecuted)));
 }
 
-TEST(TestAsyncAt, asyncAtSimple)
+TEST_F(TestAsync, asyncAtSimple)
 {
-  gExecuted = false;
   qi::SteadyClock::time_point tp(qi::SteadyClock::now()+qi::MilliSeconds(1));
-  auto executing = qi::asyncAt(&executeGlobal, tp);
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(gExecuted);
+  executing = qi::asyncAt(&executeGlobal, tp);
 }
 
-TEST(TestAsyncDelay, asyncDelaySimple)
+TEST_F(TestAsync, asyncDelaySimple)
 {
-  gExecuted = false;
-  auto executing = qi::asyncDelay(&executeGlobal, qi::MilliSeconds(1));
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, executing.wait(usualTimeout));
-  ASSERT_TRUE(gExecuted);
+  executing = qi::asyncDelay(&executeGlobal, qi::MilliSeconds(1));
 }
 
 // Let's try with a famous actor
@@ -81,7 +78,7 @@ public:
   bool calledFromStrand() { return strand()->isInThisContext(); }
 };
 
-TEST(TestAsync, asyncActorMethod)
+TEST(TestAsyncActor, asyncActorMethod)
 {
   JohnnyDepp actor;
   ASSERT_TRUE(qi::async(qi::bind(&JohnnyDepp::calledFromStrand, &actor)).value());
