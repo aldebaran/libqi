@@ -33,10 +33,11 @@ namespace qi
         // consistency reasons.
         if (socket)
         {
+          auto completePromise = _completePromise;
           socket->get_io_service().wrap([=]() mutable {
             QI_LOG_DEBUG_SOCKET(socket.get()) << "Disconnecting: before socket close";
             close<N>(socket);
-            _completePromise.setValue(nullptr);
+            completePromise.setValue(nullptr);
           })();
         }
         else
