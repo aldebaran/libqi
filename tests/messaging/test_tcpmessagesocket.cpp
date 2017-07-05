@@ -12,8 +12,7 @@
 #include "tests/qi/testutils/testutils.hpp"
 #include "qi/scoped.hpp"
 
-static const int defaultTimeoutInMs = 500;
-static const std::chrono::milliseconds defaultPostPauseInMs{20};
+static const qi::MilliSeconds defaultTimeout{ 2000 };
 
 ////////////////////////////////////////////////////////////////////////////////
 // Connected tests
@@ -222,13 +221,13 @@ TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
   auto signalPromises = connectSignals(*clientSideSocket);
 
   Future<void> fut0 = clientSideSocket->connect(url);
-  ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeoutInMs));
-  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.connectedReceived().wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.connectedReceived().wait(defaultTimeout));
   ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
 
   Future<void> fut1 = clientSideSocket->disconnect();
-  ASSERT_EQ(FutureState_FinishedWithValue, fut1.wait(defaultTimeoutInMs));
-  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut1.wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeout));
 }
 
 TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
@@ -248,13 +247,13 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
     signalPromises = connectSignals(*clientSideSocket);
 
     Future<void> fut0 = clientSideSocket->connect(url);
-    ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeoutInMs));
-    ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.connectedReceived().wait(defaultTimeoutInMs));
+    ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
+    ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.connectedReceived().wait(defaultTimeout));
     ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
   }
 
   // disconnected must be emitted on destruction.
-  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeout));
 }
 
 TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
@@ -285,10 +284,10 @@ TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
   Future<void> fut0 = clientSideSocket->connect(url);
-  ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
 
   Future<void> fut1 = clientSideSocket->disconnect();
-  ASSERT_EQ(FutureState_FinishedWithValue, fut1.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut1.wait(defaultTimeout));
 
   MessageAddress address{1234, 5, 9876, 107};
   ASSERT_FALSE(clientSideSocket->send(makeMessage(address)));
@@ -323,7 +322,7 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
     promiseReceivedMessage.setValue(0);
   });
   Future<void> fut = clientSideSocket->connect(url);
-  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 
   // The server sends a message.
   ASSERT_TRUE(promiseServerSideSocket.future().hasValue());
@@ -331,7 +330,7 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
   ASSERT_TRUE(promiseServerSideSocket.future().value()->send(msgSent));
 
   // Wait for the client to receive it.
-  ASSERT_EQ(FutureState_FinishedWithValue, promiseReceivedMessage.future().wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, promiseReceivedMessage.future().wait(defaultTimeout));
 }
 
 TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
@@ -364,7 +363,7 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
   });
   Future<void> fut = clientSideSocket->connect(url);
   fut.wait();
-  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 
   // The server sends a message.
   ASSERT_TRUE(promiseServerSideSocket.future().hasValue());
@@ -453,8 +452,8 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
   Future<void> futDisconnect = socket->disconnect();
 
   // Now the async connect (therefore the connecting part) can finish.
-  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect.wait(defaultTimeoutInMs));
-  ASSERT_EQ(FutureState_FinishedWithError, futConnect.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect.wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithError, futConnect.wait(defaultTimeout));
   ASSERT_EQ("Connect abort: disconnection requested while connecting", futConnect.error());
 }
 
@@ -502,7 +501,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   ASSERT_TRUE(futDisconnect0.isRunning());
 
   // Wait for entering shutdown().
-  ASSERT_EQ(FutureState_FinishedWithValue, promiseShutdownStarted.future().wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, promiseShutdownStarted.future().wait(defaultTimeout));
 
   // Subsequent disconnect() cannot complete because shutdown() is blocking.
   Future<void> futDisconnect1 = socket->disconnect();
@@ -515,9 +514,9 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   promiseCanShutdown.setValue(0);
 
   // All future must complete.
-  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect0.wait(defaultTimeoutInMs));
-  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect1.wait(defaultTimeoutInMs));
-  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect2.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect0.wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect1.wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect2.wait(defaultTimeout));
   ASSERT_FALSE(socket->isConnected());
   ASSERT_EQ(MessageSocket::Status::Disconnected, socket->status());
 
@@ -541,7 +540,7 @@ TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
   // Connect the client.
   auto socket = makeMessageSocket(this->scheme());
   Future<void> fut = socket->connect(url);
-  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 
   // Launch threads waiting to disconnect the socket.
   Promise<void> promiseRun;
@@ -588,7 +587,7 @@ TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
     if (i == messageCount) promiseAllMessageReceived.setValue(0);
   });
   Future<void> fut = clientSideSocket->connect(url);
-  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 
   // The server sends a message.
   ASSERT_TRUE(promiseServerSideSocket.future().hasValue());
@@ -634,9 +633,9 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
   std::this_thread::sleep_for(milliseconds{100});
   socket = makeMessageSocket(scheme, getEventLoop());
   Future<void> futCo = socket->connect(url);
-  ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeout));
   Future<void> futDisco = socket->disconnect();
-  ASSERT_EQ(FutureState_FinishedWithValue, futDisco.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, futDisco.wait(defaultTimeout));
 }
 
 // Connect to another process and make it brutally crash to check that the
@@ -658,10 +657,10 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
     std::this_thread::sleep_for(milliseconds{100});
     socket = makeMessageSocket(protocol, getEventLoop());
     Future<void> fut = socket->connect(url);
-    ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+    ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
   }
   std::this_thread::sleep_for(milliseconds{500});
   ASSERT_EQ(MessageSocket::Status::Disconnected, socket->status());
   Future<void> fut = socket->disconnect();
-  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeoutInMs));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 }
