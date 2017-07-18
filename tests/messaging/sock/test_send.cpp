@@ -113,12 +113,20 @@ TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
   using namespace qi::sock;
   using namespace mock;
   boost::synchronized_value<std::vector<std::thread>> writeThreads;
+  std::atomic_bool finished {false};
   auto _ = scopedSetAndRestore(
     N::_async_write_next_layer,
     [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-      writeThreads->push_back(std::thread([&, h]{
-        h(success<Error>(), 0u);
-      }));
+      if (!finished)
+      {
+        auto syncThreads = writeThreads.synchronize();
+        if (!finished)
+        {
+          syncThreads->push_back(std::thread([&, h]{
+            h(success<Error>(), 0u);
+          }));
+        }
+      }
     }
   );
   IoService<N> io;
@@ -157,13 +165,12 @@ TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
   promise.future().wait();
   ASSERT_EQ(sendCount, messageCount);
   {
+    finished = true;
     auto syncThreads = writeThreads.synchronize();
-    auto b = syncThreads->begin();
-    const auto e = syncThreads->end();
-    while (b != e)
+    for (auto& t : *syncThreads)
     {
-      (*b).join();
-      ++b;
+      if (t.joinable())
+        t.join();
     }
   }
   std::this_thread::sleep_for(defaultPostPauseInMs);
