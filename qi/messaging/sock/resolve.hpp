@@ -1,20 +1,21 @@
 #pragma once
-#ifndef _QI_NET_RESOLVE_HPP
-#define _QI_NET_RESOLVE_HPP
+#ifndef _QI_SOCK_RESOLVE_HPP
+#define _QI_SOCK_RESOLVE_HPP
 #include <string>
-#include <qi/messaging/net/concept.hpp>
+#include <qi/messaging/sock/concept.hpp>
 #include <qi/type/traits.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/error.hpp>
-#include <qi/messaging/net/option.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/error.hpp>
+#include <qi/messaging/sock/option.hpp>
 #include <qi/url.hpp>
 #include <qi/os.hpp>
+#include <qi/functional.hpp>
 #include <qi/macroregular.hpp>
 
 /// @file
 /// Contains functions and types related to URL resolve.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
   /// Resolve the given URL and give back a list of endpoints via a callback.
   ///
   /// The URL format must be: scheme://host:port
@@ -65,9 +66,11 @@ namespace qi { namespace net {
       return _resolver.get_io_service();
     }
   // Procedure:
-    /// Network N, Procedure<void (ErrorCode<N>, Iterator<Resolver<N>>)>
-    template<typename Proc>
-    void operator()(const Url& url, Proc onComplete)
+    /// Network N,
+    /// Procedure<void (ErrorCode<N>, Iterator<Resolver<N>>)> Proc,
+    /// Procedure<void (Resolver<N>&)> Proc1
+    template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+    void operator()(const Url& url, Proc onComplete, Proc1 setupStop = Proc1{})
     {
       if (!url.isValid() || url.port() == 0)
       {
@@ -81,12 +84,13 @@ namespace qi { namespace net {
 #endif
       );
       _resolver.async_resolve(query, onComplete);
+      setupStop(_resolver);
     }
   };
 
   namespace detail
   {
-    /// Precondition: readableBoundedRange(b. e)
+    /// Precondition: readableBoundedRange(b, e)
     ///
     /// Iterator<Entry<Resolver<N>>> I
     template<typename I>
@@ -156,9 +160,10 @@ namespace qi { namespace net {
       return _resolve.getIoService();
     }
   // Procedure:
-    /// Procedure<void (ErrorCode<N>, OptionalEntry)> Proc
-    template<typename Proc>
-    void operator()(const Url& url, IpV6Enabled ipV6, Proc onComplete)
+    /// Procedure<void (ErrorCode<N>, OptionalEntry)> Proc,
+    /// Procedure<void (Resolver<N>&)> Proc1
+    template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+    void operator()(const Url& url, IpV6Enabled ipV6, Proc onComplete, Proc1 setupStop = Proc1{})
     {
       _resolve(url,
         [=](const ErrorCode<N>& erc, Iterator<Resolver<N>> it) mutable {
@@ -169,9 +174,10 @@ namespace qi { namespace net {
           }
           decltype(it) itEnd;
           onComplete(erc, detail::findFirstValidIfAny(it, itEnd, ipV6));
-        });
+        },
+        setupStop);
     }
   };
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_RESOLVE_HPP
+#endif // _QI_SOCK_RESOLVE_HPP

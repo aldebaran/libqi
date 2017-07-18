@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _QI_NET_ERROR_HPP
-#define _QI_NET_ERROR_HPP
+#ifndef _QI_SOCK_ERROR_HPP
+#define _QI_SOCK_ERROR_HPP
 #include <boost/system/error_code.hpp>
 #include <boost/asio/error.hpp>
 
@@ -11,7 +11,7 @@
 ///
 /// See concept.hpp
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
   template<typename Error>
   Error success();
 
@@ -101,6 +101,6 @@ namespace qi { namespace net {
     return system::error_code{asio::error::connection_refused, system::system_category()};
   }
 
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_ERROR_HPP
+#endif // _QI_SOCK_ERROR_HPP

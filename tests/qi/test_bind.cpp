@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
 #include <qi/future.hpp>
+#include <qi/actor.hpp>
 #include "test_future.hpp"
 
 qiLogCategory("test");
@@ -160,3 +161,48 @@ TEST(TestBind, BindLambda)
   auto f = qi::bind<int>([](int i){ return i; }, 18);
   ASSERT_EQ(18, f());
 }
+
+namespace {
+
+  using SomeData = std::vector<int>;
+
+  struct ActorType : public qi::Actor
+  {
+    ~ActorType()
+    {
+      qi::Actor::joinTasks();
+    }
+
+    // must return a future for the test to reproduce real common use case
+    qi::Future<int> run(const SomeData&) { return qi::Future<int>{42}; }
+  };
+
+  struct NotActorType
+  {
+    // must return a future for the test to reproduce real common use case
+    qi::Future<int> run(const SomeData&) { return qi::Future<int>{42}; }
+  };
+
+  template<typename T>
+  struct TestBindActor : ::testing::Test {};
+
+  using ObjectTypeList = ::testing::Types<ActorType, NotActorType>;
+  TYPED_TEST_CASE(TestBindActor, ObjectTypeList);
+
+}
+
+TYPED_TEST(TestBindActor, BindObjectWrappedFunc)
+{
+  auto p = std::make_shared<TypeParam>();
+  const SomeData data;
+  static auto f = [](TypeParam* self, const SomeData& data) { return self->run(data); };
+  using ReturnType = decltype(f(p.get(), data));
+  static std::function<ReturnType(TypeParam*, const SomeData&)> sf{ f };
+
+  auto fu = qi::bind(sf, p.get(), data);
+  auto result = qi::detail::tryUnwrap(qi::async(fu));
+  static_assert(std::is_same<decltype(result), ::qi::Future<int>>::value, "");
+}
+
+
+

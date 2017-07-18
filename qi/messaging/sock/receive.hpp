@@ -1,11 +1,11 @@
 #pragma once
-#ifndef _QI_NET_RECEIVE_HPP
-#define _QI_NET_RECEIVE_HPP
-#include <qi/messaging/net/concept.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/option.hpp>
-#include <qi/messaging/net/error.hpp>
-#include <qi/messaging/net/common.hpp>
+#ifndef _QI_SOCK_RECEIVE_HPP
+#define _QI_SOCK_RECEIVE_HPP
+#include <qi/messaging/sock/concept.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/option.hpp>
+#include <qi/messaging/sock/error.hpp>
+#include <qi/messaging/sock/common.hpp>
 #include "src/messaging/message.hpp"
 #include <qi/trackable.hpp>
 #include <qi/log.hpp>
@@ -16,7 +16,7 @@
 /// @file
 /// Contains functions and types related to message reception on a socket.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
   /// Receive a message through the socket and call the handler when the
   /// operation is complete, successfully or not.
   ///
@@ -73,7 +73,7 @@ namespace qi { namespace net {
   /// Transformation<Procedure<void (Args...)>> F1
   template<typename N, typename S, typename M, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
   void receiveMessage(const S& socket, M ptrMsg, SslEnabled ssl, size_t maxPayload,
-    const Proc& onReceive, F0 dataTransfo = F0{}, F1 netTransfo = F1{});
+    const Proc& onReceive, F0 lifetimeTransfo = F0{}, F1 syncTransfo = F1{});
 
   //template<typename N, typename S, typename M, typename Proc>
   //void receiveMessage(const S& socket, M&& ptrMsg, SslEnabled&& ssl, size_t maxPayload, const Proc& onReceive);
@@ -88,16 +88,16 @@ namespace qi { namespace net {
     /// Transformation<Procedure<void (Args...)>> F1
     template<typename N, typename S, typename M, typename Proc, typename F0, typename F1>
     void onReadData(const ErrorCode<N>& erc, const S& socket, M ptrMsg, SslEnabled ssl,
-      size_t maxPayload, Proc onReceive, const F0& dataTransfo, const F1& netTransfo)
+      size_t maxPayload, Proc onReceive, const F0& lifetimeTransfo, const F1& syncTransfo)
     {
       if (auto optionalPtrNextMsg = onReceive(erc, ptrMsg))
       {
-        receiveMessage<N>(socket, *optionalPtrNextMsg, ssl, maxPayload, onReceive, dataTransfo, netTransfo);
+        receiveMessage<N>(socket, *optionalPtrNextMsg, ssl, maxPayload, onReceive, lifetimeTransfo, syncTransfo);
       }
     }
 
     /// Performs various checks against the received message header, then starts
-    /// an async read to get the message data.
+    /// an asynchronous read to get the message data.
     ///
     /// Note: The message size must not exceed the given maximum payload.
     ///
@@ -110,13 +110,13 @@ namespace qi { namespace net {
     template<typename N, typename S, typename M, typename Proc, typename F0, typename F1>
     void onReadHeader(const ErrorCode<N>& erc, std::size_t len,
       const S& socket, M ptrMsg, SslEnabled ssl,
-      size_t maxPayload, Proc onReceive, F0 dataTransfo, F1 netTransfo)
+      size_t maxPayload, Proc onReceive, F0 lifetimeTransfo, F1 syncTransfo)
     {
       auto receiveErrorAndMaybeReceiveNext = [&](ErrorCode<N> erc) {
         if (auto optionalPtrMsg = onReceive(erc, M{}))
         {
           receiveMessage<N>(socket, *optionalPtrMsg, ssl, maxPayload, onReceive,
-            dataTransfo, netTransfo);
+            lifetimeTransfo, syncTransfo);
         }
       };
       if (erc)
@@ -125,11 +125,11 @@ namespace qi { namespace net {
         return;
       }
       // When using SSL, sometimes we are called spuriously.
-      // Consider this only in ssl ?
+      // Consider this only in SSL ?
       if (*ssl && len == 0)
       {
         receiveMessage<N>(socket, ptrMsg, ssl, maxPayload, onReceive,
-          dataTransfo, netTransfo);
+          lifetimeTransfo, syncTransfo);
         return;
       }
       auto& msg = *ptrMsg;
@@ -147,7 +147,7 @@ namespace qi { namespace net {
       if (payload == 0u)
       {
         onReadData<N>(success<ErrorCode<N>>(), socket, ptrMsg, ssl, maxPayload,
-          onReceive, dataTransfo, netTransfo);
+          onReceive, lifetimeTransfo, syncTransfo);
         return;
       }
       if (payload > maxPayload)
@@ -160,16 +160,16 @@ namespace qi { namespace net {
       }
       void* ptr = msg._p->buffer.reserve(payload);
       auto buffer = N::buffer(ptr, payload);
-      auto readData = dataTransfo([=](ErrorCode<N> error, std::size_t /*len*/) {
-        onReadData<N>(error, socket, ptrMsg, ssl, maxPayload, onReceive, dataTransfo, netTransfo);
+      auto readData = lifetimeTransfo([=](ErrorCode<N> error, std::size_t /*len*/) {
+        onReadData<N>(error, socket, ptrMsg, ssl, maxPayload, onReceive, lifetimeTransfo, syncTransfo);
       });
       if (*ssl)
       {
-        N::async_read(*socket, buffer, netTransfo(readData));
+        N::async_read(*socket, buffer, syncTransfo(readData));
       }
       else
       {
-        N::async_read((*socket).next_layer(), buffer, netTransfo(readData));
+        N::async_read((*socket).next_layer(), buffer, syncTransfo(readData));
       }
     }
   } // namespace detail
@@ -182,22 +182,22 @@ namespace qi { namespace net {
   /// Transformation<Procedure<void (Args...)>> F1
   template<typename N, typename S, typename M, typename Proc, typename F0, typename F1>
   void receiveMessage(const S& socket, M ptrMsg, SslEnabled ssl, size_t maxPayload,
-      const Proc& onReceive, F0 dataTransfo, F1 netTransfo)
+      const Proc& onReceive, F0 lifetimeTransfo, F1 syncTransfo)
   {
     auto makeHeaderBuffer = [&] {
       return N::buffer((*ptrMsg)._p->getHeader(), sizeof(MessagePrivate::MessageHeader));
     };
-    auto readHeader = dataTransfo([=](ErrorCode<N> erc, std::size_t len) {
+    auto readHeader = lifetimeTransfo([=](ErrorCode<N> erc, std::size_t len) {
       detail::onReadHeader<N>(erc, len, socket, ptrMsg, ssl, maxPayload, onReceive,
-        dataTransfo, netTransfo);
+        lifetimeTransfo, syncTransfo);
     });
     if (*ssl)
     {
-      N::async_read(*socket, makeHeaderBuffer(), netTransfo(readHeader));
+      N::async_read(*socket, makeHeaderBuffer(), syncTransfo(readHeader));
     }
     else
     {
-      N::async_read((*socket).next_layer(), makeHeaderBuffer(), netTransfo(readHeader));
+      N::async_read((*socket).next_layer(), makeHeaderBuffer(), syncTransfo(readHeader));
     }
   }
 
@@ -212,11 +212,11 @@ namespace qi { namespace net {
   /// The message receiving is handled by `receiveMessage`.
   ///
   /// Warning: The instance must remain alive until the handler is called.
-  /// You can provide a procedure transformation (`dataTransfo`) that will
+  /// You can provide a procedure transformation (`lifetimeTransfo`) that will
   /// wrap the handler and handle the expired instance case.
   /// `ReceiveMessageContinuousTrack` does this for you by relying on `Trackable`.
   ///
-  /// A network procedure transformation can also be provided to wrap any
+  /// A sync procedure transformation can also be provided to wrap any
   /// handler passed to the network. A typical use is to strand the handler.
   ///
   /// Example: receiving messages until an error occurs
@@ -248,7 +248,7 @@ namespace qi { namespace net {
     /// Transformation<Procedure<void (Args...)>> F1
     template<typename S, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
-        Proc onReceive, const F0& dataTransfo = {}, const F1& netTransfo = {})
+        Proc onReceive, const F0& lifetimeTransfo = {}, const F1& syncTransfo = {})
     {
       receiveMessage<N>(socket, &_msg, ssl, maxPayload,
         [=](ErrorCode<N> erc, const Message* m) mutable -> boost::optional<Message*> {
@@ -260,8 +260,8 @@ namespace qi { namespace net {
           }
           return {};
         },
-        dataTransfo,
-        netTransfo
+        lifetimeTransfo,
+        syncTransfo
       );
     }
   };
@@ -289,7 +289,7 @@ namespace qi { namespace net {
     /// Transformation<Procedure<void (Args...)>> F
     template<typename S, typename Proc, typename F = IdTransfo>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
-      Proc onReceive, const F& netTransfo = {})
+      Proc onReceive, const F& syncTransfo = {})
     {
       _receiveMsg(socket, ssl, maxPayload, onReceive,
         trackWithFallbackTransfo(
@@ -297,13 +297,13 @@ namespace qi { namespace net {
             onReceive(operationAborted<ErrorCode<N>>(), nullptr);
           },
           this),
-        netTransfo);
+        syncTransfo);
     }
     ~ReceiveMessageContinuousTrack()
     {
       destroy();
     }
   };
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_RECEIVE_HPP
+#endif // _QI_SOCK_RECEIVE_HPP

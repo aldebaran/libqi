@@ -25,6 +25,12 @@
 
 # include <qi/os.hpp>
 
+// For ExceptionLogError:
+# include <stdexcept>
+# include <boost/exception/exception.hpp>
+# include <boost/exception/diagnostic_information.hpp>
+# include <qi/macroregular.hpp>
+
 
 /**
  * \verbatim
@@ -542,9 +548,41 @@ namespace qi {
     void setCategory(const std::string& catName, qi::LogLevel level, SubscriberId sub = 0);
 
   }
+
 }
 
 # include <qi/detail/log.hxx>
 
+namespace qi
+{
+  /// Logs an exception in the error log, distinguishing
+  /// std::exception, boost::exception and unknown exception
+  /// (typically for the `catch (...)` case).
+  ///
+  /// You can provide a log category and a prefix to the log.
+  ///
+  /// OStreamable O, ConvertibleTo<const char*> S
+  template<typename O, typename S = char const*>
+  struct ExceptionLogError
+  {
+    S category;
+    O prefix;
+  // Regular (if S and O are):
+    QI_GENERATE_FRIEND_REGULAR_OPS_2(ExceptionLogError, category, prefix)
+  // Custom:
+    void operator()(const std::exception& e) const
+    {
+      qiLogError(category) << prefix << ": standard exception: " << e.what();
+    }
+    void operator()(const boost::exception& e) const
+    {
+      qiLogError(category) << prefix <<": boost exception: " << boost::diagnostic_information(e);
+    }
+    void operator()() const
+    {
+      qiLogError(category) << prefix << ": unknown exception";
+    }
+  };
+} // namespace qi
 
 #endif  // _QI_LOG_HPP_

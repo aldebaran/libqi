@@ -1,9 +1,9 @@
 #pragma once
 #ifndef _QI_TESTS_MESSAGING_NETWORKASIONOOPLOCK_HPP
 #define _QI_TESTS_MESSAGING_NETWORKASIONOOPLOCK_HPP
-#include <qi/messaging/net/networkasio.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
   /// In unit tests, we want to perform a no-op lock.
   inline int scopelock(const NetworkAsio::ssl_socket_type&)
   {

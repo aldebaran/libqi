@@ -5,9 +5,10 @@
 #include <boost/optional.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/net/resolve.hpp>
-#include <qi/messaging/net/connect.hpp>
-#include <qi/messaging/net/networkasio.hpp>
+#include <qi/messaging/sock/resolve.hpp>
+#include <qi/messaging/sock/connect.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
+#include <qi/scoped.hpp>
 #include <qi/future.hpp>
 #include "networkmock.hpp"
 #include "networkcommon.hpp"
@@ -23,7 +24,7 @@ struct NetworkType
 template<typename T>
 using Network = typename NetworkType<T>::type;
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
 template<typename N>
 struct ResolveUrlListFun
@@ -97,7 +98,7 @@ struct ConnectSocketFutureFun
   }
 };
 
-}} // qi::net
+}} // qi::sock
 
 
 template<typename T>
@@ -107,11 +108,11 @@ struct NetResolveUrl : testing::Test
 
 using sequences = testing::Types<
   // Mock
-  qi::net::ResolveUrlListFun<mock::N>, qi::net::ResolveUrlFun<mock::N>,
-  qi::net::ConnectSocketFun<mock::N>, qi::net::ConnectSocketFutureFun<mock::N>,
+  qi::sock::ResolveUrlListFun<mock::N>, qi::sock::ResolveUrlFun<mock::N>,
+  qi::sock::ConnectSocketFun<mock::N>, qi::sock::ConnectSocketFutureFun<mock::N>,
   // Asio
-  qi::net::ResolveUrlListFun<qi::net::NetworkAsio>, qi::net::ResolveUrlFun<qi::net::NetworkAsio>,
-  qi::net::ConnectSocketFun<qi::net::NetworkAsio>, qi::net::ConnectSocketFutureFun<qi::net::NetworkAsio>
+  qi::sock::ResolveUrlListFun<qi::sock::NetworkAsio>, qi::sock::ResolveUrlFun<qi::sock::NetworkAsio>,
+  qi::sock::ConnectSocketFun<qi::sock::NetworkAsio>, qi::sock::ConnectSocketFutureFun<qi::sock::NetworkAsio>
 >;
 
 TYPED_TEST_CASE(NetResolveUrl, sequences);
@@ -119,7 +120,7 @@ TYPED_TEST_CASE(NetResolveUrl, sequences);
 TYPED_TEST(NetResolveUrl, WrongUrl)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using F = TypeParam;
   using N = Network<F>;
   IoService<N>& io = N::defaultIoService();
@@ -148,8 +149,8 @@ TYPED_TEST(NetResolveUrl, WrongUrl)
 TEST(NetFindFirstValidIfAny, Ok)
 {
   using namespace qi;
-  using namespace qi::net;
-  using net::detail::findFirstValidIfAny;
+  using namespace qi::sock;
+  using sock::detail::findFirstValidIfAny;
   using mock::N;
   using Entry = N::_resolver_entry;
   auto entry = [](bool v6, std::string host) {
@@ -190,10 +191,10 @@ TEST(NetFindFirstValidIfAny, Ok)
 TEST(NetResolveUrlList, Success)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   using mock::Resolver;
-  Resolver::async_resolve = defaultAsyncResolve;
+  auto _ = scopedSetAndRestore(Resolver::async_resolve, defaultAsyncResolve);
   using I = N::resolver_type::iterator;
   Promise<std::pair<Error, I>> promiseResult;
   IoService<N> io;
@@ -213,4 +214,56 @@ TEST(NetResolveUrlList, Success)
   ASSERT_EQ(entryIpV4, *it);
   ++it;
   ASSERT_EQ(entryIpV6, *it);
+}
+
+// Checks that the setup-cancel procedure is called.
+//
+// We block in the resolve and the only way to unblock is to perform a cancel.
+// To perform a cancel, the setup-cancel procedure must have been called.
+TEST(NetResolveUrlList, Cancel)
+{
+  //using Resolve = TypeParam;
+  using namespace qi;
+  using namespace qi::sock;
+  using namespace mock;
+  using mock::Resolver;
+  using I = N::resolver_type::iterator;
+
+  Promise<std::pair<Error, I>> promiseResolve;
+  std::thread threadResolve;
+  auto _ = scopedSetAndRestore(
+    Resolver::async_resolve,
+    [&](Resolver::query, Resolver::_anyResolveHandler h) {
+      threadResolve = std::thread{[=]() mutable {
+        // Block until the resolve promise has been set.
+        auto p = promiseResolve.future().value();
+        h(p.first, p.second);
+      }};
+    }
+  );
+  Promise<std::pair<Error, I>> promiseResult;
+  Promise<void> promiseCancel;
+  IoService<N> io;
+  const std::string host = "10.11.12.13";
+  ResolveUrlList<N> resolve{io};
+  resolve(
+    Url{"tcp://" + host + ":1234"},
+    [&](Error e, I it) { // onComplete
+      promiseResult.setValue({e, it});
+    },
+    [&](Resolver&) { // setupCancel
+      promiseCancel.future().andThen([=](void*) mutable {
+        promiseResolve.setValue({operationAborted<Error>(), I{}});
+      });
+    }
+  );
+  auto futResult = promiseResult.future();
+
+  // Trigger the cancel.
+  promiseCancel.setValue(nullptr);
+
+  // And check that we have a "operation aborted" error.
+  ASSERT_EQ(FutureState_FinishedWithValue, futResult.waitFor(defaultTimeout));
+  ASSERT_EQ(operationAborted<Error>(), futResult.value().first);
+  threadResolve.join();
 }

@@ -2,11 +2,12 @@
 #include <thread>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/net/accept.hpp>
-#include <qi/messaging/net/connect.hpp>
-#include <qi/messaging/net/networkasio.hpp>
+#include <qi/messaging/sock/accept.hpp>
+#include <qi/messaging/sock/connect.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include <qi/future.hpp>
+#include <qi/scoped.hpp>
 #include <qi/url.hpp>
 #include "networkmock.hpp"
 #include "networkcommon.hpp"
@@ -20,9 +21,12 @@ static const qi::MilliSeconds defaultTimeout{500};
 TEST(NetAcceptConnectionContinuous, Success)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = mock::Network;
-  N::acceptor_type::async_accept = mock::defaultAsyncAccept;
+  auto _ = scopedSetAndRestore(
+    N::acceptor_type::async_accept,
+    mock::defaultAsyncAccept
+  );
 
   Promise<SocketPtr<N>> promiseAcceptFinished;
   SslContext<N> context{Method<SslContext<N>>::sslv23};
@@ -43,12 +47,15 @@ TEST(NetAcceptConnectionContinuous, Success)
 TEST(NetAcceptConnectionContinuous, AcceptFailed)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = mock::Network;
 
-  N::acceptor_type::async_accept = [](SslSocket<N>::next_layer_type&, N::_anyHandler h) {
-    h(networkUnreachable<ErrorCode<N>>());
-  };
+  auto _ = scopedSetAndRestore(
+    N::acceptor_type::async_accept,
+    [](SslSocket<N>::next_layer_type&, N::_anyHandler h) {
+      h(networkUnreachable<ErrorCode<N>>());
+    }
+  );
 
   Promise<SocketPtr<N>> promiseAcceptFinished;
   SslContext<N> context{Method<SslContext<N>>::sslv23};
@@ -70,7 +77,7 @@ TEST(NetAcceptConnectionContinuous, AcceptFailed)
 TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = NetworkAsio;
 
   auto& io = N::defaultIoService();

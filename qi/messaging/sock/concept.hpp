@@ -1,12 +1,12 @@
 #pragma once
-#ifndef _QI_NET_CONCEPT_HPP
-#define _QI_NET_CONCEPT_HPP
+#ifndef _QI_SOCK_CONCEPT_HPP
+#define _QI_SOCK_CONCEPT_HPP
 #include <qi/concept.hpp>
 
 /// @file
-/// Contains definitions of concepts used by the code in the net namespace.
+/// Contains definitions of concepts used by the code in the sock namespace.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 /// # Concept definitions
 ///
 /// ## NetErrorCode
@@ -135,6 +135,7 @@ namespace qi { namespace net {
 ///        socket.set_option(noDelay)
 ///     && socket.async_connect(endpoint, handler)
 ///     && socket.shutdown(shutdownMode, errorCodeLValue)
+///     && socket.cancel()
 ///     && socket.close(errorCodeLValue)
 ///     && Regular handle = socket.native_handle()
 ///     && Endpoint<S> e = const_socket.remote_endpoint()
@@ -257,6 +258,7 @@ namespace qi { namespace net {
 ///           NetResolveHandler resolveHandler, the following are valid:
 ///        R resolver{ioServiceLValue};
 ///     && resolver.async_resolve(query, resolveHandler)
+///     && resolver.cancel();
 ///     && NetIoService& io = resolver.get_io_service();
 ///     && If `resolver` is destroyed before `resolveHandler` has been called,
 ///         `resolveHandler` must eventually be called with an error equal to
@@ -313,5 +315,5 @@ namespace qi { namespace net {
 namespace concept // To allow doc tools to extract this documentation.
 {
 }
-}} // namespace qi::net
-#endif // _QI_NET_CONCEPT_HPP
+}} // namespace qi::sock
+#endif // _QI_SOCK_CONCEPT_HPP

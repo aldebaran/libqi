@@ -59,12 +59,11 @@ AnyReference AnyReferenceBase::fromPtr(const T* ptr)
 }
 
 template<typename T>
-AnyReference AnyReferenceBase::from(const T& ptr)
+AnyReference AnyReferenceBase::from(const T& value)
 {
-  AnyReference ref;
   static TypeInterface* t = 0;
   QI_ONCE( t = typeOf<typename boost::remove_const<T>::type>());
-  return AnyReference(t, t->initializeStorage(const_cast<void*>((const void*)&ptr)));
+  return AnyReference(t, t->initializeStorage(const_cast<void*>((const void*)&value)));
 }
 
 inline TypeKind AnyReferenceBase::kind() const
@@ -78,7 +77,7 @@ inline TypeKind AnyReferenceBase::kind() const
 inline AnyReference AnyReferenceBase::unwrap() const
 {
   AnyReference res = *this;
-  while (res.kind() == TypeKind_Dynamic)
+  while (res.isValid() && res.kind() == TypeKind_Dynamic)
   {
     res = res.content();
   }

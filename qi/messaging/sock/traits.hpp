@@ -1,14 +1,14 @@
 #pragma once
-#ifndef _QI_NET_TRAITS_HPP
-#define _QI_NET_TRAITS_HPP
+#ifndef _QI_SOCK_TRAITS_HPP
+#define _QI_SOCK_TRAITS_HPP
 #include <boost/shared_ptr.hpp>
-#include <qi/messaging/net/concept.hpp>
+#include <qi/messaging/sock/concept.hpp>
 #include <qi/type/traits.hpp>
 
 /// @file
-/// Contains traits used by the code in the net namespace.
+/// Contains traits used by the code in the sock namespace.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
   // Network-related traits
   template<typename N>
   using Acceptor = typename N::acceptor_type;
@@ -72,6 +72,6 @@ namespace qi { namespace net {
 
   template<typename N>
   using SocketPtr = boost::shared_ptr<SslSocket<N>>;
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_TRAITS_HPP
+#endif // _QI_SOCK_TRAITS_HPP

@@ -1152,7 +1152,83 @@ TEST(TestObject, DynAnyArguments)
   o.call<void>("callMee3", 1, 2, 3);
   args = ap.onCall.get();
   EXPECT_EQ(expect, args.to<std::vector<int> >());
+}
 
+TEST(TestObject, NullAnyValueToObjectThrows)
+{
+  ASSERT_ANY_THROW(qi::AnyValue{}.to<qi::AnyObject>());
+}
+
+TEST(TestObject, NullAnyValueConvertToRegisteredStaticTypeFails)
+{
+  qi::AnyValue v;
+  qi::AnyObject o{boost::make_shared<ArgPack>()};
+  auto result = v.convert(o.asGenericObject()->type);
+  ASSERT_EQ(qi::AnyReference{}, result.first);
+  ASSERT_FALSE(result.second);
+}
+
+TEST(TestObject, NullObjectHasNullGenericObject)
+{
+  qi::AnyObject o;
+  ASSERT_EQ(nullptr, o.asGenericObject());
+}
+
+TEST(TestObject, NullAnyValueConvertToObjectType)
+{
+  qi::AnyValue v;
+  auto result = v.convert(qi::typeOf<qi::AnyObject>());
+  EXPECT_FALSE(result.first.isValid());
+  ASSERT_FALSE(result.second);
+}
+
+TEST(TestObject, NullAnyValueAsReferenceConvertToObjectType)
+{
+  qi::AnyValue v;
+  auto r = v.asReference();
+  auto result = r.convert(qi::typeOf<qi::AnyObject>());
+  EXPECT_FALSE(result.first.isValid());
+  ASSERT_FALSE(result.second);
+}
+
+TEST(TestObject, NullAnyReferenceFromAnyValueConvertToObjectType)
+{
+  qi::AnyValue v;
+  auto r = qi::AnyReference::from(v);
+  auto result = r.convert(qi::typeOf(qi::AnyObject{}));
+  EXPECT_FALSE(result.first.isValid());
+  ASSERT_FALSE(result.second);
+}
+
+TEST(TestObject, CallingWithNullArgInsteadOfObjectThrows)
+{
+  qi::DynamicObjectBuilder gob;
+  static const std::string methodName{"callMeMaybe"};
+  gob.advertiseMethod(methodName, [](qi::AnyObject){});
+  auto o = gob.object();
+  std::string errorMessage;
+  try
+  {
+    o.call<void>(methodName, qi::AnyValue{});
+    FAIL() << "Calling method with a null value should throw if it was expecting an object";
+  }
+  catch (const std::exception& e)
+  {
+    errorMessage = e.what();
+  }
+
+  static const std::string expectedMessageStart{"Call argument number 0 conversion failure from Invalid to Object"};
+  ASSERT_EQ(0, errorMessage.compare(0, expectedMessageStart.size(), expectedMessageStart))
+      << "Got unexpected error message: " << errorMessage;
+}
+
+TEST(TestObject, CallingWithNullArgWorks)
+{
+  qi::DynamicObjectBuilder gob;
+  static const std::string methodName{"callMeMaybe"};
+  gob.advertiseMethod(methodName, [](qi::AnyValue){});
+  auto o = gob.object();
+  o.call<void>(methodName, qi::AnyValue{}); // should not throw
 }
 
 class Sleeper

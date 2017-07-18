@@ -340,7 +340,7 @@ namespace detail {
     }
 
     template <typename T>
-    void FutureBaseTyped<T>::setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel)
+    void FutureBaseTyped<T>::setOnCancel(const qi::Promise<T>& promise, CancelCallback onCancel)
     {
       bool doCancel = false;
       {
@@ -456,6 +456,7 @@ namespace detail {
     template <typename T>
     void FutureBaseTyped<T>::setOnDestroyed(boost::function<void(ValueType)> f)
     {
+      boost::recursive_mutex::scoped_lock lock(mutex());
       _onDestroyed = f;
     }
 

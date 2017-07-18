@@ -483,7 +483,7 @@ namespace qi {
 
   std::string Signature::toPrettySignature() const {
     if (!isValid())
-      return std::string();
+      return std::string("Invalid");
     SignatureConvertor sc(this);
     return sc.signature();
   }

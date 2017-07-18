@@ -1,10 +1,10 @@
 #pragma once
-#ifndef _QI_NET_OPTION_HPP
-#define _QI_NET_OPTION_HPP
+#ifndef _QI_SOCK_OPTION_HPP
+#define _QI_SOCK_OPTION_HPP
 #include <limits>
 #include <boost/optional.hpp>
-#include <qi/messaging/net/concept.hpp>
-#include <qi/messaging/net/traits.hpp>
+#include <qi/messaging/sock/concept.hpp>
+#include <qi/messaging/sock/traits.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/log.hpp>
 #include <qi/macroregular.hpp>
@@ -12,7 +12,7 @@
 /// @file
 /// Contains option types (ssl, ipV6) and functions to set options on a socket.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
   inline char const* logCategory()
   {
@@ -74,7 +74,7 @@ namespace qi { namespace net {
     // Transmit each Message without delay
     try
     {
-      socket.lowest_layer().set_option(net::SocketOptionNoDelay<N>{true});
+      socket.lowest_layer().set_option(sock::SocketOptionNoDelay<N>{true});
     }
     catch (const std::exception& e)
     {
@@ -98,6 +98,6 @@ namespace qi { namespace net {
     }
     N::setSocketNativeOptions(handle, static_cast<int>(ajustedTimeout));
   }
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_OPTION_HPP
+#endif // _QI_SOCK_OPTION_HPP

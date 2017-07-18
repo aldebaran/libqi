@@ -112,6 +112,21 @@ TEST(Value, As)
   ASSERT_ANY_THROW(v.asInt16());
 }
 
+TEST(Value, InvalidValue)
+{
+  AnyValue v;
+  EXPECT_FALSE(v.isValid());
+  EXPECT_EQ(AnyValue{}, v);
+}
+
+TEST(Value, InvalidReference)
+{
+  AnyValue v;
+  auto r = v.asReference();
+  EXPECT_FALSE(r.isValid());
+  EXPECT_EQ(AnyReference{}, r);
+}
+
 TEST(Value, Basic)
 {
   AnyReference v;
@@ -833,4 +848,76 @@ TEST(Insert, InsertInvalid)
 
   ASSERT_ANY_THROW(anyMap.insert("false", 0));
   ASSERT_ANY_THROW(anyMap.insert(1, 10));
+}
+
+TEST(Reference, invalidAsReference)
+{
+  qi::AnyValue v;
+  auto r = v.asReference();
+  EXPECT_FALSE(r.isValid());
+}
+
+TEST(Reference, referenceFromInvalidWrapsIt)
+{
+  qi::AnyValue v;
+  auto r = qi::AnyReference::from(v);
+  EXPECT_TRUE(r.isValid());
+  EXPECT_FALSE(r.unwrap().isValid());
+  EXPECT_FALSE(r.content().isValid());
+}
+
+template <typename T>
+struct ConvertWithTypeInterface: ::testing::Test {
+  using TypeInterface = T;
+};
+
+using TypeInterfaces = ::testing::Types<
+   ListTypeInterface,
+   StructTypeInterface,
+   MapTypeInterface,
+   IntTypeInterface,
+   FloatTypeInterface,
+   RawTypeInterface,
+   StringTypeInterface,
+   PointerTypeInterface,
+   DynamicTypeInterface>;
+
+TYPED_TEST_CASE(ConvertWithTypeInterface, TypeInterfaces);
+
+TYPED_TEST(ConvertWithTypeInterface, convertInvalidToNullTypeInterfaceYieldsInvalid)
+{
+  auto result = qi::AnyValue{}.convert(static_cast<typename TestFixture::TypeInterface*>(nullptr));
+  EXPECT_FALSE(result.first.isValid());
+  EXPECT_FALSE(result.second);
+}
+
+template <typename T>
+struct ConvertWithTypes: ::testing::Test {
+  using Type = T;
+};
+
+using Types = ::testing::Types<
+    int, float, double, std::string, std::vector<int>, std::map<int, int>,
+    Foo, Foo*, void*, qi::AnyValue, qi::AnyObject>;
+
+TYPED_TEST_CASE(ConvertWithTypes, Types);
+
+TYPED_TEST(ConvertWithTypes, convertInvalidToOtherTypeInterfaceIsYieldsInvalid)
+{
+  auto result = qi::AnyValue{}.convert(qi::typeOf<typename TestFixture::Type>());
+  EXPECT_FALSE(result.first.isValid());
+  EXPECT_FALSE(result.second);
+}
+
+TYPED_TEST(ConvertWithTypes, convertInvalidAsReferenceToOtherTypeInterfaceYieldsInvalid)
+{
+  auto result = qi::AnyValue{}.asReference().convert(qi::typeOf<typename TestFixture::Type>());
+  EXPECT_FALSE(result.first.isValid());
+  EXPECT_FALSE(result.second);
+}
+
+TYPED_TEST(ConvertWithTypes, convertReferenceFromInvalidToOtherTypeInterfaceIsSafe)
+{
+  qi::AnyReference::from(qi::AnyValue{}).convert(qi::typeOf<typename TestFixture::Type>());
+  // depending on the type, the result may be invalid or not, let's not test the result
 }

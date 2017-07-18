@@ -27,6 +27,7 @@ namespace qi
 /// Thus, the behavior of a generic algorithm is well defined for all its uses
 /// with types modeling the required concepts.
 ///
+///
 /// # Syntax
 ///
 /// As concepts are not yet part of the C++ language, they are specified here in
@@ -140,6 +141,7 @@ namespace qi
 /// A QuasiRegular type is a Regular type without the default-constructibility.
 /// See Regular.
 ///
+///
 /// ## Regular
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept Regular(T) =
@@ -165,6 +167,7 @@ namespace qi
 /// either made via copy construction or assignment, are equal and independent.
 /// Copy independence means that modifying an object doesn't affect its copies.
 ///
+///
 /// ## PseudoRegular
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept PseudoRegular(T) =
@@ -175,6 +178,7 @@ namespace qi
 ///  (ditto for other implications).
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+///
 /// ## Procedure
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept Procedure(T, Args..., Ret) =
@@ -184,10 +188,11 @@ namespace qi
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A Procedure is a type you can use as a function. There is no guarantee that
 /// calling several times an instance of a Procedure type will yield the same
-/// result.
+/// result (this is what is meant by "not necessarily regular").
 /// For example, with an instance "proc" of a
 /// Procedure(Proc, int, char, bool) type, you can write:
 ///   bool b = proc(5, 'z');
+///
 ///
 /// ## Transformation
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -210,6 +215,7 @@ namespace qi
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// f^0(x) == x.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
 ///
 /// ## Action
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -245,6 +251,45 @@ namespace qi
 /// a^3(x) means (a(x), a(x), a(x)) (i.e. three successive calls)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+///
+/// ## IsomorphicAction
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept IsomorphicAction(F, A) =
+///      Action(F, A)
+///   && retract: F -> G where:
+///         Action(G, A)
+///      && With g == retract(f):
+///            (forall x in Arg) (f(x), g(x)) == x
+///         && (forall x in Arg) (g(x), f(x)) == x
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// This is an action that can be retracted, i.e. undone, in both directions.
+/// Another way to put it is that it is invertible.
+///
+///
+/// ## Function
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Function(F, Args..., Ret) =
+///      Procedure(F, Args..., Ret)
+///   && () is regular
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// This is a mathematical function.
+///
+///
+/// ## RetractableFunction
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept RetractableFunction(F, Arg, Ret) =
+///      Function(F, Arg, Ret)
+///   && retract: F -> G where:
+///         Function(G, Ret, Arg)
+///      && (forall x in Arg) retract(f)(f(x)) == x
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// This is a mathematical unary function that can be retracted, i.e. undone.
+///
+/// Warning: That does not mean that the other way can be undone, i.e.
+///     (forall y in Ret) f(retract(f)(y)) == y
+///   is false.
+///
+///
 /// ## Readable
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept Readable(T) =
@@ -257,6 +302,7 @@ namespace qi
 /// Typical models are: const pointers, const iterators, const boost::optional,
 /// pointers, iterators, boost::optional
 ///
+///
 /// ## Mutable
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept Mutable(T) =
@@ -268,6 +314,7 @@ namespace qi
 /// A Mutable is a type that you can dereference. The dereferenced value can be
 /// modified.
 /// Typical models are: pointers, iterators, boost::optional
+///
 ///
 /// # Range concept definitions
 ///
@@ -295,12 +342,14 @@ namespace qi
 /// Also, pop being not necessarily regular, the traversal on a copy of a range
 /// is not guaranteed to yield the same result (e.g. useful for input streams).
 ///
+///
 /// ## ForwardRange
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept ForwardRange(R) =
 ///     Range(R)
 ///  && pop is regular (i.e. the range is multipass)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
 ///
 /// ## ReadableRange
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,12 +358,14 @@ namespace qi
 ///  && front: R -> U where Regular(U)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+///
 /// ## ReadableForwardRange
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept ReadableForwardRange(R) =
 ///     ForwardRange(R)
 ///  && ReadableRange(R)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
 ///
 /// ## MutableForwardRange
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

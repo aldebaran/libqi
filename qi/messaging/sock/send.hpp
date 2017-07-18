@@ -1,6 +1,6 @@
 #pragma once
-#ifndef _QI_NET_SEND_HPP
-#define _QI_NET_SEND_HPP
+#ifndef _QI_SOCK_SEND_HPP
+#define _QI_SOCK_SEND_HPP
 #include <atomic>
 #include <vector>
 #include <list>
@@ -8,11 +8,11 @@
 #include <sstream>
 #include <boost/thread/synchronized_value.hpp>
 #include <boost/core/ignore_unused.hpp>
-#include <qi/messaging/net/concept.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/option.hpp>
-#include <qi/messaging/net/error.hpp>
-#include <qi/messaging/net/common.hpp>
+#include <qi/messaging/sock/concept.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/option.hpp>
+#include <qi/messaging/sock/error.hpp>
+#include <qi/messaging/sock/common.hpp>
 #include <qi/trackable.hpp>
 #include <qi/future.hpp>
 #include <qi/scoped.hpp>
@@ -22,7 +22,7 @@
 /// @file
 /// Contains functions and types related to message sending on a socket.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
   /// Make network buffers for the given message.
   ///
@@ -81,7 +81,7 @@ namespace qi { namespace net {
   ///
   /// If the handler returns a new message, it is immediately sent.
   ///
-  /// Precondition: The message refered to by `cptrMsg` must be valid until the
+  /// Precondition: The message referred to by `cptrMsg` must be valid until the
   ///   handler has been called.
   ///
   /// Precondition: This function must not be called while a message is already
@@ -111,22 +111,22 @@ namespace qi { namespace net {
   /// Transformation<Procedure<void (Args...)>> F1
   template<typename N, typename S, typename M, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
   void sendMessage(const S& socket, M cptrMsg, Proc onSent, SslEnabled ssl,
-      F0 dataTransfo = {}, F1 netTransfo = {})
+      F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
     auto buffers = makeBuffers<N>(*cptrMsg);
-    auto writeCont = dataTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
+    auto writeCont = lifetimeTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
       if (auto optionalCptrNextMsg = onSent(erc, cptrMsg))
       {
-        sendMessage<N>(socket, *optionalCptrNextMsg, onSent, ssl, dataTransfo, netTransfo);
+        sendMessage<N>(socket, *optionalCptrNextMsg, onSent, ssl, lifetimeTransfo, syncTransfo);
       }
     });
     if (*ssl)
     {
-      N::async_write(*socket, std::move(buffers), netTransfo(writeCont));
+      N::async_write(*socket, std::move(buffers), syncTransfo(writeCont));
     }
     else
     {
-      N::async_write((*socket).next_layer(), std::move(buffers), netTransfo(writeCont));
+      N::async_write((*socket).next_layer(), std::move(buffers), syncTransfo(writeCont));
     }
   }
 
@@ -148,11 +148,11 @@ namespace qi { namespace net {
   /// be enqueued and the queue processing will continue from where it had stopped.
   ///
   /// Warning: The instance must remain alive until messages are sent.
-  /// You can provide a procedure transformation (`dataTransfo`) that will
+  /// You can provide a procedure transformation (`lifetimeTransfo`) that will
   /// wrap any internal callback and handle the expired instance case.
   /// `SendMessageEnqueueTrack` does this for you by relying on `Trackable`.
   ///
-  /// A network procedure transformation can also be provided to wrap any
+  /// A sync procedure transformation can also be provided to wrap any
   /// callback passed to the network. A typical use is to strand the callback.
   ///
   /// Network N, Mutable<SslSocket<N>> S
@@ -178,7 +178,7 @@ namespace qi { namespace net {
              typename Proc = NoOpProcedure<bool (ErrorCode<N>, ReadableMessage)>,
              typename F0 = IdTransfo, typename F1 = IdTransfo>
     void operator()(Msg&&, SslEnabled, Proc onSent = Proc{true},
-      const F0& dataTransfo = F0{}, const F1& netTransfo = F1{});
+      const F0& lifetimeTransfo = F0{}, const F1& syncTransfo = F1{});
   private:
     S _socket;
     /// A list is used because we need the iterators not to be invalidated by
@@ -198,9 +198,9 @@ namespace qi { namespace net {
   template<typename N, typename S>
   template<typename Msg, typename Proc, typename F0, typename F1>
   void SendMessageEnqueue<N, S>::operator()(Msg&& msg, SslEnabled ssl, Proc onSent,
-      const F0& dataTransfo, const F1& netTransfo)
+      const F0& lifetimeTransfo, const F1& syncTransfo)
   {
-    qiLogDebug(logCategory()) << this << " SendMessageEnqueue()(" << msg.type() << ": " << msg.address() << ", ssl=" << *ssl << ")";
+    qiLogDebug(logCategory()) << _socket.get() << " SendMessageEnqueue()(" << msg.type() << ": " << msg.address() << ", ssl=" << *ssl << ")";
     using I = decltype(_sendQueue.begin());
     I itMsg;
     bool mustStartSendLoop = false;
@@ -268,7 +268,7 @@ namespace qi { namespace net {
           return itNext;
         };
       sendMessage<N>(_socket, itMsg, std::move(eraseAndReturnNextMessage), ssl,
-        dataTransfo, netTransfo);
+        lifetimeTransfo, syncTransfo);
     }
   }
 
@@ -297,18 +297,18 @@ namespace qi { namespace net {
   // Procedure:
     /// Message Msg, Procedure<void (ErrorCode<N>, Readable<Message>)> Proc, Transformation<Procedure<void (Args...)>> F
     template<typename Msg, typename Proc = NoOpProcedure<void (ErrorCode<N>, ReadableMessage)>, typename F = IdTransfo>
-    void operator()(Msg&& m, SslEnabled ssl, Proc onSent = Proc{}, F netTransfo = F{})
+    void operator()(Msg&& m, SslEnabled ssl, Proc onSent = Proc{}, F syncTransfo = F{})
     {
-      auto dataTransfo = trackWithFallbackTransfo([=]() mutable {
+      auto lifetimeTransfo = trackWithFallbackTransfo([=]() mutable {
           onSent(operationAborted<ErrorCode<N>>(), {});
         },
         this
       );
-      _sendMsg(std::forward<Msg>(m), ssl, onSent, dataTransfo, netTransfo);
+      _sendMsg(std::forward<Msg>(m), ssl, onSent, lifetimeTransfo, syncTransfo);
     }
   private:
     SendMessageEnqueue<N, S> _sendMsg;
   };
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_SEND_HPP
+#endif // _QI_SOCK_SEND_HPP

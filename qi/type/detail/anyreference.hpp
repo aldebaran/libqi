@@ -35,10 +35,11 @@ namespace detail {
 class QI_API AnyReferenceBase
 {
 protected:
-  AnyReferenceBase();
-
   ///@{
   /// Low level Internal API
+
+  /// Constructs an invalid reference, pointing to nothing.
+  AnyReferenceBase();
 
   /** Store type and allocate storage of value.
    * @param type use this type for initialization
@@ -68,7 +69,9 @@ protected:
   AnyReference _element(const AnyReference& key, bool throwOnFailure, bool autoInsert);
 
 public:
-  /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy)
+  /// Attempts the conversion of the value behind the reference to the given type.
+  /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy).
+  /// Converted value is invalid if conversion failed.
   std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
   std::pair<AnyReference, bool> convert(ListTypeInterface* targetType) const;
   std::pair<AnyReference, bool> convert(StructTypeInterface* targetType) const;
@@ -88,7 +91,9 @@ public:
   template<typename T>
   T* ptr(bool check = true);
 
+  /// @return false if this is invalid.
   bool isValid() const;
+
   /// @return true if value is valid and not void
   bool isValue() const;
 
@@ -100,14 +105,23 @@ public:
   /** Construction and assign.
    */
 
-  /** Construct a AnyValue with storage pointing to ptr.
-   * @warning the AnyReference will become invalid if ptr
-   * is destroyed (if it gets deleted or points to the stack and goes
-   * out of scope).
+  /**
+   * Wraps the given value into an AnyReference, allowing an introspectable,
+   * type-erased access to the value.
+   * @warning the AnyReference has an undefined behavior if the value it
+   * references is destroyed.
+   * @note AnyReference can be used to wrap another AnyValue or AnyReference,
+   * even if they are invalid.
    */
   template <typename T>
   static AnyReference from(const T& ref);
 
+  /**
+   * Construct a AnyValue with storage pointing to ptr.
+   * @warning the AnyReference will become invalid if ptr
+   * is destroyed (if it gets deleted or points to the stack and goes
+   * out of scope).
+   */
   template <typename T>
   static AnyReference fromPtr(const T* ptr);
 

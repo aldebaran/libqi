@@ -16,6 +16,7 @@
 # include <qi/trackable.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
+# include <qi/functional.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -772,8 +773,8 @@ namespace qi {
     }
 
     Promise(const qi::Promise<T>& rhs)
+      : _f(rhs._f)
     {
-      _f = rhs._f;
       ++_f._p->_promiseCount;
     }
 
@@ -933,7 +934,7 @@ namespace qi {
       void setBroken(qi::Future<T>& future);
       void setCanceled(qi::Future<T>& future);
 
-      void setOnCancel(qi::Promise<T>& promise, CancelCallback onCancel);
+      void setOnCancel(const qi::Promise<T>& promise, CancelCallback onCancel);
       void setOnDestroyed(boost::function<void (ValueType)> f);
 
       void connect(qi::Future<T> future,
@@ -1015,9 +1016,6 @@ namespace qi {
   template<typename FT, typename PT>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p, AdaptFutureOption option = AdaptFutureOption_ForwardCancel);
 
-  template<typename R>
-  void adaptFuture(Future<AnyReference>& f, Promise<R>& p);
-
   /// Similar to adaptFuture(f, p) but with a custom converter
   template<typename FT, typename PT, typename CONV>
   void adaptFuture(const Future<FT>& f, Promise<PT>& p, CONV converter,
@@ -1034,6 +1032,63 @@ namespace qi {
 
   template <typename T>
   Future<AnyValue> toAnyValueFuture(Future<T> future);
+
+  /// Polymorphic function object that creates a Future from a value, if provided.
+  ///
+  /// "unit" is traditionally the name of a transformation that sends a value into
+  /// the monadic level, because it is a "unit" or "neutral element" for
+  /// monadic composition.
+  ///
+  /// See the comment of `semiLift` for an explanation.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `i` is an `int`
+  /// UnitFuture unit;
+  /// Future<int> fut0 = unit(i);
+  /// Future<void> fut1 = unit();
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  struct UnitFuture
+  {
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_0(UnitFuture)
+  // PolymorphicFunction<Future<T> (T), Future<void> ()>:
+    /// There is no constraint on T.
+    template<typename T>
+    Future<traits::Decay<T>> operator()(T&& t) const
+    {
+      return Future<traits::Decay<T>>{std::forward<T>(t)};
+    }
+
+    Future<void> operator()() const
+    {
+      return Future<void>{nullptr};
+    }
+  };
+
+  /// Returns a new function similar to the given one except that it returns a
+  /// future.
+  ///
+  /// This is a "semi-lifting" (see `semilift` for an explanation of the lifting notion)
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `heavyCompute` takes a `vector<int>` and returns an `int`.
+  /// // `v` is a `vector<int>`.
+  /// auto f = futurizeOutput(heavyCompute);
+  /// Future<int> res = f(v);
+  /// // ...
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// TODO: Remove the trailing return type when get rid of C++11.
+  ///
+  /// Procedure Proc
+  template<typename Proc>
+  auto futurizeOutput(Proc&& p)
+    -> decltype(semiLift(std::forward<Proc>(p), UnitFuture{}))
+  {
+    return semiLift(std::forward<Proc>(p), UnitFuture{});
+  }
 }
 
 #ifdef _MSC_VER

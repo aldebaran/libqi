@@ -18,7 +18,7 @@ namespace detail
 
 static const char* InvalidFutureError = "function returned an invalid future";
 
-template<typename T> void setPromise(qi::Promise<T>& promise, AnyValue& v)
+template<typename T> void setPromise(qi::Promise<T>& promise, const AnyValue& v)
 {
   try
   {
@@ -35,14 +35,19 @@ template<typename T> void setPromise(qi::Promise<T>& promise, AnyValue& v)
   }
 }
 
-template<> inline void setPromise(qi::Promise<void>& promise, AnyValue&)
+template<> inline void setPromise(qi::Promise<void>& promise, const AnyValue&)
 {
   promise.setValue(0);
 }
 
-template<> inline void setPromise(qi::Promise<AnyValue>& promise, AnyValue& val)
+template<> inline void setPromise(qi::Promise<AnyValue>& promise, const AnyValue& val)
 {
   promise.setValue(val);
+}
+
+template<> inline void setPromise(qi::Promise<AnyReference>& promise, const AnyValue& val)
+{
+  promise.setValue(val.clone());
 }
 
 template <typename T>
@@ -218,10 +223,58 @@ inline void extractFuture<void>(const qi::Future<qi::AnyReference>& metaFut)
   }
 }
 
+/// Factorization of the setting of the promise according to the future result.
+template <typename T>
+inline void setAdaptedResult(Promise<T>& promise, AnyReference& ref)
+{
+  static TypeInterface* targetType;
+  QI_ONCE(targetType = typeOf<T>());
+  try
+  {
+    std::pair<AnyReference, bool> conv = ref.convert(targetType);
+    if (!conv.first.type())
+      promise.setError(std::string("Unable to convert call result to target type: from ")
+        + ref.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
+    else
+    {
+      promise.setValue(*conv.first.ptr<T>(false));
+    }
+    if (conv.second)
+      conv.first.destroy();
+  }
+  catch(const std::exception& e)
+  {
+    promise.setError(std::string("Return argument conversion error: ") + e.what());
+  }
+  ref.destroy();
+}
+
+/// Specialization for setting the promise according to the future result in the case of void.
+template <>
+inline void setAdaptedResult<void>(Promise<void>& promise, AnyReference& ref)
+{
+  promise.setValue(nullptr);
+  ref.destroy();
+}
+
+/// Specialization for setting the promise according to the future result in the case of AnyReference.
+template <>
+inline void setAdaptedResult<AnyReference>(Promise<AnyReference>& promise, AnyReference& ref)
+{
+  try
+  {
+    promise.setValue(ref.clone());
+  }
+  catch(const std::exception& e)
+  {
+    promise.setError(std::string("Return argument conversion error: ") + e.what());
+  }
+  ref.destroy();
+}
+
 template <typename T>
 inline void futureAdapter(const qi::Future<qi::AnyReference>& metaFut, qi::Promise<T> promise)
 {
-  qiLogDebug("qi.object") << "futureAdapter " << qi::typeOf<T>()->infoString()<< ' ' << metaFut.hasError();
   //error handling
   if (metaFut.hasError()) {
     promise.setError(metaFut.error());
@@ -236,46 +289,7 @@ inline void futureAdapter(const qi::Future<qi::AnyReference>& metaFut, qi::Promi
   if (handleFuture(val, promise))
     return;
 
-  static TypeInterface* targetType;
-  QI_ONCE(targetType = typeOf<T>());
-  try
-  {
-    std::pair<AnyReference, bool> conv = val.convert(targetType);
-    if (!conv.first.type())
-      promise.setError(std::string("Unable to convert call result to target type: from ")
-        + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
-    else
-    {
-      promise.setValue(*conv.first.ptr<T>(false));
-    }
-    if (conv.second)
-      conv.first.destroy();
-  }
-  catch(const std::exception& e)
-  {
-    promise.setError(std::string("Return argument conversion error: ") + e.what());
-  }
-  val.destroy();
-}
-
-template <>
-inline void futureAdapter<void>(const qi::Future<qi::AnyReference>& metaFut, qi::Promise<void> promise)
-{
-  qiLogDebug("qi.object") << "futureAdapter void " << metaFut.hasError();
-  //error handling
-  if (metaFut.hasError()) {
-    promise.setError(metaFut.error());
-    return;
-  }
-  if (metaFut.isCanceled()) {
-    promise.setCanceled();
-    return;
-  }
-  AnyReference val =  metaFut.value();
-  if (handleFuture(val, promise))
-    return;
-
-  promise.setValue(0);
+  setAdaptedResult(promise, val);
   val.destroy();
 }
 

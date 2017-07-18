@@ -14,8 +14,7 @@ GenericObject::GenericObject(ObjectTypeInterface *type, void *value)
 {
 }
 
-GenericObject::~GenericObject() {
-}
+GenericObject::~GenericObject() {}
 
 const MetaObject &GenericObject::metaObject() {
   if (!type || !value) {
@@ -26,23 +25,69 @@ const MetaObject &GenericObject::metaObject() {
   return type->metaObject(value);
 }
 
-qi::Future<AnyReference>
-GenericObject::metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature)
+Future<AnyReference> GenericObject::metaCallNoUnwrap(
+    unsigned int method,
+    const GenericFunctionParameters& params,
+    const qi::MetaCallType callType,
+    const Signature& returnSignature)
 {
-  if (!type || !value) {
-    const std::string s = "Operating on invalid GenericObject..";
-    qiLogWarning() << s;
-    return qi::makeFutureError<AnyReference>(s);
-  }
-  try {
+  QI_ASSERT(type && value && "invalid generic object");
+  if (!type || !value)
+    return qi::makeFutureError<AnyReference>("invalid generic object");
+
+  try
+  {
     return type->metaCall(value, shared_from_this(), method, params, callType, returnSignature);
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception &e)
+  {
     return qi::makeFutureError<AnyReference>(e.what());
   }
   catch (...)
   {
-    return qi::makeFutureError<AnyReference>("Unknown exception caught");
+    return qi::makeFutureError<AnyReference>("unknown error");
   }
+}
+
+qi::Future<AnyReference> GenericObject::metaCall(
+    unsigned int method,
+    const GenericFunctionParameters& params,
+    MetaCallType callType,
+    Signature returnSignature)
+{
+  Promise<AnyReference> unwrappedResult;
+  auto result = metaCallNoUnwrap(method, params, callType, returnSignature);
+  qi::adaptFutureUnwrap(result, unwrappedResult);
+  return unwrappedResult.future();
+}
+
+qi::Future<AnyReference> GenericObject::metaCall(
+    const std::string &nameWithOptionalSignature,
+    const GenericFunctionParameters& args,
+    MetaCallType callType,
+    Signature returnSignature)
+{
+  int methodId = findMethod(nameWithOptionalSignature, args);
+  if (methodId < 0) // in that case, the method ID is an error number
+    return makeFutureError<AnyReference>(makeFindMethodErrorMessage(nameWithOptionalSignature, args, methodId));
+  return metaCall(methodId, args, callType, returnSignature);
+}
+
+int GenericObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args)
+{
+  return metaObject().findMethod(nameWithOptionalSignature, args);
+}
+
+std::string GenericObject::makeFindMethodErrorMessage(
+    const std::string& nameWithOptionalSignature,
+    const qi::GenericFunctionParameters& args,
+    const int errorNo)
+{
+  auto resolvedSignature = args.signature(true).toString();
+  return metaObject()._p->generateErrorString(
+        nameWithOptionalSignature, resolvedSignature,
+        metaObject().findCompatibleMethod(nameWithOptionalSignature),
+        errorNo, false);
 }
 
 void GenericObject::metaPost(unsigned int event, const GenericFunctionParameters& args)
@@ -52,27 +97,6 @@ void GenericObject::metaPost(unsigned int event, const GenericFunctionParameters
     return;
   }
   type->metaPost(value, shared_from_this(), event, args);
-}
-
-int GenericObject::findMethod(const std::string& nameWithOptionalSignature, const GenericFunctionParameters& args)
-{
-  return metaObject().findMethod(nameWithOptionalSignature, args);
-}
-
-qi::Future<AnyReference>
-GenericObject::metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& args, MetaCallType callType, Signature returnSignature)
-{
-  if (!type || !value) {
-    const std::string s = "Invalid object";
-    qiLogError() << s;
-    return qi::makeFutureError<AnyReference>(s);
-  }
-  int methodId = findMethod(nameWithOptionalSignature, args);
-  if (methodId < 0) {
-    std::string resolvedSig = args.signature(true).toString();
-    return makeFutureError<AnyReference>(metaObject()._p->generateErrorString(nameWithOptionalSignature, resolvedSig, metaObject().findCompatibleMethod(nameWithOptionalSignature), methodId, false));
-  }
-  return metaCall(methodId, args, callType, returnSignature);
 }
 
 /// Resolve signature and bounce

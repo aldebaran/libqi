@@ -20,6 +20,10 @@ namespace qi {
   {
   public:
 
+    /**
+     * A default-constructed AnyValue is invalid, and equivalent to an unset optional value.
+     * It cannot be converted to any other type, and will yield exceptions instead.
+     */
     AnyValue();
     AnyValue(const AnyValue& b);
     explicit AnyValue(const AnyReference& b, bool copy, bool free);

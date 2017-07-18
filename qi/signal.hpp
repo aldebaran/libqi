@@ -291,7 +291,7 @@ namespace qi {
     void callImpl(const GenericFunctionParameters& args);
 
   public:
-    QI_API_DEPRECATED_MSG("please use link instead or cast to qi::SignalLink")
+    QI_API_DEPRECATED_MSG("please use link() instead or cast to qi::SignalLink")
     SignalLink linkId;
   };
 

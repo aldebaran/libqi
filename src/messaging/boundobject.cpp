@@ -567,6 +567,7 @@ namespace qi {
     }
   }
 
+  // if 'val' is a qi::Object<> its ownership will be given to the 'host' object
   static inline void convertAndSetValue(Message& ret, AnyReference val,
     const Signature& targetSignature, boost::weak_ptr<ObjectHost> host,
     MessageSocket* socket, const Signature& forcedSignature)
@@ -602,8 +603,14 @@ namespace qi {
                                                    const Signature& forcedReturnSignature,
                                                    CancelableKitWeak kit)
   {
-    qi::Message ret(Message::Type_Reply, replyaddr);
     _removeCachedFuture(kit, socket, replyaddr.messageId);
+    if (!socket->isConnected())
+    {
+      val.destroy();
+      qiLogDebug() << "Can't send call result: the socket has been disconnected";
+      return;
+    }
+    qi::Message ret(Message::Type_Reply, replyaddr);
     try {
       TypeKind kind = TypeKind_Unknown;
       boost::shared_ptr<GenericObject> ao = qi::detail::getGenericFuture(val, &kind);
@@ -644,7 +651,12 @@ namespace qi {
       ret.setError("Unknown error caught while forwarding the answer");
     }
     if (!socket->send(ret))
+    {
+      // TODO: if `convertAndSetValue` transfers ownership of `val` in the object host,
+      // `val.destroy()` below won't be enough. Check if it's necessary to destroy
+      // `val` inside the host.
       qiLogWarning("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
+    }
     val.destroy();
   }
 
@@ -657,6 +669,13 @@ namespace qi {
                                                CancelableKitWeak kit,
                                                AtomicIntPtr cancelRequested)
   {
+    if(!socket->isConnected())
+    {
+      _removeCachedFuture(kit, socket, replyaddr.messageId);
+      future.setOnDestroyed(&destroyAbstractFuture);
+      qiLogDebug() << "Can't send call result: the socket has been disconnected";
+      return;
+    }
     qi::Message ret(Message::Type_Reply, replyaddr);
     if (future.hasError()) {
       ret.setType(qi::Message::Type_Error);
@@ -721,7 +740,11 @@ namespace qi {
     }
     _removeCachedFuture(kit, socket, replyaddr.messageId);
     if (!socket->send(ret))
+    {
+      // TODO: Check if `val` must be destroyed here. Take into account the potential
+      // transfer ownership to the object host.
       qiLogWarning("qimessaging.serverresult") << "Can't generate an answer for address:" << replyaddr;
+    }
   }
 
 // id 1 is for the service itself, we must not use it for sub-objects

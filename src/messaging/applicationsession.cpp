@@ -65,18 +65,7 @@ static void parseAddress()
   qi::Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
   standAlone() = vm.count("qi-standalone") ? true : false;
 
-  {
-    po::options_description descTmp;
-    descTmp.add_options()
-        ("help,h", "");
-
-    po::variables_map vmTmp;
-    po::store(po::command_line_parser(qi::Application::arguments()).options(descTmp).allow_unregistered().run(),
-              vmTmp);
-
-    if (vmTmp.count("help"))
-      std::cout << desc << std::endl;
-  }
+  qi::Application::options().add(desc);
 }
 
 // This function is used to add the callback before the call of Application's constructor
@@ -347,5 +336,10 @@ void ApplicationSession::run()
 bool ApplicationSession::standAlone()
 {
   return ::standAlone();
+}
+
+std::string ApplicationSession::helpText() const
+{
+  return Application::helpText();
 }
 }

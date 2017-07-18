@@ -42,19 +42,33 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(DynamicTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     // same-type check (not done before, useful mainly for AnyObject)
     if (targetType->info() == type()->info())
       return std::make_pair(*this, false);
-    AnyReference result;
 
-    result._type = targetType;
-    result._value = targetType->initializeStorage();
-    static_cast<DynamicTypeInterface*>(targetType)->set(&result._value, AnyReference(*this));
-    return std::make_pair(result, true);
+    try
+    {
+      AnyReference result;
+      result._value = targetType->initializeStorage();
+      static_cast<DynamicTypeInterface*>(targetType)->set(&result._value, AnyReference(*this));
+      result._type = targetType;
+      return std::make_pair(result, true);
+    }
+    catch (const std::exception& e)
+    {
+      qiLogDebug() << "Failed to convert to dynamic type: " << e.what();
+    }
+    return std::make_pair(AnyReference{}, false);
   }
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(PointerTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -137,6 +151,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(ListTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -183,6 +200,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(StringTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -213,6 +233,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(RawTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -245,6 +268,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(FloatTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -275,6 +301,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(IntTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -457,6 +486,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(StructTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
     StructTypeInterface* tdst = targetType;
 
@@ -649,6 +681,9 @@ namespace detail
 
   std::pair<AnyReference, bool> AnyReferenceBase::convert(MapTypeInterface* targetType) const
   {
+    if (!targetType)
+      return std::make_pair(AnyReference{}, false);
+
     AnyReference result;
 
     switch (_type->kind())
@@ -1063,6 +1098,9 @@ bool operator<(const AnyReference& a, const AnyReference& b)
 
 bool operator==(const AnyReference& a, const AnyReference& b)
 {
+  if (!a.isValid() || !b.isValid())
+    return !a.isValid() && !b.isValid();
+
   if (a.kind() == TypeKind_Iterator && b.kind() == TypeKind_Iterator
       && a.type()->info() == b.type()->info())
   {

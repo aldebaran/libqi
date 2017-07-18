@@ -68,7 +68,7 @@ namespace qi {
 
   private:
     //Future
-    void onFutureFinished(qi::Future<unsigned int> future, long id, qi::Promise<unsigned int> result);
+    void onFutureFinished(qi::Future<unsigned int> future, int id, qi::Promise<unsigned int> result);
 
   private:
     using BoundServiceMap = std::map<unsigned int, BoundService>;

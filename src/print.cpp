@@ -173,7 +173,7 @@ namespace detail
     using boost::range::max_element;
     using boost::algorithm::join;
 
-    if (!empty(members))
+    if (!boost::empty(members))
     {
       print(makeSubSectionHeader(Line{ Column(headerLabel.to_string(), StreamColor_Fuchsia) }));
       IndentLevelPtr membersIndentLevel = makeIndentLevel();

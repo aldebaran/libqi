@@ -333,12 +333,23 @@ namespace qi
         std::forward<Args>(args)...);
   }
 
+  namespace detail
+  {
+    template<typename AF, typename Arg0, typename... Args>
+    struct WorkaroundVS2015 // TODO: Remove once we upgrade from VS2015
+    {
+      using type = decltype(boost::bind(
+        std::declval<AF>(),
+        detail::BindTransform<Arg0>::transform(std::declval<Arg0>()),
+        std::declval<Args>()...));
+    };
+  }
+
   template <typename AF, typename Arg0, typename... Args>
   auto bindWithFallback(boost::function<void()> onFail, AF&& fun, Arg0&& arg0, Args&&... args)
     -> typename detail::BindTransform<Arg0>::template wrap_type<
-      decltype(boost::bind(std::forward<AF>(fun),
-                           detail::BindTransform<Arg0>::transform(arg0),
-                           std::forward<Args>(args)...))>
+         typename detail::WorkaroundVS2015<AF, Arg0, Args...>::type
+       >
   {
     using Transform = detail::BindTransform<Arg0>;
     auto transformed = Transform::transform(arg0);

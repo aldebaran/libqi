@@ -4,8 +4,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/net/send.hpp>
+#include <qi/messaging/sock/send.hpp>
 #include <qi/future.hpp>
+#include <qi/scoped.hpp>
 #include "src/messaging/message.hpp"
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "networkmock.hpp"
@@ -20,11 +21,14 @@ static const std::chrono::milliseconds defaultPostPauseInMs{20};
 TEST(NetSendMessage, FailsOnWrite)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
-  N::_async_write_next_layer =  [](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-    h(Error{Error::unknown}, 0u);
-  };
+  auto _ = scopedSetAndRestore(
+    N::_async_write_next_layer,
+    [](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      h(Error{Error::unknown}, 0u);
+    }
+  );
   IoService<N> io;
   auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
   Message sentMsg;
@@ -43,11 +47,14 @@ TEST(NetSendMessage, FailsOnWrite)
 TEST(NetSendMessage, SuccessSingleMessage)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
-  N::_async_write_next_layer =  [](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-    h(Error{Error::success}, 0u);
-  };
+  auto _ = scopedSetAndRestore(
+    N::_async_write_next_layer,
+    [](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      h(Error{Error::success}, 0u);
+    }
+  );
   IoService<N> io;
   auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
   Message sentMsg;
@@ -66,14 +73,17 @@ TEST(NetSendMessage, SuccessSingleMessage)
 TEST(NetSendMessage, SuccessMultipleMessage)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   std::vector<std::thread> writeThreads;
-  N::_async_write_next_layer =  [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-    writeThreads.push_back(std::thread([&, h]{
-      h(success<Error>(), 0u);
-    }));
-  };
+  auto _ = scopedSetAndRestore(
+    N::_async_write_next_layer,
+    [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      writeThreads.push_back(std::thread([&, h]{
+        h(success<Error>(), 0u);
+      }));
+    }
+  );
   IoService<N> io;
   auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
   std::vector<Message> messages(100);
@@ -100,14 +110,17 @@ TEST(NetSendMessage, SuccessMultipleMessage)
 TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
   boost::synchronized_value<std::vector<std::thread>> writeThreads;
-  N::_async_write_next_layer = [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-    writeThreads->push_back(std::thread([&, h]{
-      h(success<Error>(), 0u);
-    }));
-  };
+  auto _ = scopedSetAndRestore(
+    N::_async_write_next_layer,
+    [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      writeThreads->push_back(std::thread([&, h]{
+        h(success<Error>(), 0u);
+      }));
+    }
+  );
   IoService<N> io;
   auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
   const int messageCount = 100;
@@ -167,9 +180,9 @@ struct NetSendMessageEnqueue : testing::Test
 
 using sequences = testing::Types<
   // Mock
-  qi::net::SendMessageEnqueue<mock::N> //, ConnectedSender<mock::N>
+  qi::sock::SendMessageEnqueue<mock::N> //, ConnectedSender<mock::N>
   // Asio
-  //, qi::net::MessageReceiver<qi::net::NetworkAsio>, qi::net::Connected<qi::net::NetworkAsio>
+  //, qi::sock::MessageReceiver<qi::sock::NetworkAsio>, qi::sock::Connected<qi::sock::NetworkAsio>
 >;
 
 TYPED_TEST_CASE(NetSendMessageEnqueue, sequences);
@@ -178,16 +191,20 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
 {
   using SendMessageEnqueue = TypeParam;
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using namespace mock;
-  N::_async_read_next_layer = defaultAsyncReadNextLayer;
+  auto scopedRead = scopedSetAndRestore(
+    N::_async_read_next_layer,
+    defaultAsyncReadNextLayer
+  );
   const unsigned sendThreadCount = 10u;
   const unsigned perSendThreadMessageCount = 100u;
   const unsigned maxSentCount = sendThreadCount * perSendThreadMessageCount;
   std::mutex writeThreadMutex;
   std::vector<std::thread> writeThreads;
   writeThreads.reserve(maxSentCount);
-  N::_async_write_next_layer =
+  auto scopedWrite = scopedSetAndRestore(
+    N::_async_write_next_layer,
     [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&,
           N::_anyTransferHandler writeCont) mutable {
       // We launch the continuation in another thread to avoid recursive calls.
@@ -195,7 +212,8 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
       writeThreads.push_back(std::thread([=]() mutable {
         writeCont(success<Error>(), 0u);
       }));
-    };
+    }
+  );
   auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
   using I = std::list<Message>::const_iterator;
   std::atomic<unsigned> sentCount{0u};
@@ -250,7 +268,7 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
 TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreadsAsio)
 {
   using namespace qi;
-  using namespace qi::net;
+  using namespace qi::sock;
   using N = NetworkAsio;
   SslContext<N> context{Method<SslContext<N>>::sslv23};
 

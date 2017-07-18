@@ -52,20 +52,35 @@ public:
   template <typename R, typename... Args>
   qi::Future<R> async(const std::string& methodName, Args&&... args);
 
-  qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
-
-  /** Find method named name callable with arguments parameters
+  /**
+   * Call a method dynamically, using an extensible list of arguments and
+   * specific call policies. Since the underlying call may be asynchronous,
+   * these functions always return a future, which would match the underlying
+   * future result. In other words, it is already unwrapped.
    */
-  int findMethod(const std::string& name, const GenericFunctionParameters& parameters);
-
-  /** Resolve the method Id and bounces to metaCall
+  //@{
+  /**
+   * Call a method by its name or signature to deduce the method ID.
    * @param nameWithOptionalSignature method name or method signature
-   * 'name::(args)' if signature is given, an exact match is required
-   * @param params arguments to the call
-   * @param callType type of the call
-   * @param returnSignature force the method to return a type
+   * 'name::(args)' if signature is given, an exact match is required.
+   * @param params arguments to pass to the call.
+   * @param callType type of the call.
+   * @param returnSignature forces the return type if set.
    */
   qi::Future<AnyReference> metaCall(const std::string &nameWithOptionalSignature, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
+
+  /**
+   * Call a method dynamically, by method ID.
+   * @param method method ID.
+   * @param params arguments to pass to the call.
+   * @param callType type of the call.
+   * @param returnSignature forces the return type if set.
+   */
+  qi::Future<AnyReference> metaCall(unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature = Signature());
+  //@}
+
+  /// Find method named name callable with arguments parameters
+  int findMethod(const std::string& name, const GenericFunctionParameters& parameters);
 
   void post(const std::string& eventName,
             qi::AutoAnyReference p1 = qi::AutoAnyReference(),
@@ -121,6 +136,20 @@ public:
   bool isValid() { return type && value;}
   ObjectTypeInterface*  type;
   void*        value;
+
+private:
+  /// Common meta call algorithm, without unwrapping the returned future.
+  Future<AnyReference> metaCallNoUnwrap(
+      unsigned int method,
+      const GenericFunctionParameters& params,
+      const MetaCallType callType,
+      const Signature& returnSignature);
+
+  /// Finds a method or throws a nicely formatted error message.
+  std::string makeFindMethodErrorMessage(
+      const std::string& nameWithOptionalSignature,
+      const GenericFunctionParameters& args,
+      const int errorNo);
 };
 
 namespace detail
@@ -170,17 +199,20 @@ R GenericObject::call(const std::string& methodName, Args&&... args)
   return detail::extractFuture<R>(fmeta);
 }
 
+/// Calls a method of the generic object asynchronously.
+/// @return a future tracking the result of the underlying method call.
+/// If the underlying call returned a future, the future is unwrapped.
 template <typename R, typename... Args>
 qi::Future<R> GenericObject::async(const std::string& methodName, Args&&... args)
 {
-  static_assert(!detail::isFuture<R>::value, "return type of async must not be a Future");
-  if (!value || !type)
-    return makeFutureError<R>("Invalid GenericObject");
-  std::vector<qi::AnyReference> params = {qi::AnyReference::from(args)...};
-  qi::Promise<R> res;
-  qi::Future<AnyReference> fmeta = metaCall(methodName, params, MetaCallType_Queued, typeOf<R>()->signature());
-  qi::adaptFutureUnwrap(fmeta, res);
-  return res.future();
+  std::vector<qi::AnyReference> anyArgs = {qi::AnyReference::from(args)...};
+  int methodId = findMethod(methodName, anyArgs);
+  if (methodId < 0) // in that case, the method ID is an error number
+    return makeFutureError<R>(makeFindMethodErrorMessage(methodName, anyArgs, methodId));
+  auto futureMeta = metaCallNoUnwrap(methodId, anyArgs, MetaCallType_Queued, typeOf<R>()->signature());
+  qi::Promise<R> result;
+  qi::adaptFutureUnwrap(futureMeta, result);
+  return result.future();
 }
 
 template<typename T>
@@ -229,6 +261,10 @@ public:
   {
     qiLogCategory("qitype.object");
     detail::ManagedObjectPtr* val = (detail::ManagedObjectPtr*)ptrFromStorage(storage);
+
+    if (!source.type())
+      throw std::runtime_error("cannot set object from an invalid value");
+
     if (source.type()->info() == info())
     { // source is objectptr
       detail::ManagedObjectPtr* src = source.ptr<detail::ManagedObjectPtr>(false);
@@ -238,6 +274,9 @@ public:
     }
     else if (source.kind() == TypeKind_Dynamic)
     { // try to dereference dynamic type in case it contains an object
+      auto content = source.content();
+      if (!content.isValid())
+        throw std::runtime_error("cannot set object from an invalid dynamic value");
       set(storage, source.content());
     }
     else if (source.kind() == TypeKind_Object)

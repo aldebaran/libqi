@@ -1,4 +1,5 @@
 #pragma once
+#include <qi/functional.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/macroregular.hpp>
 
@@ -162,5 +163,128 @@ namespace qi
   template<typename F>
   Scoped<void, traits::Decay<F>> scoped(F&& f) {
       return Scoped<void, traits::Decay<F>>{std::forward<F>(f)};
+  }
+
+  /// Applies an action and applies its retraction on scope exit.
+  ///
+  /// Example: incrementing an atomic counter and decrementing it on scope exit
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// auto incr = [](std::atomic<int>& x) {++x;};
+  /// auto decr = [](std::atomic<int>& x) {--x;};
+  ///
+  /// // `counter` is a std::atomic<int>
+  /// {
+  ///   auto _ = scopedApplyAndRetract(counter, incr, decr);
+  ///   // here, the counter has been incremented
+  ///   // ...
+  /// }
+  /// // here, the counter has been decremented
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+
+  // Contains workarounds for VS2013.
+  // TODO: Remove this when get rid of VS2013.
+  namespace vs13
+  {
+    template<class F>
+    using Retract = typename F::retract_type;
+  }
+
+  /// Action<T> F, Action<T> G
+  template<typename T, typename F, typename G>
+  auto scopedApplyAndRetract(T& value, F&& f, G&& retraction)
+  // TODO: Remove the trailing return when get rid of VS2013.
+  // A lambda is not used because of the non-evaluated decltype context.
+    -> Scoped<std::reference_wrapper<T>, traits::Decay<G>>
+  {
+    // Apply the action now.
+    std::forward<F>(f)(value);
+
+    // Apply the retraction on scope exit.
+    return scoped(std::ref(value), std::forward<G>(retraction));
+  }
+
+  /// Applies an action and applies its retraction on scope exit.
+  ///
+  /// The retraction is obtained through the `IsomorphicAction` concept.
+  ///
+  /// IsomorphicAction<T> F
+  template<typename T, typename F>
+  auto scopedApplyAndRetract(T& value, F&& f)
+  // TODO: 1) Get rid of VS2013
+  //       2) Remove the trailing return when we upgrade to C++14 or higher (aka C++14+)
+  // A lambda is not used because of the non-evaluated decltype context.
+    -> Scoped<std::reference_wrapper<T>, vs13::Retract<traits::Decay<F>>>
+  {
+    return scopedApplyAndRetract(value, std::forward<F>(f), retract(f));
+  }
+
+  /// Restores a value on scope exit.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// void print(const Element& e)
+  /// {
+  ///   auto _ = scopedSetAndRestore(flags, flag_hex | flag_pretty);
+  ///   // Performs:
+  ///   //  auto oldFlags = flags;
+  ///   //  flags = flag_hex | flag_pretty;
+  ///   ...
+  /// }
+  /// // On scope exit, performs:
+  /// //  flags = oldFlags;
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Remark: Also works with move-only types.
+  ///
+  /// Warning: As with `scoped` the return value must be stored on the stack.
+  ///   If it is not stored, the value is of course immediately restored.
+  ///
+  /// With T t, U u, the following is valid:
+  ///   t = std::move(u);
+  template<typename T, typename U>
+  auto scopedSetAndRestore(T& value, U&& newValue)
+  // TODO: Remove the trailing return when we upgrade to C++14+
+  // A lambda is not used because of the non-evaluated decltype context.
+    -> decltype(scopedApplyAndRetract(
+      value,
+      makeMoveAssign<T>(std::forward<U>(newValue)),
+      makeMoveAssign<T>(std::move(value))))
+  {
+    return scopedApplyAndRetract(
+      value,
+
+      // Will perform: value = std::move(Decay<U>(std::forward<U>(newValue)));
+      // (c++ is beautiful :D)
+      makeMoveAssign<T>(std::forward<U>(newValue)),
+
+      // Will perform: value = std::move(Decay<T>(std::move(oldValue));
+      // `oldValue` is `value` when entering this procedure.
+      makeMoveAssign<T>(std::move(value)));
+  }
+
+  /// Increments a value and decrements it on scope exit.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// void T::invoke_maybe(boost::function<void()> f, const boost::system::error_code& erc)
+  /// {
+  ///   if (!erc)
+  ///   {
+  ///     auto _ = scopedIncrAndDecr<Atomic<uint64_t>>(_activeTask);
+  ///     // Here, `_activeTask` has been incremented.
+  ///     ...
+  ///   }
+  ///   // Here, `_activeTask` has been decremented.
+  ///   ...
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// (Integral || BidirectionalIterator) T
+  template<typename T>
+  auto scopedIncrAndDecr(T& value)
+    -> decltype(scopedApplyAndRetract(value, Incr<T>{}))
+  {
+    return scopedApplyAndRetract(value, Incr<T>{});
   }
 } // namespace qi

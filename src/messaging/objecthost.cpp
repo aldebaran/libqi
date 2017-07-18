@@ -7,6 +7,7 @@
 #include "objecthost.hpp"
 
 #include "boundobject.hpp"
+#include <qi/type/traits.hpp>
 
 qiLogCategory("qimessaging.objecthost");
 
@@ -96,36 +97,66 @@ void ObjectHost::removeRemoteReferences(MessageSocketPtr socket)
   RemoteReferencesMap::iterator it = _remoteReferences.find(socket.get());
   if (it == _remoteReferences.end())
     return;
-  for (std::vector<unsigned int>::iterator vit = it->second.begin(), end = it->second.end();
-       vit != end;
-       ++vit)
-    removeObject(*vit);
+  Future<void> fut{nullptr};
+  for (auto id : it->second)
+    fut = removeObject(id, fut);
+
   _remoteReferences.erase(it);
 }
 
-void ObjectHost::removeObject(unsigned int id)
+namespace
 {
-  /* Ensure we are not in the middle of iteration when
-  *  removing our ref on BoundAnyObject.
-  */
-  BoundAnyObject obj;
+  /// Wraps a shared pointer so that when this class object is copied, the underlying
+  /// shared pointer is not and therefore can most likely be reset and destroy the
+  /// underlying shared pointer pointee object.
+  /// shared_ptr<T> P
+  template <typename Ptr>
+  struct PointerDeferredResetHack
+  {
+    template <typename ...Args, typename Enable = qi::traits::EnableIf<std::is_constructible<Ptr, Args...>::value>>
+    PointerDeferredResetHack(Args&&... args)
+      : wrap(boost::make_shared<Ptr>(std::forward<Args>(args)...))
+    {
+    }
+
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(PointerDeferredResetHack, wrap)
+
+    /// Tries to destroy the wrapped pointer pointee object if possible
+    void operator()() const
+    {
+      QI_ASSERT(wrap);
+      (*wrap).reset();
+    }
+
+    boost::shared_ptr<Ptr> wrap;
+  };
+}
+
+Future<void> ObjectHost::removeObject(unsigned int id, Future<void> fut)
+{
   {
     boost::recursive_mutex::scoped_lock lock(_mutex);
     ObjectMap::iterator it = _objectMap.find(id);
     if (it == _objectMap.end())
     {
       qiLogDebug() << this << " No match in host for " << id;
-      return;
+      return fut;
     }
-    obj = it->second;
+    const auto obj = it->second;
     _objectMap.erase(it);
     qiLogDebug() << this << " count " << obj.use_count();
     // Because of potential dependencies between the object's destruction
     // and the networking resources, we transfer the object's destruction
     // responsability to another thread.
-    qi::async([obj]{});
+    const auto resetter = PointerDeferredResetHack<BoundAnyObject>(std::move(obj));
+    fut = fut.then([resetter](Future<void> f) {
+      if (f.hasError())
+        qiLogWarning() << "Object destruction failed: " << f.error();
+      resetter();
+    });
   }
   qiLogDebug() << this << " Object " << id << " removed.";
+  return fut;
 }
 
 void ObjectHost::clear()

@@ -4,8 +4,8 @@
 #include <boost/optional.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qi/messaging/net/networkasio.hpp>
-#include <qi/messaging/net/option.hpp>
+#include <qi/messaging/sock/networkasio.hpp>
+#include <qi/messaging/sock/option.hpp>
 
 #if BOOST_OS_WINDOWS
 # include <Winsock2.h> // needed by mstcpip.h
@@ -14,7 +14,7 @@
 # include <linux/in.h> // for  IPPROTO_TCP
 #endif
 
-qiLogCategory(qi::net::logCategory());
+qiLogCategory(qi::sock::logCategory());
 
 #if BOOST_OS_WINDOWS
 static void setSocketNativeOptionsWindows(
@@ -129,18 +129,19 @@ namespace qi {
     return l.empty() ? defaultValue : boost::lexical_cast<size_t>(l);
   }
 
+} // namespace qi
+
+namespace qi { namespace sock {
+
   boost::optional<qi::int64_t> getSocketTimeWarnThresholdFromEnv()
   {
     static const auto thresholdEnvVariable = os::getenv("QIMESSAGING_SOCKET_DISPATCH_TIME_WARN_THRESHOLD");
     using Opt = boost::optional<qi::int64_t>;
-    static Opt warnThreshold = thresholdEnvVariable.empty()
+    static const auto warnThreshold = thresholdEnvVariable.empty()
        ? Opt{}
        : Opt{strtol(thresholdEnvVariable.c_str(), 0, 0)};
     return warnThreshold;
   }
-} // namespace qi
-
-namespace qi { namespace net {
 
   void NetworkAsio::setSocketNativeOptions(
     boost::asio::ip::tcp::socket::native_handle_type socketNativeHandle, int timeoutInSeconds)
@@ -156,4 +157,4 @@ namespace qi { namespace net {
   #endif
   }
 
-}} // namespace qi::net
+}} // namespace qi::sock

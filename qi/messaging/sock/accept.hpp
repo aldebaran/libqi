@@ -1,13 +1,13 @@
 #pragma once
-#ifndef _QI_NET_ACCEPT_HPP
-#define _QI_NET_ACCEPT_HPP
+#ifndef _QI_SOCK_ACCEPT_HPP
+#define _QI_SOCK_ACCEPT_HPP
 #include <boost/make_shared.hpp>
-#include <qi/messaging/net/concept.hpp>
-#include <qi/messaging/net/traits.hpp>
-#include <qi/messaging/net/error.hpp>
-#include <qi/messaging/net/option.hpp>
-#include <qi/messaging/net/resolve.hpp>
-#include <qi/messaging/net/common.hpp>
+#include <qi/messaging/sock/concept.hpp>
+#include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/error.hpp>
+#include <qi/messaging/sock/option.hpp>
+#include <qi/messaging/sock/resolve.hpp>
+#include <qi/messaging/sock/common.hpp>
 #include <qi/url.hpp>
 #include <qi/macroregular.hpp>
 #include <qi/functional.hpp>
@@ -16,7 +16,7 @@
 /// Contains functions and types related to socket acception, in the context of
 /// a server accepting incoming connections.
 
-namespace qi { namespace net {
+namespace qi { namespace sock {
 
   /// Asynchronously accept connections and pass the associated socket via a
   /// handler.
@@ -56,7 +56,7 @@ namespace qi { namespace net {
   ///         _socket = socket;
   ///         return false; // stop accepting connections
   ///       },
-  ///       trackSilentTransfo(this) // data transformation: don't call the
+  ///       trackSilentTransfo(this) // lifetime transformation: don't call the
   ///                                // handler if this objet was destroyed
   ///     );
   ///   }
@@ -69,14 +69,14 @@ namespace qi { namespace net {
   /// Transformation<Procedure<void (Args...)>> F1
   template<typename N, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
   void acceptConnection(Acceptor<N>& acceptor, SslContext<N>& context,
-    Proc onAccept, F0 dataTransfo = {}, F1 netTransfo = {})
+    Proc onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
     SocketPtr<N> socket = boost::make_shared<SslSocket<N>>(acceptor.get_io_service(), context);
-    acceptor.async_accept((*socket).next_layer(), netTransfo(dataTransfo(
+    acceptor.async_accept((*socket).next_layer(), syncTransfo(lifetimeTransfo(
       [=, &acceptor, &context](const ErrorCode<N>& erc) mutable {
         if (onAccept(erc, socket)) // true means "must continue"
         {
-          acceptConnection<N>(acceptor, context, onAccept, dataTransfo, netTransfo);
+          acceptConnection<N>(acceptor, context, onAccept, lifetimeTransfo, syncTransfo);
         }
       })));
   }
@@ -194,10 +194,10 @@ namespace qi { namespace net {
     template<typename Proc, typename F0, typename F1>
     void startAccept(SslContext<N>& context,
         const Endpoint<Lowest<SslSocket<N>>>& endpoint, ReuseAddressEnabled reuse,
-        Proc onAccept, const F0& dataTransfo, const F1& netTransfo)
+        Proc onAccept, const F0& lifetimeTransfo, const F1& syncTransfo)
     {
       listen<N>(_acceptor, endpoint, reuse);
-      acceptConnection<N>(_acceptor, context, onAccept, dataTransfo, netTransfo);
+      acceptConnection<N>(_acceptor, context, onAccept, lifetimeTransfo, syncTransfo);
     }
   public:
   // QuasiRegular:
@@ -214,9 +214,9 @@ namespace qi { namespace net {
     template<typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
     void operator()(SslContext<N>& context,
         const Endpoint<Lowest<SslSocket<N>>>& endpoint, ReuseAddressEnabled reuse,
-        const Proc& onAccept, const F0& dataTransfo = {}, const F1& netTransfo = {})
+        const Proc& onAccept, const F0& lifetimeTransfo = {}, const F1& syncTransfo = {})
     {
-      startAccept(context, endpoint, reuse, onAccept, dataTransfo, netTransfo);
+      startAccept(context, endpoint, reuse, onAccept, lifetimeTransfo, syncTransfo);
     }
 
     /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
@@ -225,9 +225,9 @@ namespace qi { namespace net {
     template<typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
     void operator()(SslContext<N>& context, const Url& url,
       IpV6Enabled ipV6, ReuseAddressEnabled reuse,
-      Proc onAccept, F0 dataTransfo = {}, F1 netTransfo = {})
+      Proc onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
     {
-      _resolve(url, ipV6, netTransfo(dataTransfo(
+      _resolve(url, ipV6, syncTransfo(lifetimeTransfo(
         [=, &context](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable {
           if (erc)
           {
@@ -240,7 +240,7 @@ namespace qi { namespace net {
             return;
           }
           startAccept(context, (*entry).endpoint(), reuse, onAccept,
-            dataTransfo, netTransfo);
+            lifetimeTransfo, syncTransfo);
         }))
       );
     }
@@ -278,9 +278,9 @@ namespace qi { namespace net {
     template<typename Proc, typename F = IdTransfo>
     void operator()(SslContext<N>& context,
       const Endpoint<Lowest<SslSocket<N>>>& endpoint, ReuseAddressEnabled reuse,
-      const Proc& onAccept, const F& netTransfo = {})
+      const Proc& onAccept, const F& syncTransfo = {})
     {
-      _accept(context, endpoint, reuse, onAccept, trackSilentTransfo(this), netTransfo);
+      _accept(context, endpoint, reuse, onAccept, trackSilentTransfo(this), syncTransfo);
     }
 
     /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
@@ -289,9 +289,9 @@ namespace qi { namespace net {
     template<typename Proc, typename F = IdTransfo>
     void operator()(SslContext<N>& context,
       const Url& url, IpV6Enabled ipV6, ReuseAddressEnabled reuse,
-      const Proc& onAccept, const F& netTransfo = {})
+      const Proc& onAccept, const F& syncTransfo = {})
     {
-      _accept(context, url, ipV6, reuse, onAccept, trackSilentTransfo(this), netTransfo);
+      _accept(context, url, ipV6, reuse, onAccept, trackSilentTransfo(this), syncTransfo);
     }
 
     ~AcceptConnectionContinuousTrack()
@@ -300,6 +300,6 @@ namespace qi { namespace net {
     }
   };
 
-}} // namespace qi::net
+}} // namespace qi::sock
 
-#endif // _QI_NET_ACCEPT_HPP
+#endif // _QI_SOCK_ACCEPT_HPP
