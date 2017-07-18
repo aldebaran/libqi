@@ -279,7 +279,7 @@ TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreadsAsio)
   using N = NetworkAsio;
   SslContext<N> context{Method<SslContext<N>>::sslv23};
 
-  auto socket = boost::make_shared<SslSocket<N>>(N::defaultIoService(), context);
+  auto socket = boost::make_shared<SslSocket<N>>(N::defaultIoService(), std::ref(context));
   using I = std::list<Message>::const_iterator;
   const unsigned sendThreadCount = 100u;
   const unsigned perSendThreadMessageCount = 100u;

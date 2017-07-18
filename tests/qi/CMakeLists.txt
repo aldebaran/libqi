@@ -32,6 +32,7 @@ qi_create_gmock(
   "test_macro.cpp"
   "test_macroregular.cpp"
   "test_moveoncopy.cpp"
+  "test_mutablestore.cpp"
   "test_path_conf.cpp"
   "test_periodictask.cpp"
   "test_qi.cpp" # main

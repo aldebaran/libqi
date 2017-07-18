@@ -362,14 +362,14 @@ namespace qi
     /// Example: leaving untouched copy constructor and assignment operator
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     /// // will not swallow the copy constructor
-    /// template<typename U, typename = traits::EnableIfNotBaseOf<Mutable, U>>
-    /// explicit Mutable(U&& u)
+    /// template<typename U, typename = traits::EnableIfNotBaseOf<MutableStore, U>>
+    /// explicit MutableStore(U&& u)
     ///     : data(std::forward<U>(u))
     /// {
     /// }
     ///
-    /// template<typename U, typename = traits::EnableIfNotBaseOf<Mutable, U>>
-    /// Mutable& operator=(U&& u)
+    /// template<typename U, typename = traits::EnableIfNotBaseOf<MutableStore, U>>
+    /// MutableStore& operator=(U&& u)
     /// {
     ///   data = std::forward<U>(u);
     ///   return *this;
@@ -377,6 +377,10 @@ namespace qi
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     template<typename Base, typename Derived>
     using EnableIfNotBaseOf = EnableIf<! std::is_base_of<Base, Decay<Derived>>::value>;
+
+    /// Behave exactly as the std::result_of_t of C++14.
+    template<typename T, typename... Args>
+    using ResultOf = typename std::result_of<T& (Args&&...)>::type;
   } // namespace traits
 } // namespace qi
 

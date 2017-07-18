@@ -44,7 +44,7 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
     using Side = HandshakeSide<SslSocket<N>>;
     ConnectSocket<N> connect{io};
     SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
       IpV6Enabled{false}, Side::client,
       [=](ErrorCode<N> e, SocketPtr) mutable {
         promiseError.setValue(e);
@@ -91,7 +91,7 @@ struct ConnectingWrap
   void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context, IpV6Enabled ipV6, Handshake side,
     const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{})
   {
-    _connecting.reset(new Connecting<N>{_io, url, ssl, context, ipV6, side, tcpPingTimeout});
+    _connecting.reset(new Connecting<N>{_io, url, ssl, std::ref(context), ipV6, side, tcpPingTimeout});
     auto complete = _complete;
     _connecting->complete().then(
       [=](Future<ConnectingResult<N>> fut) mutable {
@@ -147,7 +147,7 @@ TYPED_TEST(NetConnectFuture, FailsOnResolve)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(url, SslEnabled{false}, context, IpV6Enabled{false}, Side::client);
+  connect(url, SslEnabled{false}, std::ref(context), IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(code(connect.complete().error()), networkUnreachable<ErrorCode<N>>().value());
   ASSERT_EQ("10.11.12.13", receivedHost);
@@ -188,7 +188,7 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
     using Side = HandshakeSide<SslSocket<N>>;
     ConnectFuture connect{io};
     SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
       IpV6Enabled{false}, Side::client);
     connected = connect.complete();
     p = &connect;
@@ -235,7 +235,7 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://" + host + ":9876"}, SslEnabled{false}, context,
+  connect(Url{"tcp://" + host + ":9876"}, SslEnabled{false}, std::ref(context),
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(host, resolvedHost);
@@ -264,7 +264,7 @@ TYPED_TEST(NetConnectFuture, OnlyIpV6EndpointsResolvedButIpV6NotAllowed)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(code(connect.complete().error()), hostNotFound<ErrorCode<N>>().value());
@@ -305,7 +305,7 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
     using Side = HandshakeSide<SslSocket<N>>;
     ConnectFuture connect{io};
     SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
       IpV6Enabled{false}, Side::client);
     connected = connect.complete();
   }
@@ -341,7 +341,7 @@ TYPED_TEST(NetConnectFuture, FailsOnConnect)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(code(connect.complete().error()), connectionRefused<ErrorCode<N>>().value());
@@ -367,7 +367,7 @@ TYPED_TEST(NetConnectFuture, SucceedsNonSsl)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
 }
@@ -398,7 +398,7 @@ TYPED_TEST(NetConnectFuture, FailsOnHandshake)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, std::ref(context),
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   const auto s = connect.complete().error();
@@ -440,7 +440,7 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
     using Side = HandshakeSide<SslSocket<N>>;
     ConnectFuture connect{io};
     SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, std::ref(context),
       IpV6Enabled{false}, Side::client);
     connected = connect.complete();
     p = &connect;
@@ -479,7 +479,7 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectFuture connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, std::ref(context),
     IpV6Enabled{false}, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
 }
@@ -557,7 +557,7 @@ TEST(NetConnectFutureStop, WhileResolving)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, std::ref(context),
     IpV6Enabled{false}, Side::client, Seconds{100},
     SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
       promiseResolve, promiseConnect}
@@ -608,7 +608,7 @@ TEST(NetConnectFutureStop, WhileConnecting)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, std::ref(context),
     IpV6Enabled{false}, Side::client, Seconds{100},
     SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
       promiseResolve, promiseConnect}
@@ -659,7 +659,7 @@ TEST(NetConnectFutureStop, WhileHandshaking)
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, std::ref(context),
     IpV6Enabled{false}, Side::client, Seconds{100},
     SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
       promiseResolve, promiseConnect}

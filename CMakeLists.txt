@@ -139,7 +139,8 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/send.hpp
          qi/messaging/sock/traits.hpp
          qi/moveoncopy.hpp
-         qi/utility.hpp)
+         qi/utility.hpp
+         qi/mutablestore.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
