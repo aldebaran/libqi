@@ -354,6 +354,29 @@ namespace qi
     template<typename T>
     using UnderlyingType = typename std::underlying_type<T>::type;
 
+    /// Useful to avoid a template constructor to swallow copy constructor,
+    /// move constructor, etc.
+    ///
+    /// Note: The "derived" type is decayed as it corresponds to the most common case.
+    ///
+    /// Example: leaving untouched copy constructor and assignment operator
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// // will not swallow the copy constructor
+    /// template<typename U, typename = traits::EnableIfNotBaseOf<Mutable, U>>
+    /// explicit Mutable(U&& u)
+    ///     : data(std::forward<U>(u))
+    /// {
+    /// }
+    ///
+    /// template<typename U, typename = traits::EnableIfNotBaseOf<Mutable, U>>
+    /// Mutable& operator=(U&& u)
+    /// {
+    ///   data = std::forward<U>(u);
+    ///   return *this;
+    /// }
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    template<typename Base, typename Derived>
+    using EnableIfNotBaseOf = EnableIf<! std::is_base_of<Base, Decay<Derived>>::value>;
   } // namespace traits
 } // namespace qi
 
