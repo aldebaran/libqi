@@ -26,7 +26,18 @@ TransportSocketCache::~TransportSocketCache()
 {
   _dying = true;
   destroy();
-  close();
+  try
+  {
+    close();
+  }
+  catch (const std::exception& ex)
+  {
+    qiLogError() << "Exception caught during destruction: " << ex.what();
+  }
+  catch (...)
+  {
+    qiLogError() << "Unknown exception caught during destruction";
+  }
 }
 
 void TransportSocketCache::init()
