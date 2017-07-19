@@ -388,8 +388,8 @@ TEST(ScopedSetAndRestore, MoveOnly)
   using MoveOnly = test::MoveOnly<int>;
   const MoveOnly oldValue{1212};
   MoveOnly newValue0{3434};
-  MoveOnly newValue1{newValue0.value};
-  MoveOnly x{oldValue.value};
+  MoveOnly newValue1{*newValue0};
+  MoveOnly x{*oldValue};
   {
     auto _ = scopedSetAndRestore(x, std::move(newValue0));
     EXPECT_EQ(newValue1, x);
@@ -399,7 +399,7 @@ TEST(ScopedSetAndRestore, MoveOnly)
 
 namespace test
 {
-  // Allows to know if an instance has been moved.
+  /// Allows to know if an instance has been moved.
   struct MoveAware
   {
     int i;

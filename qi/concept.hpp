@@ -308,12 +308,14 @@ namespace qi
 /// concept Mutable(T) =
 ///      Regular(T)
 ///   && Readable(T)
-///   && With T t:
+///   && With const T t:
 ///     `*t = x` is well-formed and establishes `*t == x`
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A Mutable is a type that you can dereference. The dereferenced value can be
 /// modified.
 /// Typical models are: pointers, iterators, boost::optional
+/// Note: Constness of a value of a Mutable type does not imply constness of the
+///   referenced value (same behavior as native pointers).
 ///
 ///
 /// # Range concept definitions

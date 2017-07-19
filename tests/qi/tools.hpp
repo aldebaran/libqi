@@ -5,27 +5,44 @@ namespace test
 {
   /// Useful to test support for move-only types.
   template<typename T>
-  struct MoveOnly
+  class MoveOnly
   {
-    T value;
-    MoveOnly(const T& value)
+    mutable T value;
+    bool moved = false;
+    void checkNotMoved() const
+    {
+      if (moved) throw std::runtime_error("operating on moved instance");
+    }
+  public:
+    explicit MoveOnly(const T& value = T())
       : value(value)
     {
     }
     MoveOnly(const MoveOnly&) = delete;
     MoveOnly& operator=(const MoveOnly&) = delete;
     MoveOnly(MoveOnly&& x)
-      : value(std::move(x.value))
+      : value((x.checkNotMoved(), std::move(x.value)))
     {
+      x.moved = true;
     }
     MoveOnly& operator=(MoveOnly&& x)
     {
+      x.checkNotMoved();
       value = std::move(x.value);
+      x.moved = true;
       return *this;
     }
     bool operator==(MoveOnly const& x) const
     {
+      checkNotMoved();
+      x.checkNotMoved();
       return value == x.value;
+    }
+  // Mutable<T>:
+    T& operator*() const
+    {
+      checkNotMoved();
+      return value;
     }
   };
 

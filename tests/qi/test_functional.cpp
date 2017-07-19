@@ -362,7 +362,7 @@ TEST(FunctionalMoveAssign, Basic)
   MoveAssign<MoveOnly, MoveOnly> moveAssign{std::move(original)};
   MoveOnly x{i + 1};
   moveAssign(x); // x = std::move(original);
-  ASSERT_EQ(i, x.value);
+  ASSERT_EQ(i, *x);
 }
 
 TEST(FunctionalIncr, Regular)
