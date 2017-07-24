@@ -35,6 +35,10 @@
 #include <boost/lockfree/queue.hpp>
 #include <boost/function.hpp>
 
+#ifdef WITH_SYSTEMD
+#include <qi/log/journaldloghandler.hpp>
+#endif
+
 #ifdef ANDROID
 # include <qi/log/androidloghandler.hpp>
 #endif
@@ -361,6 +365,12 @@ namespace qi {
                                _glConsoleLogHandler,
                                _1, _2, _3, _4, _5, _6, _7, _8),
                    verb);
+#ifdef WITH_SYSTEMD
+        addHandler("journaldloghandler",
+                   boost::bind(&qi::log::JournaldLogHandler,
+                               _1, _4, _5, _6, _7, _8),
+                   verb);
+#endif
       }
 
       void destroyDefaultHandler()
