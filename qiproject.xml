@@ -4,7 +4,7 @@
   <maintainer email="vincent.palancher@external.softbankrobotics.com ">Vincent Palancher</maintainer>
   <qibuild name="libqi">
     <depends buildtime="true" runtime="true" names="dl boost pthread systemd openssl" />
-    <depends testtime="true" names="gtest" />
+    <depends testtime="true" buildtime="true" names="gtest" />
   </qibuild>
   <project src="dox" />
   <project src="libqipamauth" />
