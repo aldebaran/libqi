@@ -1,4 +1,5 @@
 #pragma once
+
 /*
  * Copyright (c) 2012 Aldebaran Robotics. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
@@ -11,6 +12,13 @@
 #include <boost/format.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/preprocessor/cat.hpp>
+#include <boost/locale/encoding_utf.hpp>
+
+// #include <locale>  TODO: Use these includes when they become available on all platforms, 
+// #include <codecvt> instead of replaced by boost.locale
+#include <type_traits>
+
+#include <ka/typetraits.hpp>
 
 #if defined(NO_QI_LOG_DETAILED_CONTEXT)
 #   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
@@ -213,7 +221,20 @@ namespace qi {
       // return a list of (category name, LogLevel) tuples.
       QI_API std::vector<std::tuple<std::string, qi::LogLevel>> parseFilterRules(
           const std::string &rules);
-    }
+
+      template <typename T, typename = ka::EnableIf<!std::is_convertible<T, std::wstring>::value>>
+      T&& narrow(T&& t)
+      {
+        return std::forward<T>(t);
+      }
+
+      inline std::string narrow(std::wstring const& str)
+      {
+        // Use the std version when locale and codecvt become available.
+        // return std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t>().to_bytes(str);
+        return boost::locale::conv::utf_to_utf<char>(str.c_str(), str.c_str() + str.size());
+      }
+    } // namespace detail
 
     //inlined for perf
     inline bool isVisible(CategoryType category, qi::LogLevel level)
@@ -222,9 +243,14 @@ namespace qi {
     }
 
     using CategoryType = detail::Category*;
-    class LogStream: public std::stringstream, boost::noncopyable
+
+    class LogStream
     {
     public:
+
+      LogStream(const LogStream&) = delete;
+      LogStream& operator=(const LogStream&) = delete;
+
       LogStream(const qi::LogLevel level,
                 const char         *file,
                 const char         *function,
@@ -275,17 +301,47 @@ namespace qi {
           qi::log::log(_logLevel, _categoryType, this->str(), _file, _function, _line);
       }
 
-      LogStream& self() {
-        return *this;
+      LogStream& self() { return *this; }
+
+      /* Here we provide a minimal interface so that LogStream behaves as an ostream:
+       * str() to extract the internal string,
+       * bool() is used to check the validity of the stream
+       * operator<< is used to insert a parameter in the stream
+       */
+      inline std::string str() const
+      {
+        return _oss.str();
+      }
+
+      explicit inline operator bool() const
+      {
+        return static_cast<bool>(_oss);
+      }
+
+      template <typename T>
+      friend LogStream& operator<<(LogStream& l, T&& t)
+      {
+        l._oss << detail::narrow(std::forward<T>(t));
+        return l;
+      }
+
+      /* overload for std::endl and other manipulators */
+      friend inline LogStream& operator<<(LogStream& l, std::ostream& (*pf) (std::ostream&))
+      {
+        l._oss << pf;
+        return l;
       }
 
     private:
+
+      std::ostringstream _oss;
       qi::LogLevel  _logLevel;
       const char   *_category;
       CategoryType  _categoryType;
       const char   *_file;
       const char   *_function;
       int           _line;
+
     };
   }
 }
