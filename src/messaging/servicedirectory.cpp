@@ -355,7 +355,7 @@ namespace qi
   void Session_SD::updateServiceInfo()
   {
     ServiceInfo si;
-    si.setName("ServiceDirectory");
+    si.setName(Session::serviceDirectoryServiceName());
     si.setServiceId(qi::Message::Service_ServiceDirectory);
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(_server->endpoints());
@@ -410,7 +410,7 @@ namespace qi
       }
 
       ServiceInfo si;
-      si.setName("ServiceDirectory");
+      si.setName(Session::serviceDirectoryServiceName());
       si.setServiceId(qi::Message::Service_ServiceDirectory);
       si.setMachineId(qi::os::getMachineId());
       si.setProcessId(qi::os::getpid());

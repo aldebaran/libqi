@@ -101,7 +101,7 @@ namespace qi {
     if (f.hasError())
     {
       qiLogDebug() << "addSdSocketToCache: connect reported failure";
-      _serviceHandler.removeService("ServiceDirectory");
+      _serviceHandler.removeService(Session::serviceDirectoryServiceName());
       p.setError(f.error());
       return;
     }
@@ -141,7 +141,7 @@ namespace qi {
     _serverObject.open();
     //add the servicedirectory object into the service cache (avoid having
     // two remoteObject registered on the same transportSocket)
-    _serviceHandler.addService("ServiceDirectory", _sdClient.object());
+    _serviceHandler.addService(Session::serviceDirectoryServiceName(), _sdClient.object());
     _socketsCache.init();
 
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
@@ -183,6 +183,11 @@ namespace qi {
     //so we should not touch it.
   }
 
+  const char* Session::serviceDirectoryServiceName()
+  {
+    static const auto sdServiceName = "ServiceDirectory";
+    return sdServiceName;
+  }
 
   // ###### Client
   qi::FutureSync<void> Session::connect(const char* serviceDirectoryURL)

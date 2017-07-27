@@ -23,7 +23,7 @@ using AuthProviderFactoryPtr = boost::shared_ptr<AuthProviderFactory>;
 class ClientAuthenticatorFactory;
 using ClientAuthenticatorFactoryPtr = boost::shared_ptr<ClientAuthenticatorFactory>;
 class GatewayPrivate;
-using GatewayPrivatePtr = boost::shared_ptr<GatewayPrivate>;
+using GatewayPrivatePtr = std::unique_ptr<GatewayPrivate>;
 
 class QI_API Gateway
 {
@@ -38,9 +38,6 @@ public:
 
   Property<bool>& connected;
 
-  void setAuthProviderFactory(AuthProviderFactoryPtr provider);
-  void setLocalClientAuthProviderFactory(AuthProviderFactoryPtr provider);
-  void setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr authenticator);
   UrlVector endpoints() const;
   bool listen(const Url& url);
   bool setIdentity(const std::string& key, const std::string& crt);

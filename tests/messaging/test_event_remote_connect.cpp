@@ -380,7 +380,7 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
 TEST_F(ObjectEventRemoteConnect, serviceDirectoryEvent)
 {
   i = 0;
-  qi::AnyObject sd = p1.client()->service("ServiceDirectory");
+  qi::AnyObject sd = p1.client()->service(qi::Session::serviceDirectoryServiceName());
 
   using SignalMap = std::map<unsigned int, qi::MetaSignal>;
   SignalMap s_map;

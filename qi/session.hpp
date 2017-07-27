@@ -46,6 +46,8 @@ namespace qi {
       ServiceLocality_Remote = 2
     };
 
+    static const char* serviceDirectoryServiceName();
+
     //Client
     qi::FutureSync<void> connect(const char* serviceDirectoryURL);
     qi::FutureSync<void> connect(const std::string &serviceDirectoryURL);
