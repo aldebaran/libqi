@@ -181,7 +181,7 @@ namespace detail {
         if (isFinished())
           return;
         requestCancel();
-        onCancel = _onCancel;
+        std::swap(onCancel, _onCancel);
       }
       if (onCancel)
       {
