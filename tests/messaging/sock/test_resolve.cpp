@@ -71,7 +71,7 @@ struct ConnectSocketFun
     SslContext<N> context{Method<SslContext<N>>::sslv23};
     connect(url, SslEnabled{true}, std::ref(context), IpV6Enabled{false},
       HandshakeSide<SslSocket<N>>::client,
-      [=](ErrorCode<N> err, boost::shared_ptr<SslSocket<N>>) mutable {
+      [=](ErrorCode<N> err, SocketPtr<N>) mutable {
         promise.setValue(err);
       }
     );
@@ -151,7 +151,7 @@ TEST(NetFindFirstValidIfAny, Ok)
   using namespace qi;
   using namespace qi::sock;
   using sock::detail::findFirstValidIfAny;
-  using mock::N;
+  using N = mock::Network;
   using Entry = N::_resolver_entry;
   auto entry = [](bool v6, std::string host) {
     return Entry{{{v6, std::move(host)}}};
@@ -159,7 +159,7 @@ TEST(NetFindFirstValidIfAny, Ok)
   auto v4_0 = entry(false, "10.11.12.13");
   auto v4_1 = entry(false, "10.11.12.14");
   auto v6_0 = entry(true, "10.11.12.15");
-  using I = N::resolver_type::iterator;
+  using I = Iterator<Resolver<N>>;
   {
     Entry* a[] = {nullptr};
     auto optionalEntry = findFirstValidIfAny(I{a}, I{}, IpV6Enabled{false});
@@ -192,22 +192,21 @@ TEST(NetResolveUrlList, Success)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  using mock::Resolver;
-  auto _ = scopedSetAndRestore(Resolver::async_resolve, defaultAsyncResolve);
-  using I = N::resolver_type::iterator;
-  Promise<std::pair<Error, I>> promiseResult;
+  using N = mock::Network;
+  auto _ = scopedSetAndRestore(Resolver<N>::async_resolve, mock::defaultAsyncResolve);
+  using I = Iterator<Resolver<N>>;
+  Promise<std::pair<ErrorCode<N>, I>> promiseResult;
   IoService<N> io;
   const std::string host = "10.11.12.13";
   ResolveUrlList<N> resolve{io};
   resolve(Url{"tcp://" + host + ":1234"},
-    [&](Error e, I it) mutable {
+    [&](ErrorCode<N> e, I it) mutable {
       promiseResult.setValue({e, it});
     }
   );
   auto fut = promiseResult.future();
   ASSERT_EQ(FutureState_FinishedWithValue, fut.waitFor(defaultTimeout));
-  ASSERT_EQ(success<Error>(), fut.value().first);
+  ASSERT_EQ(success<ErrorCode<N>>(), fut.value().first);
   auto it = fut.value().second;
   const N::_resolver_entry entryIpV4{{{false, host}}};
   const N::_resolver_entry entryIpV6{{{true, host}}};
@@ -225,15 +224,14 @@ TEST(NetResolveUrlList, Cancel)
   //using Resolve = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  using mock::Resolver;
-  using I = N::resolver_type::iterator;
+  using N = mock::Network;
+  using I = Iterator<Resolver<N>>;
 
-  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<std::pair<ErrorCode<N>, I>> promiseResolve;
   std::thread threadResolve;
   auto _ = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Resolver<N>::query, Resolver<N>::_anyResolveHandler h) {
       threadResolve = std::thread{[=]() mutable {
         // Block until the resolve promise has been set.
         auto p = promiseResolve.future().value();
@@ -241,19 +239,19 @@ TEST(NetResolveUrlList, Cancel)
       }};
     }
   );
-  Promise<std::pair<Error, I>> promiseResult;
+  Promise<std::pair<ErrorCode<N>, I>> promiseResult;
   Promise<void> promiseCancel;
   IoService<N> io;
   const std::string host = "10.11.12.13";
   ResolveUrlList<N> resolve{io};
   resolve(
     Url{"tcp://" + host + ":1234"},
-    [&](Error e, I it) { // onComplete
+    [&](ErrorCode<N> e, I it) { // onComplete
       promiseResult.setValue({e, it});
     },
-    [&](Resolver&) { // setupCancel
+    [&](Resolver<N>&) { // setupCancel
       promiseCancel.future().andThen([=](void*) mutable {
-        promiseResolve.setValue({operationAborted<Error>(), I{}});
+        promiseResolve.setValue({operationAborted<ErrorCode<N>>(), I{}});
       });
     }
   );
@@ -264,6 +262,6 @@ TEST(NetResolveUrlList, Cancel)
 
   // And check that we have a "operation aborted" error.
   ASSERT_EQ(FutureState_FinishedWithValue, futResult.waitFor(defaultTimeout));
-  ASSERT_EQ(operationAborted<Error>(), futResult.value().first);
+  ASSERT_EQ(operationAborted<ErrorCode<N>>(), futResult.value().first);
   threadResolve.join();
 }

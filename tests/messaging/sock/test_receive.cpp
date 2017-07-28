@@ -25,21 +25,21 @@ TEST(NetReceiveMessage, FailsOnReadNonSsl)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   std::vector<std::thread> writeThreads;
   auto _ = scopedSetAndRestore(
     N::_async_read_next_layer,
-    [&](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
+    [&](SslSocket<N>::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
-        h(Error{Error::unknown}, 0u);
+        h(ErrorCode<N>{ErrorCode<N>::unknown}, 0u);
       }});
     }
   );
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
   const size_t maxPayload = 10000;
   Message msg;
-  Promise<Error> promise;
-  receiveMessage<N>(socket, &msg, SslEnabled{false}, maxPayload, [=](Error e, const Message*) mutable {
+  Promise<ErrorCode<N>> promise;
+  receiveMessage<N>(socket, &msg, SslEnabled{false}, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
     promise.setError(e.message());
     return boost::optional<Message*>{};
   });
@@ -70,25 +70,25 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadNonSsl)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   std::vector<std::thread> writeThreads;
   auto _ = scopedSetAndRestore(
     N::_async_read_next_layer,
-    [&](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
+    [&](SslSocket<N>::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
-        h(Error{Error::unknown}, 0u);
+        h(ErrorCode<N>{ErrorCode<N>::unknown}, 0u);
       }});
     }
   );
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
   const size_t maxPayload = 10000;
-  Promise<Error> promise;
+  Promise<ErrorCode<N>> promise;
   ReceiveMessageContinuous<N> receive;
-  receive(socket, SslEnabled{false}, maxPayload, [=](Error e, const Message*) mutable {
+  receive(socket, SslEnabled{false}, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
     promise.setValue(e);
     return false; // Stop receiving messages.
   });
-  ASSERT_EQ(Error{Error::unknown}, promise.future().value());
+  ASSERT_EQ(ErrorCode<N>{ErrorCode<N>::unknown}, promise.future().value());
   for (auto& t: writeThreads) t.join();
   std::this_thread::sleep_for(defaultPostPauseInMs);
 }
@@ -96,7 +96,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadNonSsl)
 namespace mock
 {
   template<typename H> // NetHandler H
-  void readHeader(N::_mutable_buffer_sequence buf, H h, qi::uint32_t magic = qi::MessagePrivate::magic, qi::uint32_t size = 10u, Error error = {})
+  void readHeader(N::_mutable_buffer_sequence buf, H h, qi::uint32_t magic = qi::MessagePrivate::magic, qi::uint32_t size = 10u, N::error_code_type error = {})
   {
     qi::MessagePrivate::MessageHeader header;
     header.magic = magic;
@@ -112,7 +112,7 @@ namespace mock
   {
     return std::thread([=]{
       promise.future().wait();
-      h(Error{}, 0u);
+      h(N::error_code_type{}, 0u);
     });
   }
 
@@ -126,26 +126,26 @@ namespace mock
     // wait the ReceiveMessageContinuous object is destroyed.
     if (*ssl)
     {
-      N::_async_read_socket = [&](Socket&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
+      N::_async_read_socket = [&](Socket<N>&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
         // We launch asynchronously to return immediately.
         t = callInAnotherThreadAfterFutureIsSet(h, nukingObject);
       };
     }
     else
     {
-      N::_async_read_next_layer = [&](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
+      N::_async_read_next_layer = [&](N::ssl_socket_type::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
         // We launch asynchronously to return immediately.
         t = callInAnotherThreadAfterFutureIsSet(h, nukingObject);
       };
     }
     ReceiveMessageContinuousTrack<N>* p = nullptr;
-    qi::Promise<Error> promiseError;
-    qi::Future<Error> futureError = promiseError.future();
+    qi::Promise<ErrorCode<N>> promiseError;
+    qi::Future<ErrorCode<N>> futureError = promiseError.future();
     {
-      auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+      auto socket = boost::make_shared<Socket<N>>(N::defaultIoService(), SslContext<N>{});
       const size_t maxPayload = 10000;
       ReceiveMessageContinuousTrack<N> receive;
-      receive(socket, ssl, maxPayload, [&](Error e, const Message*) {
+      receive(socket, ssl, maxPayload, [&](ErrorCode<N> e, const Message*) {
         promiseError.setValue(e);
         return true; // continue receiving messages
       });
@@ -158,7 +158,7 @@ namespace mock
     nukingObject.setValue(0);
     // We wait for an error to occur.
     ASSERT_TRUE(futureError.hasValue());
-    ASSERT_EQ(operationAborted<Error>(), futureError.value());
+    ASSERT_EQ(operationAborted<ErrorCode<N>>(), futureError.value());
     t.join();
   }
 } // namespace mock
@@ -201,24 +201,24 @@ namespace mock
 
     if (*ssl)
     {
-      N::_async_read_socket = [&](Socket&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
+      N::_async_read_socket = [&](Socket<N>&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
         readHeaderThenDataAfterParentHasBeenDestroyed(buf, h);
       };
     }
     else
     {
-      N::_async_read_next_layer = [&](Socket::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
+      N::_async_read_next_layer = [&](Socket<N>::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
         readHeaderThenDataAfterParentHasBeenDestroyed(buf, h);
       };
     }
     ReceiveMessageContinuousTrack<N>* p = nullptr;
-    Promise<Error> promiseError;
-    Future<Error> futureError = promiseError.future();
+    Promise<ErrorCode<N>> promiseError;
+    Future<ErrorCode<N>> futureError = promiseError.future();
     {
-      auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+      auto socket = boost::make_shared<Socket<N>>(N::defaultIoService(), SslContext<N>{});
       const size_t maxPayload = 10000;
       ReceiveMessageContinuousTrack<N> receive;
-      receive(socket, ssl, maxPayload, [=](Error e, const Message*) mutable {
+      receive(socket, ssl, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
         promiseError.setValue(e);
         return true;
       });
@@ -231,7 +231,7 @@ namespace mock
     nukingObject.setValue(0);
     // We wait for an error to occur.
     ASSERT_TRUE(futureError.hasValue());
-    ASSERT_EQ(operationAborted<Error>(), futureError.value());
+    ASSERT_EQ(operationAborted<ErrorCode<N>>(), futureError.value());
     t.join();
   }
 } // namespace mock
@@ -250,28 +250,28 @@ TYPED_TEST(NetReceiveMessageContinuous, AsyncReadCalledUntilSomethingIsActuallyR
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   std::atomic<int> callCount{0};
   std::mutex writeThreadsMutex;
   std::vector<std::thread> writeThreads;
   auto _ = scopedSetAndRestore(
     N::_async_read_next_layer,
-    [&](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
+    [&](SslSocket<N>::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       std::lock_guard<std::mutex> lock{writeThreadsMutex};
       writeThreads.push_back(std::thread{[&, h] {
         ++callCount;
         // Error when called 11th times.
-        h(Error{callCount == 11 ? Error::unknown : Error::success}, 0u);
+        h(ErrorCode<N>{callCount == 11 ? ErrorCode<N>::unknown : ErrorCode<N>::success}, 0u);
       }});
     }
   );
-  Promise<Error> promiseError;
-  Future<Error> futureError = promiseError.future();
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+  Promise<ErrorCode<N>> promiseError;
+  Future<ErrorCode<N>> futureError = promiseError.future();
+  auto socket = boost::make_shared<Socket<N>>(N::defaultIoService(), SslContext<N>{});
   const size_t maxPayload = 10000;
   ReceiveMessageContinuous<N> receive;
   receive(socket, SslEnabled{false}, maxPayload,
-    [&](Error e, const Message*) mutable {
+    [&](ErrorCode<N> e, const Message*) mutable {
       if (e)
       {
         promiseError.setValue(e);
@@ -281,7 +281,7 @@ TYPED_TEST(NetReceiveMessageContinuous, AsyncReadCalledUntilSomethingIsActuallyR
     }
   );
   ASSERT_TRUE(futureError.hasValue());
-  ASSERT_EQ(Error{Error::unknown}, futureError.value());
+  ASSERT_EQ(ErrorCode<N>{ErrorCode<N>::unknown}, futureError.value());
   ASSERT_EQ(11, callCount);
   std::lock_guard<std::mutex> lock{writeThreadsMutex};
   for (auto& t: writeThreads) t.join();
@@ -295,10 +295,10 @@ namespace mock
   {
     qi::uint32_t _magic = qi::MessagePrivate::magic;
     qi::uint32_t _headerSize = 10u;
-    Error _headerError = {};
-    Error _dataError = {};
+    N::error_code_type _headerError = {};
+    N::error_code_type _dataError = {};
     int _callCount = 0;
-    void operator()(Socket::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h)
+    void operator()(N::ssl_socket_type::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h)
     {
       ++_callCount;
       if (_callCount % 2 == 1)
@@ -318,25 +318,25 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecauseOfBadMessageCook
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   std::vector<std::thread> threads;
-  AsyncReadNextLayerHeaderThenData h;
+  mock::AsyncReadNextLayerHeaderThenData h;
   ++h._magic; // make it wrong
   auto _ = scopedSetAndRestore(
     N::_async_read_next_layer,
-    [=, &threads](Socket::next_layer_type& s, N::_mutable_buffer_sequence buf, N::_anyTransferHandler handler) mutable {
+    [=, &threads](SslSocket<N>::next_layer_type& s, N::_mutable_buffer_sequence buf, N::_anyTransferHandler handler) mutable {
       threads.push_back(std::thread{[=]() mutable {h(s, buf, handler);}});
     }
   );
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
-  Promise<Error> promiseError;
+  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
+  Promise<ErrorCode<N>> promiseError;
   const size_t maxPayload = 10000;
   ReceiveMessageContinuous<N> receive;
-  receive(socket, SslEnabled{false}, maxPayload, [=](Error e, const Message*) mutable {
+  receive(socket, SslEnabled{false}, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
     promiseError.setValue(e);
     return false;
   });
-  ASSERT_EQ(fault<Error>(), promiseError.future().value());
+  ASSERT_EQ(fault<ErrorCode<N>>(), promiseError.future().value());
   for (auto& t: threads) t.join();
 }
 
@@ -344,57 +344,57 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecausePayloadIsTooBig)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   const size_t maxPayload = 10000;
-  AsyncReadNextLayerHeaderThenData h;
+  mock::AsyncReadNextLayerHeaderThenData h;
   ++h._headerSize = maxPayload + 1; // make it wrong
   auto _ = scopedSetAndRestore(N::_async_read_next_layer, h);
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
-  Promise<Error> promiseError;
-  Future<Error> futureError = promiseError.future();
+  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
+  Promise<ErrorCode<N>> promiseError;
+  Future<ErrorCode<N>> futureError = promiseError.future();
   ReceiveMessageContinuous<N> receive;
-  receive(socket, SslEnabled{false}, maxPayload, [=](Error e, const Message*) mutable {
+  receive(socket, SslEnabled{false}, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
     promiseError.setValue(e);
     return false;
   });
-  ASSERT_EQ(messageSize<Error>(), futureError.value());
+  ASSERT_EQ(messageSize<ErrorCode<N>>(), futureError.value());
 }
 
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadData)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  AsyncReadNextLayerHeaderThenData h;
-  h._dataError = Error{Error::unknown}; // read data will fail
+  using N = mock::Network;
+  mock::AsyncReadNextLayerHeaderThenData h;
+  h._dataError = ErrorCode<N>{ErrorCode<N>::unknown}; // read data will fail
   auto _ = scopedSetAndRestore(N::_async_read_next_layer, h);
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
   const size_t maxPayload = 10000;
-  Promise<Error> promiseError;
-  Future<Error> futureError = promiseError.future();
+  Promise<ErrorCode<N>> promiseError;
+  Future<ErrorCode<N>> futureError = promiseError.future();
   ReceiveMessageContinuous<N> receive;
-  receive(socket, SslEnabled{false}, maxPayload, [=](Error e, const Message*) mutable {
+  receive(socket, SslEnabled{false}, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
     promiseError.setValue(e);
     return false;
   });
-  ASSERT_EQ(Error{Error::unknown}, futureError.value());
-  ASSERT_EQ(2, N::_async_read_next_layer.target<AsyncReadNextLayerHeaderThenData>()->_callCount);
+  ASSERT_EQ(ErrorCode<N>{ErrorCode<N>::unknown}, futureError.value());
+  ASSERT_EQ(2, N::_async_read_next_layer.target<mock::AsyncReadNextLayerHeaderThenData>()->_callCount);
 }
 
 TYPED_TEST(NetReceiveMessageContinuous, SeveralMessagesHandled)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  auto _ = scopedSetAndRestore(N::_async_read_next_layer, AsyncReadNextLayerHeaderThenData{});
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+  using N = mock::Network;
+  auto _ = scopedSetAndRestore(N::_async_read_next_layer, mock::AsyncReadNextLayerHeaderThenData{});
+  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
   int messageHandledCount = 0;
   const int maxMessageHandledCount = 11;
   const size_t maxPayload = 10000;
-  Promise<Error> promiseError;
-  Future<Error> futureError = promiseError.future();
+  Promise<ErrorCode<N>> promiseError;
+  Future<ErrorCode<N>> futureError = promiseError.future();
   ReceiveMessageContinuous<N> receive;
-  receive(socket, SslEnabled{false}, maxPayload, [&](Error e, const Message*) mutable {
+  receive(socket, SslEnabled{false}, maxPayload, [&](ErrorCode<N> e, const Message*) mutable {
     ++messageHandledCount;
     if (e)
     {
@@ -403,14 +403,14 @@ TYPED_TEST(NetReceiveMessageContinuous, SeveralMessagesHandled)
     }
     if (messageHandledCount == maxMessageHandledCount)
     {
-      promiseError.setValue(success<Error>());
+      promiseError.setValue(success<ErrorCode<N>>());
     }
     return messageHandledCount < maxMessageHandledCount; // success until the max th message is received.
   });
-  ASSERT_EQ(success<Error>(), futureError.value());
+  ASSERT_EQ(success<ErrorCode<N>>(), futureError.value());
   ASSERT_EQ(maxMessageHandledCount, messageHandledCount);
   ASSERT_EQ(2 * maxMessageHandledCount,
-    N::_async_read_next_layer.target<AsyncReadNextLayerHeaderThenData>()->_callCount);
+    N::_async_read_next_layer.target<mock::AsyncReadNextLayerHeaderThenData>()->_callCount);
 }
 
 TEST(NetReceiveMessage, Asio)

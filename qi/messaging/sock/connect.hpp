@@ -12,7 +12,9 @@
 #include <qi/future.hpp>
 #include <qi/clock.hpp>
 #include <qi/macroregular.hpp>
+#include <qi/moveoncopy.hpp>
 #include <qi/os.hpp>
+#include <qi/utility.hpp>
 
 /// @file
 /// Contains functions and types related to socket connection.
@@ -20,10 +22,10 @@
 namespace qi { namespace sock {
 
   /// Network N
-  template<typename N>
-  SocketPtr<N> createSocket(IoService<N>& io, SslEnabled ssl, SslContext<N>& context)
+  template<typename N, typename SslContext>
+  SocketPtr<N> createSocket(IoService<N>& io, SslEnabled ssl, SslContext&& context)
   {
-    auto socket = boost::make_shared<SslSocket<N>>(io, context);
+    auto socket = makeSocketPtr<N>(io, fwd<SslContext>(context));
     if (*ssl)
     {
       socket->set_verify_mode(N::sslVerifyNone());
@@ -75,7 +77,7 @@ namespace qi { namespace sock {
           return;
         }
         // Options can be set only once the socket is connected.
-        setSocketOptions<N>(*socket, tcpPingTimeout);
+        setSocketOptions<N>(socket, tcpPingTimeout);
         if (*ssl)
         {
           sslHandshake<N>(socket, side, onComplete, setupStop);
@@ -150,15 +152,16 @@ namespace qi { namespace sock {
   // Procedure:
     /// Procedure<void (ErrorCode<N>, SocketPtr)> Proc,
     /// Procedure<void (Resolver<N>& || SocketPtr<N>)> Proc1
-    template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
-    void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context,
+    template<typename SslContext, typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+    void operator()(const Url& url, SslEnabled ssl, SslContext&& context,
         IpV6Enabled ipV6, Handshake side, Proc onComplete,
         const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
         Proc1 setupStop = Proc1{})
     {
       auto& io = _resolve.getIoService();
+      auto ctx = makeMoveOnCopy(makeMutableStore(fwd<SslContext>(context)));
       _resolve(url, ipV6,
-        [=, &io, &context](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
+        [=, &io](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
           if (erc)
           {
             onComplete(erc, {});
@@ -169,7 +172,7 @@ namespace qi { namespace sock {
             onComplete(hostNotFound<ErrorCode<N>>(), {});
             return;
           }
-          auto socket = createSocket<N>(io, ssl, context);
+          auto socket = createSocket<N>(io, ssl, fwd<SslContext>(**ctx));
           connect<N>(socket, entry.value(), onComplete, ssl, side, tcpPingTimeout, setupStop);
         },
         setupStop
@@ -259,12 +262,12 @@ namespace qi { namespace sock {
     }
   // Procedure:
     /// Procedure<void (Resolver<N>& || SocketPtr<N>)> Proc
-    template<typename Proc = PolymorphicConstantFunction<void>>
-    void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context, IpV6Enabled ipV6,
+    template<typename SslContext, typename Proc = PolymorphicConstantFunction<void>>
+    void operator()(const Url& url, SslEnabled ssl, SslContext&& context, IpV6Enabled ipV6,
       Handshake side, const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
       Proc setupStop = {})
     {
-      _connect(url, ssl, context, ipV6, side, ConnectHandler<N>{_complete}, tcpPingTimeout,
+      _connect(url, ssl, fwd<SslContext>(context), ipV6, side, ConnectHandler<N>{_complete}, tcpPingTimeout,
         setupStop);
     }
 

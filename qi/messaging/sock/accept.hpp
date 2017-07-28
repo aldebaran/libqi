@@ -71,7 +71,7 @@ namespace qi { namespace sock {
   void acceptConnection(Acceptor<N>& acceptor, SslContext<N>& context,
     Proc onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
-    SocketPtr<N> socket = boost::make_shared<SslSocket<N>>(acceptor.get_io_service(), std::ref(context));
+    auto socket = makeSocketPtr<N>(acceptor.get_io_service(), std::ref(context));
     acceptor.async_accept((*socket).next_layer(), syncTransfo(lifetimeTransfo(
       [=, &acceptor, &context](const ErrorCode<N>& erc) mutable {
         if (onAccept(erc, socket)) // true means "must continue"

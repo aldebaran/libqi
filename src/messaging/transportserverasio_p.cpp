@@ -16,6 +16,7 @@
 #include "transportserver.hpp"
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
+#include <qi/messaging/sock/traits.hpp>
 
 #include <qi/eventloop.hpp>
 
@@ -30,7 +31,7 @@ namespace qi
 
   void _onAccept(TransportServerImplPtr p,
                  const boost::system::error_code& erc,
-                 boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>> s
+                 sock::SocketPtr<sock::NetworkAsio> s
                  )
   {
     boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
@@ -54,7 +55,7 @@ namespace qi
   }
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
-    boost::shared_ptr<boost::asio::ssl::stream<boost::asio::ip::tcp::socket> > s
+    sock::SocketPtr<sock::NetworkAsio> s
     )
   {
     qiLogDebug() << this << " onAccept";
@@ -92,7 +93,7 @@ namespace qi
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
         }
     }
-    _s = boost::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(_acceptor->get_io_service(), std::ref(_sslContext));
+    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), std::ref(_sslContext));
     _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
@@ -295,7 +296,7 @@ namespace qi
       _sslContext.use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
-    _s = boost::make_shared<boost::asio::ssl::stream<boost::asio::ip::tcp::socket>>(_acceptor->get_io_service(), std::ref(_sslContext));
+    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), std::ref(_sslContext));
     _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);

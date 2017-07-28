@@ -10,6 +10,7 @@
 #include <qi/messaging/sock/connect.hpp>
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/traits.hpp>
+#include <qi/utility.hpp>
 
 namespace qi
 {
@@ -197,13 +198,13 @@ namespace qi
         {
         }
 
-        template<typename Proc = PolymorphicConstantFunction<void>>
-        void start(const Url& url, SslEnabled ssl, SslContext<N>& context,
+        template<typename SslContext, typename Proc = PolymorphicConstantFunction<void>>
+        void start(const Url& url, SslEnabled ssl, SslContext&& context,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
           Proc setupCancel = Proc{})
         {
           setContinuation();
-          _connect(url, ssl, context, ipV6, side, tcpPingTimeout, setupCancel);
+          _connect(url, ssl, fwd<SslContext>(context), ipV6, side, tcpPingTimeout, setupCancel);
         }
 
         template<typename Proc = PolymorphicConstantFunction<void>>
@@ -214,11 +215,12 @@ namespace qi
         }
       };
 
-      Connecting(IoService<N>& io, const Url& url, SslEnabled ssl, SslContext<N>& context,
+      template<typename SslContext>
+      Connecting(IoService<N>& io, const Url& url, SslEnabled ssl, SslContext&& context,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
         : _impl(std::make_shared<Impl>(io))
       {
-        _impl->start(url, ssl, context, ipV6, side, tcpPingTimeout,
+        _impl->start(url, ssl, fwd<SslContext>(context), ipV6, side, tcpPingTimeout,
           SetupConnectionStop<N>{_impl->_promiseStop.future()});
       }
       Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<N>& s, Handshake side)

@@ -7,11 +7,11 @@
 namespace mock
 {
   N::_resolver_entry* N::resolver_type::iterator::_sentinel = nullptr;
-  Resolver::_anyAsyncResolver Resolver::async_resolve = defaultAsyncResolve;
-  LowestLayer::_anyAsyncConnecter LowestLayer::async_connect = defaultAsyncConnect;
-  LowestLayer::_anyCanceler LowestLayer::cancel = defaultCancel;
-  LowestLayer::_anyShutdowner LowestLayer::shutdown = defaultShutdown;
-  Socket::_anyAsyncHandshaker Socket::async_handshake = defaultAsyncHandshake;
+  N::resolver_type::_anyAsyncResolver N::resolver_type::async_resolve = defaultAsyncResolve;
+  _LowestLayer::_anyAsyncConnecter _LowestLayer::async_connect = defaultAsyncConnect;
+  _LowestLayer::_anyCanceler _LowestLayer::cancel = defaultCancel;
+  _LowestLayer::_anyShutdowner _LowestLayer::shutdown = defaultShutdown;
+  N::ssl_socket_type::_anyAsyncHandshaker N::ssl_socket_type::async_handshake = defaultAsyncHandshake;
   N::acceptor_type::_anyAsyncAccepter N::acceptor_type::async_accept = defaultAsyncAccept;
   N::_anyAsyncReaderSocket N::_async_read_socket = defaultAsyncReadSocket;
   N::_anyAsyncReaderNextLayer N::_async_read_next_layer = defaultAsyncReadNextLayer;

@@ -21,7 +21,7 @@ static const qi::MilliSeconds defaultTimeout{ 2000 };
 namespace mock
 {
   template<typename H> // NetHandler H
-  void readHeader(N::_mutable_buffer_sequence buf, H h, qi::uint32_t magic = qi::MessagePrivate::magic, qi::uint32_t size = 10u, Error error = {})
+  void readHeader(N::_mutable_buffer_sequence buf, H h, qi::uint32_t magic = qi::MessagePrivate::magic, qi::uint32_t size = 10u, N::error_code_type error = {})
   {
     qi::MessagePrivate::MessageHeader header;
     header.magic = magic;
@@ -38,10 +38,10 @@ namespace mock
   {
     qi::uint32_t _magic = qi::MessagePrivate::magic;
     qi::uint32_t _headerSize = 10u;
-    Error _headerError = {};
-    Error _dataError = {};
+    N::error_code_type _headerError = {};
+    N::error_code_type _dataError = {};
     int _callCount = 0;
-    void operator()(Socket::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h)
+    void operator()(N::ssl_socket_type::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h)
     {
       ++_callCount;
       if (_callCount % 2 == 1)
@@ -404,15 +404,14 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 {
   using namespace qi;
   using namespace qi::sock;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
 
   std::thread threadResolve;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query q, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Resolver<N>::query q, Resolver<N>::_anyResolveHandler h) {
         threadResolve = std::thread{[=] {
-          defaultAsyncResolve(q, h);
+          mock::defaultAsyncResolve(q, h);
         }};
     }
   );
@@ -421,12 +420,12 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
   });
 
   Promise<void> promiseAsyncConnectStarted;
-  Promise<Error> promiseAsyncConnectResult;
+  Promise<ErrorCode<N>> promiseAsyncConnectResult;
 
   // The async connect waits for a promise to be set before finishing.
   std::thread threadConnect;
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
+    Lowest<SslSocket<N>>::async_connect,
     [&](N::_resolver_entry, N::_anyHandler h) mutable {
       threadConnect = std::thread{[=]() mutable {
         promiseAsyncConnectStarted.setValue(0);
@@ -439,11 +438,11 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
     threadConnect.join();
   });
 
-  using LowestLayer = N::ssl_socket_type::lowest_layer_type;
+  using LowestLayer = Lowest<SslSocket<N>>;
   auto scopedShutdown = scopedSetAndRestore(
     LowestLayer::shutdown,
-    [=](LowestLayer::shutdown_type, Error) mutable {
-      auto err = operationAborted<Error>();
+    [=](LowestLayer::shutdown_type, ErrorCode<N>) mutable {
+      auto err = operationAborted<ErrorCode<N>>();
       promiseAsyncConnectResult.setValue(err);
     }
   );
@@ -465,19 +464,18 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 {
   using namespace qi;
   using namespace qi::sock;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
 
-  Promise<Error> promiseAsyncReadWrite;
+  Promise<ErrorCode<N>> promiseAsyncReadWrite;
 
-  Resolver::async_resolve = defaultAsyncResolve;
-  LowestLayer::async_connect = defaultAsyncConnect;
+  Resolver<N>::async_resolve = mock::defaultAsyncResolve;
+  Lowest<SslSocket<N>>::async_connect = mock::defaultAsyncConnect;
   std::vector<std::thread> readThreads, writeThreads;
 
   // Make sure async read and async write block until cancel happens.
   auto scopedRead = scopedSetAndRestore(
     N::_async_read_next_layer,
-    [=, &readThreads](Socket::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
+    [=, &readThreads](SslSocket<N>::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       readThreads.push_back(std::thread{[=] {
         h(promiseAsyncReadWrite.future().value(), 0);
       }});
@@ -485,7 +483,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   );
   auto scopedWrite = scopedSetAndRestore(
     N::_async_write_next_layer,
-    [=, &writeThreads](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+    [=, &writeThreads](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
         h(promiseAsyncReadWrite.future().value(), 0);
       }});
@@ -494,15 +492,15 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   auto scopedCancel = scopedSetAndRestore(
     N::ssl_socket_type::lowest_layer_type::cancel,
     [=]() mutable {
-      promiseAsyncReadWrite.setValue(operationAborted<Error>());
+      promiseAsyncReadWrite.setValue(operationAborted<ErrorCode<N>>());
     }
   );
 
   Promise<void> promiseShutdownStarted;
   Promise<void> promiseCanShutdown;
   auto scopedShutdown = scopedSetAndRestore(
-    LowestLayer::shutdown,
-    [=](LowestLayer::shutdown_type, Error) mutable {
+    Lowest<SslSocket<N>>::shutdown,
+    [=](Lowest<SslSocket<N>>::shutdown_type, ErrorCode<N>) mutable {
       promiseShutdownStarted.setValue(0);
       promiseCanShutdown.future().wait();
     }

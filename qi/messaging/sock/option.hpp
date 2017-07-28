@@ -5,6 +5,7 @@
 #include <boost/optional.hpp>
 #include <qi/messaging/sock/concept.hpp>
 #include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/socketptr.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/log.hpp>
 #include <qi/macroregular.hpp>
@@ -69,12 +70,12 @@ namespace qi { namespace sock {
   ///
   /// Network N
   template<typename N>
-  void setSocketOptions(SslSocket<N>& socket, const boost::optional<Seconds>& timeout)
+  void setSocketOptions(const SocketPtr<N>& socket, const boost::optional<Seconds>& timeout)
   {
     // Transmit each Message without delay
     try
     {
-      socket.lowest_layer().set_option(sock::SocketOptionNoDelay<N>{true});
+      socket->lowest_layer().set_option(sock::SocketOptionNoDelay<N>{true});
     }
     catch (const std::exception& e)
     {
@@ -88,7 +89,7 @@ namespace qi { namespace sock {
     // We cannot properly honor a timeout less than 10 seconds.
     using I = traits::Decay<decltype(timeout.value().count())>;
     auto ajustedTimeout = std::max(timeout.value().count(), I(10));
-    auto handle = socket.lowest_layer().native_handle();
+    auto handle = socket->lowest_layer().native_handle();
     static const auto intMax = std::numeric_limits<int>::max();
     if (ajustedTimeout > I(intMax))
     {

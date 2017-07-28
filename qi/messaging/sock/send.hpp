@@ -156,7 +156,7 @@ namespace qi { namespace sock {
   /// callback passed to the network. A typical use is to strand the callback.
   ///
   /// Network N, Mutable<SslSocket<N>> S
-  template<typename N, typename S = boost::shared_ptr<SslSocket<N>>>
+  template<typename N, typename S = SocketPtr<N>>
   struct SendMessageEnqueue
   {
     using ReadableMessage = std::list<Message>::const_iterator;

@@ -152,8 +152,6 @@ namespace mock
 
       struct next_layer_type {} _next_layer;
       next_layer_type& next_layer() {return _next_layer;}
-
-      friend int scopelock(ssl_socket_type) {return 0;}
     };
     struct acceptor_type
     {
@@ -240,13 +238,15 @@ namespace mock
       return {b, b + maxSizeInBytes};
     }
 
+    using _socket = qi::sock::Socket<Network>;
+
     using const_buffer_type = _const_buffer_sequence;
     using _anyTransferHandler = std::function<void (error_code_type, std::size_t)>;
-    using _anyAsyncReaderSocket = std::function<void (ssl_socket_type&, _mutable_buffer_sequence, _anyTransferHandler)>;
+    using _anyAsyncReaderSocket = std::function<void (_socket&, _mutable_buffer_sequence, _anyTransferHandler)>;
     static _anyAsyncReaderSocket _async_read_socket;
 
     template<typename NetTransferHandler>
-    static void async_read(ssl_socket_type& s, _mutable_buffer_sequence b, NetTransferHandler h)
+    static void async_read(_socket& s, _mutable_buffer_sequence b, NetTransferHandler h)
     {
       _async_read_socket(s, b, h);
     }
@@ -260,7 +260,7 @@ namespace mock
       _async_read_next_layer(s, b, h);
     }
 
-    using _anyAsyncWriterSocket = std::function<void (ssl_socket_type&, const std::vector<_const_buffer_sequence>&, _anyTransferHandler)>;
+    using _anyAsyncWriterSocket = std::function<void (_socket&, const std::vector<_const_buffer_sequence>&, _anyTransferHandler)>;
     static _anyAsyncWriterSocket _async_write_socket;
 
     template<typename NetSslSocket, typename NetTransferHandler>
@@ -343,26 +343,22 @@ inline ErrorCode<mock::Network> connectionRefused<ErrorCode<mock::Network>>()
 namespace mock
 {
   using N = Network;
-  using Error = N::error_code_type;
-  using Resolver = N::resolver_type;
-  using Socket = N::ssl_socket_type;
-  using LowestLayer = Socket::lowest_layer_type;
-  using SocketPtr = boost::shared_ptr<Socket>;
+  using _LowestLayer = N::ssl_socket_type::lowest_layer_type;
 
-  inline void defaultAsyncResolve(Resolver::query q, Resolver::_anyResolveHandler h)
+  inline void defaultAsyncResolve(N::resolver_type::query q, N::resolver_type::_anyResolveHandler h)
   {
     std::thread{[=] {
       static N::_resolver_entry entryIpV4{{{false, q._host}}};
       static N::_resolver_entry entryIpV6{{{true, q._host}}};
       static N::_resolver_entry* a[] = {&entryIpV4, &entryIpV6, nullptr};
-      h(qi::sock::success<Error>(), Resolver::iterator{a});
+      h(qi::sock::success<N::error_code_type>(), N::resolver_type::iterator{a});
     }}.join();
   }
 
   inline void defaultAsyncConnect(N::_resolver_entry, N::_anyHandler h)
   {
     std::thread{[=] {
-      h(Error{});
+      h(N::error_code_type{});
     }}.join();
   }
 
@@ -370,49 +366,49 @@ namespace mock
   {
   }
 
-  inline void defaultShutdown(LowestLayer::shutdown_type, N::error_code_type)
+  inline void defaultShutdown(_LowestLayer::shutdown_type, N::error_code_type)
   {
   }
 
-  inline void defaultAsyncHandshake(Socket::handshake_type, N::_anyHandler h)
+  inline void defaultAsyncHandshake(N::ssl_socket_type::handshake_type, N::_anyHandler h)
   {
     std::thread{[=] {
-      h(Error{});
+      h(N::error_code_type{});
     }}.join();
   }
 
-  inline void defaultAsyncAccept(Socket::next_layer_type&, N::_anyHandler h)
+  inline void defaultAsyncAccept(N::ssl_socket_type::next_layer_type&, N::_anyHandler h)
   {
     std::thread{[=] {
-      h(Error{});
+      h(N::error_code_type{});
     }}.join();
   }
 
-  inline void defaultAsyncReadSocket(Socket&, N::_mutable_buffer_sequence b, N::_anyTransferHandler h)
+  inline void defaultAsyncReadSocket(qi::sock::SocketWithContext<N>&, N::_mutable_buffer_sequence b, N::_anyTransferHandler h)
   {
     std::thread{[=] {
-      h(Error{}, 0u);
+      h(N::error_code_type{}, 0u);
     }}.detach();
   }
 
-  inline void defaultAsyncReadNextLayer(Socket::next_layer_type&, N::_mutable_buffer_sequence b, N::_anyTransferHandler h)
+  inline void defaultAsyncReadNextLayer(N::ssl_socket_type::next_layer_type&, N::_mutable_buffer_sequence b, N::_anyTransferHandler h)
   {
     std::thread{[=] {
-      h(Error{}, 0u);
+      h(N::error_code_type{}, 0u);
     }}.detach();
   }
 
-  inline void defaultAsyncWriteSocket(Socket&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h)
+  inline void defaultAsyncWriteSocket(qi::sock::SocketWithContext<N>&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h)
   {
     std::thread{[=] {
-      h(Error{}, 0u);
+      h(N::error_code_type{}, 0u);
     }}.detach();
   }
 
-  inline void defaultAsyncWriteNextLayer(Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h)
+  inline void defaultAsyncWriteNextLayer(N::ssl_socket_type::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h)
   {
     std::thread{[=] {
-      h(Error{}, 0u);
+      h(N::error_code_type{}, 0u);
     }}.detach();
   }
 

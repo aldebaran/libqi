@@ -18,26 +18,24 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
 {
   using namespace qi;
   using namespace qi::sock;
-  using mock::N;
-  using mock::Resolver;
+  using N = mock::Network;
   std::thread resolveThread;
   Promise<void> nukeObject;
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectSocketFuture object is destroyed.
   auto _ = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Query<Resolver<N>>, Resolver<N>::_anyResolveHandler h) {
       // We launch asynchronously to return immediately.
       resolveThread = std::thread{[=]{
         // Wait for the object destruction.
         nukeObject.future().wait();
         // Now call the handler.
-        h(operationAborted<ErrorCode<N>>(), Resolver::iterator{});
+        h(operationAborted<ErrorCode<N>>(), Resolver<N>::iterator{});
       }};
     }
   );
   ConnectSocket<N>* p = nullptr;
-  using SocketPtr = boost::shared_ptr<SslSocket<N>>;
   Promise<ErrorCode<N>> promiseError;
   IoService<N>& io = N::defaultIoService();
   {
@@ -46,7 +44,7 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
     SslContext<N> context{Method<SslContext<N>>::sslv23};
     connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, std::ref(context),
       IpV6Enabled{false}, Side::client,
-      [=](ErrorCode<N> e, SocketPtr) mutable {
+      [=](ErrorCode<N> e, SocketPtr<N>) mutable {
         promiseError.setValue(e);
       }
     );
@@ -76,11 +74,10 @@ namespace qi { namespace sock {
 template<typename N>
 struct ConnectingWrap
 {
-  using SocketPtr = boost::shared_ptr<SslSocket<N>>;
   using Handshake = HandshakeSide<SslSocket<N>>;
   IoService<N>& _io;
   std::unique_ptr<Connecting<N>> _connecting;
-  Promise<SocketPtr> _complete;
+  Promise<SocketPtr<N>> _complete;
 
   /// Adapt Connecting to behave as ConnectSocket.
   /// This allows to share unit tests for these two types.
@@ -109,7 +106,7 @@ struct ConnectingWrap
   ~ConnectingWrap()
   {
   }
-  Future<SocketPtr> complete() const
+  Future<SocketPtr<N>> complete() const
   {
     return _complete.future();
   }
@@ -131,15 +128,14 @@ TYPED_TEST(NetConnectFuture, FailsOnResolve)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using mock::N;
-  using mock::Resolver;
+  using N = mock::Network;
   std::string receivedHost, receivedPort;
   auto _ = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query q, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Query<Resolver<N>> q, Resolver<N>::_anyResolveHandler h) {
       receivedHost = q._host;
       receivedPort = q._port;
-      h(networkUnreachable<ErrorCode<N>>(), Resolver::iterator{});
+      h(networkUnreachable<ErrorCode<N>>(), Resolver<N>::iterator{});
     }
   );
   IoService<N>& io = N::defaultIoService();
@@ -162,27 +158,25 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
   using namespace qi;
   using namespace qi::sock;
   using namespace boost::algorithm;
-  using mock::N;
-  using mock::Resolver;
+  using N = mock::Network;
   std::thread resolveThread;
   Promise<void> nukeObject;
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto _ = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Query<Resolver<N>>, Resolver<N>::_anyResolveHandler h) {
       // We launch asynchronously to return immediately.
       resolveThread = std::thread{[=]{
         // Wait for the object destruction.
         nukeObject.future().wait();
         // Now call the handler.
-        h(operationAborted<ErrorCode<N>>(), Resolver::iterator{});
+        h(operationAborted<ErrorCode<N>>(), Resolver<N>::iterator{});
       }};
     }
   );
   ConnectFuture* p = nullptr;
-  using SocketPtr = boost::shared_ptr<SslSocket<N>>;
-  qi::Future<SocketPtr> connected;
+  qi::Future<SocketPtr<N>> connected;
   IoService<N>& io = N::defaultIoService();
   {
     using Side = HandshakeSide<SslSocket<N>>;
@@ -210,24 +204,23 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
   using namespace qi;
   using namespace qi::sock;
   using namespace boost::algorithm;
-  using namespace mock;
-  using mock::Resolver;
+  using N = mock::Network;
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query q, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Query<Resolver<N>> q, Resolver<N>::_anyResolveHandler h) {
       static N::_resolver_entry entryIpV6{{{true}}}, entryIpV4{{{false, q._host}}};
       static N::_resolver_entry* a[] = {&entryIpV6, &entryIpV6, &entryIpV4, nullptr};
-      h(Error{}, Resolver::iterator{a});
+      h(ErrorCode<N>{}, Resolver<N>::iterator{a});
     }
   );
   std::string resolvedHost;
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
+    Lowest<SslSocket<N>>::async_connect,
     [&](N::_resolver_entry e, N::_anyHandler h) {
       resolvedHost = e._e._addr._value;
-      h(Error{Error::networkUnreachable});
+      h(ErrorCode<N>{ErrorCode<N>::networkUnreachable});
     }
   );
   IoService<N>& io = N::defaultIoService();
@@ -247,17 +240,16 @@ TYPED_TEST(NetConnectFuture, OnlyIpV6EndpointsResolvedButIpV6NotAllowed)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
   using Entry = N::_resolver_entry;
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto _ = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [](Resolver::query, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [](Query<Resolver<N>>, Resolver<N>::_anyResolveHandler h) {
       static Entry entryIpV6{{{true}}};
       static Entry* a[] = {&entryIpV6, &entryIpV6, &entryIpV6, nullptr};
-      h(success<Error>(), Resolver::iterator{a});
+      h(success<ErrorCode<N>>(), Resolver<N>::iterator{a});
     }
   );
   IoService<N>& io = N::defaultIoService();
@@ -278,18 +270,17 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
   using namespace qi;
   using namespace qi::sock;
   using namespace boost::algorithm;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
   std::thread resolveThread;
   qi::Promise<void> nukeObject;
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
+    Lowest<SslSocket<N>>::async_connect,
     [=, &resolveThread](N::_resolver_entry, N::_anyHandler h) {
       resolveThread = std::thread{[=]{
         // Wait for the object destruction.
@@ -298,8 +289,7 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
       }};
     }
   );
-  using SocketPtr = boost::shared_ptr<SslSocket<N>>;
-  Future<SocketPtr> connected;
+  Future<sock::SocketPtr<N>> connected;
   IoService<N>& io = N::defaultIoService();
   {
     using Side = HandshakeSide<SslSocket<N>>;
@@ -322,19 +312,17 @@ TYPED_TEST(NetConnectFuture, FailsOnConnect)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using namespace boost::algorithm;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   std::string resolvedHost;
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
+    Lowest<SslSocket<N>>::async_connect,
     [&](N::_resolver_entry e, N::_anyHandler h) {
       resolvedHost = e._e._addr._value;
-      h(Error{Error::connectionRefused});
+      h(ErrorCode<N>{ErrorCode<N>::connectionRefused});
     }
   );
   IoService<N>& io = N::defaultIoService();
@@ -353,15 +341,14 @@ TYPED_TEST(NetConnectFuture, SucceedsNonSsl)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
-    defaultAsyncConnect
+    Lowest<SslSocket<N>>::async_connect,
+    mock::defaultAsyncConnect
   );
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<SslSocket<N>>;
@@ -377,21 +364,19 @@ TYPED_TEST(NetConnectFuture, FailsOnHandshake)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using namespace boost::algorithm;
-  using mock::Resolver;
-  using namespace mock;
+  using N = mock::Network;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
-    defaultAsyncConnect
+    Lowest<SslSocket<N>>::async_connect,
+    mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    Socket::async_handshake,
-    [=](Socket::handshake_type, N::_anyHandler h) {
-      h(Error{Error::sslErrors});
+    SslSocket<N>::async_handshake,
+    [=](SslSocket<N>::handshake_type, N::_anyHandler h) {
+      h(ErrorCode<N>{ErrorCode<N>::sslErrors});
     }
   );
   IoService<N>& io = N::defaultIoService();
@@ -412,18 +397,16 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using namespace boost::algorithm;
-  using mock::Resolver;
-  using namespace mock;
-  Resolver::async_resolve = defaultAsyncResolve;
-  LowestLayer::async_connect = defaultAsyncConnect;
+  using N = mock::Network;
+  Resolver<N>::async_resolve = mock::defaultAsyncResolve;
+  Lowest<SslSocket<N>>::async_connect = mock::defaultAsyncConnect;
   qi::Promise<void> nukeObject;
   std::thread t;
   // The handshake is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto _ = scopedSetAndRestore(
-    Socket::async_handshake,
-    [&](Socket::handshake_type, N::_anyHandler h) {
+    SslSocket<N>::async_handshake,
+    [&](SslSocket<N>::handshake_type, N::_anyHandler h) {
       // We launch asynchronously to return immediately.
       t = std::move(std::thread([=]{
         // Wait for the object destruction.
@@ -434,7 +417,7 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
     }
   );
   ConnectFuture* p = nullptr;
-  qi::Future<boost::shared_ptr<SslSocket<N>>> connected;
+  qi::Future<SocketPtr<N>> connected;
   IoService<N>& io = N::defaultIoService();
   {
     using Side = HandshakeSide<SslSocket<N>>;
@@ -461,19 +444,18 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
   using ConnectFuture = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  using mock::Resolver;
+  using N = mock::Network;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
-    defaultAsyncConnect
+    Lowest<SslSocket<N>>::async_connect,
+    mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    Socket::async_handshake,
-    defaultAsyncHandshake
+    SslSocket<N>::async_handshake,
+    mock::defaultAsyncHandshake
   );
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<SslSocket<N>>;
@@ -487,12 +469,12 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
 template<typename N>
 struct SetupStop
 {
-  using I = mock::Resolver::iterator;
+  using I = qi::sock::Iterator<qi::sock::Resolver<N>>;
 
   qi::Future<void> futStopResolve;
   qi::Future<void> futStopConnect;
   bool connectAlreadySetup;
-  qi::Promise<std::pair<mock::Error, I>> promiseResolve;
+  qi::Promise<std::pair<qi::sock::ErrorCode<N>, I>> promiseResolve;
   qi::Promise<qi::sock::ErrorCode<N>> promiseConnect;
 
   void operator()(qi::sock::Resolver<N>&)
@@ -526,18 +508,16 @@ TEST(NetConnectFutureStop, WhileResolving)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  using mock::Resolver;
-  using I = N::resolver_type::iterator;
+  using N = mock::Network;
 
-  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<std::pair<ErrorCode<N>, Iterator<Resolver<N>>>> promiseResolve;
   Promise<void> promiseStopResolve;
   Promise<void> promiseStopConnect;
   Promise<ErrorCode<N>> promiseConnect;
   std::thread threadResolve;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    [&](Resolver::query, Resolver::_anyResolveHandler h) {
+    Resolver<N>::async_resolve,
+    [&](Query<Resolver<N>>, Resolver<N>::_anyResolveHandler h) {
       threadResolve = std::thread{[=]() mutable {
         // Block until the resolve promise has been set.
         auto p = promiseResolve.future().value();
@@ -546,12 +526,12 @@ TEST(NetConnectFutureStop, WhileResolving)
     }
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
-    defaultAsyncConnect
+    Lowest<SslSocket<N>>::async_connect,
+    mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    Socket::async_handshake,
-    defaultAsyncHandshake
+    SslSocket<N>::async_handshake,
+    mock::defaultAsyncHandshake
   );
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<SslSocket<N>>;
@@ -578,21 +558,19 @@ TEST(NetConnectFutureStop, WhileConnecting)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  using mock::Resolver;
-  using I = N::resolver_type::iterator;
+  using N = mock::Network;
 
-  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<std::pair<ErrorCode<N>, Iterator<Resolver<N>>>> promiseResolve;
   Promise<void> promiseStopResolve;
   Promise<void> promiseStopConnect;
   Promise<ErrorCode<N>> promiseConnect;
   std::thread threadConnect;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
+    Lowest<SslSocket<N>>::async_connect,
     [&](N::_resolver_entry, N::_anyHandler h) {
       threadConnect = std::thread{[=]() mutable {
         // Block until the resolve promise has been set.
@@ -601,8 +579,8 @@ TEST(NetConnectFutureStop, WhileConnecting)
     }
   );
   auto scopedHandshake = scopedSetAndRestore(
-    Socket::async_handshake,
-    defaultAsyncHandshake
+    SslSocket<N>::async_handshake,
+    mock::defaultAsyncHandshake
   );
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<SslSocket<N>>;
@@ -629,25 +607,23 @@ TEST(NetConnectFutureStop, WhileHandshaking)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
-  using mock::Resolver;
-  using I = N::resolver_type::iterator;
+  using N = mock::Network;
 
-  Promise<std::pair<Error, I>> promiseResolve;
+  Promise<std::pair<ErrorCode<N>, Iterator<Resolver<N>>>> promiseResolve;
   Promise<void> promiseStopResolve;
   Promise<void> promiseStopConnect;
   Promise<ErrorCode<N>> promiseConnect;
   std::thread threadHandshake;
   auto scopedResolve = scopedSetAndRestore(
-    Resolver::async_resolve,
-    defaultAsyncResolve
+    Resolver<N>::async_resolve,
+    mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    LowestLayer::async_connect,
-    defaultAsyncConnect
+    Lowest<SslSocket<N>>::async_connect,
+    mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    Socket::async_handshake,
+    SslSocket<N>::async_handshake,
     [&](HandshakeSide<SslSocket<N>>, N::_anyHandler h) {
       threadHandshake = std::thread{[=]() mutable {
         // Block until the resolve promise has been set.

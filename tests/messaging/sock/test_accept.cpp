@@ -24,7 +24,7 @@ TEST(NetAcceptConnectionContinuous, Success)
   using namespace qi::sock;
   using N = mock::Network;
   auto _ = scopedSetAndRestore(
-    N::acceptor_type::async_accept,
+    Acceptor<N>::async_accept,
     mock::defaultAsyncAccept
   );
 
@@ -51,7 +51,7 @@ TEST(NetAcceptConnectionContinuous, AcceptFailed)
   using N = mock::Network;
 
   auto _ = scopedSetAndRestore(
-    N::acceptor_type::async_accept,
+    Acceptor<N>::async_accept,
     [](SslSocket<N>::next_layer_type&, N::_anyHandler h) {
       h(networkUnreachable<ErrorCode<N>>());
     }

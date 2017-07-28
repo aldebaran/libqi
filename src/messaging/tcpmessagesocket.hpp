@@ -265,7 +265,6 @@ namespace qi {
     };
 
     const sock::SslEnabled _ssl;
-    sock::SslContext<N> _sslContext;
     mutable boost::recursive_mutex _stateMutex;
     sock::IoService<N>& _ioService;
 
@@ -322,13 +321,12 @@ namespace qi {
         SocketPtr socket)
     : MessageSocket()
     , _ssl(ssl)
-    , _sslContext{Method::sslv23}
     , _ioService(io)
     , _state{DisconnectedState{}}
   {
     if (socket)
     {
-      sock::setSocketOptions<N>(*socket, getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds}));
+      sock::setSocketOptions<N>(socket, getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds}));
       _state = ConnectingState{io, ssl, socket, Handshake::server};
     }
   }
@@ -401,7 +399,8 @@ namespace qi {
     }
     // This changes the status so that concurrent calls will return in error.
     using Side = sock::HandshakeSide<sock::SslSocket<N>>;
-    _state = ConnectingState{_ioService, url, _ssl, _sslContext, !disableIpV6, Side::client,
+    using Context = sock::SslContext<N>;
+    _state = ConnectingState{_ioService, url, _ssl, Context{Method::sslv23}, !disableIpV6, Side::client,
       getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds})};
     _url = url;
     auto self = shared_from_this();
