@@ -101,6 +101,16 @@ namespace qi { namespace sock {
     return system::error_code{asio::error::connection_refused, system::system_category()};
   }
 
+  template<typename Error>
+  Error shutdown();
+
+  template<>
+  inline boost::system::error_code shutdown<boost::system::error_code>()
+  {
+    using namespace boost;
+    return system::error_code{asio::error::shut_down, system::system_category()};
+  }
+
 }} // namespace qi::sock
 
 #endif // _QI_SOCK_ERROR_HPP

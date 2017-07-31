@@ -316,7 +316,7 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
   auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
 
   Promise<void> promiseReceivedMessage;
-  auto clientSideSocket = makeMessageSocket(this->scheme());//N::defaultIoService(), SslEnabled{true});
+  auto clientSideSocket = makeMessageSocket(this->scheme());
   clientSideSocket->messageReady.connect([&](const Message& msgReceived) mutable {
     if (!messageEqual(msgReceived, msgSent)) throw std::runtime_error("messages are not equal.");
     promiseReceivedMessage.setValue(0);
@@ -440,7 +440,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 
   using LowestLayer = Lowest<SslSocket<N>>;
   auto scopedShutdown = scopedSetAndRestore(
-    LowestLayer::shutdown,
+    LowestLayer::_shutdown,
     [=](LowestLayer::shutdown_type, ErrorCode<N>) mutable {
       auto err = operationAborted<ErrorCode<N>>();
       promiseAsyncConnectResult.setValue(err);
@@ -472,7 +472,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   Lowest<SslSocket<N>>::async_connect = mock::defaultAsyncConnect;
   std::vector<std::thread> readThreads, writeThreads;
 
-  // Make sure async read and async write block until cancel happens.
+  // Make sure async read and async write block until shutdown happens.
   auto scopedRead = scopedSetAndRestore(
     N::_async_read_next_layer,
     [=, &readThreads](SslSocket<N>::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
@@ -489,20 +489,22 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
       }});
     }
   );
-  auto scopedCancel = scopedSetAndRestore(
-    N::ssl_socket_type::lowest_layer_type::cancel,
-    [=]() mutable {
-      promiseAsyncReadWrite.setValue(operationAborted<ErrorCode<N>>());
+
+  using LowestLayer = Lowest<Socket<N>>;
+  auto scopedShutdown = scopedSetAndRestore(
+    LowestLayer::_shutdown,
+    [=](LowestLayer::shutdown_type, ErrorCode<N>&) mutable {
+      promiseAsyncReadWrite.setValue(shutdown<ErrorCode<N>>());
     }
   );
 
-  Promise<void> promiseShutdownStarted;
-  Promise<void> promiseCanShutdown;
-  auto scopedShutdown = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::shutdown,
-    [=](Lowest<SslSocket<N>>::shutdown_type, ErrorCode<N>) mutable {
-      promiseShutdownStarted.setValue(0);
-      promiseCanShutdown.future().wait();
+  Promise<void> promiseCloseStarted;
+  Promise<void> promiseCanFinishClose;
+  auto scopedClose = scopedSetAndRestore(
+    LowestLayer::close,
+    [=](ErrorCode<N>&) mutable {
+      promiseCloseStarted.setValue(0);
+      promiseCanFinishClose.value();
     }
   );
 
@@ -512,18 +514,18 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   Future<void> futDisconnect0 = socket->disconnect();
   ASSERT_TRUE(futDisconnect0.isRunning());
 
-  // Wait for entering shutdown().
-  ASSERT_EQ(FutureState_FinishedWithValue, promiseShutdownStarted.future().wait(defaultTimeout));
+  // Wait for entering close().
+  ASSERT_EQ(FutureState_FinishedWithValue, promiseCloseStarted.future().wait(/*defaultTimeout*/));
 
-  // Subsequent disconnect() cannot complete because shutdown() is blocking.
+  // Subsequent disconnect() cannot complete because close() is blocking.
   Future<void> futDisconnect1 = socket->disconnect();
   ASSERT_TRUE(futDisconnect1.isRunning()) << "finished: " << futDisconnect1.isFinished();
   Future<void> futDisconnect2 = socket->disconnect();
   ASSERT_TRUE(futDisconnect2.isRunning());
 
-  // Now, unblock shutdown() so that disconnecting state and later
+  // Now, unblock close() so that disconnecting state and later
   // disconnected state can complete.
-  promiseCanShutdown.setValue(0);
+  promiseCanFinishClose.setValue(0);
 
   // All future must complete.
   ASSERT_EQ(FutureState_FinishedWithValue, futDisconnect0.wait(defaultTimeout));
@@ -666,7 +668,7 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
     ScopedProcess _{
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
     };
-    std::this_thread::sleep_for(milliseconds{100});
+    std::this_thread::sleep_for(milliseconds{500});
     socket = makeMessageSocket(protocol, getEventLoop());
     Future<void> fut = socket->connect(url);
     ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));

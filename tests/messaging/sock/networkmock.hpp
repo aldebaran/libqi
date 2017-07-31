@@ -45,6 +45,7 @@ namespace mock
         connectionRefused,
         fault,
         messageSize,
+        shutdown,
         unknown
       } _value;
       std::string _message;
@@ -65,6 +66,7 @@ namespace mock
         case connectionRefused: return "connectionRefused";
         case fault: return "fault";
         case messageSize: return "messageSize";
+        case shutdown: return "shutdown";
         case unknown: return "unknown";
         }
         throw std::runtime_error("error_code_type::message(): unknown code.");
@@ -129,10 +131,24 @@ namespace mock
         using _anyCanceler = std::function<void ()>;
         static _anyCanceler cancel;
 
-        using _anyShutdowner = std::function<void (shutdown_type, error_code_type)>;
-        static _anyShutdowner shutdown;
+        using _anyShutdowner = std::function<void (shutdown_type, error_code_type&)>;
+        static _anyShutdowner _shutdown;
 
-        void close(error_code_type) {}
+        static inline void shutdown(shutdown_type type, error_code_type& erc)
+        {
+          _shutdown(type, erc);
+        }
+
+        static inline void shutdown(shutdown_type type)
+        {
+          error_code_type erc;
+          shutdown(type, erc);
+          if (erc) throw std::runtime_error(erc.message());
+        }
+
+        using _anyCloser = std::function<void (error_code_type&)>;
+        static _anyCloser close;
+
         using _native_handle = int;
         _native_handle native_handle() {return {};}
 
@@ -338,6 +354,12 @@ inline ErrorCode<mock::Network> connectionRefused<ErrorCode<mock::Network>>()
   return {ErrorCode<mock::Network>::connectionRefused};
 }
 
+template<>
+inline ErrorCode<mock::Network> shutdown<ErrorCode<mock::Network>>()
+{
+  return {ErrorCode<mock::Network>::shutdown};
+}
+
 }} // namespace qi::sock
 
 namespace mock
@@ -366,7 +388,11 @@ namespace mock
   {
   }
 
-  inline void defaultShutdown(_LowestLayer::shutdown_type, N::error_code_type)
+  inline void defaultShutdown(_LowestLayer::shutdown_type, N::error_code_type&)
+  {
+  }
+
+  inline void defaultClose(N::error_code_type&)
   {
   }
 

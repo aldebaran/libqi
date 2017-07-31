@@ -10,7 +10,8 @@ namespace mock
   N::resolver_type::_anyAsyncResolver N::resolver_type::async_resolve = defaultAsyncResolve;
   _LowestLayer::_anyAsyncConnecter _LowestLayer::async_connect = defaultAsyncConnect;
   _LowestLayer::_anyCanceler _LowestLayer::cancel = defaultCancel;
-  _LowestLayer::_anyShutdowner _LowestLayer::shutdown = defaultShutdown;
+  _LowestLayer::_anyShutdowner _LowestLayer::_shutdown = defaultShutdown;
+  _LowestLayer::_anyCloser _LowestLayer::close = defaultClose;
   N::ssl_socket_type::_anyAsyncHandshaker N::ssl_socket_type::async_handshake = defaultAsyncHandshake;
   N::acceptor_type::_anyAsyncAccepter N::acceptor_type::async_accept = defaultAsyncAccept;
   N::_anyAsyncReaderSocket N::_async_read_socket = defaultAsyncReadSocket;

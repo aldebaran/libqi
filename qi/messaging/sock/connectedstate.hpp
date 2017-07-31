@@ -130,6 +130,7 @@ namespace qi
         boost::synchronized_value<Promise<ConnectedResult<N>>> _completePromise;
         ConnectedResult<N> _result;
         std::atomic<bool> _stopRequested;
+        std::atomic<bool> _shuttingdown;
         ReceiveMessageContinuous<N> _receiveMsg;
         SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
         boost::mutex _disconnectedPromiseMutex;
@@ -150,9 +151,12 @@ namespace qi
           {
             _result.disconnectedPromise = disconnectedPromise;
 
-            // The cancel will cause any pending operation on the socket to fail
-            // with a "operation aborted" error.
-            _result.socket->lowest_layer().cancel();
+            // The shutdown will cause any pending operation on the socket to fail.
+            auto self = shared_from_this();
+            ioServiceStranded([=] {
+              self->_shuttingdown = true;
+              self->_result.socket->lowest_layer().shutdown(ShutdownMode<Lowest<SslSocket<N>>>::shutdown_both);
+            })();
           }
           else
           {
@@ -167,6 +171,13 @@ namespace qi
         SocketPtr<N>& socket()
         {
           return _result.socket;
+        }
+
+        template<typename Proc>
+        auto ioServiceStranded(Proc&& p)
+          -> decltype(StrandTransfo<N>{std::declval<IoService<N>*>()}(std::forward<Proc>(p)))
+        {
+          return StrandTransfo<N>{&socket()->get_io_service()}(std::forward<Proc>(p));
         }
       };
       std::shared_ptr<Impl> _impl;
@@ -200,9 +211,9 @@ namespace qi
       }
       template<typename Proc>
       auto ioServiceStranded(Proc&& p)
-        -> decltype(StrandTransfo<N>{&_impl->socket()->get_io_service()}(std::forward<Proc>(p)))
+        -> decltype(_impl->ioServiceStranded(std::forward<Proc>(p)))
       {
-        return StrandTransfo<N>{&_impl->socket()->get_io_service()}(std::forward<Proc>(p));
+        return _impl->ioServiceStranded(std::forward<Proc>(p));
       }
     };
 
@@ -219,6 +230,7 @@ namespace qi
     Connected<N>::Impl::Impl(const SocketPtr<N>& s)
       : _result{s}
       , _stopRequested(false)
+      , _shuttingdown(false)
       , _sendMsg{s}
     {
     }
@@ -229,24 +241,14 @@ namespace qi
       auto prom = _completePromise.synchronize();
       if (!prom->future().isRunning()) // promise already set
         return;
-      if (_stopRequested.load() && error == operationAborted<ErrorCode<N>>())
+      const bool stopAsked = _stopRequested.load() && _shuttingdown.load();
+      const bool hasError = error || !msg;
+      if (!stopAsked && hasError)
       {
-        // This is not a real error: the user has asked the state to stop,
-        // so we set the promise with a value instead of an error.
-        prom->setValue(_result);
-      }
-      else if (error || !msg)
-      {
-        // A real error occurred.
         _result.hasError = true;
         _result.errorMessage = error.message();
-        prom->setValue(_result);
       }
-      else
-      {
-        // This is not an error: the user decided to stop after handling a message.
-        prom->setValue(_result);
-      }
+      prom->setValue(_result);
     }
 
     template<typename N>
@@ -257,7 +259,7 @@ namespace qi
       auto self = shared_from_this();
       _receiveMsg(socket(), ssl, maxPayload,
         [=](sock::ErrorCode<N> e, const Message* msg) mutable { // onReceived
-          const bool mustContinue = onReceive(e, msg);
+          const bool mustContinue = !_shuttingdown.load() && onReceive(e, msg);
           if (!mustContinue)
           {
             self->setPromise(e, msg);
@@ -284,7 +286,7 @@ namespace qi
       auto self = shared_from_this();
       _sendMsg(std::forward<Msg>(msg), ssl,
         [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
-          const bool mustContinue = onSent(e, ptrMsg);
+          const bool mustContinue = !_shuttingdown.load() && onSent(e, ptrMsg);
           if (!mustContinue)
           {
             self->setPromise(e, &msg);

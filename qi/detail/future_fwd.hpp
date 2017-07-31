@@ -7,6 +7,7 @@
 #ifndef _QI_FUTURE_HPP_
 # define _QI_FUTURE_HPP_
 
+# include <stdexcept>
 # include <type_traits>
 # include <qi/api.hpp>
 # include <qi/assert.hpp>
@@ -17,6 +18,7 @@
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
 # include <qi/functional.hpp>
+# include <qi/os.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -81,6 +83,20 @@ namespace qi {
     FutureState_FinishedWithError,  ///< The operation is finished with an error
     FutureState_FinishedWithValue,  ///< The operation is finished with a value
   };
+
+  inline std::ostream& operator<<(std::ostream& o, FutureState x)
+  {
+    switch (x)
+    {
+    case FutureState_None: return o << "FutureState_None";
+    case FutureState_Running: return o << "FutureState_Running";
+    case FutureState_Canceled: return o << "FutureState_Canceled";
+    case FutureState_FinishedWithError: return o << "FutureState_FinishedWithError";
+    case FutureState_FinishedWithValue: return o << "FutureState_FinishedWithValue";
+    }
+    throw std::runtime_error("Unknown FutureState value: " + os::to_string(x));
+  }
+
 
   enum FutureCallbackType {
     FutureCallbackType_Sync  = 0,

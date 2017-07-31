@@ -28,6 +28,7 @@ namespace qi { namespace sock {
 ///     && E e = fault<E>();
 ///     && E e = messageSize<E>();
 ///     && E e = connectionRefused<E>();
+///     && E e = shutdown<E>();
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Any network operation can result in an error. An error is convertible to a
 /// boolean: true means "error", false means "success".
