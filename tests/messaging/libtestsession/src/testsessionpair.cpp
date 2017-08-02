@@ -11,60 +11,62 @@
 #include <testsession/testsession.hpp>
 #include <testsession/testsessionpair.hpp>
 
-TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
+const TestSessionPair::ShareServiceDirectory_tag TestSessionPair::ShareServiceDirectory{};
+
+TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
+  : _mode(mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode)
+  , _sd(qi::makeSession())
+  , _gw(_mode == TestMode::Mode_Gateway ? new qi::Gateway : nullptr)
 {
-  qi::UrlVector endpoints;
-  _sd = qi::makeSession();
-
-  // #1 Get active mode.
-  _mode = mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode;
-
-  // #2 Listen.
-  if (_mode == TestMode::Mode_SSL)
+  const bool gatewayMode = _mode == TestMode::Mode_Gateway;
+  std::string gwUrl;
+  if (gatewayMode)
+  {
+    gwUrl = std::move(sdUrl);
+    sdUrl = "tcp://0.0.0.0:0";
+  }
+  else if (_mode == TestMode::Mode_SSL)
   {
     _sd->setIdentity(qi::path::findData("qi", "server.key"),
                      qi::path::findData("qi", "server.crt"));
-    _sd->listenStandalone("tcps://0.0.0.0:0");
-    endpoints = _sd->endpoints();
+    const std::string oldProt{ "tcp://" };
+    const auto pos = sdUrl.find(oldProt);
+    if (pos != std::string::npos)
+    {
+      sdUrl.replace(pos, oldProt.size(), "tcps://");
+    }
+  }
+
+  qi::UrlVector endpoints;
+  _sd->listenStandalone(std::move(sdUrl));
+  if (gatewayMode)
+  {
+    _gw->attachToServiceDirectory(_sd->url()).wait();
+    _gw->listen(std::move(gwUrl));
+    endpoints = _gw->endpoints();
   }
   else
   {
-    if (_mode == TestMode::Mode_Gateway)
-    {
-      _sd->listenStandalone("tcp://0.0.0.0:0");
-      _gw.reset(new qi::Gateway);
-      _gw->attachToServiceDirectory(_sd->url()).value();
-      _gw->listen(sdUrl);
-      endpoints = _gw->endpoints();
-    }
-    else
-    {
-      _sd->listenStandalone(sdUrl);
-      endpoints = _sd->endpoints();
-    }
+    endpoints = _sd->endpoints();
   }
 
-  // #3 Get client and server sessions.
-  _client.reset(new TestSession(endpoints[0].str(), false, _mode));
   _server.reset(new TestSession(endpoints[0].str(), true, _mode));
+  if (_mode != TestMode::Mode_Direct) // no client in direct mode
+  {
+    _client.reset(new TestSession(endpoints[0].str(), false, _mode));
+  }
 }
 
-TestSessionPair::TestSessionPair(TestSessionPair &other)
+TestSessionPair::TestSessionPair(ShareServiceDirectory_tag t, const TestSessionPair& other, TestMode::Mode mode)
+  : TestSessionPair(mode == TestMode::Mode_Gateway ? other.gateway().endpoints().front() :
+                                                     other.sd()->endpoints().front(), mode)
+{}
+
+TestSessionPair::TestSessionPair(const qi::Url& sdEndpoint, TestMode::Mode mode)
+  : _mode(mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode)
+  , _server(new TestSession(sdEndpoint.str(), true, _mode))
+  , _client(_mode == TestMode::Mode_Direct ? nullptr : new TestSession(sdEndpoint.str(), false, _mode))
 {
-  _sd = qi::makeSession();
-
-  // #1 Get active mode.
-  _mode = TestMode::getTestMode();
-
-  // #2 Get client and server sessions using other pair service directory.
-  _client.reset(new TestSession(other._sd->endpoints()[0].str(), false, _mode));
-  _server.reset(new TestSession(other._sd->endpoints()[0].str(), true, _mode));
-}
-
-TestSessionPair::~TestSessionPair()
-{
-  _client.reset();
-  _server.reset();
 }
 
 qi::SessionPtr TestSessionPair::client() const
@@ -84,6 +86,13 @@ qi::SessionPtr TestSessionPair::server() const
 qi::SessionPtr TestSessionPair::sd() const
 {
   return _sd;
+}
+
+const qi::Gateway& TestSessionPair::gateway() const
+{
+  if (!_gw)
+    throw std::runtime_error("No gateway instanciated");
+  return *_gw;
 }
 
 std::vector<qi::Url> TestSessionPair::serviceDirectoryEndpoints() const

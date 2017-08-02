@@ -64,7 +64,7 @@ public:
     , oe2(0)
     , om1(0)
     , om2(0)
-    , p2(p1)
+    , p2(TestSessionPair::ShareServiceDirectory, p1)
   {
     qi::DynamicObjectBuilder obs1, obs2;
     se1 = obs1.advertiseSignal<const int&>("fire1");

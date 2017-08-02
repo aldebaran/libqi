@@ -14,38 +14,6 @@
  */
 
 /*!
- * \fn TestSessionPair::TestSessionPair()
- * \brief TestSessionPair constructor. Allocate and initialize two qi::Session, one in client mode and the other in server mode.
- *        Test setting used depends on environment variable.
- * \throw TestSessionError on failure.
- * \see qi::Session
- * \since 1.18
- * \author Pierre Roullon
- */
-
-/*!
- * \fn TestSessionPair::TestSessionPair(TestSession::Mode mode)
- * \brief TestSessionPair constructor. Allocate and initialize two qi::Session, one in client mode and the other in server mode.
- *        Test settings used depends on given mode.
- * \throw TestSessionError on failure.
- * \see qi::Session
- * \since 1.18
- * \author Pierre Roullon
- */
-
-/*!
- * \fn TestSessionPair::TestSessionPair(TestSessionPair &other)
- * \brief TestSessionPair copy constructor. Allocate and initialize two qi::Session, one in client mode and the other in server mode.
- *        Use qi::ServiceDirectory of given TestSessionPair, both pair are therefore connected on the same service directory.
- *        Test setting used depends on environment variable.
- * \throw TestSessionError on failure.
- * \see qi::Session
- * \see qi::ServiceDirectory
- * \since 1.18
- * \author Pierre Roullon
- */
-
-/*!
  * \fn TestSessionPair::client()
  * \brief Getter for client session of pair.
  * \return Pointer to qi::Session.
@@ -55,7 +23,7 @@
  */
 
 /*!
- * \fn TestSessionPair::client()
+ * \fn TestSessionPair::server()
  * \brief Getter for server session of pair.
  * \return Pointer to qi::Session.
  * \see qi::Session
@@ -73,15 +41,37 @@
 class TestSessionPair
 {
 public:
-  TestSessionPair(TestMode::Mode mode = TestMode::Mode_Default,
-                  const std::string url = "tcp://0.0.0.0:0");
-  TestSessionPair(TestSessionPair &other);
-  ~TestSessionPair();
+  struct ShareServiceDirectory_tag {};
+  static const ShareServiceDirectory_tag ShareServiceDirectory;
+
+  /*!
+   * Constructs a session pair that will instanciate a service directory and possibly a gateway if mode is Mode_Gateway
+   * or if it is Mode_Default and TestMode::getTestMode() returns Mode_Gateway. The server and the client will connect
+   * to the endpoint that was created (the service directory or the gateway if it was instanciated).
+   * \note The newly created session will not instanciate a service directory or a gateway of its own.
+   */
+  TestSessionPair(TestMode::Mode mode = TestMode::Mode_Default, std::string sdUrl = "tcp://0.0.0.0:0");
+
+  /*!
+   * Constructs a session pair that will connect the server and the client to the service directory (or
+   * the gateway, depending on mode) of the other session pair, so that both sessions share the same.
+   * \note The newly created session will not instanciate a service directory or a gateway of its own.
+   */
+  TestSessionPair(ShareServiceDirectory_tag, const TestSessionPair& other, TestMode::Mode mode = TestMode::Mode_Default);
+
+  /*!
+   * Constructs a session pair that will connect the server and the client to sdEndpoint.
+   * \note The newly created session will not instanciate a service directory or a gateway of its own.
+   */
+  TestSessionPair(const qi::Url& sdEndpoint, TestMode::Mode mode = TestMode::Mode_Default);
+
+  ~TestSessionPair() = default;
 
 public:
   qi::SessionPtr client() const;
   qi::SessionPtr server() const;
   qi::SessionPtr sd() const;
+  const qi::Gateway& gateway() const;
   std::vector<qi::Url> serviceDirectoryEndpoints() const;
   std::vector<qi::Url> gatewayEndpoints() const;
   TestMode::Mode mode() const
@@ -90,11 +80,11 @@ public:
   }
 
 private:
-  qi::SessionPtr       _sd;
+  TestMode::Mode _mode;
+  qi::SessionPtr _sd;
   std::unique_ptr<qi::Gateway> _gw;
-  TestMode::Mode       _mode;
-  std::unique_ptr<TestSession> _client;
   std::unique_ptr<TestSession> _server;
+  std::unique_ptr<TestSession> _client;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_TESTSESSIONPAIR_HPP_

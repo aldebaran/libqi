@@ -33,7 +33,7 @@ TEST(Test, Recurse)
 {
   payload = qi::Promise<bool>();
   TestSessionPair       p1;
-  TestSessionPair       p2(p1);
+  TestSessionPair       p2(TestSessionPair::ShareServiceDirectory, p1);
   qi::DynamicObjectBuilder     ob1, ob2;
   ob1.advertiseMethod("onFire1", &onFire1);
   ob2.advertiseMethod("onFire2", &onFire2);

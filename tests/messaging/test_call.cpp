@@ -1671,7 +1671,7 @@ TEST(TestCall, TestMultipleGetObjectProperty)
 TEST(TestCall, TestIsConnected)
 {
   TestSessionPair p0;
-  TestSessionPair p1(p0);
+  TestSessionPair p1(TestSessionPair::ShareServiceDirectory, p0);
   ASSERT_TRUE(p0.server()->isConnected());
   ASSERT_TRUE(p0.client()->isConnected());
   ASSERT_TRUE(p1.server()->isConnected());
