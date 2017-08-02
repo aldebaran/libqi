@@ -38,6 +38,8 @@
 #include <testsession/testsession.hpp>
 #include <qi/messaging/gateway.hpp>
 
+const auto serviceWaitDefaultTimeout = qi::Seconds{ 1 };
+
 class TestSessionPair
 {
 public:

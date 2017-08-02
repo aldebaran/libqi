@@ -41,6 +41,26 @@ namespace test
     int _pid;
   };
 
+  /// Predicate P
+  template <typename P>
+  static testing::AssertionResult verifyBeforeDuration(P pred,
+                                                       qi::NanoSeconds dura,
+                                                       qi::NanoSeconds period = qi::MilliSeconds{10})
+  {
+    while (!pred())
+    {
+      if (dura == qi::NanoSeconds::zero())
+      {
+        return testing::AssertionFailure()
+               << "Predicate was not true before "
+               << boost::chrono::duration_cast<qi::MicroSeconds>(dura).count() << " microseconds";
+      }
+      if (period >= dura) dura = qi::NanoSeconds::zero();
+      else dura -= period;
+      qi::sleepFor(period);
+    }
+    return testing::AssertionSuccess();
+  }
 
   static const auto defaultFutureWaitDuration = qi::Seconds{ 3 };
 

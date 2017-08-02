@@ -111,6 +111,9 @@ void repeatedlyCallServiceMaybeDying(
   const auto endTime = std::chrono::steady_clock::now() + timeout;
   auto server = p.server();
   ScopedThread worker{ [server] { alternateModule(server); } };
+  ASSERT_EQ(qi::FutureState_FinishedWithValue,
+            p.client()->waitForService("TestToto").wait(serviceWaitDefaultTimeout));
+
   while (nofAttempts && (endTime > std::chrono::steady_clock::now()))
   {
     --nofAttempts;

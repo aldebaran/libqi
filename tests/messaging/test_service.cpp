@@ -347,13 +347,9 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
 
   // Register the object again with the provider, find it back from the client
   ASSERT_NO_THROW(p.server()->registerService("Bar", barAsObject));
-
-  qi::Future<qi::AnyObject> f = p.client()->service("Bar");
-  f.wait(3000);
-  ASSERT_TRUE(f.hasValue());
-  barAsRemoteService = f.value();
-
-  ASSERT_TRUE(barAsRemoteService);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue,
+            p.client()->waitForService("Bar").wait(qi::Seconds{ 3 }));
+  ASSERT_TRUE(p.client()->service("Bar").value());
 }
 
 class DummyObject

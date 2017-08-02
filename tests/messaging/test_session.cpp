@@ -531,14 +531,13 @@ TEST(QiSession, serviceRegistered)
   ASSERT_EQ(obj.asGenericObject()->value, ao.asGenericObject()->value);
 }
 
-TEST(QiSession, reuseSd)
+TEST(QiSession, RegisterServiceFromClient)
 {
   TestSessionPair pair;
 
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("reply", &reply);
   qi::AnyObject obj(ob.object());
-
   pair.client()->registerService("serviceTest", obj);
 
   qi::AnyObject object = pair.sd()->service("serviceTest");
