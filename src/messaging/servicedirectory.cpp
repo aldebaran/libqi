@@ -380,15 +380,19 @@ namespace qi
     qiLogInfo() << messInfo.str();
     auto f = barrier.future().andThen([&](const std::vector<Future<void>>& futures)
     {
-      std::string error = [&]
+      const auto error = [&]
       {
         std::stringstream ss;
+        bool prefixed = false;
         for (const auto& future: futures)
         {
           if (future.hasError())
           {
-            if (error.empty())
+            if (!prefixed)
+            {
               ss << "an error occurred when listening to one of the requested endpoints:";
+              prefixed = true;
+            }
             ss << std::endl << future.error();
           }
         }
