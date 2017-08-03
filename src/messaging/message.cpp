@@ -26,6 +26,9 @@ qiLogCategory("qimessaging.message");
 
 namespace qi {
 
+
+  const unsigned int MessagePrivate::magic = 0x42adde42;
+
   unsigned int newMessageId()
   {
     static qi::Atomic<int> id(0);

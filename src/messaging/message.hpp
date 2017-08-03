@@ -1,4 +1,5 @@
 #pragma once
+
 /*
 **  Copyright (C) 2012 Aldebaran Robotics
 **  See COPYING for the license
@@ -45,7 +46,7 @@ namespace qi {
     std::string   signature;
     MessageHeader header;
 
-    static const unsigned int magic = 0x42adde42;
+    static const unsigned int magic;
   };
 
   class MessageAddress {
