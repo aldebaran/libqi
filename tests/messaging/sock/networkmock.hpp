@@ -10,6 +10,8 @@
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/messaging/sock/error.hpp>
 #include <qi/messaging/sock/common.hpp>
+#include <qi/moveoncopy.hpp>
+#include <qi/utility.hpp>
 #include <qi/macroregular.hpp>
 
 /// @file
@@ -20,6 +22,31 @@
 /// Contains mock types for unit tests.
 namespace mock
 {
+  // Transforms a procedure to call it in another thread.
+  //
+  // The transformed procedure will wait for the original procedure to finish
+  // before returning.
+  template<typename Proc>
+  struct CallInAnotherThread
+  {
+    Proc proc;
+
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(CallInAnotherThread, proc)
+
+  // Procedure:
+    template<typename... T>
+    void operator()(T&&... t)
+    {
+      using namespace qi;
+      auto m = makeMoveOnCopy(fwd<T>(t)...);
+      std::thread{[=]() {
+          apply(proc, std::move(asTuple(m)));
+        }
+      }.join();
+    }
+  };
+
   /// Models in the simplest possible way the Network concept.
   struct Network
   {
@@ -76,7 +103,9 @@ namespace mock
     struct io_service_type
     {
       template<typename Proc>
-      Proc wrap(Proc p) const {return p;}
+      CallInAnotherThread<Proc> wrap(Proc p) const {
+        return CallInAnotherThread<Proc>{p};
+      }
     };
     struct ssl_context_type
     {

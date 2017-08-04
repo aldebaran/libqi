@@ -494,7 +494,10 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   auto scopedShutdown = scopedSetAndRestore(
     LowestLayer::_shutdown,
     [=](LowestLayer::shutdown_type, ErrorCode<N>&) mutable {
-      promiseAsyncReadWrite.setValue(shutdown<ErrorCode<N>>());
+      if (promiseAsyncReadWrite.future().isRunning())
+      {
+        promiseAsyncReadWrite.setValue(shutdown<ErrorCode<N>>());
+      }
     }
   );
 
@@ -504,7 +507,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
     LowestLayer::close,
     [=](ErrorCode<N>&) mutable {
       promiseCloseStarted.setValue(0);
-      promiseCanFinishClose.value();
+      promiseCanFinishClose.future().wait(); // block
     }
   );
 
@@ -515,7 +518,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   ASSERT_TRUE(futDisconnect0.isRunning());
 
   // Wait for entering close().
-  ASSERT_EQ(FutureState_FinishedWithValue, promiseCloseStarted.future().wait(/*defaultTimeout*/));
+  ASSERT_EQ(FutureState_FinishedWithValue, promiseCloseStarted.future().wait(defaultTimeout));
 
   // Subsequent disconnect() cannot complete because close() is blocking.
   Future<void> futDisconnect1 = socket->disconnect();
