@@ -1480,7 +1480,7 @@ namespace detail
     }
     msg << " failed ";
     msg << additionalMsg;
-    qiLogWarning() << msg.str();
+    qiLogDebug() << msg.str();
     throw std::runtime_error(msg.str());
   }
 
