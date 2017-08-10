@@ -45,6 +45,7 @@ qi_create_gtest(
   "test_scoped.cpp"
   "test_strand.cpp"
   "test_trackable.cpp"
+  "test_utility.cpp"
   "test_version.cpp"
   "tools.hpp"
 

@@ -28,6 +28,12 @@ namespace test
       return value == x.value;
     }
   };
+
+  enum class RefKind
+  {
+    LValue,
+    RValue
+  };
 } // namespace test
 
 #endif // _QI_TESTS_TOOLS_HPP_

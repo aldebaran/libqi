@@ -137,7 +137,8 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/receive.hpp
          qi/messaging/sock/resolve.hpp
          qi/messaging/sock/send.hpp
-         qi/messaging/sock/traits.hpp)
+         qi/messaging/sock/traits.hpp
+         qi/utility.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
