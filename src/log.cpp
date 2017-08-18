@@ -35,6 +35,7 @@
 
 #include <boost/lockfree/queue.hpp>
 #include <boost/function.hpp>
+#include <boost/predef.h>
 
 #ifdef WITH_SYSTEMD
 #include <qi/log/journaldloghandler.hpp>
@@ -44,11 +45,13 @@
 # include <qi/log/androidloghandler.hpp>
 #endif
 
-#ifndef _WIN32
-#include <fnmatch.h>
-#else
+#if BOOST_OS_WINDOWS
 # include <shlwapi.h>
 # pragma comment(lib, "shlwapi.lib")
+# include <boost/locale.hpp>
+# include <boost/filesystem.hpp>
+#else
+# include <fnmatch.h>
 #endif
 
 
@@ -353,6 +356,79 @@ namespace qi {
       }
     } // namespace detail
 #else
+
+
+#if BOOST_OS_WINDOWS && !defined(NDEBUG)
+    namespace detail {
+
+      void installWindowsDebugOutput(qi::LogLevel verb)
+      {
+        auto winDebuggerOutputLogHandler = [](const qi::LogLevel verb, const qi::Clock::time_point date,
+            const qi::SystemClock::time_point systemDate,
+            const char* category, const char* msg,
+            const char* file, const char* fct, const int line)
+        {
+          if (!IsDebuggerPresent()) // we need to check on each call in case the debuger is attached on the fly
+            return;
+
+          // We force long log level names in this specific case.
+          auto context = (log::context() | LogContextAttr_Verbosity) & ~LogContextAttr_ShortVerbosity;
+          auto logline = qi::detail::logline(context, date, systemDate, category, msg, file, fct, line, verb);
+
+          const auto processId = std::to_wstring(GetCurrentProcessId());
+
+          // Add the process name to help with multi-process debugging:
+          static const auto processName = [&] {
+
+            using Path = boost::filesystem::path;
+
+            static const auto getProcessPath = [&] {
+              const Path processPath = __argv ? Path{ __argv[0] } : Path{ __wargv[0] };
+
+              // Before providing the process name, we log in the debug ouptut the complete command line
+              // so that is is possible to identify processes in multi-process debugging when using several same process names
+              // but different arguments:
+              {
+                std::wstringstream launchMessage;
+                launchMessage << L"#### QI Process Logs Tracking Begin (PID=" << processId
+                              << L") - Command Line: \n  " << processPath;
+                for (int idx = 1; idx < __argc; ++idx)
+                {
+                  launchMessage << L' ';
+                  if (__argv)
+                    launchMessage << __argv[idx];
+                  else
+                    launchMessage << __wargv[idx];
+                }
+                launchMessage << L'\n';
+                OutputDebugStringW(launchMessage.str().c_str());
+              }
+
+              return processPath;
+            };
+
+
+            return getProcessPath().filename().wstring() + L'(' + processId + L") > ";
+
+          }();
+
+          // We receive UTF-8 so we want to be able to display unicode characters in this output too:
+          auto wlogline = processName + boost::locale::conv::utf_to_utf<wchar_t>(logline.c_str(), logline.c_str() + logline.size());
+          OutputDebugStringW(wlogline.c_str());
+        };
+
+        addHandler("winDebuggerOutputLogHandler", std::move(winDebuggerOutputLogHandler), verb);
+      }
+
+    }
+#else
+    namespace detail {
+        inline void installWindowsDebugOutput(qi::LogLevel) { }
+    }
+#endif
+
+
+
     static ConsoleLogHandler *_glConsoleLogHandler = nullptr;
 
     namespace detail {
@@ -370,6 +446,8 @@ namespace qi {
                                _1, _4, _5, _6, _7, _8),
                    verb);
 #endif
+
+        installWindowsDebugOutput(verb);
       }
 
       void destroyDefaultHandler()
