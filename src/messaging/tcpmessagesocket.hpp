@@ -476,8 +476,8 @@ namespace qi {
   {
     bool wasConnected = false;
     {
-      DisconnectingState dis{socket, promiseDisconnected};
       boost::recursive_mutex::scoped_lock lock(_stateMutex);
+      DisconnectingState dis{socket, promiseDisconnected};
       wasConnected = (getStatus() == Status::Connected);
       _state = std::move(dis);
       auto self = shared_from_this();
