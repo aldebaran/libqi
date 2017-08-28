@@ -104,7 +104,6 @@ set(QI_H qi/detail/async.hxx
          qi/path.hpp
          qi/path_conf.hpp
          qi/periodictask.hpp
-         qi/qi.hpp
          qi/stats.hpp
          qi/trackable.hpp
          qi/translator.hpp
@@ -273,8 +272,8 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/typeinterface.hpp
                    qi/type/typeobject.hpp
                    qi/type/typedispatcher.hpp
-                   qi/type/traits.hpp)
-
+                   qi/type/traits.hpp
+                   qi/type/integersequence.hpp)
 
 
 set(QITYPE_C src/type/binarycodec.cpp
