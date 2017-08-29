@@ -1,5 +1,8 @@
 #pragma once
+#include <boost/config.hpp>
+#include <qi/type/integersequence.hpp>
 #include <qi/type/traits.hpp>
+#include <qi/utility.hpp>
 #include <qi/macroregular.hpp>
 
 /// @file
@@ -421,5 +424,197 @@ namespace qi {
   Incr<T> retract(Decr<T>)
   {
     return {};
+  }
+
+  namespace detail
+  {
+    template<typename Proc, typename Args, std::size_t... I>
+    BOOST_CONSTEXPR auto applyImpl(Proc&& proc, Args&& args, qi::index_sequence<I...>)
+      // TODO: Guess what, remove this when c++14 is available.
+      -> decltype(proc(std::get<I>(std::forward<Args>(args))...))
+    {
+      return proc(std::get<I>(std::forward<Args>(args))...);
+    }
+  }
+
+  /// Applies the procedure after unpacking the arguments.
+  ///
+  /// Besides std::tuple, arguments can be stored as std::pair, std::array, or
+  /// any type modeling the `Tuple` concept (see concept.hpp).
+  ///
+  /// Note: This is roughly equivalent to C++17's `std::apply`. The main difference
+  /// is that this version use function call syntax instead of C++17's `std::invoke`.
+  ///
+  /// TODO: Replace this by `std::apply` when C++17 is available.
+  ///
+  /// Example: using a `std::tuple` as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, char c, float f) {
+  ///   ...
+  /// }
+  ///
+  /// // ...
+  /// auto args = std::make_tuple(5, 'a', 3.14f);
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: using a `std::pair` as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, char c) {
+  ///   ...
+  /// }
+  ///
+  /// // ...
+  /// auto args = std::make_pair(5, 'a');
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: using a `std::array` as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, int j, int k, int l) {
+  ///   ...
+  /// }
+  ///
+  /// // ...
+  /// std::array<int, 4> args = {13, 2, 9874, 42};
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: using a custom type as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// namespace test
+  /// {
+  ///   template<std::size_t N>
+  ///   using index = std::integral_constant<std::size_t, N>;
+  ///
+  ///   template<typename A, typename B, typename C>
+  ///   struct X
+  ///   {
+  ///     A a;
+  ///     B b;
+  ///     C c;
+  ///
+  ///     bool operator==(const X& y) const
+  ///     {
+  ///       return a == y.a && b == y.b && c == y.c;
+  ///     }
+  ///
+  ///     A& get(index<0>) {return a;}
+  ///     B& get(index<1>) {return b;}
+  ///     C& get(index<2>) {return c;}
+  ///     const A& get(index<0>) const {return a;}
+  ///     const B& get(index<1>) const {return b;}
+  ///     const C& get(index<2>) const {return c;}
+  ///   };
+  /// } // namespace test
+  ///
+  /// namespace std
+  /// {
+  ///   template<typename A, typename B, typename C>
+  ///   struct tuple_size<test::X<A, B, C>> : integral_constant<size_t, 3>
+  ///   {
+  ///   };
+  ///
+  ///   template<size_t I, typename A, typename B, typename C>
+  ///   BOOST_CONSTEXPR auto get(test::X<A, B, C>& x)
+  ///     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+  ///     -> decltype(x.get(integral_constant<size_t, I>{}))
+  ///   {
+  ///     return x.get(integral_constant<size_t, I>{});
+  ///   }
+  ///
+  ///   template<size_t I, typename A, typename B, typename C>
+  ///   BOOST_CONSTEXPR auto get(const test::X<A, B, C>& x)
+  ///     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+  ///     -> decltype(x.get(integral_constant<size_t, I>{}))
+  ///   {
+  ///     return x.get(integral_constant<size_t, I>{});
+  ///   }
+  /// } // namespace std
+  ///
+  /// int f(int i, char c, float f) {
+  ///   ...
+  /// }
+  /// // ...
+  ///
+  /// const X args{5, 'a', 3.14f};
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// See `Apply` to transform a function into an equivalent tuple-accepting function.
+  ///
+  /// Procedure Proc, Tuple Args
+  template<typename Proc, typename Args>
+  BOOST_CONSTEXPR auto apply(Proc&& proc, Args&& args)
+    // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+    -> decltype(detail::applyImpl(fwd<Proc>(proc), fwd<Args>(args),
+      make_index_sequence<std::tuple_size<traits::Decay<Args>>::value>{}))
+  {
+    return detail::applyImpl(fwd<Proc>(proc), fwd<Args>(args),
+      make_index_sequence<std::tuple_size<traits::Decay<Args>>::value>{});
+  }
+
+  /// Procedure accepting a tuple of arguments and unpacking them for the underlying
+  /// procedure.
+  ///
+  /// Example: transforming a "n-argument function" into a "tuple function"
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, int j) {
+  ///   ...
+  /// };
+  ///
+  /// // ...
+  /// auto f2 = apply(f); // helper function that returns a `Apply<Decay<decltype(f)>>`
+  /// int res0 = f2(std::make_tuple(4454, 7));
+  /// int res1 = f2(std::make_pair(5, 12));
+  /// int res2 = f2(std::array<int, 2>{98, 99});
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Note: See `apply` for an example on how to use a custom type.
+  ///
+  /// See `apply` for more examples.
+  ///
+  /// Procedure Proc
+  template<typename Proc>
+  struct Apply
+  {
+    Proc proc;
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(Apply, proc)
+  // Procedure:
+    template<typename Args>
+    auto operator()(Args&& args) QI_NOEXCEPT_EXPR(apply(proc, fwd<Args>(args)))
+      // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+      -> decltype(apply(proc, fwd<Args>(args)))
+    {
+      return apply(proc, fwd<Args>(args));
+    }
+  };
+
+  /// Helper function to enable type deduction for `Apply`.
+  ///
+  /// Note: An overload taking the procedure _and_ the arguments also exists.
+  /// This allows for currying.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, int j) {
+  ///   ...
+  /// };
+  ///
+  /// // ...
+  /// auto args = std::make_pair(34, 45);
+  ///
+  /// // immediate call version
+  /// auto res0 = apply(f, args);
+  ///
+  /// // currified version (this version)
+  /// auto f2 = apply(f);
+  /// auto res1 = f2(args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Procedure Proc
+  template<typename Proc>
+  Apply<traits::Decay<Proc>> apply(Proc&& proc)
+  {
+    return {fwd<Proc>(proc)};
   }
 } // namespace qi

@@ -7,6 +7,7 @@
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
 #include <qi/detail/conceptpredicate.hpp>
+#include "test_functional_common.hpp"
 #include <qi/functional.hpp>
 #include <qi/detail/conceptpredicate.hpp>
 #include <qi/range.hpp>
@@ -519,4 +520,67 @@ TEST(FunctionalDecr, IsomorphicBidirectionalIterator)
   inv(b);
   decr(b);
   ASSERT_EQ("les", *b);
+}
+
+TEST(FunctionalApply, Tuple)
+{
+  using namespace qi;
+  auto g = [](int i, char c, float f) {
+    return std::make_tuple(i, c, f);
+  };
+  const auto args = std::make_tuple(5, 'a', 3.14f);
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, Pair)
+{
+  using namespace qi;
+  auto g = [](int i, char c) {
+    return std::make_pair(i, c);
+  };
+  const auto args = std::make_pair(5, 'a');
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, Array)
+{
+  using namespace qi;
+  auto g = [](int i, int j, int k, int l) {
+    return std::array<int, 4>{i, j, k, l};
+  };
+  const std::array<int, 4> args = {0, 1, 2, 3};
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, Custom)
+{
+  using namespace qi;
+  using X = test::X<int, char, float>;
+  auto g = [](int i, char c, float f) {
+    return X{i, c, f};
+  };
+  const X args{5, 'a', 3.14f};
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, MoveOnly)
+{
+  using namespace qi;
+  using test::MoveOnly;
+  auto g = [](MoveOnly<int> i, MoveOnly<char> c, MoveOnly<float> f) {
+    return std::make_tuple(*i, *c, *f);
+  };
+  const auto res = std::make_tuple(5, 'a', 3.14f);
+  {
+    auto args = std::make_tuple(MoveOnly<int>{5}, MoveOnly<char>{'a'}, MoveOnly<float>{3.14f});
+    ASSERT_EQ(res, apply(g, std::move(args)));
+  }
+  {
+    auto args = std::make_tuple(MoveOnly<int>{5}, MoveOnly<char>{'a'}, MoveOnly<float>{3.14f});
+    ASSERT_EQ(res, apply(g)(std::move(args)));
+  }
 }

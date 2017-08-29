@@ -318,6 +318,20 @@ namespace qi
 ///   referenced value (same behavior as native pointers).
 ///
 ///
+/// ## Tuple
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Tuple(T) =
+///      Regular(T)
+///   && With T t, constexpr std::size_t I, the following is valid:
+///        constexpr std::size_t N = std::tuple_size<T>::value;
+///     && auto& x = std::get<I>(t); // for I in [0, N)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// A Tuple is a heterogeneous container that can be unpacked.
+/// See `apply` for an example of unpacking.
+/// Typical models are: std::tuple, std::pair, std::array
+/// Note: Any user-defined type can be made to model this concept.
+///
+///
 /// # Range concept definitions
 ///
 /// ## Range

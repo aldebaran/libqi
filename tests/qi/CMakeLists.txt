@@ -25,6 +25,7 @@ qi_create_gmock(
   "test_eventloop.cpp"
   "test_flags.cpp"
   "test_functional.cpp"
+  "test_functional_common.hpp"
   "test_future.hpp"
   "test_future.cpp"
   "test_futuregroup.cpp"
