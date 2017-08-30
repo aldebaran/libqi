@@ -30,6 +30,7 @@ namespace test
     {
       x.checkNotMoved();
       value = std::move(x.value);
+      moved = false;
       x.moved = true;
       return *this;
     }
