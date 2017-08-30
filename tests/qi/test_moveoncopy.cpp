@@ -1,4 +1,7 @@
+#include <utility>
 #include <gtest/gtest.h>
+#include <qi/functional.hpp>
+#include <qi/type/integersequence.hpp>
 #include <qi/moveoncopy.hpp>
 #include "tools.hpp"
 
@@ -82,4 +85,80 @@ TEST(MoveOnCopy, ConstInstance)
   const MoveOnCopy<int> m(i);
   *m = *m + 1;
   ASSERT_EQ(i + 1, *m);
+}
+
+TEST(MoveOnCopy, OperatorStar)
+{
+  using namespace qi;
+  static_assert(std::is_same<decltype(*makeMoveOnCopy()), std::tuple<>&>::value, "");
+  static_assert(std::is_same<decltype(*makeMoveOnCopy(5)), int&>::value, "");
+  static_assert(std::is_same<decltype(*makeMoveOnCopy(5, 'a')), std::tuple<int, char>&>::value, "");
+  static_assert(std::is_same<decltype(*makeMoveOnCopy(5, 'a', 3.14f)), std::tuple<int, char, float>&>::value, "");
+}
+
+TEST(MoveOnCopy, asTuple)
+{
+  using namespace qi;
+  static_assert(std::is_same<decltype(asTuple(makeMoveOnCopy())), std::tuple<>&>::value, "");
+  static_assert(std::is_same<decltype(asTuple(makeMoveOnCopy(5))), std::tuple<int>&>::value, "");
+  static_assert(std::is_same<decltype(asTuple(makeMoveOnCopy(5, 'a'))), std::tuple<int, char>&>::value, "");
+  static_assert(std::is_same<decltype(asTuple(makeMoveOnCopy(5, 'a', 3.14f))), std::tuple<int, char, float>&>::value, "");
+}
+
+namespace test
+{
+  std::tuple<int, char, float> h(MoveOnly<int>&& i, MoveOnly<char>&& c, MoveOnly<float>&& f)
+  {
+    return std::make_tuple(*i, *c, *f);
+  }
+
+  std::tuple<> k()
+  {
+    return std::make_tuple();
+  }
+
+  std::tuple<int> l(int i)
+  {
+    return std::make_tuple(i);
+  }
+} // namespace test
+
+TEST(MoveOnCopy, MultipleArgumentsUnpack)
+{
+  using namespace qi;
+  using namespace test;
+  const int i = 5;
+  const char c = 'a';
+  const float f = 3.14f;
+  auto m = makeMoveOnCopy(MoveOnly<int>(i), MoveOnly<char>(c), MoveOnly<float>(f));
+  auto g = [=]() mutable {
+    auto h2 = apply(h);
+    return h2(std::move(*m));
+  };
+  ASSERT_EQ(g(), std::make_tuple(i, c, f));
+}
+
+TEST(MoveOnCopy, NoArgumentUnpack)
+{
+  using namespace qi;
+  using namespace test;
+  auto m = makeMoveOnCopy();
+  auto g = [=]() mutable {
+    auto k2 = apply(k);
+    return k2(std::move(*m));
+  };
+  ASSERT_EQ(g(), std::make_tuple());
+}
+
+TEST(MoveOnCopy, OneArgumentUnpack)
+{
+  using namespace qi;
+  using namespace test;
+  const int i = 5;
+  auto m = makeMoveOnCopy(i);
+  auto g = [=]() mutable {
+    auto l2 = apply(l);
+    return l2(std::move(asTuple(m)));
+  };
+  ASSERT_EQ(g(), std::make_tuple(i));
 }

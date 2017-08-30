@@ -31,6 +31,9 @@ namespace qi
     using True  = std::true_type;
     using False = std::false_type;
 
+    template<bool condition>
+    using Bool = std::integral_constant<bool, condition>;
+
     template<typename A, typename B>
     using Equal = typename std::is_same<A, B>::type;
 
