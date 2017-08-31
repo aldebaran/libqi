@@ -384,6 +384,10 @@ namespace qi
     /// Behave exactly as the std::result_of_t of C++14.
     template<typename T, typename... Args>
     using ResultOf = typename std::result_of<T& (Args&&...)>::type;
+
+    /// Behave exactly as the std::remove_pointer_t of C++14.
+    template<typename T>
+    using RemovePointer = typename std::remove_pointer<T>::type;
   } // namespace traits
 } // namespace qi
 

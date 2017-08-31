@@ -93,7 +93,7 @@ namespace qi
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
         }
     }
-    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), std::ref(_sslContext));
+    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
@@ -296,7 +296,7 @@ namespace qi
       _sslContext.use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
-    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), std::ref(_sslContext));
+    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);

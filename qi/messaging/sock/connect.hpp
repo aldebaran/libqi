@@ -159,7 +159,7 @@ namespace qi { namespace sock {
         Proc1 setupStop = Proc1{})
     {
       auto& io = _resolve.getIoService();
-      auto ctx = makeMoveOnCopy(makeMutableStore(fwd<SslContext>(context)));
+      auto ctx = makeMoveOnCopy(makeMutableStoreFwd(fwd<SslContext>(context)));
       _resolve(url, ipV6,
         [=, &io](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
           if (erc)

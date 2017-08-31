@@ -152,63 +152,87 @@ namespace qi {
     {
       return boost::apply_visitor(Deref{}, const_cast<variant_type&>(data));
     }
-
   };
 
   namespace detail
   {
     template<typename T>
-    struct IsReferenceWrapper : traits::False
+    MutableStore<traits::Decay<T>, traits::Decay<T>*> makeMutableStoreFwdImpl(T&& t, std::true_type /*isRValue*/)
     {
-    };
+      // rvalue: move it inside the mutable.
+      return MutableStore<traits::Decay<T>, traits::Decay<T>*>{std::move(t)};
+    }
 
     template<typename T>
-    struct IsReferenceWrapper<std::reference_wrapper<T>> : traits::True
+    MutableStore<traits::Decay<T>, traits::Decay<T>*> makeMutableStoreFwdImpl(T&& t, std::false_type /*isRValue*/)
     {
-    };
+      // Not an rvalue (i.e it is an lvalue): put the address inside the mutable.
+      return MutableStore<traits::Decay<T>, traits::Decay<T>*>{&t};
+    }
 
     template<typename T>
-    using EnableIfReferenceWrapper = traits::EnableIf<detail::IsReferenceWrapper<traits::Decay<T>>::value>;
-
-    template<typename T>
-    using EnableIfNotReferenceWrapper = traits::EnableIf<!detail::IsReferenceWrapper<traits::Decay<T>>::value>;
-
-    template<typename T>
-    using RefType = typename T::type;
+    using Raw = traits::RemovePointer<traits::Decay<T>>;
   } // namespace detail
 
-  /// Helper function to perform type deduction for constructing a MutableStore.
+  /// Helper function to perform type-deduction for `MutableStore`.
   ///
-  /// If a `std::reference_wrapper` is passed, `t`'s address is stored inside the mutable.
-  /// Otherwise, `t` is forwarded inside the mutable.
+  /// Type deduction proceeds this way:
   ///
-  /// Example: Storing an `int` by value
+  /// - if a pointer of type `T*` is passed, the returned
+  ///   type is `MutableStore<T, T*>` containing the given pointer.
+  ///
+  /// - otherwise, a non-pointer object of type `T` is passed, and the returned
+  ///   type is `MutableStore<T, T*>` containing the given object.
+  ///
+  /// Example: Storing a value by address
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// int i = 5;
-  /// auto m = makeMutableStore(i);
-  /// ++(*m); // does not modify `i`
+  /// int j = 0;
+  /// auto m = makeMutableStore(&j);
+  /// ++(*m);
+  /// // here, `j == 1`
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
-  /// Example: Storing an `int` by reference
+  /// Example: Storing a value by value
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// int i = 5;
-  /// auto m = makeMutableStore(std::ref(i));
-  /// ++(*m); // now: i == 6
+  /// int j = 0;
+  /// auto m = makeMutableStore(j); // copy the value
+  /// ++(*m);
+  /// // here, `j == 0`
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   template<typename T>
-  MutableStore<traits::Decay<T>, traits::Decay<T>*> makeMutableStore(T&& t,
-    detail::EnableIfNotReferenceWrapper<T>* = {})
+  MutableStore<detail::Raw<T>, detail::Raw<T>*> makeMutableStore(T&& t)
   {
-    using D = traits::Decay<T>;
-    return MutableStore<D, D*>{fwd<T>(t)};
+    using R = detail::Raw<T>;
+    return MutableStore<R, R*>{fwd<T>(t)};
   }
 
+  /// Helper function to perform delayed perfect-forwarding in a generic context.
+  ///
+  /// Example: Perfect-forwarding a parameter after capture in a lambda
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// template<typename T>
+  /// void f(T&& t) {
+  ///   // 1) Store `t` by address if it is an L-value, by value otherwise.
+  ///   auto mut = makeMutableStoreFwd(fwd<T>(t));
+  ///
+  ///   // 2) Wrap `mut` to move it into the lambda.
+  ///   auto moc = makeMoveOnCopy(mut);
+  ///
+  ///   async([=] {
+  ///
+  ///     // 3) Get the value back and perfect-forward it to the next procedure.
+  ///     //    `**moc` is a L-value ref so `fwd<T>(**moc)` works as expected.
+  ///     g(fwd<T>(**moc));
+  ///   });
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// If you just want to construct a `MutableStore` with type deduction, simply
+  /// use `makeMutableStore`.
   template<typename T>
-  MutableStore<detail::RefType<T>, detail::RefType<T>*> makeMutableStore(T&& t,
-    detail::EnableIfReferenceWrapper<T>* = {})
+  MutableStore<traits::Decay<T>, traits::Decay<T>*> makeMutableStoreFwd(T&& t)
   {
-    using D = detail::RefType<T>;
-    return MutableStore<D, D*>{&t.get()};
+    return detail::makeMutableStoreFwdImpl(std::forward<T>(t), std::is_rvalue_reference<T&&>{});
   }
 
 } // namespace qi

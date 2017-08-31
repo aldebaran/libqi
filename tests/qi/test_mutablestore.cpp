@@ -184,28 +184,36 @@ TEST(MutableStoreMutability, IndirectCopy)
   ASSERT_EQ(i + 1, *m1);
 }
 
-TEST(MutableStore, MakeMutableLValue)
+TEST(MutableStore, MakeMutableAddress)
 {
   using namespace qi;
   const int i = 87363;
   int j = i;
-
-  // We pass an lvalue, so the mutable holds a pointer to `j`,
-  auto m = makeMutableStore(std::ref(j));
+  auto m = makeMutableStore(&j); // The mutable holds a pointer to `j`.
   ASSERT_EQ(i, *m);
   ++(*m);
   ASSERT_EQ(i + 1, *m);
-  ASSERT_EQ(i + 1, j);
+  ASSERT_EQ(i + 1, j); // j's value has changed
 }
 
-TEST(MutableStore, MakeMutableRValue)
+TEST(MutableStore, MakeMutableValue)
+{
+  using namespace qi;
+  const int i = 87363;
+  int j = i;
+  auto m = makeMutableStore(j); // The mutable owns the value.
+  ASSERT_EQ(i, *m);
+  ++(*m);
+  ASSERT_EQ(i + 1, *m);
+  ASSERT_EQ(i, j); // j's value has not changed
+}
+
+TEST(MutableStore, MakeMutableValueMoveOnly)
 {
   using namespace qi;
   using test::MoveOnly;
   const int i = 87363;
-
-  // We pass an rvalue, so the mutable holds a pointer to `j`.
-  auto m = makeMutableStore(MoveOnly<int>{i});
+  auto m = makeMutableStore(MoveOnly<int>{i}); // The mutable owns the `MoveOnly`.
   ASSERT_EQ(i, **m);
   ++(**m);
   ASSERT_EQ(i + 1, **m);
@@ -242,12 +250,12 @@ namespace test
     //
     // If `T&&` is an Lvalue, the addresse t is put inside the `MutableStore`.
     //  Then, `MoveOnCopy` copies `t`'s address into the lambda.
-    auto m = qi::makeMoveOnCopy(qi::makeMutableStore(std::forward<T>(t)));
+    auto m = qi::makeMoveOnCopy(qi::makeMutableStoreFwd(std::forward<T>(t)));
     return async([=]() mutable {
       // Unwrap the value on two levels (MoveOnCopy and MutableStore) and
       // perfect-forward it.
       // `refkind` is overloaded to distinguish an Rvalue from an Lvalue.
-      return refkind(std::forward<T>(**m));
+      return refkind(qi::fwd<T>(**m));
     });
   }
 } // namespace test

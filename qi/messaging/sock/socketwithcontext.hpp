@@ -34,7 +34,7 @@ namespace qi { namespace sock {
 
     template<typename SslContext>
     SocketWithContext(io_service_t& io, SslContext&& ctx)
-      : context(makeMutableStore(fwd<SslContext>(ctx)))
+      : context(makeMutableStoreFwd(fwd<SslContext>(ctx)))
       , socket(io, *context)
     {
     }

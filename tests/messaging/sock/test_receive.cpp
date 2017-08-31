@@ -426,7 +426,7 @@ TEST(NetReceiveMessage, Asio)
   Promise<SocketPtr<N>> promiseConnect;
 
   AcceptConnectionContinuous<N> accept{io};
-  accept(std::ref(context), url,
+  accept(context, url,
     IpV6Enabled{false}, ReuseAddressEnabled{true},
     [=](ErrorCode<N> erc, SocketPtr<N> socket) mutable {
       if (erc)
@@ -442,7 +442,7 @@ TEST(NetReceiveMessage, Asio)
   // Connect client.
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
-  connect(url, SslEnabled{false}, std::ref(context), IpV6Enabled{true},
+  connect(url, SslEnabled{false}, context, IpV6Enabled{true},
     Side::client);
   ASSERT_TRUE(connect.complete().hasValue()) << connect.complete().error();
   auto clientSideSocket = connect.complete().value();

@@ -69,7 +69,7 @@ struct ConnectSocketFun
     Promise<ErrorCode<N>> promise;
     ConnectSocket<N> connect{io};
     SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(url, SslEnabled{true}, std::ref(context), IpV6Enabled{false},
+    connect(url, SslEnabled{true}, context, IpV6Enabled{false},
       HandshakeSide<SslSocket<N>>::client,
       [=](ErrorCode<N> err, SocketPtr<N>) mutable {
         promise.setValue(err);
@@ -87,7 +87,7 @@ struct ConnectSocketFutureFun
   {
     ConnectSocketFuture<N> connect{io};
     SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(url, SslEnabled{true}, std::ref(context), IpV6Enabled{false}, HandshakeSide<SslSocket<N>>::client);
+    connect(url, SslEnabled{true}, context, IpV6Enabled{false}, HandshakeSide<SslSocket<N>>::client);
     return stringToError(connect.complete().error());
   }
   ErrorCode<N> stringToError(const std::string& s) const

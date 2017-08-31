@@ -99,7 +99,7 @@ TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
   );
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
-  connect(url, SslEnabled{false}, std::ref(context), IpV6Enabled{false}, Side::client);
+  connect(url, SslEnabled{false}, context, IpV6Enabled{false}, Side::client);
   ASSERT_EQ(FutureState_FinishedWithValue, connect.complete().waitFor(defaultTimeout));
 
   auto fut = promiseAcceptFinished.future();
