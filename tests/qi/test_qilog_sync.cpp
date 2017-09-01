@@ -539,7 +539,7 @@ TEST_F(SyncLog, threadSafeness)
   // add category
   {
     std::vector<std::future<void>> futures;
-    std::atomic<int> count;
+    std::atomic<int> count{0};
     for (int i = 0; i < 10; ++i)
     {
       futures.emplace_back(std::async(std::launch::async, [&count, i] {
@@ -563,8 +563,8 @@ TEST_F(SyncLog, threadSafeness)
   // add handler
   {
     std::vector<std::future<void>> futures;
-    std::atomic<int> pos;
-    std::atomic<int> count;
+    std::atomic<int> pos{0};
+    std::atomic<int> count{0};
     for (int i = 0; i < 10; ++i)
     {
       futures.emplace_back(std::async(std::launch::async, [&pos, &count] {

@@ -12,7 +12,7 @@
 #include <gmock/gmock.h>
 #include <qi/log.hpp>
 
-class LogHandler
+class LogHandler final
 {
 public:
   LogHandler(const std::string& name, qi::log::Handler handler);
@@ -23,8 +23,9 @@ public:
   const unsigned int id;
 };
 
-class MockLogHandler : public LogHandler
+class MockLogHandler
 {
+  LogHandler handler;
 public:
   explicit MockLogHandler(const std::string& name);
 
@@ -38,6 +39,9 @@ public:
                   const char*,
                   const char*,
                   int);
+
+  const unsigned int& id = handler.id;
+
 };
 
 inline void dummyHandler(qi::LogLevel,

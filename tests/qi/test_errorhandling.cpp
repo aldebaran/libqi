@@ -74,7 +74,7 @@ TEST(ExceptionLogError, Basic)
   log::addHandler(handlerName,
     [&](LogLevel, Clock::time_point, SystemClock::time_point, const char*, std::string msg, const char*, const char*, int) {
       const auto exp = prefix + ": " + expected.at(i);
-      if (!starts_with(msg, exp))
+      if (!starts_with(msg, exp) && msg != "Ping!")
         throw std::runtime_error("'" + msg + "' does not start with '" + exp + "'");
       ++i;
     }

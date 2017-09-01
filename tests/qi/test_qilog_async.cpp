@@ -16,29 +16,33 @@ namespace
 const int iterations = 1000;
 const auto defaultTimeout = qi::Seconds(2);
 
-class BlockyHandler : public LogHandler
+static const std::string testCategory = "core.log.test1";
+
+class BlockyHandler
 {
 public:
-  std::atomic<int> count{ 0 };
+  std::atomic<int> count{0};
   qi::Promise<void> start;
   qi::Promise<void> finished;
+  LogHandler handler;
+  const unsigned int& id = handler.id;
 
   explicit BlockyHandler(const std::string& name)
-    : LogHandler(name, std::ref(*this))
+    : handler(name, std::ref(*this))
   {
   }
 
   void operator()(const qi::LogLevel,
                   const qi::Clock::time_point,
                   const qi::SystemClock::time_point,
-                  const char*,
+                  const std::string category,
                   const char*,
                   const char*,
                   const char*,
                   int)
   {
     start.future().wait();
-    if (++count == iterations)
+    if (category == testCategory && ++count == iterations)
       finished.setValue(0);
   }
 };
@@ -61,16 +65,16 @@ protected:
 
 TEST_F(AsyncLog, logasync)
 {
-  qiLogCategory("core.log.test1");
+  qiLogCategory(testCategory);
 
   BlockyHandler bh("BlockyHandler");
 
   for (int i = 0; i < iterations; i++)
-    qiLogFatal() << i;
+    qiLogFatal() << i << std::endl;
 
   bh.start.setValue(0);
 
-  EXPECT_EQ(bh.finished.future().wait(defaultTimeout), qi::FutureState_FinishedWithValue);
+  EXPECT_EQ(qi::FutureState_FinishedWithValue, bh.finished.future().wait(defaultTimeout));
 }
 
 

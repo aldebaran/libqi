@@ -12,9 +12,10 @@
 #include <qi/scoped.hpp>
 #include <functional>
 
+using ScopedVoidFunction = decltype(qi::scoped(std::function<void()>{}));
+
 template <typename Mock>
-auto scopeMockExpectations(Mock& mock)
-  -> decltype(qi::scoped<std::function<void()>>({})) // TODO C++14: remove this line
+ScopedVoidFunction scopeMockExpectations(Mock& mock) // TODO C++14: just return auto
 {
    // TODO C++14: pass the lambda directly to scoped
   std::function<void()> fun = [&]{ EXPECT_TRUE(testing::Mock::VerifyAndClearExpectations(&mock)); };

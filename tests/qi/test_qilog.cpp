@@ -13,10 +13,12 @@ LogHandler::~LogHandler()
   qi::log::removeHandler(name);
 }
 
+
 MockLogHandler::MockLogHandler(const std::string& name)
-  : LogHandler(name, std::ref(*this))
+  : handler(name, std::ref(*this))
 {
 }
+
 
 void MockLogHandler::operator()(qi::LogLevel,
                                 qi::Clock::time_point,
