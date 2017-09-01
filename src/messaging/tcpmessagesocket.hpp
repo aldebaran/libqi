@@ -596,7 +596,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock lock(_stateMutex);
     if (getStatus() != Status::Connected)
     {
-      QI_LOG_WARNING_SOCKET(this) << "Socket must be connected to send().";
+      QI_LOG_DEBUG_SOCKET(this) << "Socket must be connected to send().";
       return false;
     }
     asConnected(_state).send(msg, _ssl);
