@@ -396,9 +396,9 @@ namespace qi {
                 {
                   launchMessage << L' ';
                   if (__argv)
-                    launchMessage << __argv[idx];
+                    launchMessage << (__argv[idx] ? __argv[idx] : "<null-argument???>");
                   else
-                    launchMessage << __wargv[idx];
+                    launchMessage << (__wargv[idx] ? __wargv[idx] : L"<null-argument???>");
                 }
                 launchMessage << L'\n';
                 OutputDebugStringW(launchMessage.str().c_str());
