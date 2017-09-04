@@ -234,6 +234,7 @@ namespace qi {
 
     /** same as value() with an infinite timeout.
      */
+    QI_API_DEPRECATED_MSG("Use either `then`, `andThen`, `value` or `wait` functions instead.")
     inline operator const ValueTypeCast&() const
     { return _p->value(FutureTimeout_Infinite); }
 
