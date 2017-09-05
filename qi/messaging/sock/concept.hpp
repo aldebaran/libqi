@@ -164,11 +164,11 @@ namespace qi { namespace sock {
 /// ## NetIoService
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept NetIoService(I) =
-///   With I io, Procedure<void (ProcArgs...)> proc the following is valid:
+///   With I io, Procedure<T (ProcArgs...)> proc the following is valid:
 ///     Procedure<void (ProcArgs...)> proc2 = io.wrap(proc);
 ///     proc2(procArgs...);
-///     which means that `wrap` returns a procedure with the same signature as
-///     `proc`. Also, `wrap` is polymorphic: its accepts any void procedure.
+///     which means that `wrap` returns a procedure accepting the same parameters
+///     as `proc` but returning `void`.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// An io service wrap a procedure (typically a network handler) to strand it.
 ///

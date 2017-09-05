@@ -17,36 +17,11 @@
 /// @file
 /// Contains the implementation of the Network concept for unit tests.
 ///
-/// See traits.hpp
+/// See qi/messaging/sock/concept.hpp
 
 /// Contains mock types for unit tests.
 namespace mock
 {
-  // Transforms a procedure to call it in another thread.
-  //
-  // The transformed procedure will wait for the original procedure to finish
-  // before returning.
-  template<typename Proc>
-  struct CallInAnotherThread
-  {
-    Proc proc;
-
-  // Regular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(CallInAnotherThread, proc)
-
-  // Procedure:
-    template<typename... T>
-    void operator()(T&&... t)
-    {
-      using namespace qi;
-      auto m = makeMoveOnCopy(fwd<T>(t)...);
-      std::thread{[=]() {
-          apply(proc, std::move(asTuple(m)));
-        }
-      }.join();
-    }
-  };
-
   /// Models in the simplest possible way the Network concept.
   struct Network
   {
@@ -102,9 +77,18 @@ namespace mock
     };
     struct io_service_type
     {
+      mutable qi::Strand _strand;
+
       template<typename Proc>
-      CallInAnotherThread<Proc> wrap(Proc p) const {
-        return CallInAnotherThread<Proc>{p};
+      auto wrap(Proc&& p) const
+        -> decltype(qi::compose(qi::PolymorphicConstantFunction<void>{}, _strand.schedulerFor(qi::fwd<Proc>(p))))
+      {
+        // If `Proc`'s return type is `R`, then `_strand.schedulerFor(p)` returns a function object that
+        // returns a `qi::Future<R>`. But this `wrap` method must return a function object that returns `void`
+        // (see `NetIoService` concept).
+        // So we compose the stranded procedure with a procedure that does nothing and returns `void` (namely
+        // `PolymorphicConstantFunction<void>{}`).
+        return qi::compose(qi::PolymorphicConstantFunction<void>{}, _strand.schedulerFor(qi::fwd<Proc>(p)));
       }
     };
     struct ssl_context_type
@@ -200,8 +184,8 @@ namespace mock
     };
     struct acceptor_type
     {
-      acceptor_type(io_service_type io) : _io(io) {}
-      io_service_type _io;
+      acceptor_type(io_service_type& io) : _io(io) {}
+      io_service_type& _io;
       using _anyAsyncAccepter = std::function<void (ssl_socket_type::next_layer_type&, _anyHandler)>;
 
       io_service_type& get_io_service() {return _io;}
@@ -240,8 +224,8 @@ namespace mock
         bool operator==(iterator b) const {return _p == b._p || (!*_p && !*b._p);}
         bool operator!=(iterator b) const {return !(*this == b);}
       };
-      io_service_type _io;
-      resolver_type(io_service_type io) : _io(io) {}
+      io_service_type& _io;
+      resolver_type(io_service_type& io) : _io(io) {}
 
       using _anyResolveHandler = std::function<void (error_code_type, iterator)>;
       using _anyAsyncResolver = std::function<void (query, _anyResolveHandler)>;
