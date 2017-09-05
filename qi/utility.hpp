@@ -25,6 +25,34 @@ namespace qi
       "template argument substituting T is an lvalue reference type");
     return static_cast<T&&>(t);
   }
+
+  /// Produce a L-value reference in a non-evaluated context.
+  ///
+  /// Note: Because of the non-evaluated context, the function need not be defined.
+  ///
+  /// Note: This follows the same idea as `std::declval()`.
+  ///
+  /// Example: Statically selecting an overload.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // Different overloads of `f` will return different types.
+  /// template<typename T>
+  /// T f(T& t) {
+  ///   // ...
+  /// }
+  ///
+  /// template<typename T>
+  /// T* f(T (&a)[N]) {
+  ///   // ...
+  /// }
+  ///
+  /// template<ytpename T>
+  /// struct X {
+  ///   // Produce a "fake" L-value reference in a `decltype` context.
+  ///   using U = decltype(f(declref<T>()));
+  /// };
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  template<typename T>
+  T& declref();
 } // namespace qi
 
 #endif // _QI_UTILITY_HPP_
