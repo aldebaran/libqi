@@ -158,7 +158,7 @@ TEST(SendObject, pass_obj_made_from_module)
   qi::AnyObject remotePlop = p.client()->service("plop");
   qi::Promise<void> receivingObject;
   auto signalLink = remotePlop.connect(
-        "onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+        "onTruc", boost::function<void(qi::AnyObject)>([=](qi::AnyObject o) mutable
   {
     ASSERT_EQ(1, o.call<int>("testMethod", 0)); // this is the real test
     receivingObject.setValue(0);
@@ -193,7 +193,7 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
 
   qi::Promise<void> receivingObject;
-  emitter.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+  emitter.connect("onTruc", boost::function<void(qi::AnyObject)>([=](qi::AnyObject o) mutable
   {
     int i = o.call<int>("testMethod", 0);
     ASSERT_EQ(1, i); // this is the real test
