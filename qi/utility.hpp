@@ -2,6 +2,8 @@
 #ifndef _QI_UTILITY_HPP_
 #define _QI_UTILITY_HPP_
 #include <type_traits>
+#include <memory>
+#include <qi/type/traits.hpp>
 #include <qi/macro.hpp>
 
 namespace qi
@@ -53,6 +55,13 @@ namespace qi
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   template<typename T>
   T& declref();
+
+  /// Constructs a std::shared_ptr<T> with T deduced from the parameter.
+  template <typename T>
+  std::shared_ptr<traits::Decay<T>> sharedPtr(T&& t)
+  {
+    return std::make_shared<traits::Decay<T>>(fwd<T>(t));
+  }
 } // namespace qi
 
 #endif // _QI_UTILITY_HPP_

@@ -4,12 +4,14 @@
 */
 #include <thread>
 #include <system_error>
+#include <memory>
 
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/thread/synchronized_value.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <qi/preproc.hpp>
 #include <qi/log.hpp>
@@ -126,7 +128,7 @@ namespace qi {
 
   EventLoopAsio::EventLoopAsio(int threadCount, std::string name, bool spawnOnOverload)
     : EventLoopPrivate(std::move(name))
-    , _work(new boost::asio::io_service::work(_io)) // TODO: use make_unique once we can use C++14
+    , _work(nullptr)
     , _maxThreads(0)
     , _workerThreads(new WorkerThreadPool())
     , _spawnOnOverload(spawnOnOverload)
@@ -148,7 +150,10 @@ namespace qi {
           qi::os::getEnvDefault(gThreadCountEnvVar, std::max(static_cast<int>(std::thread::hardware_concurrency()), 3));
     }
 
-    _maxThreads = qi::os::getEnvDefault(gMaxThreadsEnvVar, 150u);
+    _io.reset();
+    delete _work.exchange(new boost::asio::io_service::work(_io));
+
+    _maxThreads = qi::os::getEnvDefault(gMaxThreadsEnvVar, 150);
     _workerThreads->launchN(threadCount, &EventLoopAsio::runWorkerLoop, this);
     if (_spawnOnOverload)
     {
@@ -176,6 +181,10 @@ namespace qi {
   {
     qiLogDebug() << "Stopping EventLoopAsio: " << this;
     delete _work.exchange(nullptr);
+
+    // FIXME: Although destroying _work should be enough, we have to explicitly stop the io_service
+    // because in some cases some work seems to get "stuck" in it for a reason that is unknown yet.
+    _io.stop();
 
     join();
   }
@@ -285,10 +294,12 @@ namespace qi {
     qiLogDebug()  << "Waiting threads from the pool - DONE";
   }
 
-  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p, const boost::system::error_code& erc)
+  /// Destructible D
+  template <typename D>
+  void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p,
+                                   const boost::system::error_code& erc, D countTask)
   {
-    auto scopedTotalTaskDecr = scoped(std::ref(_totalTask), Decr<std::atomic<uint64_t>>{});
-
+    boost::ignore_unused(id, countTask);
     if (!erc)
     {
       auto _ = scopedIncrAndDecr(_activeTask);
@@ -338,12 +349,8 @@ namespace qi {
       const auto id = ++gTaskId;
       tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
 
-
-      ++_totalTask;
-      bool resetTotalTask = true;
-      auto _ = scoped([&]{ if (resetTotalTask) { --_totalTask; } });
-      _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, Promise<void>{}, erc));
-      resetTotalTask = false;
+      auto countTotalTask = sharedPtr(scopedIncrAndDecr(_totalTask));
+      _io.post([=] { invoke_maybe(cb, id, Promise<void>{}, erc, countTotalTask); });
     }
     else
     {
@@ -367,9 +374,7 @@ namespace qi {
 
     const auto id = ++gTaskId;
 
-    ++_totalTask;
-    bool resetTotalTask = true;
-    auto _ = scoped([&]{ if (resetTotalTask) { --_totalTask; } });
+    auto countTotalTask = sharedPtr(scopedIncrAndDecr(_totalTask));
 
     tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
     if (delay > Duration::zero())
@@ -377,12 +382,11 @@ namespace qi {
       boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
       timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
       qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
-      timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
+      timer->async_wait([=](const boost::system::error_code& erc) { invoke_maybe(cb, id, prom, erc, countTotalTask); });
       return prom.future();
     }
     Promise<void> prom;
-    _io.post(boost::bind<void>(&EventLoopAsio::invoke_maybe, this, cb, id, prom,erc));
-    resetTotalTask = false;
+    _io.post([=] { invoke_maybe(cb, id, prom, erc, countTotalTask); });
     return prom.future();
   }
 
@@ -406,17 +410,13 @@ namespace qi {
 
     const auto id = ++gTaskId;
 
-    ++_totalTask;
-    bool resetTotalTask = true;
-    auto _ = scoped([&]{ if (resetTotalTask) { --_totalTask; } });
+    auto countTotalTask = sharedPtr(scopedIncrAndDecr(_totalTask));
 
     //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
     boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(boost::ref(_io));
     timer->expires_at(timepoint);
     qi::Promise<void> prom(boost::bind(&SteadyTimer::cancel, timer));
-    timer->async_wait(boost::bind(&EventLoopAsio::invoke_maybe, this, cb, id, prom, _1));
-    resetTotalTask = false;
-
+    timer->async_wait([=](const boost::system::error_code& erc) { invoke_maybe(cb, id, prom, erc, countTotalTask); });
     return prom.future();
   }
 

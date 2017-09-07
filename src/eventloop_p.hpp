@@ -80,7 +80,10 @@ namespace qi {
     void setMaxThreads(unsigned int max) override;
 
   private:
-    void invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p, const boost::system::error_code& erc);
+    /// Destructible D
+    template<typename D>
+    void invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p,
+                      const boost::system::error_code& erc, D countTask);
     void runWorkerLoop();
     void runPingLoop();
 
@@ -92,8 +95,8 @@ namespace qi {
     std::unique_ptr<WorkerThreadPool> _workerThreads;
     std::thread _pingThread;
 
-    std::atomic<uint64_t> _totalTask;
-    std::atomic<uint64_t> _activeTask;
+    std::atomic<int64_t> _totalTask {0};
+    std::atomic<int64_t> _activeTask {0};
     const bool _spawnOnOverload;
   };
 }
