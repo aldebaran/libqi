@@ -52,7 +52,7 @@ namespace qi
       Event_Message = 1,
     };
 
-    explicit MessageSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
+    explicit MessageSocket(qi::EventLoop* eventLoop = qi::getNetworkEventLoop())
       : _eventLoop(eventLoop)
       , _status(Status::Disconnected)
     {
@@ -106,7 +106,7 @@ namespace qi
   };
 
   using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
-  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
+  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getNetworkEventLoop());
 }
 
 #endif  // _SRC_MESSAGESOCKET_HPP_

@@ -60,7 +60,8 @@ namespace qi {
   public:
     static const char* const defaultName;
 
-    explicit EventLoopAsio(int threadCount = 0, std::string name = defaultName);
+    explicit EventLoopAsio(int threadCount = 0, std::string name = defaultName,
+      bool spawnOnOverload = true);
     ~EventLoopAsio() override;
 
     bool isInThisContext() const override;
@@ -93,6 +94,7 @@ namespace qi {
 
     std::atomic<uint64_t> _totalTask;
     std::atomic<uint64_t> _activeTask;
+    const bool _spawnOnOverload;
   };
 }
 

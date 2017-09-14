@@ -50,7 +50,7 @@ namespace qi
      *   - the value returned by std::thread::hardware_concurrency() if it's greater than 3,
      *   - the fixed value of 3.
      */
-    explicit EventLoop(std::string name = "eventloop", int nthreads = 0);
+    explicit EventLoop(std::string name = "eventloop", int nthreads = 0, bool spawnOnOverload = true);
 
     /// \brief Default destructor.
     ~EventLoop();
@@ -177,6 +177,9 @@ namespace qi
 
   /// \brief Returns the global eventloop, created on demand on first call.
   QI_API EventLoop* getEventLoop();
+
+  /// \brief Returns the global network eventloop, created on demand on first call.
+  QI_API EventLoop* getNetworkEventLoop();
 
   /**
    * \brief Starts the eventloop with nthread threads. Does nothing if already started.

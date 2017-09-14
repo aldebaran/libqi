@@ -124,11 +124,12 @@ namespace qi {
   static const auto gMaxTimeoutsEnvVar = "QI_EVENTLOOP_MAX_TIMEOUTS";
   const char* const EventLoopAsio::defaultName = "MainEventLoop";
 
-  EventLoopAsio::EventLoopAsio(int threadCount, std::string name)
+  EventLoopAsio::EventLoopAsio(int threadCount, std::string name, bool spawnOnOverload)
     : EventLoopPrivate(std::move(name))
     , _work(new boost::asio::io_service::work(_io)) // TODO: use make_unique once we can use C++14
     , _maxThreads(0)
     , _workerThreads(new WorkerThreadPool())
+    , _spawnOnOverload(spawnOnOverload)
   {
     start(threadCount);
   }
@@ -149,7 +150,10 @@ namespace qi {
 
     _maxThreads = qi::os::getEnvDefault(gMaxThreadsEnvVar, 150u);
     _workerThreads->launchN(threadCount, &EventLoopAsio::runWorkerLoop, this);
-    _pingThread = std::thread(&EventLoopAsio::runPingLoop, this);
+    if (_spawnOnOverload)
+    {
+      _pingThread = std::thread(&EventLoopAsio::runPingLoop, this);
+    }
   }
 
   EventLoopAsio::~EventLoopAsio()
@@ -318,7 +322,6 @@ namespace qi {
     }
   }
 
-
   void EventLoopAsio::post(qi::Duration delay,
       const boost::function<void ()>& cb)
   {
@@ -427,8 +430,8 @@ namespace qi {
     return static_cast<void*>(&_io);
   }
 
-  EventLoop::EventLoop(std::string name, int nthreads)
-    : _p(new EventLoopAsio(nthreads, name)) // TODO: use make_unique once we can use C++14
+  EventLoop::EventLoop(std::string name, int nthreads, bool spawnOnOverload)
+    : _p(new EventLoopAsio(nthreads, name, spawnOnOverload)) // TODO: use make_unique once we can use C++14
     , _name(name)
   {
   }
@@ -588,33 +591,48 @@ namespace qi {
     ctx = 0;
   }
 
-  static EventLoop*    _poolEventLoop = nullptr;
+  static EventLoop* _poolEventLoop = nullptr;
+  static EventLoop* _networkEventLoop = nullptr;
 
-  //the initialisation is protected by a mutex,
-  //we then use an atomic to prevent having a mutex on a fastpath.
+  namespace
+  {
+    // The initialisation is protected by a mutex,
+    // We then use an atomic to prevent having a mutex on a fastpath.
+    EventLoop* _getInternal(EventLoop* &ctx, int nthreads, const std::string& name,
+      bool spawnOnOverload, boost::mutex& mutex, std::atomic<int>& init)
+    {
+      if (init.load())
+        return ctx;
+
+      {
+        boost::mutex::scoped_lock _sl(mutex);
+        if (!ctx)
+        {
+          if (!qi::Application::initialized())
+          {
+            qiLogVerbose() << "Creating event loop while no qi::Application() is running";
+          }
+          ctx = new EventLoop(name, nthreads, spawnOnOverload); // TODO: use make_unique once we can use C++14
+          Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
+        }
+      }
+      ++init;
+      return ctx;
+    }
+  }
+
   static EventLoop* _get(EventLoop* &ctx, int nthreads)
   {
-    //same mutex for multiples eventloops, but that's ok, used only at init.
-    static boost::mutex    eventLoopMutex;
+    static boost::mutex mutex;
     static std::atomic<int> init(0);
+    return _getInternal(ctx, nthreads, EventLoopAsio::defaultName, true, mutex, init);
+  }
 
-    if (init.load())
-      return ctx;
-
-    {
-      boost::mutex::scoped_lock _sl(eventLoopMutex);
-      if (!ctx)
-      {
-        if (!qi::Application::initialized())
-        {
-          qiLogVerbose() << "Creating event loop while no qi::Application() is running";
-        }
-        ctx = new EventLoop(EventLoopAsio::defaultName, nthreads); // TODO: use make_unique once we can use C++14
-        Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
-      }
-    }
-    ++init;
-    return ctx;
+  static EventLoop* _getNetwork(EventLoop* &ctx)
+  {
+    static boost::mutex mutex;
+    static std::atomic<int> init(0);
+    return _getInternal(ctx, 1, "EventLoopNetwork", false, mutex, init);
   }
 
   void startEventLoop(int nthread)
@@ -627,6 +645,10 @@ namespace qi {
     return _get(_poolEventLoop, 0);
   }
 
+  EventLoop* getNetworkEventLoop()
+  {
+    return _getNetwork(_networkEventLoop);
+  }
 
   boost::asio::io_service& getIoService()
   {

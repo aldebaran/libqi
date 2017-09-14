@@ -648,7 +648,7 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
   };
   std::this_thread::sleep_for(milliseconds{100});
-  socket = makeMessageSocket(scheme, getEventLoop());
+  socket = makeMessageSocket(scheme);
   Future<void> futCo = socket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeout));
   Future<void> futDisco = socket->disconnect();
@@ -672,7 +672,7 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
     };
     std::this_thread::sleep_for(milliseconds{500});
-    socket = makeMessageSocket(protocol, getEventLoop());
+    socket = makeMessageSocket(protocol);
     Future<void> fut = socket->connect(url);
     ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
   }
