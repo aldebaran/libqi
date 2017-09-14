@@ -17,6 +17,7 @@
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
 #include <qi/messaging/sock/traits.hpp>
+#include <qi/messaging/sock/sslcontextptr.hpp>
 
 #include <qi/eventloop.hpp>
 
@@ -31,7 +32,7 @@ namespace qi
 
   void _onAccept(TransportServerImplPtr p,
                  const boost::system::error_code& erc,
-                 sock::SocketPtr<sock::NetworkAsio> s
+                 sock::SocketWithContextPtr<sock::NetworkAsio> s
                  )
   {
     boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
@@ -55,7 +56,7 @@ namespace qi
   }
 
   void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
-    sock::SocketPtr<sock::NetworkAsio> s
+    sock::SocketWithContextPtr<sock::NetworkAsio> s
     )
   {
     qiLogDebug() << this << " onAccept";
@@ -93,7 +94,7 @@ namespace qi
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
         }
     }
-    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
+    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
@@ -289,14 +290,14 @@ namespace qi
         return qi::makeFutureError<void>(s);
       }
 
-      _sslContext.set_options(
+      _sslContext->set_options(
         boost::asio::ssl::context::default_workarounds
         | boost::asio::ssl::context::no_sslv2);
-      _sslContext.use_certificate_chain_file(self->_identityCertificate.c_str());
-      _sslContext.use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
+      _sslContext->use_certificate_chain_file(self->_identityCertificate.c_str());
+      _sslContext->use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
     }
 
-    _s = sock::makeSocketPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
+    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);
@@ -328,9 +329,10 @@ namespace qi
                                                                  EventLoop* ctx)
     : TransportServerImpl(self, ctx)
     , _self(self)
-    , _acceptor(new boost::asio::ip::tcp::acceptor(*(boost::asio::io_service*)ctx->nativeHandle()))
+    , _acceptor(new boost::asio::ip::tcp::acceptor(*asIoServicePtr(ctx)))
     , _live(true)
-    , _sslContext(*(boost::asio::io_service*)ctx->nativeHandle(), boost::asio::ssl::context::sslv23)
+    , _sslContext(sock::makeSslContextPtr<sock::NetworkAsio>(*asIoServicePtr(ctx),
+                                                             sock::SslContext<sock::NetworkAsio>::sslv23))
     , _s()
     , _ssl(false)
     , _port(0)

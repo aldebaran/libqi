@@ -12,21 +12,33 @@
 
 namespace qi { namespace sock {
 
-  /// Default underlying socket type.
-  template<typename N>
-  using Socket = SocketWithContext<N>;
+  /// NetSslSocket Socket
+  template<typename Socket>
+  using SocketPtr = boost::shared_ptr<Socket>;
 
-  /// Default underlying socket type pointer.
   template<typename N>
-  using SocketPtr = boost::shared_ptr<Socket<N>>;
+  using SslSocketPtr = SocketPtr<SslSocket<N>>;
+  template<typename N>
+  using SocketWithContextPtr = SocketPtr<SocketWithContext<N>>;
 
-  /// Helper function to deduce types for `SocketPtr`.
+  /// Constructs a simple SslSocket. The caller is responsible of managing the
+  /// lifetime of the SslContext.
   ///
   /// Network N
-  template<typename N, typename... Args>
-  SocketPtr<N> makeSocketPtr(Args&&... args)
+  template<typename N>
+  SslSocketPtr<N> makeSslSocketPtr(IoService<N>& io, SslContext<N>& context)
   {
-    return boost::make_shared<Socket<N>>(fwd<Args>(args)...);
+    return boost::make_shared<SslSocket<N>>(io, context);
+  }
+
+  /// Constructs a SocketWithContext that will ensure that the SslContext shares the
+  /// lifetime of the socket.
+  ///
+  /// Network N
+  template<typename N>
+  SocketWithContextPtr<N> makeSocketWithContextPtr(IoService<N>& io, const SslContextPtr<N>& context)
+  {
+    return boost::make_shared<SocketWithContext<N>>(io, context);
   }
 }} // namespace qi::sock
 

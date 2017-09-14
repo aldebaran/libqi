@@ -19,6 +19,8 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   std::thread resolveThread;
   Promise<void> nukeObject;
   // The resolve is going to fail. Before calling the handler, we're going to
@@ -35,16 +37,17 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
       }};
     }
   );
-  ConnectSocket<N>* p = nullptr;
+  ConnectSocket<N, S>* p = nullptr;
   Promise<ErrorCode<N>> promiseError;
   IoService<N>& io = N::defaultIoService();
   {
-    using Side = HandshakeSide<SslSocket<N>>;
-    ConnectSocket<N> connect{io};
-    SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
+    using Side = HandshakeSide<S>;
+    ConnectSocket<N, S> connect{io};
+    SslContext<N> context { Method<SslContext<N>>::sslv23 };
+    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false},
+      [&] { return makeSslSocketPtr<N>(io, context); },
       IpV6Enabled{false}, Side::client,
-      [=](ErrorCode<N> e, SocketPtr<N>) mutable {
+      [=](ErrorCode<N> e, SocketPtr<S>) mutable {
         promiseError.setValue(e);
       }
     );
@@ -70,14 +73,16 @@ struct NetConnectFuture : testing::Test
 
 namespace qi { namespace sock {
 
-/// Network N
-template<typename N>
+/// Network N,
+/// With NetSslSocket S:
+///   S is compatible with N
+template<typename N, typename S>
 struct ConnectingWrap
 {
-  using Handshake = HandshakeSide<SslSocket<N>>;
+  using Handshake = HandshakeSide<S>;
   IoService<N>& _io;
-  std::unique_ptr<Connecting<N>> _connecting;
-  Promise<SocketPtr<N>> _complete;
+  std::unique_ptr<Connecting<N, S>> _connecting;
+  Promise<SocketPtr<S>> _complete;
 
   /// Adapt Connecting to behave as ConnectSocket.
   /// This allows to share unit tests for these two types.
@@ -85,14 +90,15 @@ struct ConnectingWrap
     : _io(io)
   {
   }
-  void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context, IpV6Enabled ipV6, Handshake side,
+  template<typename Proc>
+  void operator()(const Url& url, SslEnabled ssl, Proc&& makeSocket, IpV6Enabled ipV6, Handshake side,
     const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{})
   {
-    _connecting.reset(new Connecting<N>{_io, url, ssl, context, ipV6, side, tcpPingTimeout});
+    _connecting.reset(new Connecting<N, S>{_io, url, ssl, makeSocket, ipV6, side, tcpPingTimeout});
     auto complete = _complete;
     _connecting->complete().then(
-      [=](Future<SyncConnectingResultPtr<N>> fut) mutable {
-        const ConnectingResult<N> res = fut.value()->get(); // copy the result
+      [=](Future<SyncConnectingResultPtr<N, S>> fut) mutable {
+        const ConnectingResult<N, S> res = fut.value()->get(); // copy the result
         if (hasError(res))
         {
           complete.setError(res.errorMessage);
@@ -107,7 +113,7 @@ struct ConnectingWrap
   ~ConnectingWrap()
   {
   }
-  Future<SocketPtr<N>> complete() const
+  Future<SocketPtr<S>> complete() const
   {
     return _complete.future();
   }
@@ -117,7 +123,8 @@ struct ConnectingWrap
 
 using sequences = testing::Types<
   // Mock
-  qi::sock::ConnectSocketFuture<mock::N>, qi::sock::ConnectingWrap<mock::N>
+  qi::sock::ConnectSocketFuture<mock::N, qi::sock::SslSocket<mock::N>>,
+  qi::sock::ConnectingWrap<mock::N, qi::sock::SslSocket<mock::N>>
   // Asio
   //, qi::sock::ConnectSocketFuture<qi::sock::NetworkAsio>, qi::sock::Connecting<qi::sock::NetworkAsio>
 >;
@@ -130,6 +137,8 @@ TYPED_TEST(NetConnectFuture, FailsOnResolve)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   std::string receivedHost, receivedPort;
   auto _ = scopedSetAndRestore(
     Resolver<N>::async_resolve,
@@ -141,10 +150,11 @@ TYPED_TEST(NetConnectFuture, FailsOnResolve)
   );
   IoService<N>& io = N::defaultIoService();
   const Url url{"tcp://10.11.12.13:1234"};
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(url, SslEnabled{false}, context, IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(url, SslEnabled{ false }, [&] { return makeSslSocketPtr<N>(io, context); },
+          IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(code(connect.complete().error()), networkUnreachable<ErrorCode<N>>().value());
   ASSERT_EQ("10.11.12.13", receivedHost);
@@ -160,6 +170,8 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
   using namespace qi::sock;
   using namespace boost::algorithm;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   std::thread resolveThread;
   Promise<void> nukeObject;
   // The resolve is going to fail. Before calling the handler, we're going to
@@ -177,14 +189,14 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
     }
   );
   ConnectFuture* p = nullptr;
-  qi::Future<SocketPtr<N>> connected;
+  qi::Future<SocketPtr<S>> connected;
   IoService<N>& io = N::defaultIoService();
   {
-    using Side = HandshakeSide<SslSocket<N>>;
+    using Side = HandshakeSide<S>;
     ConnectFuture connect{io};
-    SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
-      IpV6Enabled{false}, Side::client);
+    SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+    connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
+            [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
     p = &connect;
   }
@@ -206,6 +218,8 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
   using namespace qi::sock;
   using namespace boost::algorithm;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto scopedResolve = scopedSetAndRestore(
@@ -218,7 +232,7 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
   );
   std::string resolvedHost;
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     [&](N::_resolver_entry e, N::_anyHandler h) {
       resolvedHost = e._e._addr._value;
       h(ErrorCode<N>{ErrorCode<N>::networkUnreachable});
@@ -226,11 +240,11 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
   );
   IoService<N>& io = N::defaultIoService();
   static const std::string host = "1.2.3.4";
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://" + host + ":9876"}, SslEnabled{false}, context,
-    IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{ "tcp://" + host + ":9876" }, SslEnabled{ false },
+          [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(host, resolvedHost);
   ASSERT_EQ(code(connect.complete().error()), networkUnreachable<ErrorCode<N>>().value());
@@ -242,7 +256,9 @@ TYPED_TEST(NetConnectFuture, OnlyIpV6EndpointsResolvedButIpV6NotAllowed)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
   using Entry = N::_resolver_entry;
+
   // The resolve is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto _ = scopedSetAndRestore(
@@ -254,11 +270,11 @@ TYPED_TEST(NetConnectFuture, OnlyIpV6EndpointsResolvedButIpV6NotAllowed)
     }
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
-    IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
+          [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(code(connect.complete().error()), hostNotFound<ErrorCode<N>>().value());
 }
@@ -272,6 +288,8 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
   using namespace qi::sock;
   using namespace boost::algorithm;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   std::thread resolveThread;
   qi::Promise<void> nukeObject;
   // The resolve is going to fail. Before calling the handler, we're going to
@@ -281,7 +299,7 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
     mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     [=, &resolveThread](N::_resolver_entry, N::_anyHandler h) {
       resolveThread = std::thread{[=]{
         // Wait for the object destruction.
@@ -290,14 +308,14 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
       }};
     }
   );
-  Future<sock::SocketPtr<N>> connected;
+  Future<SocketPtr<S>> connected;
   IoService<N>& io = N::defaultIoService();
   {
-    using Side = HandshakeSide<SslSocket<N>>;
+    using Side = HandshakeSide<S>;
     ConnectFuture connect{io};
-    SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
-      IpV6Enabled{false}, Side::client);
+    SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+    connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
+            [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
   }
   // Now we unblock the resolve handler.
@@ -314,24 +332,26 @@ TYPED_TEST(NetConnectFuture, FailsOnConnect)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   auto scopedResolve = scopedSetAndRestore(
     Resolver<N>::async_resolve,
     mock::defaultAsyncResolve
   );
   std::string resolvedHost;
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     [&](N::_resolver_entry e, N::_anyHandler h) {
       resolvedHost = e._e._addr._value;
       h(ErrorCode<N>{ErrorCode<N>::connectionRefused});
     }
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
-    IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
+          [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   ASSERT_EQ(code(connect.complete().error()), connectionRefused<ErrorCode<N>>().value());
   ASSERT_EQ("10.11.12.13", resolvedHost);
@@ -343,20 +363,22 @@ TYPED_TEST(NetConnectFuture, SucceedsNonSsl)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   auto scopedResolve = scopedSetAndRestore(
     Resolver<N>::async_resolve,
     mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     mock::defaultAsyncConnect
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false}, context,
-    IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
+          [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
 }
 
@@ -366,26 +388,28 @@ TYPED_TEST(NetConnectFuture, FailsOnHandshake)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   auto scopedResolve = scopedSetAndRestore(
     Resolver<N>::async_resolve,
     mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    SslSocket<N>::async_handshake,
-    [=](SslSocket<N>::handshake_type, N::_anyHandler h) {
+    S::async_handshake,
+    [=](S::handshake_type, N::_anyHandler h) {
       h(ErrorCode<N>{ErrorCode<N>::sslErrors});
     }
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
-    IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
+          [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
   const auto s = connect.complete().error();
   ASSERT_EQ(code(s), ErrorCode<N>::sslErrors);
@@ -399,15 +423,17 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   Resolver<N>::async_resolve = mock::defaultAsyncResolve;
-  Lowest<SslSocket<N>>::async_connect = mock::defaultAsyncConnect;
+  Lowest<S>::async_connect = mock::defaultAsyncConnect;
   qi::Promise<void> nukeObject;
   std::thread t;
   // The handshake is going to fail. Before calling the handler, we're going to
   // wait the ConnectFuture object is destroyed.
   auto _ = scopedSetAndRestore(
-    SslSocket<N>::async_handshake,
-    [&](SslSocket<N>::handshake_type, N::_anyHandler h) {
+    S::async_handshake,
+    [&](S::handshake_type, N::_anyHandler h) {
       // We launch asynchronously to return immediately.
       t = std::move(std::thread([=]{
         // Wait for the object destruction.
@@ -418,14 +444,14 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
     }
   );
   ConnectFuture* p = nullptr;
-  qi::Future<SocketPtr<N>> connected;
+  qi::Future<SocketPtr<S>> connected;
   IoService<N>& io = N::defaultIoService();
   {
-    using Side = HandshakeSide<SslSocket<N>>;
+    using Side = HandshakeSide<S>;
     ConnectFuture connect{io};
-    SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
-      IpV6Enabled{false}, Side::client);
+    SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+    connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
+            [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
     p = &connect;
   }
@@ -446,28 +472,30 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   auto scopedResolve = scopedSetAndRestore(
     Resolver<N>::async_resolve,
     mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    SslSocket<N>::async_handshake,
+    S::async_handshake,
     mock::defaultAsyncHandshake
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
+  using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
-    IpV6Enabled{false}, Side::client);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
+          [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
 }
 
-template<typename N>
+template<typename N, typename S>
 struct SetupStop
 {
   using I = qi::sock::Iterator<qi::sock::Resolver<N>>;
@@ -487,7 +515,7 @@ struct SetupStop
     });
   }
 
-  void operator()(const qi::sock::SocketPtr<N>&)
+  void operator()(const qi::sock::SocketPtr<S>&)
   {
     using namespace qi::sock;
     // Can be called in the connection step and in the handshake step.
@@ -510,6 +538,7 @@ TEST(NetConnectFutureStop, WhileResolving)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
 
   Promise<std::pair<ErrorCode<N>, Iterator<Resolver<N>>>> promiseResolve;
   Promise<void> promiseStopResolve;
@@ -527,20 +556,21 @@ TEST(NetConnectFutureStop, WhileResolving)
     }
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    SslSocket<N>::async_handshake,
+    S::async_handshake,
     mock::defaultAsyncHandshake
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
-  ConnectSocketFuture<N> connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  using Side = HandshakeSide<S>;
+  ConnectSocketFuture<N, S> connect{io};
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true},
+    [&] { return makeSslSocketPtr<N>(io, context); },
     IpV6Enabled{false}, Side::client, Seconds{100},
-    SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
+    SetupStop<N, S>{promiseStopResolve.future(), promiseStopConnect.future(), false,
       promiseResolve, promiseConnect}
   );
 
@@ -560,6 +590,7 @@ TEST(NetConnectFutureStop, WhileConnecting)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
 
   Promise<std::pair<ErrorCode<N>, Iterator<Resolver<N>>>> promiseResolve;
   Promise<void> promiseStopResolve;
@@ -571,7 +602,7 @@ TEST(NetConnectFutureStop, WhileConnecting)
     mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     [&](N::_resolver_entry, N::_anyHandler h) {
       threadConnect = std::thread{[=]() mutable {
         // Block until the resolve promise has been set.
@@ -580,16 +611,17 @@ TEST(NetConnectFutureStop, WhileConnecting)
     }
   );
   auto scopedHandshake = scopedSetAndRestore(
-    SslSocket<N>::async_handshake,
+    S::async_handshake,
     mock::defaultAsyncHandshake
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
-  ConnectSocketFuture<N> connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  using Side = HandshakeSide<S>;
+  ConnectSocketFuture<N, S> connect{io};
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true},
+    [&] { return makeSslSocketPtr<N>(io, context); },
     IpV6Enabled{false}, Side::client, Seconds{100},
-    SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
+    SetupStop<N, S>{promiseStopResolve.future(), promiseStopConnect.future(), false,
       promiseResolve, promiseConnect}
   );
 
@@ -609,6 +641,7 @@ TEST(NetConnectFutureStop, WhileHandshaking)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
 
   Promise<std::pair<ErrorCode<N>, Iterator<Resolver<N>>>> promiseResolve;
   Promise<void> promiseStopResolve;
@@ -620,12 +653,12 @@ TEST(NetConnectFutureStop, WhileHandshaking)
     mock::defaultAsyncResolve
   );
   auto scopedConnect = scopedSetAndRestore(
-    Lowest<SslSocket<N>>::async_connect,
+    Lowest<S>::async_connect,
     mock::defaultAsyncConnect
   );
   auto scopedHandshake = scopedSetAndRestore(
-    SslSocket<N>::async_handshake,
-    [&](HandshakeSide<SslSocket<N>>, N::_anyHandler h) {
+    S::async_handshake,
+    [&](HandshakeSide<S>, N::_anyHandler h) {
       threadHandshake = std::thread{[=]() mutable {
         // Block until the resolve promise has been set.
         h(promiseConnect.future().value());
@@ -633,12 +666,13 @@ TEST(NetConnectFutureStop, WhileHandshaking)
     }
   );
   IoService<N>& io = N::defaultIoService();
-  using Side = HandshakeSide<SslSocket<N>>;
-  ConnectSocketFuture<N> connect{io};
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true}, context,
+  using Side = HandshakeSide<S>;
+  ConnectSocketFuture<N, S> connect{io};
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true},
+    [&] { return makeSslSocketPtr<N>(io, context); },
     IpV6Enabled{false}, Side::client, Seconds{100},
-    SetupStop<N>{promiseStopResolve.future(), promiseStopConnect.future(), false,
+    SetupStop<N, S>{promiseStopResolve.future(), promiseStopConnect.future(), false,
       promiseResolve, promiseConnect}
   );
 

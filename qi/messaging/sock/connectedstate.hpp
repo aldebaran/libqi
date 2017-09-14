@@ -53,11 +53,13 @@ namespace qi
     /// // ...
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
-    /// Network N
-    template<typename N>
+    /// Network N,
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
     struct ConnectedResult
     {
-      SocketPtr<N> socket;
+      SocketPtr<S> socket;
 
       /// If a disconnection was requested, this promise is related to the future
       /// returned to the caller. Setting it will inform the caller that the
@@ -67,7 +69,7 @@ namespace qi
       bool hasError;
       std::string errorMessage;
 
-      ConnectedResult(SocketPtr<N> s = SocketPtr<N>{})
+      ConnectedResult(SocketPtr<S> s = SocketPtr<S>{})
         : socket(s)
         , hasError(false)
       {
@@ -75,12 +77,16 @@ namespace qi
     };
 
     /// Network N
-    template<typename N>
-    using SyncConnectedResult = boost::synchronized_value<ConnectedResult<N>>;
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
+    using SyncConnectedResult = boost::synchronized_value<ConnectedResult<N, S>>;
 
     /// Network N
-    template<typename N>
-    using SyncConnectedResultPtr = boost::shared_ptr<SyncConnectedResult<N>>;
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
+    using SyncConnectedResultPtr = boost::shared_ptr<SyncConnectedResult<N, S>>;
 
     boost::optional<qi::int64_t> getSocketTimeWarnThresholdFromEnv();
 
@@ -117,27 +123,28 @@ namespace qi
     /// // Get a Message msg;
     /// c.send(msg); // Move the message if you can, to avoid a copy.
     /// // Send more messages.
-    /// Future<std::pair<SocketPtr<N>, Promise<void>>> futureComplete = c.complete();
+    /// Future<std::pair<SocketPtr<S>, Promise<void>>> futureComplete = c.complete();
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
     /// Network N
-    template<typename N>
+    /// NetSslSocket N
+    template<typename N, typename S>
     struct Connected
     {
     private:
       struct Impl : std::enable_shared_from_this<Impl>
       {
         using std::enable_shared_from_this<Impl>::shared_from_this;
-        using ReadableMessage = typename SendMessageEnqueue<N, SocketPtr<N>>::ReadableMessage;
+        using ReadableMessage = typename SendMessageEnqueue<N, SocketPtr<S>>::ReadableMessage;
 
-        boost::synchronized_value<Promise<SyncConnectedResultPtr<N>>> _completePromise;
-        SyncConnectedResultPtr<N> _result;
+        boost::synchronized_value<Promise<SyncConnectedResultPtr<N, S>>> _completePromise;
+        SyncConnectedResultPtr<N, S> _result;
         std::atomic<bool> _stopRequested;
         std::atomic<bool> _shuttingdown;
         ReceiveMessageContinuous<N> _receiveMsg;
-        SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
+        SendMessageEnqueue<N, SocketPtr<S>> _sendMsg;
 
-        Impl(const SocketPtr<N>& socket);
+        Impl(const SocketPtr<S>& socket);
         ~Impl();
 
         template<typename Proc>
@@ -158,7 +165,7 @@ namespace qi
               self->_shuttingdown = true;
               auto socket = (*self->_result)->socket;
               socket->lowest_layer().cancel();
-              socket->lowest_layer().shutdown(ShutdownMode<Lowest<SslSocket<N>>>::shutdown_both);
+              socket->lowest_layer().shutdown(ShutdownMode<Lowest<S>>::shutdown_both);
             })();
           }
           else
@@ -171,7 +178,7 @@ namespace qi
 
         void setPromise(const sock::ErrorCode<N>&, const Message*);
 
-        SocketPtr<N>& socket()
+        SocketPtr<S>& socket()
         {
           return (*_result)->socket;
         }
@@ -199,7 +206,7 @@ namespace qi
       ///
       /// Procedure<bool (ErrorCode<N>, const Message*)> Proc
       template<typename Proc>
-      Connected(const SocketPtr<N>&, SslEnabled ssl, size_t maxPayload, const Proc& onReceive,
+      Connected(const SocketPtr<S>&, SslEnabled ssl, size_t maxPayload, const Proc& onReceive,
         qi::int64_t messageHandlingTimeoutInMus = getSocketTimeWarnThresholdFromEnv().value_or(0));
 
       /// If `onSent` returns false, the processing of enqueued messages stops.
@@ -210,7 +217,7 @@ namespace qi
       {
         return _impl->send(std::forward<Msg>(msg), ssl, onSent);
       }
-      Future<SyncConnectedResultPtr<N>> complete() const
+      Future<SyncConnectedResultPtr<N, S>> complete() const
       {
         return _impl->_completePromise->future();
       }
@@ -230,26 +237,26 @@ namespace qi
       }
     };
 
-    template<typename N>
+    template<typename N, typename S>
     template<typename Proc>
-    Connected<N>::Connected(const SocketPtr<N>& socket, SslEnabled ssl, size_t maxPayload,
+    Connected<N, S>::Connected(const SocketPtr<S>& socket, SslEnabled ssl, size_t maxPayload,
         const Proc& onReceive, qi::int64_t messageHandlingTimeoutInMus)
       : _impl(std::make_shared<Impl>(socket))
     {
       _impl->start(ssl, maxPayload, onReceive, messageHandlingTimeoutInMus);
     }
 
-    template<typename N>
-    Connected<N>::Impl::Impl(const SocketPtr<N>& s)
-      : _result{ boost::make_shared<SyncConnectedResult<N>>(ConnectedResult<N>{ s }) }
+    template<typename N, typename S>
+    Connected<N, S>::Impl::Impl(const SocketPtr<S>& s)
+      : _result{ boost::make_shared<SyncConnectedResult<N, S>>(ConnectedResult<N, S>{ s }) }
       , _stopRequested(false)
       , _shuttingdown(false)
       , _sendMsg{s}
     {
     }
 
-    template<typename N>
-    void Connected<N>::Impl::setPromise(const sock::ErrorCode<N>& error, const Message* msg)
+    template<typename N, typename S>
+    void Connected<N, S>::Impl::setPromise(const sock::ErrorCode<N>& error, const Message* msg)
     {
       auto prom = _completePromise.synchronize();
       if (!prom->future().isRunning()) // promise already set
@@ -265,9 +272,9 @@ namespace qi
       prom->setValue(_result);
     }
 
-    template<typename N>
+    template<typename N, typename S>
     template<typename Proc>
-    void Connected<N>::Impl::start(SslEnabled ssl, size_t maxPayload, Proc onReceive,
+    void Connected<N, S>::Impl::start(SslEnabled ssl, size_t maxPayload, Proc onReceive,
         qi::int64_t messageHandlingTimeoutInMus)
     {
       auto self = shared_from_this();
@@ -292,14 +299,14 @@ namespace qi
       }))();
     }
 
-    template<typename N>
-    Connected<N>::Impl::~Impl()
+    template<typename N, typename S>
+    Connected<N, S>::Impl::~Impl()
     {
     }
 
-    template<typename N>
+    template<typename N, typename S>
     template<typename Msg, typename Proc>
-    void Connected<N>::Impl::send(Msg&& msg, SslEnabled ssl, Proc onSent)
+    void Connected<N, S>::Impl::send(Msg&& msg, SslEnabled ssl, Proc onSent)
     {
       using SendMessage = decltype(_sendMsg);
       using ReadableMessage = typename SendMessage::ReadableMessage;

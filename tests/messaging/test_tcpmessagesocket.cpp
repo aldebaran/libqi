@@ -549,7 +549,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
     }
   );
 
-  using LowestLayer = Lowest<Socket<N>>;
+  using LowestLayer = Lowest<SslSocket<N>>;
   auto scopedShutdown = scopedSetAndRestore(
     LowestLayer::_shutdown,
     [=](LowestLayer::shutdown_type, ErrorCode<N>&) mutable {

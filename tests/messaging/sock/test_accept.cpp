@@ -5,6 +5,7 @@
 #include <qi/messaging/sock/accept.hpp>
 #include <qi/messaging/sock/connect.hpp>
 #include <qi/messaging/sock/networkasio.hpp>
+#include <qi/messaging/sock/sslcontextptr.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include <qi/future.hpp>
 #include <qi/scoped.hpp>
@@ -23,17 +24,21 @@ TEST(NetAcceptConnectionContinuous, Success)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
+
   auto _ = scopedSetAndRestore(
     Acceptor<N>::async_accept,
     mock::defaultAsyncAccept
   );
 
-  Promise<SocketPtr<N>> promiseAcceptFinished;
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  Endpoint<Lowest<SslSocket<N>>> endpoint;
-  AcceptConnectionContinuous<N> accept{N::defaultIoService()};
-  accept(context, endpoint, ReuseAddressEnabled{true},
-    [&](ErrorCode<N> e, SocketPtr<N> s) {
+  auto& io = N::defaultIoService();
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  Promise<SocketPtr<S>> promiseAcceptFinished;
+  Endpoint<Lowest<S>> endpoint;
+
+  AcceptConnectionContinuous<N, S> accept{io};
+  accept([&]{ return makeSslSocketPtr<N>(io, context); }, endpoint, ReuseAddressEnabled{true},
+    [&](ErrorCode<N> e, SocketPtr<S> s) {
       if (e) promiseAcceptFinished.setError("Accept error occurred.");
       else   promiseAcceptFinished.setValue(s);
       return false;
@@ -49,21 +54,24 @@ TEST(NetAcceptConnectionContinuous, AcceptFailed)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
+  using S = SslSocket<N>;
 
   auto _ = scopedSetAndRestore(
     Acceptor<N>::async_accept,
-    [](SslSocket<N>::next_layer_type&, N::_anyHandler h) {
+    [](S::next_layer_type&, N::_anyHandler h) {
       h(networkUnreachable<ErrorCode<N>>());
     }
   );
 
-  Promise<SocketPtr<N>> promiseAcceptFinished;
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  Endpoint<Lowest<SslSocket<N>>> endpoint;
-  AcceptConnectionContinuous<N> accept{N::defaultIoService()};
-  accept(context, endpoint,
+  auto& io = N::defaultIoService();
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  Promise<SocketPtr<S>> promiseAcceptFinished;
+  Endpoint<Lowest<S>> endpoint;
+
+  AcceptConnectionContinuous<N, S> accept{io};
+  accept([&]{ return makeSslSocketPtr<N>(io, context); }, endpoint,
     ReuseAddressEnabled{false},
-    [&](ErrorCode<N> e, SocketPtr<N> s) {
+    [&](ErrorCode<N> e, SocketPtr<S> s) {
       if (e) promiseAcceptFinished.setError(e.message());
       else promiseAcceptFinished.setValue(s);
       return false;
@@ -79,17 +87,19 @@ TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
   using namespace qi;
   using namespace qi::sock;
   using N = NetworkAsio;
-  using E = Endpoint<Lowest<SslSocket<N>>>;
+  using S = SslSocket<N>;
+  using E = Endpoint<Lowest<S>>;
 
   auto& io = N::defaultIoService();
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
-  Promise<SocketPtr<N>> promiseAcceptFinished;
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  Promise<SocketPtr<S>> promiseAcceptFinished;
   Promise<E> localEndpoint;
 
-  AcceptConnectionContinuous<N> accept{io};
-  accept(context, "tcp://127.0.0.1:0",
+  auto makeSocket = [&]{ return makeSslSocketPtr<N>(io, context); };
+  AcceptConnectionContinuous<N, S> accept{io};
+  accept(makeSocket, "tcp://127.0.0.1:0",
     IpV6Enabled{false}, ReuseAddressEnabled{false},
-    [&](ErrorCode<N> erc, SocketPtr<N> socket) { // onAccept
+    [&](ErrorCode<N> erc, SocketPtr<S> socket) { // onAccept
       if (erc)
       {
         promiseAcceptFinished.setError(erc.message());
@@ -112,9 +122,9 @@ TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
       localEndpoint.setValue(*ep);
     }
   );
-  using Side = HandshakeSide<SslSocket<N>>;
-  ConnectSocketFuture<N> connect{io};
-  connect(url(localEndpoint.future().value(), SslEnabled{false}), SslEnabled{false}, context,
+  using Side = HandshakeSide<S>;
+  ConnectSocketFuture<N, S> connect{io};
+  connect(url(localEndpoint.future().value(), SslEnabled{false}), SslEnabled{false}, makeSocket,
           IpV6Enabled{false}, Side::client);
   ASSERT_EQ(FutureState_FinishedWithValue, connect.complete().waitFor(defaultTimeout)) << connect.complete().error();
 

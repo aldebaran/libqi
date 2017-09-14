@@ -41,11 +41,11 @@ namespace qi
     TransportServer* _self;
     boost::asio::ip::tcp::acceptor* _acceptor;
     void onAccept(const boost::system::error_code& erc,
-      sock::SocketPtr<sock::NetworkAsio> s);
+      sock::SocketWithContextPtr<sock::NetworkAsio> s);
     TransportServerAsioPrivate();
     std::atomic<bool> _live;
-    boost::asio::ssl::context _sslContext;
-    sock::SocketPtr<sock::NetworkAsio> _s;
+    sock::SslContextPtr<sock::NetworkAsio> _sslContext;
+    sock::SocketWithContextPtr<sock::NetworkAsio> _s;
     bool _ssl;
     unsigned short _port;
     boost::synchronized_value<qi::Future<void>> _asyncEndpoints;

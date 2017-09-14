@@ -67,11 +67,11 @@ struct ConnectSocketFun
   ErrorCode<N> operator()(IoService<N>& io, const Url& url) const
   {
     Promise<ErrorCode<N>> promise;
-    ConnectSocket<N> connect{io};
-    SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(url, SslEnabled{true}, context, IpV6Enabled{false},
+    ConnectSocket<N, SslSocket<N>> connect{io};
+    SslContext<N> context { Method<SslContext<N>>::sslv23 };
+    connect(url, SslEnabled{true}, [&]{ return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{false},
       HandshakeSide<SslSocket<N>>::client,
-      [=](ErrorCode<N> err, SocketPtr<N>) mutable {
+      [=](ErrorCode<N> err, SslSocketPtr<N>) mutable {
         promise.setValue(err);
       }
     );
@@ -85,9 +85,10 @@ struct ConnectSocketFutureFun
   using Network = N;
   ErrorCode<N> operator()(IoService<N>& io, const Url& url) const
   {
-    ConnectSocketFuture<N> connect{io};
-    SslContext<N> context{Method<SslContext<N>>::sslv23};
-    connect(url, SslEnabled{true}, context, IpV6Enabled{false}, HandshakeSide<SslSocket<N>>::client);
+    ConnectSocketFuture<N, SslSocket<N>> connect{io};
+    SslContext<N> context { Method<SslContext<N>>::sslv23 };
+    connect(url, SslEnabled{ true }, [&] { return makeSslSocketPtr<N>(io, context); },
+            IpV6Enabled{ false }, HandshakeSide<SslSocket<N>>::client);
     return stringToError(connect.complete().error());
   }
   ErrorCode<N> stringToError(const std::string& s) const

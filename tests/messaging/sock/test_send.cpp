@@ -5,6 +5,7 @@
 #include <boost/optional.hpp>
 #include <gtest/gtest.h>
 #include <qi/messaging/sock/send.hpp>
+#include <qi/messaging/sock/sslcontextptr.hpp>
 #include <qi/future.hpp>
 #include <qi/scoped.hpp>
 #include "src/messaging/message.hpp"
@@ -30,7 +31,8 @@ TEST(NetSendMessage, FailsOnWrite)
     }
   );
   IoService<N> io;
-  auto socket = makeSocketPtr<N>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   Message sentMsg;
   Promise<std::pair<ErrorCode<N>, Message*>> promise;
   auto onComplete = [&](ErrorCode<N> e, Message* m) {
@@ -56,7 +58,8 @@ TEST(NetSendMessage, SuccessSingleMessage)
     }
   );
   IoService<N> io;
-  auto socket = makeSocketPtr<N>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   Message sentMsg;
   Promise<std::pair<ErrorCode<N>, Message*>> promise;
   auto onComplete = [&](ErrorCode<N> e, Message* m) {
@@ -85,7 +88,8 @@ TEST(NetSendMessage, SuccessMultipleMessage)
     }
   );
   IoService<N> io;
-  auto socket = makeSocketPtr<N>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   std::vector<Message> messages(100);
   auto itMsg = messages.begin();
   using I = decltype(itMsg);
@@ -130,7 +134,8 @@ TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
     }
   );
   IoService<N> io;
-  auto socket = makeSocketPtr<N>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   const int messageCount = 100;
   std::vector<Message> messages(messageCount);
   auto itMsg = messages.begin();
@@ -187,7 +192,7 @@ struct NetSendMessageEnqueue : testing::Test
 
 using sequences = testing::Types<
   // Mock
-  qi::sock::SendMessageEnqueue<mock::N> //, ConnectedSender<mock::N>
+  qi::sock::SendMessageEnqueue<mock::N, qi::sock::SslSocketPtr<mock::N>> //, ConnectedSender<mock::N>
   // Asio
   //, qi::sock::MessageReceiver<qi::sock::NetworkAsio>, qi::sock::Connected<qi::sock::NetworkAsio>
 >;
@@ -221,7 +226,8 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
       }));
     }
   );
-  auto socket = makeSocketPtr<N>(N::defaultIoService(), SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   using I = std::list<Message>::const_iterator;
   std::atomic<unsigned> sentCount{0u};
   Promise<void> promiseEnoughSent;
@@ -277,16 +283,16 @@ TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreadsAsio)
   using namespace qi;
   using namespace qi::sock;
   using N = NetworkAsio;
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
 
-  auto socket = makeSocketPtr<N>(N::defaultIoService(), context);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   using I = std::list<Message>::const_iterator;
   const unsigned sendThreadCount = 100u;
   const unsigned perSendThreadMessageCount = 100u;
   const unsigned maxSentCount = sendThreadCount * perSendThreadMessageCount;
   std::atomic<unsigned> sentCount{0u};
   Promise<void> promiseEnoughSent;
-  SendMessageEnqueue<N> send{socket};
+  SendMessageEnqueue<N, SslSocketPtr<N>> send{socket};
   auto onSent = [&](ErrorCode<N>, I) {
     // We wait for all messages to be enqueued before starting processing them.
     ++sentCount;

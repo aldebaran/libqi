@@ -24,6 +24,7 @@
 #include <qi/messaging/sock/connectedstate.hpp>
 #include <qi/messaging/sock/macrolog.hpp>
 #include <qi/messaging/sock/networkasio.hpp>
+#include <qi/messaging/sock/sslcontextptr.hpp>
 
 /// @file
 /// Contains a socket to send and receive qi::Messages, and the types representing
@@ -33,7 +34,7 @@ namespace qi {
 
   boost::optional<Seconds> getTcpPingTimeout(Seconds defaultTimeout);
 
-  template<typename N>
+  template<typename N, typename S>
   class TcpMessageSocket;
 
   namespace sock
@@ -43,11 +44,13 @@ namespace qi {
     /// Precondition: The socket pointer must be valid.
     /// You should protect the socket if necessary.
     ///
-    /// Network N
-    template<typename N>
+    /// Network N,
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
     struct HandleMessage
     {
-      boost::shared_ptr<TcpMessageSocket<N>> _tcpSocket;
+      boost::shared_ptr<TcpMessageSocket<N, S>> _tcpSocket;
       bool operator()(const sock::ErrorCode<N>& erc, const Message* msg)
       {
         QI_LOG_DEBUG_SOCKET(_tcpSocket.get()) << "Message received "
@@ -177,18 +180,20 @@ namespace qi {
   /// If the socket has not been disconnected, it is synchronously disconnected
   /// on destruction.
   ///
-  /// Network N
-  template<typename N = sock::NetworkAsio>
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
+  template<typename N = sock::NetworkAsio, typename S = sock::SocketWithContext<N>>
   class TcpMessageSocket
     : public MessageSocket
-    , public boost::enable_shared_from_this<TcpMessageSocket<N>>
+    , public boost::enable_shared_from_this<TcpMessageSocket<N, S>>
   {
   public:
-    using SocketPtr = sock::SocketPtr<N>;
-    using Handshake = sock::HandshakeSide<sock::SslSocket<N>>;
+    using SocketPtr = sock::SocketPtr<S>;
+    using Handshake = sock::HandshakeSide<S>;
     using Method = sock::Method<sock::SslContext<N>>;
-    using boost::enable_shared_from_this<TcpMessageSocket<N>>::shared_from_this;
-    friend struct sock::HandleMessage<N>;
+    using boost::enable_shared_from_this<TcpMessageSocket<N, S>>::shared_from_this;
+    friend struct sock::HandleMessage<N, S>;
 
     /// If the socket is not null, we consider we are on server side.
     /// On server side, if SSL is enabled the connection only consist of the handshake.
@@ -250,13 +255,13 @@ namespace qi {
     // Regular:
       QI_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
     // Procedure:
-      void operator()(Future<sock::SyncConnectedResultPtr<N>> f)
+      void operator()(Future<sock::SyncConnectedResultPtr<N, S>> f)
       {
         _futureConnected.wait();
         // Here, connected state is over, successfully (user asked for) or not.
         QI_LOG_DEBUG_SOCKET(_socket.get()) << "Exiting connected state.";
 
-        const sock::ConnectedResult<N> res = f.value()->get(); // copy the result
+        const sock::ConnectedResult<N, S> res = f.value()->get(); // copy the result
         if (res.hasError)
         {
           QI_LOG_DEBUG_SOCKET(_socket.get()) << "socket exited connected state: " << res.errorMessage;
@@ -273,9 +278,9 @@ namespace qi {
       Promise<void> promiseDisconnected = Promise<void>{});
 
     using DisconnectedState = sock::Disconnected<N>;
-    using ConnectingState = sock::Connecting<N>;
-    using ConnectedState = sock::Connected<N>;
-    using DisconnectingState = sock::Disconnecting<N>;
+    using ConnectingState = sock::Connecting<N, S>;
+    using ConnectedState = sock::Connected<N, S>;
+    using DisconnectingState = sock::Disconnecting<N, S>;
 
     // Do not change the order : it must match the Status enumeration order.
     using State = boost::variant<DisconnectedState, ConnectingState, ConnectedState, DisconnectingState>;
@@ -315,10 +320,11 @@ namespace qi {
     FutureSync<void> doDisconnect();
   };
 
-  using TcpMessageSocketPtr = boost::shared_ptr<TcpMessageSocket<sock::NetworkAsio>>;
+  template<typename N, typename S>
+  using TcpMessageSocketPtr = boost::shared_ptr<TcpMessageSocket<N, S>>;
 
-  template<typename N>
-  TcpMessageSocket<N>::TcpMessageSocket(sock::IoService<N>& io, sock::SslEnabled ssl,
+  template<typename N, typename S>
+  TcpMessageSocket<N, S>::TcpMessageSocket(sock::IoService<N>& io, sock::SslEnabled ssl,
         SocketPtr socket)
     : MessageSocket()
     , _ssl(ssl)
@@ -332,8 +338,8 @@ namespace qi {
     }
   }
 
-  template<typename N>
-  TcpMessageSocket<N>::~TcpMessageSocket()
+  template<typename N, typename S>
+  TcpMessageSocket<N, S>::~TcpMessageSocket()
   {
     // We are in the destructor, so no concurrency problem.
     if (getStatus() == Status::Connected)
@@ -351,8 +357,8 @@ namespace qi {
   /// To succeed, the object must be in the `connecting` state.
   /// This is typically obtained by first constructing the object with a
   /// connected socket,
-  template<typename N>
-  bool TcpMessageSocket<N>::ensureReading()
+  template<typename N, typename S>
+  bool TcpMessageSocket<N, S>::ensureReading()
   {
     static const auto maxPayload = getMaxPayloadFromEnv();
     {
@@ -377,7 +383,7 @@ namespace qi {
         return false;
       }
       auto self = shared_from_this();
-      _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N>{self});
+      _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N, S>{self});
       auto& connected = asConnected(_state);
       connected.complete().then(connected.ioServiceStranded(
         OnConnectedComplete{self, Future<void>{nullptr}}
@@ -392,8 +398,8 @@ namespace qi {
   /// The operation completes when the returned future is set.
   ///
   /// The object must be in the `disconnected` state.
-  template<typename N>
-  FutureSync<void> TcpMessageSocket<N>::connect(const Url& url)
+  template<typename N, typename S>
+  FutureSync<void> TcpMessageSocket<N, S>::connect(const Url& url)
   {
     static const bool disableIpV6 = os::getenv("QIMESSAGING_ENABLE_IPV6").empty();
     Promise<void> connectedPromise;
@@ -405,15 +411,20 @@ namespace qi {
       return ConnectingState::connectError("Must be disconnected to connect().");
     }
     // This changes the status so that concurrent calls will return in error.
-    using Side = sock::HandshakeSide<sock::SslSocket<N>>;
-    using Context = sock::SslContext<N>;
-    _state = ConnectingState{_ioService, url, _ssl, Context{Method::sslv23}, !disableIpV6, Side::client,
-      getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds})};
+    using Side = sock::HandshakeSide<S>;
+    _state =
+        ConnectingState{ _ioService, url, _ssl,
+                         [&] {
+                           return sock::makeSocketWithContextPtr<N>(
+                                 _ioService, sock::makeSslContextPtr<N>(Method::sslv23));
+                         },
+                         !disableIpV6, Side::client,
+                         getTcpPingTimeout(Seconds{ sock::defaultTimeoutInSeconds }) };
     _url = url;
     auto self = shared_from_this();
 
     asConnecting(_state).complete().then([=](
-        Future<sock::SyncConnectingResultPtr<N>> fut) mutable {
+        Future<sock::SyncConnectingResultPtr<N, S>> fut) mutable {
       // Here, connecting is over, successfully or not.
       {
         boost::recursive_mutex::scoped_lock lock(_stateMutex, boost::defer_lock);
@@ -435,7 +446,7 @@ namespace qi {
         // Connecting was successful, so we enter the connected state (to be able
         // send and receive messages).
         static const auto maxPayload = getMaxPayloadFromEnv();
-        _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N>{self});
+        _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N, S>{self});
         auto& connected = asConnected(_state);
         connected.complete().then(connected.ioServiceStranded(
           OnConnectedComplete{self, connectedPromise.future()}
@@ -457,8 +468,8 @@ namespace qi {
 
   /// You must wait for this method to complete before
   /// destructing the socket.
-  template<typename N>
-  FutureSync<void> TcpMessageSocket<N>::doDisconnect()
+  template<typename N, typename S>
+  FutureSync<void> TcpMessageSocket<N, S>::doDisconnect()
   {
     Promise<void> promiseDisconnected;
     boost::recursive_mutex::scoped_lock lock(_stateMutex);
@@ -481,9 +492,8 @@ namespace qi {
     return promiseDisconnected.future();
   }
 
-  template<typename N>
-  void TcpMessageSocket<N>::enterDisconnectedState(
-    const SocketPtr& socket, Promise<void> promiseDisconnected)
+  template<typename N, typename S>
+  void TcpMessageSocket<N, S>::enterDisconnectedState(const SocketPtr& socket, Promise<void> promiseDisconnected)
   {
     bool wasConnected = false;
     {
@@ -516,16 +526,16 @@ namespace qi {
     }
   }
 
-  template<typename N>
-  bool TcpMessageSocket<N>::mustTreatAsServerAuthentication(const Message& msg) const
+  template<typename N, typename S>
+  bool TcpMessageSocket<N, S>::mustTreatAsServerAuthentication(const Message& msg) const
   {
     return !hasReceivedRemoteCapabilities()
         && msg.service() == Message::Service_Server
         && msg.function() == Message::ServerFunction_Authenticate;
   }
 
-  template<typename N>
-  bool TcpMessageSocket<N>::handleCapabilityMessage(const Message& msg)
+  template<typename N, typename S>
+  bool TcpMessageSocket<N, S>::handleCapabilityMessage(const Message& msg)
   {
     AnyReference cmRef;
     try
@@ -545,8 +555,8 @@ namespace qi {
     return true;
   }
 
-  template<typename N>
-  bool TcpMessageSocket<N>::handleNormalMessage(const Message& msg)
+  template<typename N, typename S>
+  bool TcpMessageSocket<N, S>::handleNormalMessage(const Message& msg)
   {
     messageReady(msg);
     socketEvent(SocketEventData(msg));
@@ -554,8 +564,8 @@ namespace qi {
     return true;
   }
 
-  template<typename N>
-  bool TcpMessageSocket<N>::handleMessage(const Message& msg)
+  template<typename N, typename S>
+  bool TcpMessageSocket<N, S>::handleMessage(const Message& msg)
   {
     bool success = false;
     if (mustTreatAsServerAuthentication(msg) || msg.type() == Message::Type_Capability)
@@ -576,8 +586,8 @@ namespace qi {
     return success;
   }
 
-  template<typename N>
-  bool TcpMessageSocket<N>::send(const Message& msg)
+  template<typename N, typename S>
+  bool TcpMessageSocket<N, S>::send(const Message& msg)
   {
     boost::recursive_mutex::scoped_lock lock(_stateMutex);
     if (getStatus() != Status::Connected)
@@ -588,6 +598,28 @@ namespace qi {
     asConnected(_state).send(msg, _ssl);
     return true;
   }
+
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
+  template <typename N = sock::NetworkAsio, typename S = sock::SocketWithContext<N>>
+  TcpMessageSocketPtr<N, S> makeTcpMessageSocket(const std::string& protocol,
+                                                 EventLoop* eventLoop = getNetworkEventLoop())
+  {
+    using Socket = TcpMessageSocket<N, S>;
+    if (protocol == "tcp")
+    {
+      return boost::make_shared<Socket>(*asIoServicePtr(eventLoop), false);
+    }
+    if (protocol == "tcps")
+    {
+      return boost::make_shared<Socket>(*asIoServicePtr(eventLoop), true);
+    }
+    qiLogError(qi::sock::logCategory()) << "Unrecognized protocol to create the TransportSocket: "
+                                        << protocol;
+    return {};
+  }
+
 } // namespace qi
 
 #endif  // _SRC_TCPMESSAGESOCKET_HPP_

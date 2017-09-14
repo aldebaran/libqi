@@ -132,6 +132,7 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/error.hpp
          qi/messaging/sock/macrolog.hpp
          qi/messaging/sock/socketptr.hpp
+         qi/messaging/sock/sslcontextptr.hpp
          qi/messaging/sock/socketwithcontext.hpp
          qi/messaging/sock/networkasio.hpp
          qi/messaging/sock/option.hpp

@@ -58,9 +58,11 @@ namespace qi { namespace sock {
   ///
   /// This function ignores errors, and is therefore reentrant.
   ///
-  /// Network N
-  template<typename N>
-  void close(SocketPtr<N> socket)
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
+  template<typename N, typename S>
+  void close(SocketPtr<S> socket)
   {
     using namespace sock;
     if (socket)
@@ -93,10 +95,12 @@ namespace qi { namespace sock {
   /// A sync procedure transformation can also be provided to wrap any
   /// handler passed to the network. A typical use is to strand the handler.
   ///
-  /// Network N
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
   /// Transformation<Procedure> F0
   /// Transformation<Procedure> F1
-  template<typename N, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  template<typename N, typename S, typename F0 = IdTransfo, typename F1 = IdTransfo>
   class SetupConnectionStop
   {
     Future<void> futStop;
@@ -121,9 +125,9 @@ namespace qi { namespace sock {
         r.cancel();
       }))));
     }
-  // Procedure<void (SocketPtr<N>)>:
+  // Procedure<void (SocketPtr<S>)>:
     /// Overload used to stop connecting and handshaking.
-    void operator()(const SocketPtr<N>& s)
+    void operator()(const SocketPtr<S>& s)
     {
       // Can be called in the connection step and in the handshake step.
       // The stop action being the same, we setup it only once.
@@ -136,12 +140,13 @@ namespace qi { namespace sock {
   };
 
   /// Helper function to perform type deduction for constructing a SetupConnectionStop.
-  template <typename N, typename F0 = IdTransfo, typename F1 = IdTransfo>
-  SetupConnectionStop<N, F0, F1> makeSetupConnectionStop(const Future<void>& f,
-                                                         F0 lifetimeTransfo = {},
-                                                         F1 syncTransfo = {})
+  template <typename N, typename S, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  SetupConnectionStop<N, S, F0, F1> makeSetupConnectionStop(const Future<void>& f,
+                                                            F0 lifetimeTransfo = {},
+                                                            F1 syncTransfo = {})
   {
-    return SetupConnectionStop<N, F0, F1>{ f, std::move(lifetimeTransfo), std::move(syncTransfo) };
+    return SetupConnectionStop<N, S, F0, F1>{ f, std::move(lifetimeTransfo),
+                                              std::move(syncTransfo) };
   }
 }} // namespace qi::sock
 

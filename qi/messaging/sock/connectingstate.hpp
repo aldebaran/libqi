@@ -38,12 +38,14 @@ namespace qi
     /// // ...
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
-    /// Network N
-    template<typename N>
+    /// Network N,
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
     struct ConnectingResult
     {
       std::string errorMessage;
-      SocketPtr<N> socket;
+      SocketPtr<S> socket;
       bool disconnectionRequested = false;
       Promise<void> disconnectedPromise;
       friend void setDisconnectionRequested(ConnectingResult& res, const Promise<void>& p)
@@ -58,12 +60,16 @@ namespace qi
     };
 
     /// Network N
-    template<typename N>
-    using SyncConnectingResult = boost::synchronized_value<ConnectingResult<N>>;
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
+    using SyncConnectingResult = boost::synchronized_value<ConnectingResult<N, S>>;
 
     /// Network N
-    template<typename N>
-    using SyncConnectingResultPtr = boost::shared_ptr<SyncConnectingResult<N>>;
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
+    using SyncConnectingResultPtr = boost::shared_ptr<SyncConnectingResult<N, S>>;
 
     /// Connecting state of the socket.
     /// Connects to a URL and give back the created socket.
@@ -85,7 +91,7 @@ namespace qi
     /// The object must be alive until the connecting process is complete.
     /// That is, you must not write:
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Future<SocketPtr<N>> connectNonSsl(IoService& io, Url url) {
+    /// Future<SocketPtr<S>> connectNonSsl(IoService& io, Url url) {
     ///   return Connecting(io, url, SslEnabled{false}, IpV6Enabled{true}).complete();
     /// }
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,18 +173,20 @@ namespace qi
     /// -> stop() ---------> stop promise
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
-    /// Network N
-    template<typename N>
+    /// Network N,
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
     struct Connecting
     {
-      using Handshake = HandshakeSide<SslSocket<N>>;
+      using Handshake = HandshakeSide<S>;
 
       struct Impl : std::enable_shared_from_this<Impl>
       {
         using std::enable_shared_from_this<Impl>::shared_from_this;
-        Promise<SyncConnectingResultPtr<N>> _promiseComplete;
-        SyncConnectingResultPtr<N> _result;
-        ConnectSocketFuture<N> _connect;
+        Promise<SyncConnectingResultPtr<N, S>> _promiseComplete;
+        SyncConnectingResultPtr<N, S> _result;
+        ConnectSocketFuture<N, S> _connect;
         Promise<void> _promiseStop; // Must be declared after `_connect`, to be destroyed first
         std::atomic<bool> _stopping;
 
@@ -186,7 +194,7 @@ namespace qi
         {
           auto self = shared_from_this();
           _connect.complete().then(
-            [=](const Future<SocketPtr<N>>& fut) { // continuation
+            [=](const Future<SocketPtr<S>>& fut) { // continuation
               {
                 auto syncRes = self->_result->synchronize();
                 if (fut.hasError())
@@ -203,54 +211,54 @@ namespace qi
           );
         }
         Impl(IoService<N>& io)
-          : _result{boost::make_shared<SyncConnectingResult<N>>()}
+          : _result{boost::make_shared<SyncConnectingResult<N, S>>()}
           , _connect{io}
           , _stopping{false}
         {
         }
 
-        template<typename SslContext, typename Proc = PolymorphicConstantFunction<void>>
-        void start(const Url& url, SslEnabled ssl, SslContext&& context,
+        template<typename Proc0, typename Proc1 = PolymorphicConstantFunction<void>>
+        void start(const Url& url, SslEnabled ssl, Proc0&& makeSocket,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
-          Proc setupCancel = Proc{})
+          Proc1 setupCancel = Proc1{})
         {
           setContinuation();
-          _connect(url, ssl, fwd<SslContext>(context), ipV6, side, tcpPingTimeout, setupCancel);
+          _connect(url, ssl, fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout, setupCancel);
         }
 
         template<typename Proc = PolymorphicConstantFunction<void>>
-        void start(SslEnabled ssl, const SocketPtr<N>& s, Handshake side, Proc setupCancel = Proc{})
+        void start(SslEnabled ssl, const SocketPtr<S>& s, Handshake side, Proc setupCancel = Proc{})
         {
           setContinuation();
           _connect(ssl, s, side, setupCancel);
         }
       };
 
-      template<typename SslContext>
-      Connecting(IoService<N>& io, const Url& url, SslEnabled ssl, SslContext&& context,
+      template<typename Proc0>
+      Connecting(IoService<N>& io, const Url& url, SslEnabled ssl, Proc0&& makeSocket,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
         : _impl(std::make_shared<Impl>(io))
       {
         const auto implWeakPtr = weakPtr(_impl);
-        _impl->start(url, ssl, fwd<SslContext>(context), ipV6, side, tcpPingTimeout,
-                     scopeLockProc(makeSetupConnectionStop<N>(_impl->_promiseStop.future(),
-                                                              scopeLockTransfo(
-                                                                  makeMutableStore(implWeakPtr)),
-                                                              StrandTransfo<N>{ &io }),
+        _impl->start(url, ssl, fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout,
+                     scopeLockProc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
+                                                                 scopeLockTransfo(
+                                                                   makeMutableStore(implWeakPtr)),
+                                                                 StrandTransfo<N>{ &io }),
                                    makeMutableStore(implWeakPtr)));
       }
-      Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<N>& s, Handshake side)
+      Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<S>& s, Handshake side)
         : _impl(std::make_shared<Impl>(io))
       {
         const auto implWeakPtr = weakPtr(_impl);
         _impl->start(ssl, s, side,
-                     scopeLockProc(makeSetupConnectionStop<N>(_impl->_promiseStop.future(),
-                                                              scopeLockTransfo(
-                                                                  makeMutableStore(implWeakPtr)),
-                                                              StrandTransfo<N>{ &io }),
+                     scopeLockProc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
+                                                                 scopeLockTransfo(
+                                                                   makeMutableStore(implWeakPtr)),
+                                                                 StrandTransfo<N>{ &io }),
                                    makeMutableStore(implWeakPtr)));
       }
-      Future<SyncConnectingResultPtr<N>> complete() const
+      Future<SyncConnectingResultPtr<N, S>> complete() const
       {
         return _impl->_promiseComplete.future();
       }

@@ -154,8 +154,8 @@ namespace qi { namespace sock {
   /// A sync procedure transformation can also be provided to wrap any
   /// callback passed to the network. A typical use is to strand the callback.
   ///
-  /// Network N, Mutable<SslSocket<N>> S
-  template<typename N, typename S = SocketPtr<N>>
+  /// Network N, Mutable<NetSslSocket> S
+  template<typename N, typename S>
   struct SendMessageEnqueue
   {
     using ReadableMessage = std::list<Message>::const_iterator;
@@ -279,7 +279,7 @@ namespace qi { namespace sock {
   /// the callback will be called with a `operation aborted` error.
   ///
   /// Network N
-  template<typename N, typename S = boost::shared_ptr<SslSocket<N>>>
+  template<typename N, typename S>
   struct SendMessageEnqueueTrack : Trackable<SendMessageEnqueueTrack<N, S>>
   {
     using ReadableMessage = typename SendMessageEnqueue<N, S>::ReadableMessage;
