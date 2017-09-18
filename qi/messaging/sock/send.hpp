@@ -114,19 +114,19 @@ namespace qi { namespace sock {
       F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
     auto buffers = makeBuffers<N>(*cptrMsg);
-    auto writeCont = lifetimeTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
+    auto writeCont = syncTransfo(lifetimeTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
       if (auto optionalCptrNextMsg = onSent(erc, cptrMsg))
       {
         sendMessage<N>(socket, *optionalCptrNextMsg, onSent, ssl, lifetimeTransfo, syncTransfo);
       }
-    });
+    }));
     if (*ssl)
     {
-      N::async_write(*socket, std::move(buffers), syncTransfo(writeCont));
+      N::async_write(*socket, std::move(buffers), writeCont);
     }
     else
     {
-      N::async_write((*socket).next_layer(), std::move(buffers), syncTransfo(writeCont));
+      N::async_write((*socket).next_layer(), std::move(buffers), writeCont);
     }
   }
 
@@ -267,6 +267,7 @@ namespace qi { namespace sock {
           }
           return itNext;
         };
+
       sendMessage<N>(_socket, itMsg, std::move(eraseAndReturnNextMessage), ssl,
         lifetimeTransfo, syncTransfo);
     }

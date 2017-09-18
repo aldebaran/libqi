@@ -179,6 +179,16 @@ namespace qi
         {
           return StrandTransfo<N>{&socket()->get_io_service()}(std::forward<Proc>(p));
         }
+
+        DataBoundTransfo<std::shared_ptr<Impl>> lifetimeTransfo()
+        {
+          return dataBoundTransfo(shared_from_this());
+        }
+
+        StrandTransfo<N> syncTransfo()
+        {
+          return {&(*socket()).get_io_service()};
+        }
       };
       std::shared_ptr<Impl> _impl;
     public:
@@ -257,19 +267,25 @@ namespace qi
         qi::int64_t messageHandlingTimeoutInMus)
     {
       auto self = shared_from_this();
-      _receiveMsg(socket(), ssl, maxPayload,
-        [=](sock::ErrorCode<N> e, const Message* msg) mutable { // onReceived
-          const bool mustContinue = !_shuttingdown.load() && onReceive(e, msg);
-          if (!mustContinue)
-          {
-            self->setPromise(e, msg);
-            return false; // We must not continue to receive messages.
-          }
-          return true; // Otherwise, we continue to receive messages.
-        },
-        dataBoundTransfo(shared_from_this()), // lifetimeTransfo
-        StrandTransfo<N>{&(*socket()).get_io_service()} // syncTransfo
-      );
+      auto life = lifetimeTransfo();
+      auto sync = syncTransfo();
+
+      // We preventively strand the first call.
+      sync(life([=]() mutable {
+        _receiveMsg(socket(), ssl, maxPayload,
+          [=](sock::ErrorCode<N> e, const Message* msg) mutable { // onReceived
+            const bool mustContinue = !_shuttingdown.load() && onReceive(e, msg);
+            if (!mustContinue)
+            {
+              self->setPromise(e, msg);
+              return false; // We must not continue to receive messages.
+            }
+            return true; // Otherwise, we continue to receive messages.
+          },
+          life,
+          sync
+        );
+      }))();
     }
 
     template<typename N>
@@ -284,19 +300,25 @@ namespace qi
       using SendMessage = decltype(_sendMsg);
       using ReadableMessage = typename SendMessage::ReadableMessage;
       auto self = shared_from_this();
-      _sendMsg(std::forward<Msg>(msg), ssl,
-        [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
-          const bool mustContinue = !_shuttingdown.load() && onSent(e, ptrMsg);
-          if (!mustContinue)
-          {
-            self->setPromise(e, &msg);
-            return false; // We must not continue to send messages.
-          }
-          return true; // Otherwise, we continue to send messages.
-        },
-        dataBoundTransfo(shared_from_this()), // lifetimeTransfo
-        StrandTransfo<N>{&(*socket()).get_io_service()} // syncTransfo
-      );
+      auto life = lifetimeTransfo();
+      auto sync = syncTransfo();
+
+      // We preventively strand the first call.
+      sync(life([=]() mutable {
+        _sendMsg(std::forward<Msg>(msg), ssl,
+          [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
+            const bool mustContinue = !_shuttingdown.load() && onSent(e, ptrMsg);
+            if (!mustContinue)
+            {
+              self->setPromise(e, &msg);
+              return false; // We must not continue to send messages.
+            }
+            return true; // Otherwise, we continue to send messages.
+          },
+          life,
+          sync
+        );
+      }))();
     }
 }} // namespace qi::sock
 
