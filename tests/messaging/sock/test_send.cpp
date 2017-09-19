@@ -7,7 +7,7 @@
 #include <qi/messaging/sock/send.hpp>
 #include <qi/messaging/sock/sslcontextptr.hpp>
 #include <qi/future.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include "src/messaging/message.hpp"
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "networkmock.hpp"
@@ -24,7 +24,7 @@ TEST(NetSendMessage, FailsOnWrite)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_write_next_layer,
     [](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       h(ErrorCode<N>{ErrorCode<N>::unknown}, 0u);
@@ -51,7 +51,7 @@ TEST(NetSendMessage, SuccessSingleMessage)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_write_next_layer,
     [](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       h(ErrorCode<N>{ErrorCode<N>::success}, 0u);
@@ -79,7 +79,7 @@ TEST(NetSendMessage, SuccessMultipleMessage)
   using namespace qi::sock;
   using N = mock::Network;
   std::vector<std::thread> writeThreads;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_write_next_layer,
     [&](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread([&, h]{
@@ -118,7 +118,7 @@ TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
   using N = mock::Network;
   boost::synchronized_value<std::vector<std::thread>> writeThreads;
   std::atomic_bool finished {false};
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_write_next_layer,
     [&](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       if (!finished)
@@ -205,7 +205,7 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
-  auto scopedRead = scopedSetAndRestore(
+  auto scopedRead = ka::scoped_set_and_restore(
     N::_async_read_next_layer,
     mock::defaultAsyncReadNextLayer
   );
@@ -215,7 +215,7 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
   std::mutex writeThreadMutex;
   std::vector<std::thread> writeThreads;
   writeThreads.reserve(maxSentCount);
-  auto scopedWrite = scopedSetAndRestore(
+  auto scopedWrite = ka::scoped_set_and_restore(
     N::_async_write_next_layer,
     [&](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&,
           N::_anyTransferHandler writeCont) mutable {

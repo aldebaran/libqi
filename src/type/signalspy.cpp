@@ -27,13 +27,14 @@ namespace detail
 SignalSpy::SignalSpy(qi::AnyObject& object, const std::string& signalOrPropertyName)
   : _records()
 {
+  using namespace ka::functional_ops;
   object.connect(
-        signalOrPropertyName,
-        qi::AnyFunction::fromDynamicFunction(
-          stranded([this](qi::AnyReferenceVector anything)
-  {
-    return this->recordAnyCallback(anything);
-  })));
+    signalOrPropertyName,
+    qi::AnyFunction::fromDynamicFunction(
+        SrcFuture{} * stranded([this](qi::AnyReferenceVector anything) {
+          return this->recordAnyCallback(anything);
+        })
+    ));
 }
 
 SignalSpy::~SignalSpy()

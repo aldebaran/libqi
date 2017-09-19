@@ -2,7 +2,7 @@
 #ifndef _QI_SOCK_TRAITS_HPP
 #define _QI_SOCK_TRAITS_HPP
 #include <qi/messaging/sock/concept.hpp>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 
 /// @file
 /// Contains traits used by the code in the sock namespace.

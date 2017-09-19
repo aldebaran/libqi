@@ -5,7 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <qi/messaging/sock/traits.hpp>
-#include <qi/utility.hpp>
+#include <ka/utility.hpp>
 
 /// @file
 /// Contains SSL context pointer traits and helper functions used in the sock namespace.
@@ -21,7 +21,7 @@ namespace qi { namespace sock {
   template<typename N, typename... Args>
   SslContextPtr<N> makeSslContextPtr(Args&&... args)
   {
-    return boost::make_shared<SslContext<N>>(fwd<Args>(args)...);
+    return boost::make_shared<SslContext<N>>(ka::fwd<Args>(args)...);
   }
 }} // namespace qi::sock
 

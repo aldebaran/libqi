@@ -274,9 +274,9 @@ public:
   operator Object<Empty>() const;
 
   // Generates `>`, `<=`, `>=` in terms of `<`.
-  friend QI_GENERATE_REGULAR_OP_GREATER(Object)
-  friend QI_GENERATE_REGULAR_OP_LESS_OR_EQUAL(Object)
-  friend QI_GENERATE_REGULAR_OP_GREATER_OR_EQUAL(Object)
+  friend KA_GENERATE_REGULAR_OP_GREATER(Object)
+  friend KA_GENERATE_REGULAR_OP_LESS_OR_EQUAL(Object)
+  friend KA_GENERATE_REGULAR_OP_GREATER_OR_EQUAL(Object)
 
   /// The PtrUid of the pointer used to initially create the object.
   /// Won't change if the object travels through the network.

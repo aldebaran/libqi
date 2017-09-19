@@ -1,11 +1,11 @@
 /*
 ** Copyright (C) 2014 Aldebaran
 */
+#include <ka/errorhandling.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/os.hpp>
-#include <qi/errorhandling.hpp>
 #include <qi/strand.hpp>
 #include <qi/periodictask.hpp>
 #include <qi/actor.hpp>
@@ -489,10 +489,10 @@ namespace
     }
   };
 
-  struct BoostError : boost::exception
+  struct boost_error_t : boost::exception
   {
     std::string msg;
-    BoostError(const std::string& s = std::string{}) : msg(s)
+    boost_error_t(const std::string& s = std::string{}) : msg(s)
     {
     }
     std::ostream& operator<<(std::ostream& o) const
@@ -514,7 +514,7 @@ TEST(TestStrand, JoinNoThrowStdException)
 TEST(TestStrand, JoinNoThrowBoostException)
 {
   using namespace qi;
-  using E = BoostError;
+  using E = boost_error_t;
   E error{"oho"};
   TestStrand<E> strand{error};
   ASSERT_EQ(Strand::OptionalErrorMessage{boost::diagnostic_information(error)}, strand.join(std::nothrow));
@@ -526,5 +526,5 @@ TEST(TestStrand, JoinNoThrowUnknownException)
   using E = int;
   E error{5};
   TestStrand<E> strand{error};
-  ASSERT_EQ(Strand::OptionalErrorMessage{ExceptionMessage::unknownError()}, strand.join(std::nothrow));
+  ASSERT_EQ(Strand::OptionalErrorMessage{ka::exception_message::unknown_error()}, strand.join(std::nothrow));
 }

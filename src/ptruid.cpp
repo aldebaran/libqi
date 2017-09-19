@@ -10,7 +10,7 @@
 #include <boost/algorithm/hex.hpp>
 #include <boost/range/algorithm/copy.hpp>
 #include <qi/ptruid.hpp>
-#include <qi/sha1.hpp>
+#include <ka/sha1.hpp>
 #include <qi/uuid.hpp>
 
 namespace qi
@@ -46,7 +46,7 @@ namespace qi
     // Assert that it's really the case.
     QI_ASSERT(it - begin(buffer) == buffer.size());
 
-    boost::copy(sha1(buffer), begin(*this));
+    boost::copy(ka::sha1(buffer), begin(*this));
 #ifdef QI_PTRUID_DEBUG
     // When debugging, the fact that PtrUids have different values at each execution is
     // not desirable (the values are different because the process uuid are different).

@@ -12,7 +12,7 @@
 #include <atomic>
 #include <sstream>
 #include <qi/session.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include "message.hpp"
 #include "messagesocket.hpp"
 #include <qi/anyobject.hpp>

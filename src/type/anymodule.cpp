@@ -3,7 +3,7 @@
 #include <qi/application.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/path.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -43,7 +43,7 @@ namespace qi
       void* lib;
       try {
 #ifdef _WIN32
-        auto errorMode = qi::scoped(GetErrorMode(), [](UINT oldErrorMode)
+        auto errorMode = ka::scoped(GetErrorMode(), [](UINT oldErrorMode)
         {
           SetErrorMode(oldErrorMode);
         });

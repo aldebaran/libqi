@@ -9,7 +9,7 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include "sessionservice.hpp"
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
@@ -187,7 +187,7 @@ namespace qi {
     // Ensure the promise is always set.
     boost::optional<Promise<AnyObject>> promise = sr->promise;
     bool mustSetPromise = true;
-    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+    auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
     if (data.which() == MessageSocket::Event_Error)
     {
@@ -277,7 +277,7 @@ namespace qi {
 
     bool mustSetPromise = true;
     boost::optional<Promise<AnyObject>> promise;
-    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+    auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
     {
       boost::recursive_mutex::scoped_lock sl(_requestsMutex);
@@ -367,7 +367,7 @@ namespace qi {
 
     bool mustSetPromise = true;
     boost::optional<Promise<AnyObject>> promise = sr->promise;
-    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+    auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
     if (future.hasError())
     {
@@ -473,7 +473,7 @@ namespace qi {
       // Ensure that the promise is always set, even in case of exception.
       bool mustSetPromise = true;
       boost::optional<Promise<AnyObject>> promise;
-      auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+      auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
       {
         boost::recursive_mutex::scoped_lock sl(_requestsMutex);

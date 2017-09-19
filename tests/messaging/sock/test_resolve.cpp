@@ -6,9 +6,10 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
 #include <qi/messaging/sock/resolve.hpp>
+#include <ka/src.hpp>
 #include <qi/messaging/sock/connect.hpp>
 #include <qi/messaging/sock/networkasio.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include <qi/future.hpp>
 #include "networkmock.hpp"
 #include "networkcommon.hpp"
@@ -202,7 +203,7 @@ TEST(NetResolveUrlList, Success)
   using namespace qi;
   using namespace qi::sock;
   using N = mock::Network;
-  auto _ = scopedSetAndRestore(Resolver<N>::async_resolve, mock::defaultAsyncResolve);
+  auto _ = ka::scoped_set_and_restore(Resolver<N>::async_resolve, mock::defaultAsyncResolve);
   using I = Iterator<Resolver<N>>;
   Promise<std::pair<ErrorCode<N>, I>> promiseResult;
   IoService<N> io;
@@ -238,7 +239,7 @@ TEST(NetResolveUrlList, Cancel)
 
   Promise<std::pair<ErrorCode<N>, I>> promiseResolve;
   std::thread threadResolve;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     Resolver<N>::async_resolve,
     [&](Resolver<N>::query, Resolver<N>::_anyResolveHandler h) {
       threadResolve = std::thread{[=]() mutable {

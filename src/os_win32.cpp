@@ -30,7 +30,7 @@
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 
 #include "utils.hpp"
 
@@ -374,7 +374,7 @@ namespace qi {
 
       auto adaptersIPsMap = [&] () -> AddressMap {
 
-        const auto scopedAdapters = qi::scoped((PIP_ADAPTER_INFO)malloc(bufferSize), &::free);
+        const auto scopedAdapters = ka::scoped((PIP_ADAPTER_INFO)malloc(bufferSize), &::free);
         if (scopedAdapters.value == NULL)
         {
           qiLogError() << "Error allocation memory needed to get hostIPAddrs";

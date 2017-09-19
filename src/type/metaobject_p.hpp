@@ -10,10 +10,10 @@
 #include <array>
 #include <boost/optional.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <qi/macroregular.hpp>
-#include <qi/range.hpp>
+#include <ka/macroregular.hpp>
+#include <ka/range.hpp>
 #include <qi/atomic.hpp>
-#include <qi/sha1.hpp>
+#include <ka/sha1.hpp>
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metaobject.hpp>
 #include <qi/type/metamethod.hpp>
@@ -192,7 +192,7 @@ namespace qi {
     mutable bool                        _dirtyCache;
 
 
-    boost::optional<Sha1Digest>         _contentSHA1;
+    boost::optional<ka::sha1_digest_t>  _contentSHA1;
 
     // Global uid for event subscribers.
     static qi::Atomic<int> uid;

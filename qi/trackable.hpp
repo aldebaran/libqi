@@ -14,9 +14,9 @@
 # include <boost/thread/condition_variable.hpp>
 # include <boost/function.hpp>
 
-# include <qi/type/traits.hpp>
+# include <ka/typetraits.hpp>
 # include <qi/macro.hpp>
-# include <qi/macroregular.hpp>
+# include <ka/macroregular.hpp>
 # include <qi/log.hpp>
 
 namespace qi
@@ -126,7 +126,7 @@ namespace qi
     Proc _fallback;
     T* _trackable;
   // Regular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_2(TrackWithFallbackTransfo, _fallback, _trackable)
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(TrackWithFallbackTransfo, _fallback, _trackable)
   // PolymorphicTransformation:
     template<typename F>
     auto operator()(F&& f) const -> decltype(
@@ -140,7 +140,7 @@ namespace qi
   ///
   /// Procedure<void ()> Proc, Trackable T
   template<typename Proc, typename T>
-  TrackWithFallbackTransfo<traits::Decay<Proc>, T> trackWithFallbackTransfo(Proc&& fallback, T* t)
+  TrackWithFallbackTransfo<ka::traits::Decay<Proc>, T> trackWithFallbackTransfo(Proc&& fallback, T* t)
   {
     return {std::forward<Proc>(fallback), t};
   }
@@ -155,7 +155,7 @@ namespace qi
   {
     T* _trackable;
   // Regular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(TrackSilentTransfo, _trackable)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(TrackSilentTransfo, _trackable)
   // PolymorphicTransformation:
     template<typename F>
     auto operator()(F&& f) const -> decltype(

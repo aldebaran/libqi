@@ -111,15 +111,6 @@ set(QI_H qi/detail/async.hxx
          qi/iocolor.hpp
          qi/strand.hpp
          qi/assert.hpp
-         qi/algorithm.hpp
-         qi/detail/conceptpredicate.hpp
-         qi/macroregular.hpp
-         qi/range.hpp
-         qi/detail/relationpredicate.hpp
-         qi/scoped.hpp
-         qi/concept.hpp
-         qi/functional.hpp
-         qi/errorhandling.hpp
          qi/messaging/sock/accept.hpp
          qi/messaging/sock/common.hpp
          qi/messaging/sock/concept.hpp
@@ -139,11 +130,6 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/resolve.hpp
          qi/messaging/sock/send.hpp
          qi/messaging/sock/traits.hpp
-         qi/moveoncopy.hpp
-         qi/mutex.hpp
-         qi/sha1.hpp
-         qi/utility.hpp
-         qi/mutablestore.hpp
          qi/uuid.hpp
          qi/ptruid.hpp)
 
@@ -276,9 +262,7 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/proxysignal.hpp
                    qi/type/typeinterface.hpp
                    qi/type/typeobject.hpp
-                   qi/type/typedispatcher.hpp
-                   qi/type/traits.hpp
-                   qi/type/integersequence.hpp)
+                   qi/type/typedispatcher.hpp)
 
 
 set(QITYPE_C src/type/binarycodec.cpp
@@ -395,9 +379,32 @@ set(QIPERF_C
   src/perf/measure.cpp
 )
 
+set(KA_H
+  ka/algorithm.hpp
+  ka/ark/mutable.hpp
+  ka/concept.hpp
+  ka/conceptpredicate.hpp
+  ka/errorhandling.hpp
+  ka/functional.hpp
+  ka/macro.hpp
+  ka/macroregular.hpp
+  ka/memory.hpp
+  ka/moveoncopy.hpp
+  ka/mutablestore.hpp
+  ka/mutex.hpp
+  ka/range.hpp
+  ka/relationpredicate.hpp
+  ka/scoped.hpp
+  ka/sha1.hpp
+  ka/src.hpp
+  ka/testutils.hpp
+  ka/typetraits.hpp
+  ka/utility.hpp
+)
+
 #### }}}
 
-qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} ${QIPERF_H} KEEP_RELATIVE_PATHS)
+qi_install_header(${QI_H} ${QITYPE_H} ${QIM_H} ${QIPERF_H} ${KA_H} KEEP_RELATIVE_PATHS)
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -409,6 +416,7 @@ qi_create_lib(qi SHARED
                  ${QITYPE_H} ${QITYPE_C}
                  ${QIM_H}    ${QIM_C}
                  ${QIPERF_H} ${QIPERF_C}
+                 ${KA_H}
               DEPENDS ASSUME_SYSTEM_INCLUDE BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS
               SUBMODULE ${_tp_qi})
 

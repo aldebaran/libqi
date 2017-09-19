@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <qi/ptruid.hpp>
 #include <qi/os.hpp>
-#include <qi/detail/conceptpredicate.hpp>
+#include <ka/conceptpredicate.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
@@ -22,7 +22,7 @@ TEST(PtrUid, Regular)
     return p;
   };
 
-  assert(detail::isRegular(incrRange(ptrUid(0), ptrUid(10), [](qi::PtrUid& x) {
+  assert(ka::is_regular(ka::bounded_range(ptrUid(0), ptrUid(10), [](qi::PtrUid& x) {
     ++(*begin(x));
   })));
 }

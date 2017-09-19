@@ -12,7 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include "servicedirectoryclient.hpp"
 #include "session_p.hpp"
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 
 qiLogCategory("qimessaging.objectregistrar");
 
@@ -84,7 +84,7 @@ namespace qi {
 
   void ObjectRegistrar::onFutureFinished(qi::Future<unsigned int> fut, int id, qi::Promise<unsigned int> result)
   {
-    auto eraseRequest = scoped([id, this]{
+    auto eraseRequest = ka::scoped([id, this]{
       boost::mutex::scoped_lock sl(_registerServiceRequestMutex);
       _registerServiceRequest.erase(id);
     });

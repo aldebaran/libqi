@@ -10,7 +10,7 @@
 #include <qi/uuid.hpp>
 #include <qi/api.hpp>
 #include <qi/assert.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/macroregular.hpp>
 
 namespace qi
 {
@@ -58,7 +58,7 @@ namespace qi
     {
     }
 
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(PtrUid, digest)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(PtrUid, digest)
 
   // OStreamable:
     friend QI_API std::ostream& operator<<(std::ostream& o, const PtrUid& uid);

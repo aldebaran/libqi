@@ -192,7 +192,7 @@ TEST(Module, IdentityOfRemoteObjects)
   EXPECT_NE(remoteObject2, o);
 }
 
-struct Dummy
+struct dummy_t
 {
   int one() const
   {
@@ -200,7 +200,7 @@ struct Dummy
   }
 };
 
-QI_REGISTER_OBJECT(Dummy, one);
+QI_REGISTER_OBJECT(dummy_t, one);
 
 TEST(Module, IdentityOfRemoteObjectsDifferentProcess)
 {
@@ -214,7 +214,7 @@ TEST(Module, IdentityOfRemoteObjectsDifferentProcess)
   auto client = makeSession();
   client->connect(serviceUrl);
   AnyObject service = client->service("PingPongService");
-  AnyObject original{boost::make_shared<Dummy>()};
+  AnyObject original{boost::make_shared<dummy_t>()};
 
   service.call<void>("give", original);
   AnyObject copy0 = service.call<AnyObject>("take");
@@ -244,7 +244,7 @@ QI_REGISTER_OBJECT(ObjectStore, get, set);
 
 TEST(Module, IdentityOfRemoteObjectsMoreIndirections)
 {
-  qi::AnyObject originalObject(boost::make_shared<Dummy>());
+  qi::AnyObject originalObject(boost::make_shared<dummy_t>());
   TestSessionPair pairA;
   pairA.server()->registerService("serviceA", boost::make_shared<ObjectStore>());
   qi::AnyObject clientA = pairA.client()->service("serviceA");

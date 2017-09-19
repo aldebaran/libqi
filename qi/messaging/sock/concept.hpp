@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _QI_SOCK_CONCEPT_HPP
 #define _QI_SOCK_CONCEPT_HPP
-#include <qi/concept.hpp>
+#include <ka/concept.hpp>
 
 /// @file
 /// Contains definitions of concepts used by the code in the sock namespace.

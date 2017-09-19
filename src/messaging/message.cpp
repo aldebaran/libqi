@@ -7,6 +7,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/dynamic_bitset.hpp>
 
+#include <ka/scoped.hpp>
 #include <qi/assert.hpp>
 #include <qi/anyvalue.hpp>
 #include "message.hpp"

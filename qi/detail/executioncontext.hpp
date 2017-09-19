@@ -11,7 +11,7 @@
 #include <boost/function.hpp>
 #include <qi/api.hpp>
 #include <qi/clock.hpp>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 
 namespace qi
 {
@@ -80,10 +80,10 @@ public:
   void post(F&& callback);
 
   /// call a callback asynchronously to be executed on tp
-  template <typename F, typename R = traits::Decay<decltype(std::declval<F>()())>>
+  template <typename F, typename R = ka::traits::Decay<decltype(std::declval<F>()())>>
   qi::Future<R> asyncAt(F&& callback, qi::SteadyClockTimePoint tp);
   /// call a callback asynchronously to be executed in delay
-  template <typename F, typename R = traits::Decay<decltype(std::declval<F>()())>>
+  template <typename F, typename R = ka::traits::Decay<decltype(std::declval<F>()())>>
   qi::Future<R> asyncDelay(F&& callback, qi::Duration delay);
 
   template <typename F>

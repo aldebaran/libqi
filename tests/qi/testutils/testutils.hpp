@@ -7,7 +7,8 @@
 #include <boost/optional.hpp>
 #include <boost/config.hpp>
 #include <gtest/gtest.h>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
+#include <ka/utility.hpp>
 #include <qi/clock.hpp>
 #include <qi/future.hpp>
 
@@ -160,7 +161,7 @@ namespace test
   template <typename T, typename... Args>
   testing::AssertionResult finishesWithValue(qi::FutureSync<T> fut, Args&&... args)
   {
-    return finishesWithValue(fut.async(), qi::fwd<Args>(args)...);
+    return finishesWithValue(fut.async(), ka::fwd<Args>(args)...);
   }
 
   template <typename T, typename Proc = detail::DoNothing>
@@ -174,7 +175,7 @@ namespace test
   template <typename T, typename... Args>
   testing::AssertionResult finishesWithError(qi::FutureSync<T> fut, Args&&... args)
   {
-    return finishesWithError(fut.async(), qi::fwd<Args>(args)...);
+    return finishesWithError(fut.async(), ka::fwd<Args>(args)...);
   }
 
   template <typename T, typename Proc = detail::DoNothing>
@@ -188,7 +189,7 @@ namespace test
   template <typename T, typename... Args>
   testing::AssertionResult finishesAsCanceled(qi::FutureSync<T> fut, Args&&... args)
   {
-    return finishesAsCanceled(fut.async(), qi::fwd<Args>(args)...);
+    return finishesAsCanceled(fut.async(), ka::fwd<Args>(args)...);
   }
 
   template <typename T, typename Proc = detail::DoNothing>
@@ -202,7 +203,7 @@ namespace test
   template <typename T, typename... Args>
   testing::AssertionResult isStillRunning(qi::FutureSync<T> fut, Args&&... args)
   {
-    return isStillRunning(fut.async(), qi::fwd<Args>(args)...);
+    return isStillRunning(fut.async(), ka::fwd<Args>(args)...);
   }
 
   static const auto defaultConnectionAttemptTimeout = qi::Seconds{10};

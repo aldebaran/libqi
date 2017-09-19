@@ -11,13 +11,13 @@
 # include <string>
 # include <vector>
 # include <type_traits>
-# include <qi/type/traits.hpp>
+# include <ka/typetraits.hpp>
 
 std::string fsconcat(const std::vector<std::string>& paths);
 
 template <typename... S,
-          typename = qi::traits::EnableIf<
-              qi::traits::Conjunction<std::is_convertible<S, std::string>...>::value>>
+          typename = ka::traits::EnableIf<
+              ka::traits::Conjunction<std::is_convertible<S, std::string>...>::value>>
 std::string fsconcat(S&&... paths)
 {
   return fsconcat(

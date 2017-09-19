@@ -14,8 +14,8 @@
 #include <boost/thread/synchronized_value.hpp>
 #include "message.hpp"
 #include <qi/url.hpp>
-#include <qi/type/traits.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/typetraits.hpp>
+#include <ka/macroregular.hpp>
 #include "messagedispatcher.hpp"
 #include "messagesocket.hpp"
 #include <qi/messaging/sock/disconnectedstate.hpp>
@@ -248,7 +248,7 @@ namespace qi {
       boost::shared_ptr<TcpMessageSocket> _socket;
       Future<void> _futureConnected;
     // Regular:
-      QI_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
+      KA_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
     // Procedure:
       void operator()(Future<sock::SyncConnectedResultPtr<N, S>> f)
       {

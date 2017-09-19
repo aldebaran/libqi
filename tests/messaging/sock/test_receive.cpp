@@ -30,7 +30,7 @@ TEST(NetReceiveMessage, FailsOnReadNonSsl)
   using S = SslSocket<N>;
 
   std::vector<std::thread> writeThreads;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_read_next_layer,
     [&](S::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
@@ -78,7 +78,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadNonSsl)
   using S = SslSocket<N>;
 
   std::vector<std::thread> writeThreads;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_read_next_layer,
     [&](S::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
@@ -268,7 +268,7 @@ TYPED_TEST(NetReceiveMessageContinuous, AsyncReadCalledUntilSomethingIsActuallyR
   std::atomic<int> callCount{0};
   std::mutex writeThreadsMutex;
   std::vector<std::thread> writeThreads;
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_read_next_layer,
     [&](S::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       std::lock_guard<std::mutex> lock{writeThreadsMutex};
@@ -339,7 +339,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecauseOfBadMessageCook
   std::vector<std::thread> threads;
   mock::AsyncReadNextLayerHeaderThenData h;
   ++h._magic; // make it wrong
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     N::_async_read_next_layer,
     [=, &threads](S::next_layer_type& s, N::_mutable_buffer_sequence buf, N::_anyTransferHandler handler) mutable {
       threads.push_back(std::thread{[=]() mutable {h(s, buf, handler);}});
@@ -367,7 +367,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecausePayloadIsTooBig)
   const size_t maxPayload = 10000;
   mock::AsyncReadNextLayerHeaderThenData h;
   ++h._headerSize = maxPayload + 1; // make it wrong
-  auto _ = scopedSetAndRestore(N::_async_read_next_layer, h);
+  auto _ = ka::scoped_set_and_restore(N::_async_read_next_layer, h);
   SslContext<N> context;
   auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   Promise<ErrorCode<N>> promiseError;
@@ -388,7 +388,7 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadData)
 
   mock::AsyncReadNextLayerHeaderThenData h;
   h._dataError = ErrorCode<N>{ErrorCode<N>::unknown}; // read data will fail
-  auto _ = scopedSetAndRestore(N::_async_read_next_layer, h);
+  auto _ = ka::scoped_set_and_restore(N::_async_read_next_layer, h);
   SslContext<N> context;
   auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   const size_t maxPayload = 10000;
@@ -409,7 +409,7 @@ TYPED_TEST(NetReceiveMessageContinuous, SeveralMessagesHandled)
   using namespace qi::sock;
   using N = mock::Network;
 
-  auto _ = scopedSetAndRestore(N::_async_read_next_layer, mock::AsyncReadNextLayerHeaderThenData{});
+  auto _ = ka::scoped_set_and_restore(N::_async_read_next_layer, mock::AsyncReadNextLayerHeaderThenData{});
   SslContext<N> context;
   auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   int messageHandledCount = 0;

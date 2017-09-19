@@ -5,12 +5,13 @@
 #include <utility>
 #include <boost/optional.hpp>
 #include <qi/atomic.hpp>
-#include <qi/functional.hpp>
+#include <ka/functional.hpp>
 #include <qi/future.hpp>
 #include <qi/messaging/sock/common.hpp>
 #include <qi/messaging/sock/receive.hpp>
 #include <qi/messaging/sock/send.hpp>
 #include <qi/messaging/sock/traits.hpp>
+#include <ka/src.hpp>
 #include "src/messaging/message.hpp"
 #include <qi/url.hpp>
 
@@ -190,9 +191,9 @@ namespace qi
           return StrandTransfo<N>{&socket()->get_io_service()}(std::forward<Proc>(p));
         }
 
-        DataBoundTransfo<std::shared_ptr<Impl>> lifetimeTransfo()
+        ka::data_bound_transfo_t<std::shared_ptr<Impl>> lifetimeTransfo()
         {
-          return dataBoundTransfo(shared_from_this());
+          return ka::data_bound_transfo(shared_from_this());
         }
 
         StrandTransfo<N> syncTransfo()
@@ -212,7 +213,7 @@ namespace qi
       /// If `onSent` returns false, the processing of enqueued messages stops.
       ///
       /// Procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>
-      template<typename Msg, typename Proc = NoOpProcedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>>
+      template<typename Msg, typename Proc = ka::no_op_procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>>
       void send(Msg&& msg, SslEnabled ssl, const Proc& onSent = {true})
       {
         return _impl->send(std::forward<Msg>(msg), ssl, onSent);

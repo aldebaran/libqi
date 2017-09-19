@@ -6,10 +6,11 @@
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/error.hpp>
 #include <qi/messaging/sock/common.hpp>
+#include <ka/src.hpp>
 #include "src/messaging/message.hpp"
 #include <qi/trackable.hpp>
 #include <qi/log.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/macroregular.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 
@@ -71,7 +72,7 @@ namespace qi { namespace sock {
   /// Procedure<Optional<M> (ErrorCode<N>, M)> Proc,
   /// Transformation<Procedure> F0,
   /// Transformation<Procedure<void (Args...)>> F1
-  template<typename N, typename S, typename M, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  template<typename N, typename S, typename M, typename Proc, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
   void receiveMessage(const S& socket, M ptrMsg, SslEnabled ssl, size_t maxPayload,
     const Proc& onReceive, F0 lifetimeTransfo = F0{}, F1 syncTransfo = F1{});
 
@@ -243,13 +244,13 @@ namespace qi { namespace sock {
   // QuasiRegular:
     ReceiveMessageContinuous() = default;
     // TODO: uncomment when messages are comparable, or when latest GCC is fixed.
-//    QI_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuous, _msg)
+//    KA_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuous, _msg)
   // Procedure:
     /// Mutable<SslSocket<N>> S,
     /// Procedure<bool (ErrorCode<N>, const Message*)> Proc,
     /// Transformation<Procedure> F0,
     /// Transformation<Procedure<void (Args...)>> F1
-    template<typename S, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
+    template<typename S, typename Proc, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
         Proc onReceive, const F0& lifetimeTransfo = {}, const F1& syncTransfo = {})
     {
@@ -287,12 +288,12 @@ namespace qi { namespace sock {
   public:
   // QuasiRegular:
     ReceiveMessageContinuousTrack() = default;
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuousTrack, _receiveMsg)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuousTrack, _receiveMsg)
   // Procedure:
     /// Mutable<<SslSocket<N>> S,
     /// Procedure<bool (ErrorCode<N>, const Message*)> Proc
     /// Transformation<Procedure<void (Args...)>> F
-    template<typename S, typename Proc, typename F = IdTransfo>
+    template<typename S, typename Proc, typename F = ka::id_transfo>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
       Proc onReceive, const F& syncTransfo = {})
     {

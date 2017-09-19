@@ -10,9 +10,9 @@
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/messaging/sock/error.hpp>
 #include <qi/messaging/sock/common.hpp>
-#include <qi/moveoncopy.hpp>
-#include <qi/utility.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/moveoncopy.hpp>
+#include <ka/utility.hpp>
+#include <ka/macroregular.hpp>
 
 /// @file
 /// Contains the implementation of the Network concept for unit tests.
@@ -73,7 +73,7 @@ namespace mock
         }
         throw std::runtime_error("error_code_type::message(): unknown code.");
       }
-      QI_GENERATE_FRIEND_REGULAR_OPS_2(error_code_type, _value, _message)
+      KA_GENERATE_FRIEND_REGULAR_OPS_2(error_code_type, _value, _message)
     };
     struct io_service_type
     {
@@ -81,14 +81,14 @@ namespace mock
 
       template<typename Proc>
       auto wrap(Proc&& p) const
-        -> decltype(qi::compose(qi::PolymorphicConstantFunction<void>{}, _strand.schedulerFor(qi::fwd<Proc>(p))))
+        -> decltype(ka::compose(ka::poly_constant_function<void>{}, _strand.schedulerFor(ka::fwd<Proc>(p))))
       {
         // If `Proc`'s return type is `R`, then `_strand.schedulerFor(p)` returns a function object that
         // returns a `qi::Future<R>`. But this `wrap` method must return a function object that returns `void`
         // (see `NetIoService` concept).
         // So we compose the stranded procedure with a procedure that does nothing and returns `void` (namely
         // `PolymorphicConstantFunction<void>{}`).
-        return qi::compose(qi::PolymorphicConstantFunction<void>{}, _strand.schedulerFor(qi::fwd<Proc>(p)));
+        return ka::compose(ka::poly_constant_function<void>{}, _strand.schedulerFor(ka::fwd<Proc>(p)));
       }
     };
     struct ssl_context_type
@@ -110,19 +110,19 @@ namespace mock
         _address(bool b = false, std::string v = "") : _isV6(b), _value(v) {}
         bool is_v6() const {return _isV6;}
         std::string to_string() const {return _value;}
-        QI_GENERATE_FRIEND_REGULAR_OPS_2(_address, _isV6, _value)
+        KA_GENERATE_FRIEND_REGULAR_OPS_2(_address, _isV6, _value)
       } _addr;
       _address address() const {return _addr;}
       unsigned short port() const {return 0u;}
       struct protocol_t {};
       protocol_t protocol() const {return {};}
-      QI_GENERATE_FRIEND_REGULAR_OPS_1(_endpoint, _addr)
+      KA_GENERATE_FRIEND_REGULAR_OPS_1(_endpoint, _addr)
     };
     struct _resolver_entry
     {
       _endpoint _e;
       _endpoint endpoint() const {return _e;}
-      QI_GENERATE_FRIEND_REGULAR_OPS_1(_resolver_entry, _e)
+      KA_GENERATE_FRIEND_REGULAR_OPS_1(_resolver_entry, _e)
     };
     using _anyHandler = std::function<void (error_code_type)>;
     struct ssl_socket_type
@@ -222,6 +222,7 @@ namespace mock
         _resolver_entry** _p;
         iterator(_resolver_entry** p = &_sentinel) : _p{p} {}
         value_type operator*() {return **_p;}
+        friend value_type src(iterator x) {return *x;}
         iterator& operator++() {++_p; return *this;}
         bool operator==(iterator b) const {return _p == b._p || (!*_p && !*b._p);}
         bool operator!=(iterator b) const {return !(*this == b);}

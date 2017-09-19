@@ -5,7 +5,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/jsoncodec.hpp>
 #include <qi/type/metaobject.hpp>
-#include <qi/detail/conceptpredicate.hpp>
+#include <ka/conceptpredicate.hpp>
 #include <src/type/metaobject_p.hpp>
 
 bool compareMetaMethodParameter(

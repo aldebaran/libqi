@@ -5,7 +5,7 @@
 #include <atomic>
 #include <boost/atomic.hpp>
 
-#include <qi/errorhandling.hpp>
+#include <ka/errorhandling.hpp>
 #include <qi/strand.hpp>
 #include <qi/log.hpp>
 #include <qi/future.hpp>
@@ -334,7 +334,7 @@ void Strand::join()
 Strand::OptionalErrorMessage Strand::join(std::nothrow_t) QI_NOEXCEPT(true)
 {
   // Catch any exception and return its message.
-  return invokeCatch(ExceptionMessage{}, [this]() {join(); return OptionalErrorMessage{};});
+  return ka::invoke_catch(ka::exception_message{}, [this]() {join(); return OptionalErrorMessage{};});
 }
 
 Future<void> Strand::async(const boost::function<void()>& cb,

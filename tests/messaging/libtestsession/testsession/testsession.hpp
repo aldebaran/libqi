@@ -77,7 +77,7 @@
 #include <boost/utility/string_ref.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <qi/session.hpp>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 
 #define ENVIRON_VARIABLE "TESTMODE"
 

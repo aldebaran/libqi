@@ -8,6 +8,7 @@
 #include <qi/api.hpp>
 #include <qi/clock.hpp>
 #include <qi/signal.hpp>
+#include <ka/src.hpp>
 
 namespace qi
 {

@@ -9,7 +9,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
 #include <qi/anymodule.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 
 qiLogCategory("qi.test.anymodule");
 
@@ -81,7 +81,7 @@ TEST_F(Module, LoadByHandWithSession)
 {
   qi::AnyModule foomod = qi::import("naoqi.testanymodulesession");
   qi::AnyObject ao = foomod.call<qi::AnyObject>("Foo", session);
-  auto scopeUnregister = qi::scoped(session->registerService("Foo", ao).value(),
+  auto scopeUnregister = ka::scoped(session->registerService("Foo", ao).value(),
                                     [&](unsigned int id) { session->unregisterService(id); });
 
   int res = ao.call<int>("bar");

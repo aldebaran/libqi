@@ -13,7 +13,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/assert.hpp>
-#include <qi/algorithm.hpp>
+#include <ka/algorithm.hpp>
 
 #include "signal_p.hpp"
 

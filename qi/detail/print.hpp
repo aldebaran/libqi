@@ -128,7 +128,7 @@ namespace detail
       {
       }
 
-      QI_GENERATE_FRIEND_REGULAR_OPS_6(Column, value, color, alignment, opts, width, fillChar)
+      KA_GENERATE_FRIEND_REGULAR_OPS_6(Column, value, color, alignment, opts, width, fillChar)
 
       ValueType value;
       StreamColor color;
@@ -156,7 +156,7 @@ namespace detail
     // Regular:
       Line() = default;
 
-      QI_GENERATE_FRIEND_REGULAR_OPS_2(Line, columns, opts)
+      KA_GENERATE_FRIEND_REGULAR_OPS_2(Line, columns, opts)
 
       Columns columns;
       Options opts;

@@ -8,7 +8,7 @@
 #include <qi/messaging/sock/sslcontextptr.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include <qi/future.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include <qi/url.hpp>
 #include "networkmock.hpp"
 #include "networkcommon.hpp"
@@ -26,7 +26,7 @@ TEST(NetAcceptConnectionContinuous, Success)
   using N = mock::Network;
   using S = SslSocket<N>;
 
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     Acceptor<N>::async_accept,
     mock::defaultAsyncAccept
   );
@@ -56,7 +56,7 @@ TEST(NetAcceptConnectionContinuous, AcceptFailed)
   using N = mock::Network;
   using S = SslSocket<N>;
 
-  auto _ = scopedSetAndRestore(
+  auto _ = ka::scoped_set_and_restore(
     Acceptor<N>::async_accept,
     [](S::next_layer_type&, N::_anyHandler h) {
       h(networkUnreachable<ErrorCode<N>>());

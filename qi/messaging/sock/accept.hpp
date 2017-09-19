@@ -9,9 +9,10 @@
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/resolve.hpp>
 #include <qi/messaging/sock/common.hpp>
+#include <ka/src.hpp>
 #include <qi/url.hpp>
-#include <qi/macroregular.hpp>
-#include <qi/functional.hpp>
+#include <ka/macroregular.hpp>
+#include <ka/functional.hpp>
 
 /// @file
 /// Contains functions and types related to socket acception, in the context of
@@ -79,7 +80,7 @@ namespace qi { namespace sock {
   ///   Transformation<Procedure> F0,
   ///   Transformation<Procedure<void (Args...)>> F1
   template<typename N, typename Proc0, typename Proc1,
-           typename F0 = IdTransfo, typename F1 = IdTransfo>
+           typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
   void acceptConnection(Acceptor<N>& acceptor, Proc0 makeSocket,
     Proc1 onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
@@ -104,7 +105,7 @@ namespace qi { namespace sock {
   /// With NetSslSocket S:
   ///   S is compatible with N,
   /// Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<SslSocket<N>>>>)> Proc
-  template<typename N, typename S, typename Proc = PolymorphicConstantFunction<void>>
+  template<typename N, typename S, typename Proc = ka::poly_constant_function<void>>
   void listen(Acceptor<N>& acceptor, const Endpoint<Lowest<S>>& endpoint,
     ReuseAddressEnabled reuse, Proc onListen = {})
   {
@@ -231,7 +232,7 @@ namespace qi { namespace sock {
     }
   public:
   // QuasiRegular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_2(AcceptConnectionContinuous, _resolve, _acceptor)
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(AcceptConnectionContinuous, _resolve, _acceptor)
     AcceptConnectionContinuous(IoService<N>& io)
       : _acceptor{io}
       , _resolve{io}
@@ -256,8 +257,8 @@ namespace qi { namespace sock {
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure> F0,
     ///   Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
-             typename F0 = IdTransfo, typename F1 = IdTransfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
+             typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
     void operator()(Proc0 makeSocket,
         const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
         const Proc1& onAccept, const Proc2& onListen = {}, const F0& lifetimeTransfo = {},
@@ -272,8 +273,8 @@ namespace qi { namespace sock {
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure> F0,
     ///   Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
-             typename F0 = IdTransfo, typename F1 = IdTransfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
+             typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
     void operator()(Proc0 makeSocket, const Url& url,
         IpV6Enabled ipV6, ReuseAddressEnabled reuse,
         Proc1 onAccept, Proc2 onListen = {},
@@ -305,7 +306,7 @@ namespace qi { namespace sock {
     AcceptConnectionContinuous<N, S> _accept;
   public:
   // QuasiRegular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(AcceptConnectionContinuousTrack, _accept)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(AcceptConnectionContinuousTrack, _accept)
     AcceptConnectionContinuousTrack(IoService<N>& io)
       : _accept{io}
     {
@@ -316,8 +317,8 @@ namespace qi { namespace sock {
     ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure<void (Args...)>> F
-    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
-             typename F = IdTransfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
+             typename F = ka::id_transfo>
     void operator()(Proc0 makeSocket,
       const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
       const Proc1& onAccept, const Proc2& onListen = {}, const F& syncTransfo = {})
@@ -331,8 +332,8 @@ namespace qi { namespace sock {
     ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure<void (Args...)>> F
-    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
-             typename F = IdTransfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
+             typename F = ka::id_transfo>
     void operator()(Proc0 makeSocket,
       const Url& url, IpV6Enabled ipV6, ReuseAddressEnabled reuse,
       const Proc1& onAccept, const Proc2& onListen = {}, const F& syncTransfo = {})

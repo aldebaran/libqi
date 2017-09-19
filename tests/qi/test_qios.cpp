@@ -26,7 +26,7 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include "testutils/testutils.hpp"
 
 static std::chrono::milliseconds timeout()
@@ -632,7 +632,7 @@ TEST(Os, getProcessUuidDifferentInDifferentProcesses)
     test::ScopedProcess process{
       qi::path::findBin("print_process_uuid"), {childFilename}, timeout()};
   }
-  const auto _ = qi::scoped([=]() {
+  const auto _ = ka::scoped([=]() {
     boost::filesystem::remove(childFilename);
   });
   boost::filesystem::ifstream childFile{childFilename};
