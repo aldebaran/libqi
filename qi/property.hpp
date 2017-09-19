@@ -11,6 +11,7 @@
 #include <boost/thread/mutex.hpp>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
+#include <qi/strand.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -122,8 +123,6 @@ namespace qi
     using ImplType = PropertyImpl<T>;
     using Getter = typename ImplType::Getter;
     using Setter = typename ImplType::Setter;
-    class ScopedLockReadWrite;
-    class ScopedLockReadOnly;
 
     Property(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
@@ -145,64 +144,8 @@ namespace qi
     FutureSync<AnyValue> value() const override;
 
   private:
-    mutable boost::mutex _mutex;
+    mutable Strand _strand;
   };
-
-  /** Provides (locking) exclusive write-enabled access to the value of a property.
-      Locks the internal mutex of the property on construction, releases it on destruction.
-      Behaves like a pointer to the property value.
-   */
-  template<class T>
-  class Property<T>::ScopedLockReadWrite
-    : boost::noncopyable
-  {
-  public:
-    ScopedLockReadWrite(Property<T>& property)
-      : _property(property)
-      , _lock(property._mutex)
-    {
-    }
-
-    ~ScopedLockReadWrite()
-    {
-      _property(_property._value); // Trigger update of the observer callbacks with the new value.
-    }
-
-    T& operator*() { return _property._value; }
-    T* operator->() { return &_property._value; }
-
-    const T& operator*() const { return _property._value; }
-    const T* operator->() const { return &_property._value; }
-
-  private:
-    Property<T>& _property;
-    boost::mutex::scoped_lock _lock;
-  };
-
-  /** Provides (locking) exclusive read-only access to the value of a property.
-      Locks the internal mutex of the property on construction, releases it on destruction.
-      Behaves like a pointer to the property value.
-   */
-  template<class T>
-  class Property<T>::ScopedLockReadOnly
-    : boost::noncopyable
-  {
-  public:
-    ScopedLockReadOnly(const Property<T>& property)
-      : _property(property)
-      , _lock(property._mutex)
-    {
-    }
-
-    const T& get() const { return _property._value; }
-    const T& operator*() const { return get(); }
-    const T* operator->() const { return &get(); }
-
-  private:
-    const Property<T>& _property;
-    boost::mutex::scoped_lock _lock;
-  };
-
 
   /// Type-erased property, simulating a typed property but using AnyValue.
   class QI_API GenericProperty : public Property<AnyValue>
