@@ -22,7 +22,7 @@ namespace qi
 
   bool MessageSocket::isConnected() const
   {
-    return _status == qi::MessageSocket::Status::Connected;
+    return status() == qi::MessageSocket::Status::Connected;
   }
 
   MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop)

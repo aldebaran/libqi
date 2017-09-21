@@ -238,11 +238,6 @@ namespace qi {
       }
       return {};
     }
-    bool isConnected() const override
-    {
-      boost::recursive_mutex::scoped_lock lock(_stateMutex);
-      return getStatus() == Status::Connected;
-    }
     bool ensureReading() override;
   private:
     /// Handler called when we transition outside the connected state.
