@@ -9,13 +9,20 @@
 #define _SRC_UTILS_HPP_
 
 # include <string>
+# include <vector>
+# include <type_traits>
+# include <qi/type/traits.hpp>
 
-std::string fsconcat(const std::string &p0,
-                     const std::string &p1,
-                     const std::string &p2 = "",
-                     const std::string &p3 = "",
-                     const std::string &p4 = "",
-                     const std::string &p5 = "");
+std::string fsconcat(const std::vector<std::string>& paths);
+
+template <typename... S,
+          typename = qi::traits::EnableIf<
+              qi::traits::Conjunction<std::is_convertible<S, std::string>...>::value>>
+std::string fsconcat(S&&... paths)
+{
+  return fsconcat(
+      std::vector<std::string>{ std::initializer_list<std::string>{ std::forward<S>(paths)... } });
+}
 
 std::string randomstr(std::string::size_type sz);
 std::wstring wrandomstr(std::wstring::size_type sz);
