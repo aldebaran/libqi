@@ -17,6 +17,7 @@ namespace qi
   MessageSocket::~MessageSocket()
   {
     qiLogDebug() << "Destroying transport socket";
+    _signalsStrand.join();
   }
 
   bool MessageSocket::isConnected() const

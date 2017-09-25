@@ -33,7 +33,8 @@ namespace qi {
 
   const unsigned int MessageDispatcher::ALL_OBJECTS = -1;
 
-  MessageDispatcher::MessageDispatcher()
+  MessageDispatcher::MessageDispatcher(ExecutionContext* execContext)
+    : _execContext{ execContext }
   {
   }
 
@@ -83,7 +84,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
     boost::shared_ptr<OnMessageSignal> &sig = _signalMap[Target(serviceId, objectId)];
     if (!sig)
-      sig.reset(new OnMessageSignal());
+      sig.reset(new OnMessageSignal(_execContext));
     sig->setCallType(MetaCallType_Direct);
     return sig->connect(fun);
   }

@@ -12,6 +12,7 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <thread>
 #include <numeric>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
@@ -78,6 +79,9 @@ TEST_F(TestTransportSocketCache, DisconnectReconnect)
   sock->disconnect();
   qiLogDebug() << "DISCONNECTING: end";
   ASSERT_FALSE(sock->isConnected()) << sock.get();
+
+  // the disconnected signal can take some time until it's received, so wait a bit
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
   qiLogDebug() << "RECONNECTING: begin";
   sockfut = cache_.socket(servInfo, endpoints[0].protocol());
   sock = sockfut.value();

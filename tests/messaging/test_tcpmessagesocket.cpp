@@ -89,6 +89,24 @@ bool messageEqual(const qi::Message& m0, const qi::Message& m1)
   return std::equal(b0, b0 + m0.buffer().size(), (char*)m1.buffer().data());
 }
 
+template<typename... Args>
+struct DisconnectSignal
+{
+  qi::SignalLink link = 0;
+  qi::Signal<Args...>* signal = nullptr;
+
+  DisconnectSignal(qi::SignalLink link, qi::Signal<Args...>* signal)
+    : link{link}
+    , signal{signal}
+  {}
+
+  void operator()()
+  {
+    if (signal && link != 0)
+      signal->disconnect(link);
+  }
+};
+
 struct SignalPromises
 {
   qi::Promise<void> _connectedReceived;
@@ -104,17 +122,40 @@ struct SignalPromises
   }
 };
 
-template<typename Socket>
-SignalPromises connectSignals(Socket& socket)
+struct SignalConnection
 {
-  SignalPromises p;
-  socket.connected.connect([=]() mutable {
-    p._connectedReceived.setValue(0);
+  SignalPromises promises;
+  std::function<void()> disconnect = qi::NoOpProcedure<void()>{};
+
+  ~SignalConnection()
+  {
+    disconnect();
+  }
+};
+
+using SignalConnectionPtr = std::unique_ptr<SignalConnection>;
+
+template<typename SocketPtr>
+SignalConnectionPtr connectSignals(const SocketPtr& socket)
+{
+  SignalConnectionPtr c { new SignalConnection };
+  const auto cptr = c.get();
+
+  const qi::SignalLink linkConnected =
+      socket->connected.connect([=]() { cptr->promises._connectedReceived.setValue(0); });
+  DisconnectSignal<> disconnectConnected{ linkConnected, &socket->connected };
+
+  const qi::SignalLink linkDisconnected = socket->disconnected.connect(
+      [=](const std::string& msg) { cptr->promises._disconnectedReceived.setValue(msg); });
+  DisconnectSignal<std::string> disconnectDisconnected{ linkDisconnected, &socket->disconnected };
+
+  const auto lifetimeTransfo = qi::dataBoundTransfo(socket);
+  c->disconnect = lifetimeTransfo([=]() mutable {
+    disconnectConnected();
+    disconnectDisconnected();
   });
-  socket.disconnected.connect([=](const std::string& msg) mutable {
-    p._disconnectedReceived.setValue(msg);
-  });
-  return p;
+
+  return c;
 }
 
 namespace {
@@ -197,20 +238,20 @@ TYPED_TEST(NetMessageSocket, DestroyNotConnectedAsio)
   using namespace qi;
   using namespace qi::sock;
 
-  SignalPromises signalPromises;
+  SignalConnectionPtr signalConnection;
   {
     auto clientSideSocket = makeMessageSocket(this->scheme());
     const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
-    signalPromises = connectSignals(*clientSideSocket);
+    signalConnection = connectSignals(clientSideSocket);
 
     // Check that signal were not emitted.
-    ASSERT_TRUE(signalPromises.connectedReceived().isRunning());
-    ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
+    ASSERT_TRUE(signalConnection->promises.connectedReceived().isRunning());
+    ASSERT_TRUE(signalConnection->promises.disconnectedReceived().isRunning());
   }
 
   // Socket is destroyed : disconnect must not be emitted since it was not
   // connected in the first place.
-  ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
+  ASSERT_TRUE(signalConnection->promises.disconnectedReceived().isRunning());
 }
 
 TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
@@ -225,16 +266,18 @@ TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
   // We also want to check that signals are emitted.
   auto clientSideSocket = makeMessageSocket(this->scheme());
   const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
-  auto signalPromises = connectSignals(*clientSideSocket);
+  auto signalConnection = connectSignals(clientSideSocket);
 
   Future<void> fut0 = clientSideSocket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
-  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.connectedReceived().wait(defaultTimeout));
-  ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
+  ASSERT_EQ(FutureState_FinishedWithValue,
+            signalConnection->promises.connectedReceived().wait(defaultTimeout));
+  ASSERT_TRUE(signalConnection->promises.disconnectedReceived().isRunning());
 
   Future<void> fut1 = clientSideSocket->disconnect();
   ASSERT_EQ(FutureState_FinishedWithValue, fut1.wait(defaultTimeout));
-  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue,
+            signalConnection->promises.disconnectedReceived().wait(defaultTimeout));
 }
 
 TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
@@ -243,7 +286,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
   using namespace qi::sock;
 
   // We also want to check that signals are emitted.
-  SignalPromises signalPromises;
+  SignalConnectionPtr signalConnection;
 
   {
     // Start a server and get the server side socket.
@@ -251,16 +294,18 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
     const auto url = this->listen(server).url;
     auto clientSideSocket = makeMessageSocket(this->scheme());
     const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
-    signalPromises = connectSignals(*clientSideSocket);
+    signalConnection = connectSignals(clientSideSocket);
 
     Future<void> fut0 = clientSideSocket->connect(url);
     ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
-    ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.connectedReceived().wait(defaultTimeout));
-    ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
+    ASSERT_EQ(FutureState_FinishedWithValue,
+              signalConnection->promises.connectedReceived().wait(defaultTimeout));
+    ASSERT_TRUE(signalConnection->promises.disconnectedReceived().isRunning());
   }
 
   // disconnected must be emitted on destruction.
-  ASSERT_EQ(FutureState_FinishedWithValue, signalPromises.disconnectedReceived().wait(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue,
+            signalConnection->promises.disconnectedReceived().wait(defaultTimeout));
 }
 
 TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
@@ -270,14 +315,14 @@ TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
   const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
-  auto signalPromises = connectSignals(*clientSideSocket);
+  auto signalConnection = connectSignals(clientSideSocket);
 
   MessageAddress address{1234, 5, 9876, 107};
   ASSERT_FALSE(clientSideSocket->send(makeMessage(address)));
 
   // Check that signal were not emitted.
-  ASSERT_TRUE(signalPromises.connectedReceived().isRunning());
-  ASSERT_TRUE(signalPromises.disconnectedReceived().isRunning());
+  ASSERT_TRUE(signalConnection->promises.connectedReceived().isRunning());
+  ASSERT_TRUE(signalConnection->promises.disconnectedReceived().isRunning());
 }
 
 TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
@@ -362,18 +407,18 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
 
   const int messageCount = 100;
   MessageAddress address{1234, 5, 9876, 107};
-  int i = 0;
+  std::atomic<int> i { 0 };
   clientSideSocket->messageReady.connect([=, &i](const Message& msg) mutable {
-    if (i > messageCount) promiseAllMessageReceived.setError("Too many messages received.");
+    const auto oldi = i++;
+    if (oldi >= messageCount) promiseAllMessageReceived.setError("Too many messages received.");
     auto addr = address;
-    addr.messageId = address.messageId + i;
+    addr.messageId = address.messageId + oldi;
     auto msg2 = makeMessage(addr);
     if (!messageEqual(msg, msg2))
     {
       promiseAllMessageReceived.setError("message not equal.");
     }
-    ++i;
-    if (i == messageCount) promiseAllMessageReceived.setValue(0);
+    if (oldi + 1 == messageCount) promiseAllMessageReceived.setValue(0);
   });
   Future<void> fut = clientSideSocket->connect(url);
   fut.wait();
@@ -616,8 +661,8 @@ TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
     {
       promiseAllMessageReceived.setError("message not equal.");
     }
-    ++i;
-    if (i == messageCount) promiseAllMessageReceived.setValue(0);
+    const auto iVal = ++i;
+    if (iVal == messageCount) promiseAllMessageReceived.setValue(0);
   });
   Future<void> fut = clientSideSocket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));

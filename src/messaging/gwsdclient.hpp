@@ -24,7 +24,7 @@ class Message;
 class MessageSocket;
 using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
 
-class GwSDClient
+class GwSDClient : public Trackable<GwSDClient>
 {
 public:
   GwSDClient();
@@ -72,6 +72,7 @@ private:
                         boost::shared_ptr<boost::mutex> mutex,
                         boost::shared_ptr<int> initCount);
   void onMessageReady(const Message& msg);
+  void resetSdSocket();
 
   using SetterFunc = void (*)(void*, const Message&, MessageSocketPtr);
   using PromiseMap = std::map<unsigned int, std::pair<void*, SetterFunc> >;

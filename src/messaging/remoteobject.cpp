@@ -100,8 +100,8 @@ namespace qi {
       _linkMessageDispatcher = socket->messagePendingConnect(_service,
         MessageSocket::ALL_OBJECTS,
         track(boost::bind<void>(&RemoteObject::onMessagePending, this, _1), this));
-      _linkDisconnected      = socket->disconnected.connect (
-         &RemoteObject::onSocketDisconnected, this, _1);
+      _linkDisconnected = socket->disconnected.connect(
+          track([=](const std::string& reason) { onSocketDisconnected(reason); }, this));
     }
   }
 

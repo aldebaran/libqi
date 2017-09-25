@@ -34,6 +34,7 @@ namespace qi {
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, enforceAuth)
     , _servicesHandler(&_sdClient, &_serverObject)
     , _sd(&_serverObject)
+    , _sdClientClosedByThis{false}
   {
     session->connected.setCallType(qi::MetaCallType_Queued);
     session->disconnected.setCallType(qi::MetaCallType_Queued);
@@ -66,7 +67,11 @@ namespace qi {
     }
   }
 
-  void SessionPrivate::onServiceDirectoryClientDisconnected(std::string error) {
+  void SessionPrivate::onServiceDirectoryClientDisconnected(std::string /*error*/)
+  {
+    if (_sdClientClosedByThis)
+      return;
+
     /*
      * Remove all proxies to services if the SD is fallen.
      */
@@ -143,17 +148,21 @@ namespace qi {
     qi::Promise<void> p;
 
     // go through hoops to get shared_ptr on this
-    f.connect(&SessionPrivate::addSdSocketToCache, this, _1, serviceDirectoryURL, p);
+    f.then([=](Future<void> f) {
+      _sdClientClosedByThis = false;
+      addSdSocketToCache(f, serviceDirectoryURL, p);
+    });
     return p.future();
   }
 
 
   qi::FutureSync<void> SessionPrivate::close()
   {
+    _sdClientClosedByThis = true;
     _serviceHandler.close();
     _serverObject.close();
     _socketsCache.close();
-    return _sdClient.close();
+    return _sdClient.close().async();
   }
 
   bool SessionPrivate::isConnected() const {

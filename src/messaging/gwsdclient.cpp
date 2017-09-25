@@ -60,11 +60,13 @@ GwSDClient::GwSDClient()
 
 GwSDClient::~GwSDClient()
 {
+  Trackable::destroy();
   close();
 }
 
 FutureSync<void> GwSDClient::connect(const Url& url)
 {
+  resetSdSocket();
   _sdSocket = qi::makeMessageSocket(url.protocol());
   if (!_sdSocket)
     return qi::makeFutureError<void>(std::string("unrecognised protocol '") + url.protocol() +
@@ -244,7 +246,7 @@ void GwSDClient::onEventConnected(Future<SignalLink> fut,
   {
     std::string error = fut.error();
     qiLogError() << "onEventConnected:" << error;
-    _sdSocket->disconnect();
+    resetSdSocket();
     if (!prom.future().isFinished())
       prom.setError(error);
     return;
@@ -268,7 +270,7 @@ void GwSDClient::onMetaObjectFetched(Future<MetaObject> fut, Promise<void> prom)
   {
     std::string error = fut.error();
     qiLogError() << error;
-    _sdSocket->disconnect();
+    resetSdSocket();
     prom.setError(error);
     return;
   }
@@ -303,7 +305,7 @@ void GwSDClient::onAuthentication(const Message& msg,
       error << "Expected a message for function #" << Message::ServerFunction_Authenticate
             << " (authentication), received a message for function " << msg.function();
     prom.setError(error.str());
-    sdSocket->disconnect();
+    sdSocket->disconnect().async();
     return;
   }
 
@@ -314,7 +316,8 @@ void GwSDClient::onAuthentication(const Message& msg,
   {
     if (sdSocket)
       sdSocket->messageReady.disconnect(*old);
-    _messageReadyLink = sdSocket->messageReady.connect(&GwSDClient::onMessageReady, this, _1);
+    _messageReadyLink = sdSocket->messageReady.connect(
+        track([=](const Message& msg){ onMessageReady(msg); }, this));
     qi::Future<MetaObject> future = fetchMetaObject();
     future.connect(&GwSDClient::onMetaObjectFetched, this, _1, prom);
     return;
@@ -335,8 +338,7 @@ void GwSDClient::onSocketConnected(FutureSync<void> future, Promise<void> promis
   {
     qiLogError() << future.error();
     promise.setError(future.error());
-    MessageSocketPtr socket;
-    std::swap(socket, _sdSocket);
+    resetSdSocket();
     return;
   }
   _sdSocket->disconnected.connect(disconnected);
@@ -348,8 +350,11 @@ void GwSDClient::onSocketConnected(FutureSync<void> future, Promise<void> promis
       authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
   }
   SignalSubscriberPtr protocolSubscriber(new SignalSubscriber);
-  *protocolSubscriber = _sdSocket->messageReady.connect(
-      &GwSDClient::onAuthentication, this, _1, promise, authenticator, protocolSubscriber);
+  *protocolSubscriber = _sdSocket->messageReady.connect(track(
+      [=](const Message& msg) {
+        onAuthentication(msg, promise, authenticator, protocolSubscriber);
+      },
+      this));
 
   CapabilityMap socketCaps = _sdSocket->localCapabilities();
   socketCaps.insert(authCaps.begin(), authCaps.end());
@@ -402,6 +407,17 @@ void GwSDClient::onMessageReady(const Message& msg)
       pit->second.second(pit->second.first, msg, _sdSocket);
       _promises.erase(pit);
     }
+  }
+}
+
+void GwSDClient::resetSdSocket()
+{
+  if (_sdSocket)
+  {
+    MessageSocketPtr socket;
+    using std::swap;
+    swap(socket, _sdSocket);
+    socket->disconnect();
   }
 }
 }

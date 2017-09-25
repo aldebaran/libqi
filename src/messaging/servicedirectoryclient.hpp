@@ -62,22 +62,34 @@ namespace qi {
     void onServiceRemoved(unsigned int idx, const std::string &name);
 
     //MessageSocket Interface
-    void onSocketConnected(qi::FutureSync<void> future, qi::Promise<void> prom);
-    qi::FutureSync<void> onSocketFailure(std::string error, bool mustSignalDisconnected = true);
+    void onSocketConnected(MessageSocketPtr socket,
+                           qi::Future<void> future,
+                           qi::Promise<void> prom);
+    qi::FutureSync<void> onSocketFailure(MessageSocketPtr socket,
+                                         std::string error,
+                                         bool mustSignalDisconnected = true);
 
     //RemoteObject Interface
-    void onMetaObjectFetched(qi::Future<void> fut, qi::Promise<void> prom);
+    void onMetaObjectFetched(MessageSocketPtr socket, qi::Future<void> fut, qi::Promise<void> prom);
 
-    void onAuthentication(const MessageSocket::SocketEventData& data, qi::Promise<void> prom, ClientAuthenticatorPtr authenticator, SignalSubscriberPtr old);
+    void onAuthentication(MessageSocketPtr socket,
+                          const MessageSocket::SocketEventData& data,
+                          qi::Promise<void> prom,
+                          ClientAuthenticatorPtr authenticator);
 
     //wait for serviceAdded/serviceRemoved are connected
     void onSDEventConnected(qi::Future<SignalLink> ret,
                             qi::Promise<void> fco,
                             bool isAdd);
 
+    bool isPreviousSdSocket(const MessageSocketPtr& socket);
+    void cleanupPreviousSdSocket(const MessageSocketPtr& socket,
+                                 qi::Promise<void> connectionPromise) const;
+
   private:
     qi::MessageSocketPtr _sdSocket; // protected by _mutex
     qi::SignalLink         _sdSocketDisconnectedSignalLink;
+    qi::SignalLink         _sdSocketSocketEventSignalLink;
     // _remoteObject is owned by _object
     qi::RemoteObject*      _remoteObject;
     // _object is a remote object of serviceDirectory

@@ -28,7 +28,7 @@ namespace qi {
    */
   class MessageDispatcher {
   public:
-    MessageDispatcher();
+    MessageDispatcher(ExecutionContext* execContext = nullptr);
 
     //internal: called by Socket to tell the class that we sent a message
     void sent(const qi::Message& msg);
@@ -47,6 +47,7 @@ namespace qi {
     using SignalMap = std::map<Target, boost::shared_ptr<OnMessageSignal> >;
     using MessageSentMap = std::map<unsigned int, MessageAddress>;
 
+    ExecutionContext*      _execContext;
     SignalMap              _signalMap;
     boost::recursive_mutex _signalMapMutex;
 

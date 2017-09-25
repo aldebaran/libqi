@@ -226,8 +226,7 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
 
   info.setMachineId(machineId);
   qi::SignalLink disconnectionTracking = socket->disconnected.connect(
-        &TransportSocketCache::onSocketDisconnected, this, url, info)
-      .setCallType(MetaCallType_Direct);
+      track([=](const std::string&) { onSocketDisconnected(url, info); }, this));
 
   ConnectionMap::iterator mIt = _connections.find(machineId);
   if (mIt != _connections.end())
@@ -332,8 +331,7 @@ void TransportSocketCache::onSocketParallelConnectionAttempt(Future<void> fut,
     return;
   }
   qi::SignalLink disconnectionTracking = socket->disconnected.connect(
-        &TransportSocketCache::onSocketDisconnected, this, url, info)
-      .setCallType(MetaCallType_Direct);
+      track([=](const std::string&) { onSocketDisconnected(url, info); }, this));
   attempt->state = State_Connected;
   attempt->endpoint = socket;
   attempt->promise.setValue(socket);

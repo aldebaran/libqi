@@ -606,8 +606,11 @@ void GatewayPrivate::onSdConnected(Future<void> fut, Promise<void> prom)
   }
   // Additional checks are required for some of the SD's messages, so it gets
   // it's own messageReady callback.
-  const SignalLink messageReadyLink = sdSocket->messageReady.connect(&GatewayPrivate::onServiceDirectoryMessageReady, this, _1, sdSocket);
-  const SignalLink disconnectedLink = sdSocket->disconnected.connect(&GatewayPrivate::onServiceDirectoryDisconnected, this, sdSocket, _1);
+  const SignalLink messageReadyLink = sdSocket->messageReady.connect(
+      track([=](const Message& msg) { onServiceDirectoryMessageReady(msg, sdSocket); }, this));
+  const SignalLink disconnectedLink = sdSocket->disconnected.connect(
+      track([=](const std::string& reason) { onServiceDirectoryDisconnected(sdSocket, reason); },
+            this));
 
   {
     boost::mutex::scoped_lock lock(_signalDisconnectionsMutex);
@@ -730,7 +733,7 @@ try
       caps.setValue(socket->localCapabilities(), typeOf<CapabilityMap>()->signature());
       socket->send(caps);
 
-      socket->messageReady.connect(&GatewayPrivate::onAnyMessageReady, this, _1, socket);
+      socket->messageReady.connect(track([=](const Message& msg){ onAnyMessageReady(msg, socket); }, this));
       onAnyMessageReady(msg, socket);
     }
     return;
@@ -747,7 +750,8 @@ try
   case AuthProvider::State_Done:
     qiLogVerbose() << "Client " << client_endpoint << " has successfully authenticated.";
     socket->messageReady.disconnect(*sub);
-    socket->messageReady.connect(&GatewayPrivate::onAnyMessageReady, this, _1, socket);
+    socket->messageReady.connect(
+        track([=](const Message& msg) { onAnyMessageReady(msg, socket); }, this));
   // Absence of `break` intentional: we want to send a reply in both cases.
   case AuthProvider::State_Cont:
     if (*firstMessage)
@@ -819,15 +823,15 @@ void GatewayPrivate::onClientConnection(const std::pair<MessageSocketPtr, Url>& 
   SignalSubscriberPtr sub = boost::make_shared<SignalSubscriber>();
   boolptr firstMessage = boost::make_shared<bool>(true);
 
-  *sub = socket->messageReady.connect(&GatewayPrivate::clientAuthenticationMessages,
-                                      this,
-                                      _1,
-                                      socket,
-                                      _authProviderFactory->newProvider(),
-                                      firstMessage,
-                                      sub);
+  auto provider = _authProviderFactory->newProvider();
+  *sub = socket->messageReady.connect(track(
+      [=](const Message& msg) {
+        clientAuthenticationMessages(msg, socket, provider, firstMessage, sub);
+      },
+      this));
   socket->disconnected.connect(
-      &GatewayPrivate::onClientDisconnected, this, socket, url.str(), _1);
+      track([=](const std::string& reason) { onClientDisconnected(socket, url.str(), reason); },
+            this));
   socket->ensureReading();
   {
     boost::recursive_mutex::scoped_lock lock(_clientsMutex);
@@ -843,15 +847,15 @@ void GatewayPrivate::onLocalClientConnection(const std::pair<MessageSocketPtr, U
   SignalSubscriberPtr sub = boost::make_shared<SignalSubscriber>();
   boolptr firstMessage = boost::make_shared<bool>(true);
 
-  *sub = socket->messageReady.connect(&GatewayPrivate::clientAuthenticationMessages,
-                                      this,
-                                      _1,
-                                      socket,
-                                      _localClientAuthProviderFactory->newProvider(),
-                                      firstMessage,
-                                      sub);
+  auto provider = _localClientAuthProviderFactory->newProvider();
+  *sub = socket->messageReady.connect(track(
+      [=](const Message& msg) {
+        clientAuthenticationMessages(msg, socket, provider, firstMessage, sub);
+      },
+      this));
   socket->disconnected.connect(
-      &GatewayPrivate::onClientDisconnected, this, socket, url.str(), _1);
+      track([=](const std::string& reason) { onClientDisconnected(socket, url.str(), reason); },
+            this));
   socket->ensureReading();
   {
     boost::recursive_mutex::scoped_lock lock(_clientsMutex);
@@ -882,8 +886,12 @@ void GatewayPrivate::startServiceAuthentication(MessageSocketPtr serviceSocket, 
       socketCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
   }
   SignalSubscriberPtr sub = boost::make_shared<SignalSubscriber>();
-  *sub = serviceSocket->messageReady.connect(
-      &GatewayPrivate::serviceAuthenticationMessages, this, _1, serviceSocket, sid, authenticator, sub);
+
+  *sub = serviceSocket->messageReady.connect(track(
+      [=](const Message& msg) {
+        serviceAuthenticationMessages(msg, serviceSocket, sid, authenticator, sub);
+      },
+      this));
 
   Message msgAuth;
   msgAuth.setFunction(Message::ServerFunction_Authenticate);
@@ -917,7 +925,8 @@ void GatewayPrivate::serviceAuthenticationMessages(const Message& msg,
   if (authData[AuthProvider::State_Key].to<AuthProvider::State>() == AuthProvider::State_Done)
   {
     service->messageReady.disconnect(*sub);
-    service->messageReady.connect(&GatewayPrivate::onAnyMessageReady, this, _1, service);
+    service->messageReady.connect(
+        track([=](const Message& msg){ onAnyMessageReady(msg, service); }, this));
     localServiceRegistrationEnd(service, sid);
     return;
   }
