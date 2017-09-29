@@ -37,6 +37,7 @@ if(QI_WITH_TESTS)
 #    "test_with_gateway.cpp" # TODO: repair
     "test_without_gateway.cpp"
     "test_streamcontext.cpp"
+    "test_send_object_standalone.cpp"
     DEPENDS
     qi
     qitestutils
