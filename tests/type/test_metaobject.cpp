@@ -149,39 +149,6 @@ TEST(MetaObject, findMethod)
   EXPECT_TRUE(true);
 }
 
-TEST(MetaObject, SHA1DigestConstruction)
-{
-  qi::detail::SHA1Digest d;
-  for (const auto v : d)
-  {
-    EXPECT_EQ(0, v);
-  }
-}
-
-TEST(MetaObject, SHA1DigestLessThenOp)
-{
-  qi::detail::SHA1Digest d1;
-  d1.value[0] = 1;
-  d1.value[1] = 9;
-
-  qi::detail::SHA1Digest d2;
-  d2.value[0] = 2;
-
-  EXPECT_TRUE(d1 < d2);
-  EXPECT_FALSE(d1 < d1);
-}
-
-TEST(MetaObject, SHA1DigestRegular)
-{
-  const qi::detail::SHA1Digest begin;
-  const qi::detail::SHA1Digest end{ {10, 10, 10, 10, 10} };
-  ASSERT_TRUE(qi::detail::isRegular(qi::incrRange(begin, end,
-    [](qi::detail::SHA1Digest& d) {
-      for (auto& x : d) ++x;
-    }
-  )));
-}
-
 TEST(MetaObject, defaultConstructedMosAreEqual)
 {
   qi::MetaObject mo1;

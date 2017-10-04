@@ -531,10 +531,7 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
     _index = std::max(idx, _index.load());
 
     // update content hash
-    {
-      _contentSHA1 = detail::SHA1Digest{ buff.str() };
-    }
-
+    _contentSHA1 = sha1(buff.str());
     _dirtyCache = false;
   }
 

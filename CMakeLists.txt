@@ -72,7 +72,6 @@ set(QI_H qi/detail/async.hxx
          qi/detail/futurebarrier.hpp
          qi/detail/futureunwrap.hpp
          qi/detail/executioncontext.hpp
-         qi/detail/sha1.hpp
          qi/detail/log.hxx
          qi/detail/mpl.hpp
          qi/detail/print.hpp
@@ -142,6 +141,7 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/traits.hpp
          qi/moveoncopy.hpp
          qi/mutex.hpp
+         qi/sha1.hpp
          qi/utility.hpp
          qi/mutablestore.hpp)
 

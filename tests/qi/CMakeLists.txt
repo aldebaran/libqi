@@ -48,6 +48,7 @@ qi_create_gmock(
   "test_range.cpp"
   "test_relationpredicate.cpp"
   "test_scoped.cpp"
+  "test_sha1.cpp"
   "test_strand.cpp"
   "test_trackable.cpp"
   "test_utility.cpp"
