@@ -91,14 +91,15 @@ struct ConnectingWrap
     _connecting.reset(new Connecting<N>{_io, url, ssl, context, ipV6, side, tcpPingTimeout});
     auto complete = _complete;
     _connecting->complete().then(
-      [=](Future<ConnectingResult<N>> fut) mutable {
-        if (hasError(fut.value()))
+      [=](Future<SyncConnectingResultPtr<N>> fut) mutable {
+        const ConnectingResult<N> res = fut.value()->get(); // copy the result
+        if (hasError(res))
         {
-          complete.setError(fut.value().errorMessage);
+          complete.setError(res.errorMessage);
         }
         else
         {
-          complete.setValue(fut.value().socket);
+          complete.setValue(res.socket);
         }
       }
     );

@@ -11,6 +11,7 @@
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/utility.hpp>
+#include <boost/thread/synchronized_value.hpp>
 
 namespace qi
 {
@@ -55,6 +56,14 @@ namespace qi
         return !x.errorMessage.empty();
       }
     };
+
+    /// Network N
+    template<typename N>
+    using SyncConnectingResult = boost::synchronized_value<ConnectingResult<N>>;
+
+    /// Network N
+    template<typename N>
+    using SyncConnectingResultPtr = boost::shared_ptr<SyncConnectingResult<N>>;
 
     /// Connecting state of the socket.
     /// Connects to a URL and give back the created socket.
@@ -163,37 +172,39 @@ namespace qi
     struct Connecting
     {
       using Handshake = HandshakeSide<SslSocket<N>>;
-      using Result = ConnectingResult<N>;
 
       struct Impl : std::enable_shared_from_this<Impl>
       {
         using std::enable_shared_from_this<Impl>::shared_from_this;
-        Promise<Result> _promiseComplete;
+        Promise<SyncConnectingResultPtr<N>> _promiseComplete;
+        SyncConnectingResultPtr<N> _result;
         ConnectSocketFuture<N> _connect;
         Promise<void> _promiseStop; // Must be declared after `_connect`, to be destroyed first
-        ConnectingResult<N> _result;
         std::atomic<bool> _stopping;
-        boost::mutex _disconnectedPromiseMutex;
 
         void setContinuation()
         {
           auto self = shared_from_this();
           _connect.complete().then(
             [=](const Future<SocketPtr<N>>& fut) { // continuation
-              if (fut.hasError())
               {
-                self->_result.errorMessage = fut.error();
+                auto syncRes = self->_result->synchronize();
+                if (fut.hasError())
+                {
+                  syncRes->errorMessage = fut.error();
+                }
+                else
+                {
+                  syncRes->socket = fut.value();
+                }
               }
-              else
-              {
-                self->_result.socket = fut.value();
-              }
-              self->_promiseComplete.setValue(_result);
+              self->_promiseComplete.setValue(self->_result);
             }
           );
         }
         Impl(IoService<N>& io)
-          : _connect{io}
+          : _result{boost::make_shared<SyncConnectingResult<N>>()}
+          , _connect{io}
           , _stopping{false}
         {
         }
@@ -228,22 +239,22 @@ namespace qi
       {
         _impl->start(ssl, s, side, SetupConnectionStop<N>{_impl->_promiseStop.future()});
       }
-      Future<Result> complete() const
+      Future<SyncConnectingResultPtr<N>> complete() const
       {
         return _impl->_promiseComplete.future();
       }
       bool stop(Promise<void> disconnectedPromise)
       {
-        boost::mutex::scoped_lock lock(_impl->_disconnectedPromiseMutex);
+        auto syncRes = _impl->_result->synchronize();
         const bool mustStop = tryRaiseAtomicFlag(_impl->_stopping);
         if (mustStop)
         {
-          setDisconnectionRequested(_impl->_result, disconnectedPromise);
+          setDisconnectionRequested(*syncRes, disconnectedPromise);
           _impl->_promiseStop.setValue(nullptr); // triggers the stop
         }
         else
         {
-          adaptFuture(_impl->_result.disconnectedPromise.future(), disconnectedPromise);
+          adaptFuture(syncRes->disconnectedPromise.future(), disconnectedPromise);
         }
         return mustStop;
       }

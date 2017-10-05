@@ -250,12 +250,13 @@ namespace qi {
     // Regular:
       QI_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
     // Procedure:
-      void operator()(Future<sock::ConnectedResult<N>> f)
+      void operator()(Future<sock::SyncConnectedResultPtr<N>> f)
       {
         _futureConnected.wait();
         // Here, connected state is over, successfully (user asked for) or not.
         QI_LOG_DEBUG_SOCKET(_socket.get()) << "Exiting connected state.";
-        const auto res = f.value();
+
+        const sock::ConnectedResult<N> res = f.value()->get(); // copy the result
         if (res.hasError)
         {
           QI_LOG_DEBUG_SOCKET(_socket.get()) << "socket exited connected state: " << res.errorMessage;
@@ -361,7 +362,13 @@ namespace qi {
         QI_LOG_INFO_SOCKET(this) << "ensureReading: socket must be in connecting state.";
         return false;
       }
-      auto res = asConnecting(_state).complete().value();
+
+      const auto res = [&]{ // copy the result
+        auto syncRes = asConnecting(_state).complete().value()->defer_synchronize();
+        lock.unlock();
+        std::lock(lock, syncRes);
+        return *syncRes;
+      }();
       if (hasError(res))
       {
         enterDisconnectedState(res.socket, res.disconnectedPromise);
@@ -405,12 +412,17 @@ namespace qi {
     _url = url;
     auto self = shared_from_this();
 
-    asConnecting(_state).complete().then([=](Future<sock::ConnectingResult<N>> fut) mutable {
+    asConnecting(_state).complete().then([=](
+        Future<sock::SyncConnectingResultPtr<N>> fut) mutable {
       // Here, connecting is over, successfully or not.
       {
-        boost::recursive_mutex::scoped_lock lock(_stateMutex);
+        boost::recursive_mutex::scoped_lock lock(_stateMutex, boost::defer_lock);
+        const auto res = [&]{ // copy the result
+          auto syncRes = fut.value()->defer_synchronize();
+          std::lock(lock, syncRes);
+          return *syncRes;
+        }();
         QI_ASSERT_TRUE(getStatus() == Status::Connecting);
-        const auto res = fut.value();
         const bool connectingFailed = hasError(res);
         if (res.disconnectionRequested || connectingFailed)
         {

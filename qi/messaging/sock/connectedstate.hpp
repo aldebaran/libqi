@@ -79,6 +79,14 @@ namespace qi
       }
     };
 
+    /// Network N
+    template<typename N>
+    using SyncConnectedResult = boost::synchronized_value<ConnectedResult<N>>;
+
+    /// Network N
+    template<typename N>
+    using SyncConnectedResultPtr = boost::shared_ptr<SyncConnectedResult<N>>;
+
     boost::optional<qi::int64_t> getSocketTimeWarnThresholdFromEnv();
 
     /// Connected state of the socket.
@@ -127,13 +135,12 @@ namespace qi
         using std::enable_shared_from_this<Impl>::shared_from_this;
         using ReadableMessage = typename SendMessageEnqueue<N, SocketPtr<N>>::ReadableMessage;
 
-        boost::synchronized_value<Promise<ConnectedResult<N>>> _completePromise;
-        ConnectedResult<N> _result;
+        boost::synchronized_value<Promise<SyncConnectedResultPtr<N>>> _completePromise;
+        SyncConnectedResultPtr<N> _result;
         std::atomic<bool> _stopRequested;
         std::atomic<bool> _shuttingdown;
         ReceiveMessageContinuous<N> _receiveMsg;
         SendMessageEnqueue<N, SocketPtr<N>> _sendMsg;
-        boost::mutex _disconnectedPromiseMutex;
 
         Impl(const SocketPtr<N>& socket);
         ~Impl();
@@ -146,23 +153,23 @@ namespace qi
 
         void stop(Promise<void> disconnectedPromise)
         {
-          boost::mutex::scoped_lock lock(_disconnectedPromiseMutex);
           if (tryRaiseAtomicFlag(_stopRequested))
           {
-            _result.disconnectedPromise = disconnectedPromise;
+            (*_result)->disconnectedPromise = disconnectedPromise;
 
             // The shutdown will cause any pending operation on the socket to fail.
             auto self = shared_from_this();
             ioServiceStranded([=] {
               self->_shuttingdown = true;
-              self->_result.socket->lowest_layer().shutdown(ShutdownMode<Lowest<SslSocket<N>>>::shutdown_both);
+              auto socket = (*self->_result)->socket;
+              socket->lowest_layer().shutdown(ShutdownMode<Lowest<SslSocket<N>>>::shutdown_both);
             })();
           }
           else
           {
             // The disconnected promise has already been set.
             // Forward the result when we have it.
-            adaptFuture(_result.disconnectedPromise.future(), disconnectedPromise);
+            adaptFuture((*_result)->disconnectedPromise.future(), disconnectedPromise);
           }
         }
 
@@ -170,7 +177,7 @@ namespace qi
 
         SocketPtr<N>& socket()
         {
-          return _result.socket;
+          return (*_result)->socket;
         }
 
         template<typename Proc>
@@ -207,7 +214,7 @@ namespace qi
       {
         return _impl->send(std::forward<Msg>(msg), ssl, onSent);
       }
-      Future<ConnectedResult<N>> complete() const
+      Future<SyncConnectedResultPtr<N>> complete() const
       {
         return _impl->_completePromise->future();
       }
@@ -238,7 +245,7 @@ namespace qi
 
     template<typename N>
     Connected<N>::Impl::Impl(const SocketPtr<N>& s)
-      : _result{s}
+      : _result{ boost::make_shared<SyncConnectedResult<N>>(ConnectedResult<N>{ s }) }
       , _stopRequested(false)
       , _shuttingdown(false)
       , _sendMsg{s}
@@ -255,8 +262,9 @@ namespace qi
       const bool hasError = error || !msg;
       if (!stopAsked && hasError)
       {
-        _result.hasError = true;
-        _result.errorMessage = error.message();
+        auto syncRes = _result->synchronize();
+        syncRes->hasError = true;
+        syncRes->errorMessage = error.message();
       }
       prom->setValue(_result);
     }
