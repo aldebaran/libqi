@@ -893,7 +893,7 @@ namespace qi {
       // this is race-free because if we reach 0 it means that this is the last Promise pointing to a state and since it
       // is the last, no one could be trying to make a copy from it while destroying it. Also no one could be changing
       // the promise state (from running to finished or whatever) while destroying it.
-      if (--_f._p->_promiseCount == 0 && _f.isRunning())
+      if (--_f._p->_promiseCount == 0 && _f._p.use_count() > 1 && _f.isRunning())
         _f._p->setBroken(_f);
     }
   };
