@@ -126,7 +126,7 @@ namespace qi { namespace sock {
   /// ConnectSocket<N> connect{ioService};
   /// connect(Url{"tcp://1.2.3.4:9876"}, handler,
   ///   SslEnabled{false}, IpV6Enabled{false},
-  ///   SetupConnectionStop<N>{promiseStop.future()});
+  ///   makeSetupConnectionStop<N>{promiseStop.future());
   /// // ...
   /// promiseStop.setValue(nullptr);
   /// // if not already complete, the completion handler will be called with a

@@ -231,13 +231,24 @@ namespace qi
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
         : _impl(std::make_shared<Impl>(io))
       {
+        const auto implWeakPtr = weakPtr(_impl);
         _impl->start(url, ssl, fwd<SslContext>(context), ipV6, side, tcpPingTimeout,
-          SetupConnectionStop<N>{_impl->_promiseStop.future()});
+                     scopeLockProc(makeSetupConnectionStop<N>(_impl->_promiseStop.future(),
+                                                              scopeLockTransfo(
+                                                                  makeMutableStore(implWeakPtr)),
+                                                              StrandTransfo<N>{ &io }),
+                                   makeMutableStore(implWeakPtr)));
       }
       Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<N>& s, Handshake side)
         : _impl(std::make_shared<Impl>(io))
       {
-        _impl->start(ssl, s, side, SetupConnectionStop<N>{_impl->_promiseStop.future()});
+        const auto implWeakPtr = weakPtr(_impl);
+        _impl->start(ssl, s, side,
+                     scopeLockProc(makeSetupConnectionStop<N>(_impl->_promiseStop.future(),
+                                                              scopeLockTransfo(
+                                                                  makeMutableStore(implWeakPtr)),
+                                                              StrandTransfo<N>{ &io }),
+                                   makeMutableStore(implWeakPtr)));
       }
       Future<SyncConnectingResultPtr<N>> complete() const
       {
