@@ -140,11 +140,17 @@ namespace {
 
     static qi::Url defaultListenURL()
     {
-      static const qi::Url listenUrl = scheme() + "://127.0.0.1:34988";
+      static const qi::Url listenUrl = scheme() + "://127.0.0.1:0";
       return listenUrl;
     }
 
-    static qi::Promise<qi::MessageSocketPtr> listen(qi::TransportServer& server
+    struct ListenResult
+    {
+      qi::Promise<qi::MessageSocketPtr> promiseConnectedSocket;
+      qi::Url url;
+    };
+
+    static ListenResult listen(qi::TransportServer& server
       , const qi::Url& url = defaultListenURL()
       , bool connectNewConnectionSignal = true)
     {
@@ -165,7 +171,7 @@ namespace {
       }
       server.listen(url);
 
-      return promiseConnectedSocket;
+      return { promiseConnectedSocket, server.endpoints().front() };
     }
 
   };
@@ -214,8 +220,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
 
   // Start a server and get the server side socket.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  this->listen(server, url);
+  const auto url = this->listen(server).url;
 
   // We also want to check that signals are emitted.
   auto clientSideSocket = makeMessageSocket(this->scheme());
@@ -243,8 +248,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
   {
     // Start a server and get the server side socket.
     TransportServer server;
-    const auto url = this->defaultListenURL();
-    this->listen(server, url);
+    const auto url = this->listen(server).url;
     auto clientSideSocket = makeMessageSocket(this->scheme());
     const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
     signalPromises = connectSignals(*clientSideSocket);
@@ -283,8 +287,7 @@ TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
 
   // Start a server and get the server side socket.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  this->listen(server, url);
+  const auto url = this->listen(server).url;
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
   const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
@@ -315,8 +318,9 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
 
   // Start a server and get the server side socket.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  auto promiseServerSideSocket = this->listen(server, url);
+  const auto listenRes = this->listen(server);
+  auto& promiseServerSideSocket = listenRes.promiseConnectedSocket;
+  const auto url = listenRes.url;
 
   // Connect the client.
   auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
@@ -347,8 +351,9 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
 
   // Start a server and get the server side socket.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  auto promiseServerSideSocket = this->listen(server, url);
+  const auto listenRes = this->listen(server);
+  auto& promiseServerSideSocket = listenRes.promiseConnectedSocket;
+  const auto url = listenRes.url;
 
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
@@ -399,8 +404,7 @@ TYPED_TEST(NetMessageSocket, PrematureDestroy)
 
   // Start a server and get the server side socket.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  this->listen(server, url);
+  const auto url = this->listen(server).url;
 
   // Connect the client.
   auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
@@ -561,8 +565,7 @@ TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
 
   // Start a server.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  this->listen(server, url);
+  const auto url = this->listen(server).url;
 
   // Connect the client.
   auto socket = makeMessageSocket(this->scheme());
@@ -593,8 +596,9 @@ TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
 
   // Start a server and get the server side socket.
   TransportServer server;
-  const auto url = this->defaultListenURL();
-  auto promiseServerSideSocket = this->listen(server, url);
+  const auto listenRes = this->listen(server);
+  auto& promiseServerSideSocket = listenRes.promiseConnectedSocket;
+  const auto url = listenRes.url;
 
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
