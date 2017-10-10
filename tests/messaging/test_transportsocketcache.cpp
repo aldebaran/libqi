@@ -183,7 +183,8 @@ TEST(TestCall, IPV6Accepted)
   ASSERT_FALSE(fut.hasError());
 
 
-  qi::MessageSocketPtr socket = qi::makeMessageSocket("tcp");
+  auto socket = qi::makeMessageSocket("tcp");
+  const auto _ = qi::scoped([=]{ socket->disconnect(); });
   fut = socket->connect(ipv6Url);
 
   ASSERT_FALSE(fut.hasError());
@@ -202,7 +203,8 @@ TEST(TestCall, IPV6Rejected)
   qi::Url ipv6Url("tcp://[::1]:4444");
   ASSERT_TRUE(ipv6Url.isValid());
 
-  qi::MessageSocketPtr socket = qi::makeMessageSocket("tcp");
+  auto socket = qi::makeMessageSocket("tcp");
+  const auto _ = qi::scoped([=]{ socket->disconnect(); });
   qi::Future<void> fut = socket->connect(ipv6Url);
 
   ASSERT_TRUE(fut.hasError());
