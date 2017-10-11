@@ -641,3 +641,38 @@ TEST(Traits, EnableIfNotBaseOf)
     ASSERT_EQ(Ctor::Copy, x.ctor);
   }
 }
+
+TEST(Traits, Conditional)
+{
+  using namespace qi::traits;
+  static_assert(Equal<Conditional<true, int, float>, int>::value, "");
+  static_assert(Equal<Conditional<false, int, float>, float>::value, "");
+}
+
+template<typename Conjunction, bool value, typename Base>
+void assertConjunction()
+{
+  static_assert(Conjunction::value == value, "");
+  static_assert(std::is_base_of<Base, Conjunction>::value, "");
+}
+
+struct CustomTrue  { static const bool value = true; };
+struct CustomFalse { static const bool value = false; };
+
+TEST(Traits, Conjunction)
+{
+  using namespace qi::traits;
+  assertConjunction<Conjunction<>,                        true,  True>();
+  assertConjunction<Conjunction<True>,                    true,  True>();
+  assertConjunction<Conjunction<False>,                   false, False>();
+  assertConjunction<Conjunction<True, False>,             false, False>();
+  assertConjunction<Conjunction<False, True>,             false, False>();
+  assertConjunction<Conjunction<True, True>,              true,  True>();
+  assertConjunction<Conjunction<CustomTrue>,              true,  CustomTrue>();
+  assertConjunction<Conjunction<CustomFalse>,             false, CustomFalse>();
+  assertConjunction<Conjunction<CustomTrue, CustomFalse>, false, CustomFalse>();
+  assertConjunction<Conjunction<CustomFalse, CustomTrue>, false, CustomFalse>();
+  assertConjunction<Conjunction<CustomFalse, False>,      false, CustomFalse>();
+  assertConjunction<Conjunction<CustomTrue, CustomTrue>,  true,  CustomTrue>();
+  assertConjunction<Conjunction<True, CustomTrue>,        true,  CustomTrue>();
+}

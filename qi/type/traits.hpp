@@ -388,6 +388,17 @@ namespace qi
     /// Behave exactly as the std::remove_pointer_t of C++14.
     template<typename T>
     using RemovePointer = typename std::remove_pointer<T>::type;
+
+    /// Behave exactly as the std::conditional_t of C++14.
+    template<bool B, typename T, typename F>
+    using Conditional = typename std::conditional<B, T, F>::type;
+
+    /// Behave exactly as the std::conjunction of C++17
+    template<typename...> struct Conjunction : True {};
+    template<typename B1> struct Conjunction<B1> : B1 {};
+    template<typename B1, typename... Bn>
+    struct Conjunction<B1, Bn...>
+        : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
   } // namespace traits
 } // namespace qi
 
