@@ -654,7 +654,6 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
 {
   using namespace qi;
   using namespace qi::sock;
-  using std::chrono::milliseconds;
 
   const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
   const std::string scheme{"tcp"};
@@ -662,7 +661,6 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
   test::ScopedProcess _{
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
   };
-  std::this_thread::sleep_for(milliseconds{100});
   auto socket = makeMessageSocket(scheme);
   const auto _2 = scoped([=]{ socket->disconnect(); });
   Future<void> futCo = socket->connect(url);
@@ -677,7 +675,6 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
 {
   using namespace qi;
   using namespace qi::sock;
-  using std::chrono::milliseconds;
 
   const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
   const std::string protocol{"tcp"};
@@ -688,12 +685,11 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
     test::ScopedProcess _{
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
     };
-    std::this_thread::sleep_for(milliseconds{500});
     socket = makeMessageSocket(protocol);
     Future<void> fut = socket->connect(url);
     ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
   }
-  std::this_thread::sleep_for(milliseconds{500});
+  std::this_thread::sleep_for(std::chrono::milliseconds{500});
   ASSERT_EQ(MessageSocket::Status::Disconnected, socket->status());
   Future<void> fut = socket->disconnect();
   ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));

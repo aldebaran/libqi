@@ -56,6 +56,7 @@ qi_create_gmock(
 
   DEPENDS
   qi
+  qitestutils
 
   TIMEOUT 120
 )

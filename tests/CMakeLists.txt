@@ -5,7 +5,15 @@ endif()
 
 if(QI_WITH_TESTS)
   include_directories(".")
-  qi_stage_header_only_lib(qitestutils "qi/testutils/testutils.hpp" "qi/testutils/mockutils.hpp" DEPENDS qi)
+  qi_create_lib(qitestutils
+    STATIC NO_INSTALL
+    SRC
+      "qi/testutils/testutils.hpp"
+      "qi/testutils/testutils.cpp"
+      "qi/testutils/mockutils.hpp"
+    DEPENDS qi
+  )
+  qi_stage_lib(qitestutils)
 endif()
 
 add_subdirectory("qi")

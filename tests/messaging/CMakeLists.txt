@@ -66,6 +66,7 @@ if(QI_WITH_TESTS)
 
     DEPENDS
     qi
+    qitestutils
     testsession
 
     TIMEOUT 120
@@ -118,6 +119,7 @@ qi_create_gtest(
 
   DEPENDS
   qi
+  qitestutils
 
   TIMEOUT 30
 )
