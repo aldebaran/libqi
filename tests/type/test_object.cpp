@@ -19,6 +19,7 @@
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/anymodule.hpp>
+#include <random>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 // vs2008 32 bits does not have std::abs() on int64
@@ -1374,4 +1375,47 @@ TEST(TestObject, WeakObject)
   qi::AnyWeakObject wobj = obj;
   obj = qi::AnyObject();
   ASSERT_FALSE(wobj.lock());
+}
+
+class MyFoo
+{
+  int _i = 0;
+public:
+  explicit MyFoo(int i)
+    : _i(i)
+  {}
+
+  int getI() const { return _i; }
+};
+
+TEST(TestObject, ObjectShared)
+{
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(1, 25000);
+  auto const i = dis(gen);
+  auto foo = boost::make_shared<MyFoo>(i);
+  qi::DynamicObjectBuilder b;
+  b.advertiseMethod("getI", foo.get(), &MyFoo::getI);
+  auto obj = b.object(foo);
+  EXPECT_EQ(i, obj.call<int>("getI"));
+}
+
+TEST(TestObject, ObjectSharedLife)
+{
+  boost::weak_ptr<Foo> wFoo;
+  Foo *fooPtr;
+  {
+    qi::AnyObject obj;
+    {
+      auto foo = boost::make_shared<Foo>();
+      fooPtr = foo.get();
+      wFoo = foo;
+      qi::DynamicObjectBuilder b;
+      b.advertiseMethod("sum", foo.get(), &Foo::fun);
+      obj = b.object(foo);
+    }
+    EXPECT_EQ(fooPtr, wFoo.lock().get());
+  }
+  EXPECT_FALSE(wFoo.lock());
 }
