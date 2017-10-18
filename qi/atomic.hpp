@@ -240,6 +240,65 @@ inline bool tryLowerAtomicFlag(std::atomic<bool>& b)
   return b.compare_exchange_strong(expected, desired);
 }
 
+class AtomicFlagLock
+{
+  std::atomic_flag* _flag = nullptr;
+  bool _locked = false;
+
+  void cleanup() QI_NOEXCEPT(true)
+  {
+    if (_flag && _locked)
+    {
+      _flag->clear();
+      _locked = false;
+    }
+  }
+
+public:
+  explicit AtomicFlagLock(std::atomic_flag& f)
+    : _flag{ &f }
+    , _locked{ !f.test_and_set() } // locked if the flag was not already set
+  {}
+
+  AtomicFlagLock(const AtomicFlagLock&) = delete;
+  AtomicFlagLock& operator=(const AtomicFlagLock&) = delete;
+
+  AtomicFlagLock(AtomicFlagLock&& o)
+    : _flag{ o._flag }
+    , _locked{ o._locked }
+  {
+    o._flag = nullptr;
+    o._locked = false;
+  }
+
+  AtomicFlagLock& operator=(AtomicFlagLock&& o)
+  {
+    cleanup();
+
+    _flag = o._flag;
+    _locked = o._locked;
+    o._flag = nullptr;
+    o._locked = false;
+    return *this;
+  }
+
+  ~AtomicFlagLock()
+  {
+    cleanup();
+  }
+
+  explicit operator bool() const
+  {
+    return _locked;
+  }
+};
+
+/// model ScopeLockable std::atomic_flag:
+inline AtomicFlagLock scopelock(std::atomic_flag& f)
+{
+  return AtomicFlagLock{ f };
+}
+
 } // namespace qi
 
 #define _QI_INSTANCIATE(_, a, elem) ::qi::detail::newAndAssign(&elem);

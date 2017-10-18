@@ -326,6 +326,7 @@ namespace qi
       {
         using type = True;
       };
+
     }
 
     /// True if the underlying memory is contiguous.

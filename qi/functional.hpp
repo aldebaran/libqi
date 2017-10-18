@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/config.hpp>
+#include <boost/optional.hpp>
 #include <qi/type/integersequence.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/utility.hpp>
@@ -616,5 +617,131 @@ namespace qi {
   Apply<traits::Decay<Proc>> apply(Proc&& proc)
   {
     return {fwd<Proc>(proc)};
+  }
+
+  namespace detail
+  {
+    template<typename Ret>
+    struct ScopeLockProc
+    {
+      template<typename Proc, typename L, typename... Args>
+      boost::optional<Ret> operator()(Proc& proc, L& lockable, Args&&... args) const
+      {
+        if (auto lock = scopelock(lockable))
+        {
+          return proc(fwd<Args>(args)...);
+        }
+        return {};
+      }
+    };
+
+    template<>
+    struct ScopeLockProc<void>
+    {
+      template<typename Proc, typename L, typename... Args>
+      void operator()(Proc& proc, L& lockable, Args&&... args) const
+      {
+        if (auto lock = scopelock(lockable))
+        {
+          proc(fwd<Args>(args)...);
+        }
+      }
+    };
+  } // namespace detail
+
+  /// Procedure wrapper that calls its underlying procedure only if the associated
+  /// lockable could be locked.
+  ///
+  /// Example: weak_ptr as a lockable to perform lifetime protection
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // std::shared_ptr<T> p;
+  /// async(scopeLockProc(
+  ///   [](int i) mutable { // procedure to be called
+  ///     return p->doStuff(i);
+  ///   },
+  ///   makeMutableStore(std::weak_ptr<T>{p}) // lockable: will create a non-null shared_ptr on success
+  ///   )
+  /// );
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Procedure<T (...)> Proc,
+  /// Mutable<ScopeLockable> M
+  template<typename Proc, typename M>
+  struct ScopeLockProc
+  {
+    Proc _proc;
+    M _mutLockable;
+  // Regular (if members aremutex.hpp>
+    QI_GENERATE_FRIEND_REGULAR_OPS_2(ScopeLockProc, _proc, _mutLockable)
+  // Procedure:
+    template<typename... Args>
+    auto operator()(Args&&... args)
+      -> decltype(detail::ScopeLockProc<traits::Decay<decltype(_proc(fwd<Args>(args)...))>>{}
+                    (_proc, *_mutLockable, fwd<Args>(args)...)) // TODO: Remove this when we can use C++14
+    {
+      return detail::ScopeLockProc<traits::Decay<decltype(_proc(fwd<Args>(args)...))>>{}
+        (_proc, *_mutLockable, fwd<Args>(args)...); // TODO: use source instead of * when available
+    }
+  };
+
+  /// Helper function to deduce types for ScopeLockProc.
+  ///
+  /// Procedure<T (...)> Proc,
+  /// Mutable<ScopeLockable> M
+  template<typename Proc, typename M>
+  ScopeLockProc<traits::Decay<Proc>, traits::Decay<M>> scopeLockProc(Proc&& proc, M&& mutLockable)
+  {
+    return { fwd<Proc>(proc), fwd<M>(mutLockable) };
+  }
+
+  /// A polymorphic transformation constructed from a ScopeLockable l that takes a procedure and
+  /// returns an equivalent one that calls that procedure only if l was successfully locked and
+  /// keeps the lock alive until the procedure returns.
+  ///
+  /// Example: mutex as a lockable to protect a asynchronous function call
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int globalCount = 0;
+  /// void incrementGlobalCount()
+  /// {
+  ///   ++globalCount;
+  /// }
+  ///
+  /// template<typename P>
+  /// void asyncIncrementTenTimes(P syncTransfo)
+  /// {
+  ///   for (int i = 0; i < 10; ++i)
+  ///     qi::async(syncTransfo(incrementGlobalCount));
+  /// }
+  ///
+  /// void doStuff()
+  /// {
+  ///   static std::mutex m;
+  ///   asyncIncrementTenTimes(scopeLockTransfo(&m));
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Mutable<ScopeLockable> M
+  template<typename M>
+  struct ScopeLockTransfo
+  {
+    M _mutLockable;
+  // Regular (if members are regular):
+    QI_GENERATE_FRIEND_REGULAR_OPS_1(ScopeLockTransfo, _mutLockable)
+  // PolymorphicTransformation:
+    /// Procedure<T (...)> Proc0
+    template<typename Proc>
+    ScopeLockProc<traits::Decay<Proc>, M> operator()(Proc&& p) const
+    {
+      return { fwd<Proc>(p), _mutLockable };
+    }
+  };
+
+  /// Helper function to deduce types for ScopeLockTransfo.
+  ///
+  /// Mutable<ScopeLockable> M
+  template<typename M>
+  ScopeLockTransfo<traits::Decay<M>> scopeLockTransfo(M&& mutLockable)
+  {
+    return { fwd<M>(mutLockable) };
   }
 } // namespace qi

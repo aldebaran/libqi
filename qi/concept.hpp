@@ -332,6 +332,26 @@ namespace qi
 /// Note: Any user-defined type can be made to model this concept.
 ///
 ///
+/// ## ScopeLockable
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept ScopeLockable(T) =
+///   With T& t, the following is valid:
+///     {
+///       if (auto lock = scopelock(t))
+///       {
+///         // In this scope, t is locked.
+///       }
+///     }
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// A ScopeLockable ensures that a guarantee is true during the lifetime of the object acquired
+/// from the call to the scopelock function (often called  a "lock", as in the example).
+/// The guarantee could be, for example, a safe mutually exclusive access to some data, or an
+/// acquisition and release of a resource, or another similarly symetric mechanism.
+/// Typical models are: std::mutex, std::recursive_mutex, std::weak_ptr<T>, std::atomic_flag,
+/// boost::synchronized_value<T>.
+///
+///
 /// # Range concept definitions
 ///
 /// ## Range

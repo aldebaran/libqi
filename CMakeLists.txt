@@ -140,6 +140,7 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/send.hpp
          qi/messaging/sock/traits.hpp
          qi/moveoncopy.hpp
+         qi/mutex.hpp
          qi/utility.hpp
          qi/mutablestore.hpp)
 

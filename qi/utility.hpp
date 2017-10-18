@@ -70,6 +70,18 @@ namespace qi
     return { p };
   }
 
+  template<typename T>
+  std::shared_ptr<T> scopelock(std::weak_ptr<T>& p)
+  {
+    return p.lock();
+  }
+
+  template<typename T>
+  boost::shared_ptr<T> scopelock(boost::weak_ptr<T>& p)
+  {
+    return p.lock();
+  }
+
   /// Constructs a std::shared_ptr<T> with T deduced from the parameter.
   template <typename T>
   std::shared_ptr<traits::Decay<T>> sharedPtr(T&& t)
