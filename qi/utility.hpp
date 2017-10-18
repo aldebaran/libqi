@@ -3,6 +3,7 @@
 #define _QI_UTILITY_HPP_
 #include <type_traits>
 #include <memory>
+#include <boost/shared_ptr.hpp>
 #include <qi/type/traits.hpp>
 #include <qi/macro.hpp>
 
@@ -55,6 +56,19 @@ namespace qi
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   template<typename T>
   T& declref();
+
+  /// Creates a weak_ptr<T> with T deduced from a shared_ptr<T>
+  template<typename T>
+  std::weak_ptr<T> weakPtr(const std::shared_ptr<T>& p)
+  {
+    return { p };
+  }
+
+  template<typename T>
+  boost::weak_ptr<T> weakPtr(const boost::shared_ptr<T>& p)
+  {
+    return { p };
+  }
 
   /// Constructs a std::shared_ptr<T> with T deduced from the parameter.
   template <typename T>
