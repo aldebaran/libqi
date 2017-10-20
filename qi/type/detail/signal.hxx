@@ -30,7 +30,15 @@ namespace qi
   template<typename T>
   SignalSubscriber SignalF<T>::connect(AnyFunction f)
   {
-    return SignalBase::connect(SignalSubscriber(std::move(f)));
+    auto execContext = executionContext();
+    if (execContext)
+    {
+      return SignalBase::connect(SignalSubscriber(std::move(f), execContext));
+    }
+    else
+    {
+      return SignalBase::connect(SignalSubscriber(std::move(f), MetaCallType_Auto));
+    }
   }
   template<typename T>
   SignalSubscriber SignalF<T>::connect(const SignalSubscriber& sub)
@@ -144,7 +152,13 @@ namespace qi
 
   template<typename T>
   SignalF<T>::SignalF(OnSubscribers onSubscribers)
-  : SignalBase(onSubscribers)
+    : SignalF(nullptr, std::move(onSubscribers))
+  {
+  }
+
+  template<typename T>
+  SignalF<T>::SignalF(ExecutionContext* execContext, OnSubscribers onSubscribers)
+    : SignalBase(execContext, onSubscribers)
   {
     * (boost::function<T>*)this = detail::BounceToSignalBase<T>(*this);
     _setSignature(detail::functionArgumentsSignature<T>());

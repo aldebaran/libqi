@@ -462,6 +462,16 @@ TEST(TestSignal, SignalSubscriberDoesNotUnsubscribeAtDestruction)
   ASSERT_EQ(2, count);
 }
 
+TEST(TestSignal, WithExecutionContext)
+{
+  qi::EventLoop threadPool{ "test_theadpool", 1, false };
+  qi::Signal<> signal{ &threadPool };
+  qi::Promise<bool> prom;
+  signal.connect([=, &threadPool]() mutable { prom.setValue(threadPool.isInThisContext()); });
+  signal();
+  ASSERT_TRUE(prom.future().value());
+}
+
 // ===========================================================
 // Signal Spy
 // -----------------------------------------------------------
