@@ -242,7 +242,8 @@ namespace qi { namespace sock {
   public:
   // QuasiRegular:
     ReceiveMessageContinuous() = default;
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuous, _msg)
+    // TODO: uncomment when messages are comparable, or when latest GCC is fixed.
+//    QI_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuous, _msg)
   // Procedure:
     /// Mutable<SslSocket<N>> S,
     /// Procedure<bool (ErrorCode<N>, const Message*)> Proc,
