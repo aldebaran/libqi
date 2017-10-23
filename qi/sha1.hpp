@@ -51,7 +51,7 @@ namespace qi {
     template<typename I>
     int sha1Update(SHA_CTX& s, I b, I e, std::false_type /* is_pointer */)
     {
-      int res;
+      int res = 1;
       while (b != e)
       {
         const auto c = *b;
@@ -68,7 +68,7 @@ namespace qi {
 
   /// Computes the sha1 digest of the given bytes.
   ///
-  /// Note: Passing pointers intead of non-pointer iterators (even random access ones)
+  /// Note: Passing pointers instead of non-pointer iterators (even random access ones)
   ///   will typically be faster, due to the underlying C api.
   ///
   /// Precondition: boundedRange(b, e)
