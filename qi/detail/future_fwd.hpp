@@ -516,7 +516,7 @@ namespace qi {
 #undef genCall
 #endif
 
-    // @deprecated since 2.5 use the overload with Strand&
+    /// @deprecated since 2.5 use the overload with Strand&
     QI_API_DEPRECATED_MSG(Use overload with 'Strand&' instead)
     void connectWithStrand(qi::Strand* strand,
         const boost::function<void(const Future<T>&)>& cb);
