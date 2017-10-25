@@ -529,14 +529,20 @@ namespace qi {
       connect(boost::bind(s));
     }
 
+    // KLUDGE: ExecutionContext uses the shared state of the future for gloomy reasons!
+    friend class ExecutionContext;
+
+  protected:
+    /// An accessor to the shared state. TODO: remove it, it should not exist.
     boost::shared_ptr<detail::FutureBaseTyped<T> > impl() { return _p;}
+
+    /// The constructor from the shared state.
     Future(boost::shared_ptr<detail::FutureBaseTyped<T> > p) :
       _p(p)
     {
       QI_ASSERT(_p);
     }
 
-  protected:
     // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
     boost::shared_ptr< detail::FutureBaseTyped<T> > _p;
     friend class Promise<T>;
