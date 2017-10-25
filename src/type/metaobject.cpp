@@ -494,34 +494,35 @@ qi::Atomic<int> MetaObjectPrivate::uid{1};
     {
       _objectNameToIdx.clear();
       _methodNameToOverload.clear();
-      for (MetaObject::MethodMap::iterator i = _methods.begin();
-        i != _methods.end(); ++i)
+      for (auto& metaMethodsSlot : _methods)
       {
-        const std::string methodName = i->second.toString();
-        _objectNameToIdx[methodName] = MetaObjectIdType(i->second.uid(), MetaObjectType_Method);
-        idx = std::max(idx, i->second.uid());
-        buff << methodName << i->second.uid();
+        auto& metaMethod = metaMethodsSlot.second;
+        const std::string methodNameSignature = metaMethod.toString();
+        _objectNameToIdx[methodNameSignature] = MetaObjectIdType(metaMethod.uid(), MetaObjectType_Method);
+        idx = std::max(idx, metaMethod.uid());
+        buff << methodNameSignature << metaMethod.uid();
 
-        OverloadMap::iterator overloadIt = _methodNameToOverload.find(i->second.name());
+        OverloadMap::iterator overloadIt = _methodNameToOverload.find(metaMethod.name());
         if (overloadIt == _methodNameToOverload.end())
         {
-          _methodNameToOverload[i->second.name()] = &i->second;
-          i->second._p->next = 0;
+          _methodNameToOverload[metaMethod.name()] = &metaMethod;
+          metaMethod._p->next = 0;
         }
         else
         { // push_front
-          i->second._p->next =  overloadIt->second;
-          overloadIt->second = &i->second;
+          metaMethod._p->next =  overloadIt->second;
+          overloadIt->second = &metaMethod;
         }
       }
     }
     {
-      for (MetaObject::SignalMap::iterator i = _events.begin();
-        i != _events.end(); ++i)
+      for (auto& metaSignalSlot : _events)
       {
-        _objectNameToIdx[i->second.toString()] = MetaObjectIdType(i->second.uid(), MetaObjectType_Signal);
-        idx = std::max(idx, i->second.uid());
-        buff << i->second.name() << i->second.uid();
+        auto& metaSignal = metaSignalSlot.second;
+        const auto metaSignalNameSignature = metaSignal.toString();
+        _objectNameToIdx[metaSignalNameSignature] = MetaObjectIdType(metaSignal.uid(), MetaObjectType_Signal);
+        idx = std::max(idx, metaSignal.uid());
+        buff << metaSignalNameSignature << metaSignal.uid();
       }
     }
     buff << _description;
