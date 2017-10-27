@@ -492,7 +492,7 @@ namespace qi {
     {
       for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
       {
-        _object.disconnect(jt->second.localSignalLinkId).async()
+        _object.disconnect(jt->second.localSignalLinkId.value()).async()
             .then([](Future<void> f) { if (f.hasError()) qiLogError() << f.error(); });
       }
       _links.erase(it);

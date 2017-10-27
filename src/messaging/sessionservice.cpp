@@ -500,7 +500,7 @@ namespace qi {
           // on which service was registered, whose lifetime is bound
           // to the service
           // TODO 40203: Could this block forever?
-          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
+          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId).value();
 
           if (!s) // weird
             qiLogVerbose() << "_socketOfService returned 0";

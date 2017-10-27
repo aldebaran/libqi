@@ -80,7 +80,7 @@ namespace qi {
     return barrier.future().andThen([](const std::vector<Future<bool>>& successes)
     {
       for (const auto& success: successes)
-        if (!success) return false;
+        if (!success.value()) return false;
       return true;
     });
   }

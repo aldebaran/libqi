@@ -234,7 +234,7 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject co
   if (ec)
     return ec->async([p]{
           return p->value().async();
-        });
+        }).unwrap();
   else
     return p->value();
 }

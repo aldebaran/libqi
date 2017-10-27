@@ -451,7 +451,7 @@ namespace qi {
     qi::Promise<SignalLink> prom(qi::FutureCallbackType_Sync);
 
     // Bind the subscriber locally.
-    SignalLink uid = DynamicObject::metaConnect(event, sub);
+    SignalLink uid = DynamicObject::metaConnect(event, sub).value();
 
     boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
     // maintain a map of localsignal -> remotesignal

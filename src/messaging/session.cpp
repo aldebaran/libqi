@@ -116,7 +116,7 @@ namespace qi {
      std::string mid;
      try
      {
-       mid = _sdClient.machineId();
+       mid = _sdClient.machineId().value();
      }
      catch (const std::exception& e)
      { // Provide a nice message for backward compatibility
