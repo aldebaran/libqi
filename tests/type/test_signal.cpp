@@ -18,6 +18,8 @@ qiLogCategory("test");
 
 namespace
 {
+const qi::MilliSeconds usualTimeout{300};
+
 class Foo
 {
 public:
@@ -458,7 +460,7 @@ TEST(TestSignalSpy, Counter)
   qi::SignalSpy sp(sig);
   QI_EMIT sig(1);
   QI_EMIT sig(1);
-  ASSERT_TRUE(sp.waitUntil(2, qi::MilliSeconds(300)));
+  ASSERT_TRUE(sp.waitUntil(2, usualTimeout));
   ASSERT_EQ(sp.recordCount(), 2u);
 
   qi::DynamicObjectBuilder ob;
@@ -467,7 +469,7 @@ TEST(TestSignalSpy, Counter)
   qi::SignalSpy sp2(obj, "signal");
   QI_EMIT sig(1);
   QI_EMIT sig(1);
-  ASSERT_TRUE(sp2.waitUntil(2, qi::MilliSeconds(300)));
+  ASSERT_TRUE(sp2.waitUntil(2, usualTimeout));
   ASSERT_EQ(sp2.recordCount(), 2u);
 }
 
@@ -477,7 +479,7 @@ TEST(TestSignalSpy, Async)
   qi::SignalSpy sp(sig);
   qi::async(boost::bind(boost::ref(sig), 1));
   qi::async(boost::bind(boost::ref(sig), 1));
-  ASSERT_TRUE(sp.waitUntil(2, qi::Seconds(1)));
+  ASSERT_TRUE(sp.waitUntil(2, usualTimeout));
   ASSERT_EQ(sp.recordCount(), 2u);
 }
 
@@ -498,7 +500,7 @@ TEST(TestSignalSpy, StoringTypedValueRecords)
   {
     signal(ints[i], strings[i]);
   }
-  spy.waitUntil(ints.size(), qi::MilliSeconds(300));
+  spy.waitUntil(ints.size(), usualTimeout);
 
   for(auto i = 1u; i < ints.size(); ++i)
   {
@@ -514,4 +516,14 @@ TEST(TestSignalSpy, StoringTypedValueRecords)
     EXPECT_EQ(ints[i], records[i].arg<int>(0));
     EXPECT_EQ(strings[i], records[i].arg<std::string>(1));
   }
+}
+
+TEST(TestSignalSpy, WaitUntilCanBeCancelled)
+{
+  qi::Signal<bool> sig;
+  qi::SignalSpy spy{sig};
+  auto waiting = spy.waitUntil(1, usualTimeout);
+  waiting.cancel();
+  auto status = waiting.wait(usualTimeout);
+  ASSERT_EQ(qi::FutureState_Canceled, status);
 }
