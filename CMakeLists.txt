@@ -300,6 +300,7 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/objecttypebuilder.cpp
              src/type/signal.cpp
              src/type/signal_p.hpp
+             src/type/signalspy.cpp
              src/type/signatureconvertor.cpp
              src/type/signatureconvertor.hpp
              src/type/staticobjecttype.cpp
