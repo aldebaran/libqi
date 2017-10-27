@@ -1253,9 +1253,11 @@ namespace detail
     case TypeKind_Tuple:
       //asTupleValuePtr is not const, so copy val to a non-const AnyReference
       setTuple(AnyReference(val).asTupleValuePtr());
+      break;
     case TypeKind_Raw: {
         std::pair<char*, size_t> pa = val.asRaw();
         setRaw(pa.first, pa.second);
+        break;
       }
     default:
       throw std::runtime_error("Update not implemented for this type.");
