@@ -85,7 +85,7 @@ private:
   template <typename... Args>
   void recordCallback(const Args&... args)
   {
-    assert(strand()->isInThisContext());
+    QI_ASSERT(strand()->isInThisContext());
     _records.emplace_back(Record{{AnyValue::from<Args>(args)...}});
     recorded();
   }
