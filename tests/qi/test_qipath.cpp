@@ -1002,7 +1002,7 @@ TEST_F(qiPathLib, listLib)
   ASSERT_EQ(expected, actual);
 }
 
-TEST(qipath, ScopedDir)
+TEST(qiPath, ScopedDir)
 {
   qi::Path tmpPath;
   {
