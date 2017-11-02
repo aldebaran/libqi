@@ -124,17 +124,18 @@ namespace qi
 
   inline StringTypeInterface::ManagedRawString makeManagedString(const std::string& s)
   {
-    return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString((char*)s.c_str(), s.size()),
+    return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString(const_cast<char*>(s.c_str()), s.size()),
                                                  StringTypeInterface::Deleter());
   }
 
   inline StringTypeInterface::ManagedRawString makeManagedString(std::string&& s)
   {
-    const auto size = s.size() + 1;
-    auto strKeptAlive = new char[size]();
-    std::copy(begin(s), end(s), strKeptAlive);
-    return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString(strKeptAlive, size),
-                                                 [](const StringTypeInterface::RawString& rawStr){ delete[] rawStr.first; });
+    // Move the string parameter in a new allocated string. This way, we avoid string buffer copy.
+    const auto ms = new auto(std::move(s));
+
+    return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString(const_cast<char*>(ms->c_str()), ms->size()),
+                                                 // Capture ms and delete it. No action is performed on RawString
+                                                 [=](const StringTypeInterface::RawString&){ delete ms; });
   }
 
   /** Declare a Type for T of Kind string.

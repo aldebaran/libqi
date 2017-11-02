@@ -9,6 +9,7 @@
 #include <tuple>
 #include <gtest/gtest.h>
 #include <boost/optional.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <ka/functional.hpp>
@@ -17,6 +18,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/jsoncodec.hpp>
+#include <qi/path.hpp>
 
 using namespace qi;
 qiLogCategory("test");
@@ -1037,6 +1039,20 @@ TEST(Reference, referenceFromInvalidWrapsIt)
   EXPECT_TRUE(r.isValid());
   EXPECT_FALSE(r.unwrap().isValid());
   EXPECT_FALSE(r.content().isValid());
+}
+
+TEST(QiPath, valueIsPreserved)
+{
+  auto tmpPath = qi::Path{qi::os::tmp()} / qi::Path{boost::filesystem::unique_path()};
+  auto transformedPath = qi::AnyValue::from(tmpPath).to<std::string>();
+  EXPECT_EQ(tmpPath.str(), transformedPath);
+}
+
+TEST(QiPath, emptyValueIsPreserved)
+{
+  auto tmpPath = qi::Path{};
+  auto transformedPath = qi::AnyValue::from(tmpPath).to<std::string>();
+  EXPECT_EQ(tmpPath.str(), transformedPath);
 }
 
 template <typename T>
