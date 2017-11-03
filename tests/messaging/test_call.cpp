@@ -786,7 +786,9 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_TRUE(weak.lock());
   // One is client side, the other server side
   if (p.client() != p.server())
+  {
     ASSERT_FALSE(weak.lock().asGenericObject() == adder.asGenericObject());
+  }
   ASSERT_TRUE(adder);
   qi::Future<int> f = adder.async<int>("add", 41);
   f.wait(1000);
