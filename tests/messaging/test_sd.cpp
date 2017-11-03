@@ -264,7 +264,6 @@ TEST(ServiceDirectory, NoThreadSpawnOnClientClose)
   qiLogVerbose() << "Waiting for objects destruction";
   for (auto& future : futures)
   {
-    auto state = future.waitFor(qi::MilliSeconds(200));
-    ASSERT_EQ(qi::FutureState_FinishedWithValue, state);
+    ASSERT_TRUE(test::finishesWithValue(future));
   }
 }
