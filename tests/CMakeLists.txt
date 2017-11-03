@@ -11,7 +11,7 @@ if(QI_WITH_TESTS)
       "qi/testutils/testutils.hpp"
       "qi/testutils/testutils.cpp"
       "qi/testutils/mockutils.hpp"
-    DEPENDS qi
+    DEPENDS qi gmock
   )
   qi_stage_lib(qitestutils)
 endif()

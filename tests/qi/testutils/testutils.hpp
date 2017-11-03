@@ -4,7 +4,12 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <boost/optional.hpp>
 #include <boost/config.hpp>
+#include <gtest/gtest.h>
+#include <qi/type/traits.hpp>
+#include <qi/clock.hpp>
+#include <qi/future.hpp>
 
 namespace test
 {
@@ -36,4 +41,147 @@ namespace test
     int _pid;
   };
 
+
+  static const auto defaultFutureWaitDuration = qi::Seconds{ 3 };
+
+  namespace detail
+  {
+    struct DoNothing
+    {
+      template<typename T>
+      void operator()(const qi::Future<T>&) const {}
+    };
+
+    template<typename T>
+    struct AssignValue
+    {
+      T* t;
+      void operator()(const qi::Future<T>& fut) const
+      {
+        *t = fut.value();
+      }
+    };
+
+    struct AssignError
+    {
+      std::string* err;
+      template<typename T>
+      void operator()(const qi::Future<T>& fut) const
+      {
+        *err = fut.error();
+      }
+    };
+
+    template <typename T>
+    testing::Message messageOfUnexpectedState(const qi::Future<T>& fut)
+    {
+      testing::Message msg;
+      switch (fut.wait(0))
+      {
+      case qi::FutureState_None:
+        msg << "the future is invalid as it is not tied to a promise";
+        break;
+      case qi::FutureState_Running:
+        msg << "the future has timed out";
+        break;
+      case qi::FutureState_Canceled:
+        msg << "the future has been canceled";
+        break;
+      case qi::FutureState_FinishedWithError:
+        msg << "the future has an error '" << fut.error() << "'";
+        break;
+      case qi::FutureState_FinishedWithValue:
+        msg << "the future has an value '" << fut.value() << "'";
+        break;
+      }
+      return msg;
+    }
+
+    template <typename T, typename Proc = DoNothing>
+    testing::AssertionResult finishesWithState(qi::Future<T> fut,
+                                               qi::FutureState expected,
+                                               Proc onSuccess = {},
+                                               qi::MilliSeconds delay = defaultFutureWaitDuration)
+    {
+      const auto state = fut.wait(delay);
+      if (state == expected)
+      {
+        onSuccess(fut);
+        return testing::AssertionSuccess();
+      }
+      return testing::AssertionFailure() << messageOfUnexpectedState(fut);
+    }
+  }
+
+  inline detail::DoNothing willDoNothing()
+  {
+    return {};
+  }
+
+  template<typename T>
+  detail::AssignValue<T> willAssignValue(T& t)
+  {
+    return {&t};
+  }
+
+  inline detail::AssignError willAssignError(std::string& err)
+  {
+    return {&err};
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult finishesWithValue(qi::Future<T> fut,
+                                             Proc onSuccess = {},
+                                             qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_FinishedWithValue, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult finishesWithValue(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return finishesWithValue(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult finishesWithError(qi::Future<T> fut,
+                                             Proc onSuccess = {},
+                                             qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_FinishedWithError, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult finishesWithError(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return finishesWithError(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult finishesAsCanceled(qi::Future<T> fut,
+                                              Proc onSuccess = {},
+                                              qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_Canceled, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult finishesAsCanceled(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return finishesAsCanceled(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult isStillRunning(qi::Future<T> fut,
+                                          Proc onSuccess = {},
+                                          qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_Running, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult isStillRunning(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return isStillRunning(fut.async(), qi::fwd<Args>(args)...);
+  }
 } // namespace test

@@ -21,7 +21,7 @@ if(QI_WITH_TESTS)
   qi_stage_dir(".")
 
   # General tests
-  qi_create_gtest(
+  qi_create_gmock(
     test_messaging
 
     "test_anymodule.cpp"
@@ -99,7 +99,7 @@ set(MESSAGING_SOURCES
   "../../src/messaging/transportsocketcache.cpp"
 )
 
-qi_create_gtest(
+qi_create_gmock(
   test_messaging_internal
 
   "test_messaging_internal.cpp"

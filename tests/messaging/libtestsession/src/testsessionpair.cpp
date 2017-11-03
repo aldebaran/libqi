@@ -29,13 +29,9 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
   {
     _sd->setIdentity(qi::path::findData("qi", "server.key"),
                      qi::path::findData("qi", "server.crt"));
-    const std::string oldProt{ "tcp://" };
-    const auto pos = sdUrl.find(oldProt);
-    if (pos != std::string::npos)
-    {
-      sdUrl.replace(pos, oldProt.size(), "tcps://");
-    }
   }
+  gwUrl = test::adaptScheme(gwUrl);
+  sdUrl = test::adaptScheme(sdUrl);
 
   qi::UrlVector endpoints;
   _sd->listenStandalone(std::move(sdUrl));
