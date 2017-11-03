@@ -244,6 +244,14 @@ namespace qi {
       }
       else
       {
+        // If the event loop has been stopped and work has been destroyed at this point then
+        // maybe the future has been set in error, so just ignore the result and leave.
+        if (!_work.load())
+        {
+          qiLogDebug() << "Ignoring ping result, the event loop is being stopped";
+          break;
+        }
+
         QI_ASSERT(callState == FutureState_FinishedWithValue);
         nbTimeout = 0;
         qiLogDebug() << "Ping ok";
