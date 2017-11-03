@@ -8,15 +8,14 @@
 #include <gtest/gtest.h>
 #include <qi/future.hpp>
 #include <qi/log.hpp>
+#include <qi/testutils/testutils.hpp>
 #include <atomic>
 
 namespace
 {
 
-const int iterations = 1000;
-const auto defaultTimeout = qi::Seconds(2);
-
-static const std::string testCategory = "core.log.test1";
+static const int iterations = 1000;
+static const auto testCategory = "core.log.test1";
 
 class BlockyHandler
 {
@@ -28,7 +27,7 @@ public:
   const unsigned int& id = handler.id;
 
   explicit BlockyHandler(const std::string& name)
-    : handler(name, std::ref(*this))
+    : handler(name, std::ref(*this), qi::LogLevel_Verbose)
   {
   }
 
@@ -65,16 +64,13 @@ protected:
 
 TEST_F(AsyncLog, logasync)
 {
-  qiLogCategory(testCategory);
-
   BlockyHandler bh("BlockyHandler");
-
+  qiLogCategory(testCategory);
   for (int i = 0; i < iterations; i++)
-    qiLogFatal() << i << std::endl;
+    qiLogVerbose() << "Iteration " << i;
 
   bh.start.setValue(0);
-
-  EXPECT_EQ(qi::FutureState_FinishedWithValue, bh.finished.future().wait(defaultTimeout));
+  ASSERT_TRUE(test::finishesWithValue(bh.finished.future()));
 }
 
 

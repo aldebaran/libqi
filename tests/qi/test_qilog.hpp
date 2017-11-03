@@ -15,7 +15,9 @@
 class LogHandler final
 {
 public:
-  LogHandler(const std::string& name, qi::log::Handler handler);
+  LogHandler(const std::string& name,
+             qi::log::Handler handler,
+             qi::LogLevel level = qi::LogLevel_Info);
 
   virtual ~LogHandler();
 

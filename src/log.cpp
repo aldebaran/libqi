@@ -585,7 +585,7 @@ namespace qi {
       {
         {
           boost::mutex::scoped_lock lock(LogWriteLock);
-          LogReadyCond.wait(lock);
+          LogReadyCond.wait(lock, []{ return !LogInstance->logs.empty(); });
         }
 
         printLog();

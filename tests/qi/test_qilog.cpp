@@ -2,9 +2,9 @@
 #include <boost/function.hpp>
 #include <boost/utility/string_ref.hpp>
 
-LogHandler::LogHandler(const std::string& name, qi::log::Handler handler)
+LogHandler::LogHandler(const std::string& name, qi::log::Handler handler, qi::LogLevel level)
   : name(name)
-  , id(qi::log::addHandler(name, std::move(handler)))
+  , id(qi::log::addHandler(name, std::move(handler), level))
 {
 }
 
@@ -29,8 +29,9 @@ void MockLogHandler::operator()(qi::LogLevel,
                                 const char*,
                                 int)
 {
-  // remove log from the logger itself
-  if (boost::string_ref(category) == "qi.log")
+  boost::string_ref catStrRef{ category };
+  // remove log from the logger itself and the eventloop
+  if (catStrRef == "qi.log" || catStrRef == "qi.eventloop")
     return;
   this->log(message);
 }
