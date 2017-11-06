@@ -14,14 +14,15 @@ namespace qi
 {
 namespace detail
 {
+  // Returns a Future<U> if T is a Future<Future<U>>, returns T otherwise.
   template <typename T>
   T tryUnwrap(T anything)
   {
     return anything;
   }
 
-  template <typename T>
-  Future<T> tryUnwrap(Future<Future<T>> future)
+  template <typename U>
+  Future<U> tryUnwrap(Future<Future<U>> future)
   {
     return future.unwrap();
   }
