@@ -26,13 +26,14 @@
 namespace qi
 {
 
+// C++14 these can be lambdas, but we need perfect forwarding in the capture in scheduleFor below
 namespace detail
 {
-
-  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
   template <typename F>
-  struct WrapInStrand;
+  struct Stranded;
 
+  template <typename F>
+  struct StrandedUnwrapped;
 }
 
 // we use ExecutionContext's helpers in schedulerFor, we don't need to implement all the methods
@@ -152,9 +153,18 @@ public:
 
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})
-      -> detail::WrapInStrand<typename std::decay<F>::type>
+      -> detail::Stranded<typename std::decay<F>::type>
   {
-    return detail::WrapInStrand<typename std::decay<F>::type>(std::forward<F>(func),
+    return detail::Stranded<typename std::decay<F>::type>(std::forward<F>(func),
+                                                              _p,
+                                                              std::move(onFail));
+  }
+
+  template <typename F>
+  auto unwrappedSchedulerFor(F&& func, boost::function<void()> onFail = {})
+      -> detail::StrandedUnwrapped<typename std::decay<F>::type>
+  {
+    return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::forward<F>(func),
                                                               _p,
                                                               std::move(onFail));
   }
@@ -210,12 +220,11 @@ namespace detail
       const boost::function<void()>& onFail,
       boost::weak_ptr<StrandPrivate> weakStrand,
       Args&&... args)
-      -> decltype(tryUnwrap(weakStrand.lock()->async(std::bind(func, std::forward<Args>(args)...)))) // TODO: remove in C++14
+      -> decltype(weakStrand.lock()->async(std::bind(func, std::forward<Args>(args)...))) // TODO: remove in C++14
   {
     if (auto strand = weakStrand.lock())
     {
-      auto ft = strand->async(std::bind(func, std::forward<Args>(args)...));
-      return tryUnwrap(ft);
+      return strand->async(std::bind(func, std::forward<Args>(args)...));
     }
     else
     {
@@ -225,9 +234,11 @@ namespace detail
           typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>("strand is dead");
     }
   }
-  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
+
+  // C++14 these can be lambdas, but we need perfect forwarding in the capture in scheduleFor
+  // A callable object that, when called defers the call of the given function to the strand.
   template <typename F>
-  struct WrapInStrand
+  struct Stranded
   {
     static const bool is_async = true;
 
@@ -235,7 +246,7 @@ namespace detail
     boost::weak_ptr<StrandPrivate> _strand;
     boost::function<void()> _onFail;
 
-    WrapInStrand(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail)
+    Stranded(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail)
       : _func(std::move(f))
       , _strand(std::move(strand))
       , _onFail(std::move(onFail))
@@ -254,6 +265,36 @@ namespace detail
         -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
     {
       return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
+    }
+  };
+
+  // Like Stranded, but unwraps the result.
+  template <typename F>
+  struct StrandedUnwrapped
+  {
+    QI_API_DEPRECATED_MSG("is_async used")
+    static const bool is_async = true;
+
+  private:
+    Stranded<F> _stranded;
+
+  public:
+    StrandedUnwrapped(F&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
+      : _stranded(std::forward<F>(f), strand, onFail)
+    {}
+
+    template <typename... Args>
+    auto operator()(Args&&... args) const
+        -> decltype(tryUnwrap(_stranded(std::forward<Args>(args)...)))
+    {
+      return tryUnwrap(_stranded(std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    auto operator()(Args&&... args)
+        -> decltype(tryUnwrap(_stranded(std::forward<Args>(args)...)))
+    {
+      return tryUnwrap(_stranded(std::forward<Args>(args)...));
     }
   };
 } // detail

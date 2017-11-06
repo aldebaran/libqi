@@ -147,11 +147,11 @@ namespace qi
       static const bool is_async = true;
       template <typename F>
       using wrap_type = decltype(
-          std::declval<T>()->stranded(std::declval<typename std::decay<F>::type>()));
+          std::declval<T>()->strandedUnwrapped(std::declval<typename std::decay<F>::type>()));
       template <typename F>
       static wrap_type<F> wrap(const T& arg, F&& func, boost::function<void()> onFail)
       {
-        return arg->stranded(std::forward<F>(func), std::move(onFail));
+        return arg->strandedUnwrapped(std::forward<F>(func), std::move(onFail));
       }
     };
 
@@ -175,26 +175,6 @@ namespace qi
                            std::false_type>::type
     {
     };
-
-    template <bool IsAsync, typename F, typename... Args>
-    struct DecayAsyncResultImpl;
-
-    template <typename F, typename... Args>
-    struct DecayAsyncResultImpl<false, F, Args...>
-    {
-      using type = decltype(std::declval<F>()(std::declval<Args>()...));
-    };
-
-    template <typename F, typename... Args>
-    struct DecayAsyncResultImpl<true, F, Args...>
-    {
-      // I'd like to use a decltype, but vs2013 fails to parse this
-      //using type = typename decltype(std::declval<F>()(std::declval<Args>()...))::TemplateValue;
-      using type = typename std::result_of<F(Args...)>::type::TemplateValue;
-    };
-
-    template <typename T, typename... Args>
-    using DecayAsyncResult = DecayAsyncResultImpl<IsAsyncBind<typename std::decay<T>::type>::value, T, Args...>;
 
     template <typename T, bool IsTrackable>
     struct BindTransformImpl

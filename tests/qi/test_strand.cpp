@@ -333,8 +333,8 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     qi::Promise<void> prom;
     qi::Signal<int> signal;
 
-    static_assert(std::is_same<decltype(prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished))), qi::Future<int>>::value, "andThen future type incorrect");
-    static_assert(std::is_same<decltype(prom.future().then(qi::bind(&MyActor::f, obj.get(), TOTAL, finished))), qi::Future<int>>::value, "then future type incorrect");
+    static_assert(std::is_same<decltype(prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished)).unwrap()), qi::Future<int>>::value, "andThen future type incorrect");
+    static_assert(std::is_same<decltype(prom.future().then(qi::bind(&MyActor::f, obj.get(), TOTAL, finished)).unwrap()), qi::Future<int>>::value, "then future type incorrect");
 
     for (int i = 0; i < 25; ++i)
       prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
