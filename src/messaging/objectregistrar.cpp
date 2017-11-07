@@ -32,9 +32,9 @@ namespace qi {
     , _sdClient(sdClient)
     , _id(qi::os::generateUuid())
   {
-    _server.endpointsChanged.connect(boost::bind(&ObjectRegistrar::updateServiceInfo, this));
+    _server.endpointsChanged.connect(track(boost::bind(&ObjectRegistrar::updateServiceInfo, this),
+                                           static_cast<Trackable<Server>*>(this)));
   }
-
 
   ObjectRegistrar::~ObjectRegistrar()
   {
@@ -155,7 +155,8 @@ namespace qi {
     qi::Promise<unsigned int> prom;
     qi::Future<unsigned int>  future;
     future = _sdClient->registerService(si);
-    future.connect(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom));
+    future.connect(track(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom),
+                         static_cast<Trackable<Server>*>(this)));
 
     return prom.future();
   };
