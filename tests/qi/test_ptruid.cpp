@@ -8,6 +8,7 @@
 #include <ka/conceptpredicate.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
+#include <boost/core/ignore_unused.hpp>
 #include <unordered_map>
 
 TEST(PtrUid, Regular)
@@ -21,8 +22,9 @@ TEST(PtrUid, Regular)
     std::fill(++b, end(p), 0);
     return p;
   };
+  boost::ignore_unused(ptrUid);
 
-  assert(ka::is_regular(ka::bounded_range(ptrUid(0), ptrUid(10), [](qi::PtrUid& x) {
+  EXPECT_TRUE(ka::is_regular(ka::bounded_range(ptrUid(0), ptrUid(10), [](qi::PtrUid& x) {
     ++(*begin(x));
   })));
 }

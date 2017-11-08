@@ -82,7 +82,7 @@ namespace qi {
   }
 
   template<typename U>
-  void ObjectTypeBuilderBase::inherits(int offset)
+  void ObjectTypeBuilderBase::inherits(std::ptrdiff_t offset)
   {
     return inherits(typeOf<
       typename boost::remove_reference<U>::type>(), offset);
@@ -96,7 +96,7 @@ namespace qi {
     // Compute the offset between T and U
     T* ptr = reinterpret_cast<T*>(0x10000);
     U* pptr = ptr;
-    intptr_t offset = reinterpret_cast<intptr_t>(pptr) - reinterpret_cast<intptr_t>(ptr);
+    std::ptrdiff_t offset = reinterpret_cast<intptr_t>(pptr) - reinterpret_cast<intptr_t>(ptr);
     qiLogDebug() << "Offset check T(" << typeid(ptr).name() << ")= " << pptr << ", U(" << typeid(ptr).name() << ")= " << ptr << ", T-U= " << offset;
     return ObjectTypeBuilderBase::inherits<U>(offset);
   }
@@ -208,7 +208,7 @@ namespace qi {
   namespace detail
   {
     static const char* interfaceMarker = "_interface_";
-    static const unsigned int interfaceMarkerLength = strlen(interfaceMarker);
+    static const auto interfaceMarkerLength = strlen(interfaceMarker);
 
     // Trait that detect inheritance from PropertyBase SignalBase or none of the above.
 

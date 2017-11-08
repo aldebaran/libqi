@@ -15,7 +15,8 @@
 namespace qi {
 
 #define INTEGRAL_TYPE(t) \
-static bool BOOST_PP_CAT(unused_ , __LINE__) = registerType(typeid(t), new IntTypeInterfaceImpl<t>());
+static bool BOOST_PP_CAT(unused_ , __LINE__) QI_ATTR_UNUSED \
+  = registerType(typeid(t), new IntTypeInterfaceImpl<t>());
 
 /** Integral types.
  * Since long is neither int32 nor uint32 on 32 bit platforms,
@@ -43,7 +44,8 @@ QI_TYPE_REGISTER_CUSTOM(bool, qi::TypeBoolImpl<bool>);
 namespace qi {
 
 #define FLOAT_TYPE(t) \
-static bool BOOST_PP_CAT(unused_ , __LINE__) = registerType(typeid(t), new FloatTypeInterfaceImpl<t>());
+static bool BOOST_PP_CAT(unused_ , __LINE__) QI_ATTR_UNUSED \
+  = registerType(typeid(t), new FloatTypeInterfaceImpl<t>());
 
 FLOAT_TYPE(float);
 FLOAT_TYPE(double);
@@ -308,4 +310,4 @@ static bool _qiregisterSession() {
   builder.registerType();
   return true;
 }
-static bool __qi_registrationSession = _qiregisterSession();
+static bool _qi_registrationSession QI_ATTR_UNUSED = _qiregisterSession();

@@ -67,7 +67,7 @@ public:
   bool init()
   {
     session->connect(connectionAddr);
-    obj = session->service("serviceTest");
+    obj = session->service("serviceTest").value();
 
     if (!obj)
     {
@@ -104,7 +104,7 @@ protected:
 
     obj = ob.object();
 
-    unsigned int id = session->registerService("serviceTest", obj);
+    unsigned int id = session->registerService("serviceTest", obj).value();
     std::cout << "serviceTest ready:" << id << std::endl;
 
   #ifdef WITH_GATEWAY_

@@ -672,7 +672,9 @@ TEST(FunctionalComposeAccu, Id) {
 
 namespace {
   struct x_t {
-    bool b;
+    x_t() = default;
+    x_t(bool b) : b{ b } {}
+    bool b{ false };
     bool operator==(x_t x) const {return b == x.b;}
   };
 
@@ -1052,9 +1054,9 @@ TEST(FunctionalApply, Pair) {
 TEST(FunctionalApply, Array) {
   using namespace ka;
   auto g = [](int i, int j, int k, int l) {
-    return std::array<int, 4>{i, j, k, l};
+    return std::array<int, 4>{{i, j, k, l}};
   };
-  std::array<int, 4> const args = {0, 1, 2, 3};
+  std::array<int, 4> const args {{0, 1, 2, 3}};
   ASSERT_EQ(args, apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
   auto const h = apply(g);

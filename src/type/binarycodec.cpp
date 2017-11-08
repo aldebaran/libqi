@@ -15,6 +15,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/typedispatcher.hpp>
 #include <qi/types.hpp>
+#include <qi/numeric.hpp>
 #include <ka/scoped.hpp>
 #include <vector>
 #include <cstring>
@@ -57,7 +58,7 @@ namespace qi {
   static inline qi::BinaryDecoder& deserialize(qi::BinaryDecoder* ds, T &b)
   {
     T2 res;
-    int ret = ds->readRaw((void *)&res, sizeof(res));
+    auto ret = ds->readRaw(static_cast<void *>(&res), sizeof(res));
     if (ret != sizeof(res))
       ds->setStatus(qi::BinaryDecoder::Status::ReadPastEnd);
     b = static_cast<T>(res);
@@ -68,13 +69,11 @@ namespace qi {
   static inline qi::BinaryEncoder& serialize(qi::BinaryEncoder* ds, T &b, bool inner)
   {
     T2 val = b;
-    int ret = ds->write((const char*)&val, sizeof(val));
+    ds->write(reinterpret_cast<const char*>(&val), sizeof(val));
     if (!inner)
     {
       ds->signature() += S;
     }
-    if (ret == -1)
-      ds->setStatus(qi::BinaryEncoder::Status::WriteError);
     return *ds;
   }
 
@@ -170,7 +169,7 @@ namespace qi {
 
   void BinaryDecoder::read(std::string &s)
   {
-    qi::uint32_t sz = 0;
+    std::uint32_t sz = 0;
     read(sz);
 
     s.clear();
@@ -221,7 +220,7 @@ namespace qi {
     delete _p;
   }
 
-  int BinaryEncoder::write(const char *str, size_t len)
+  std::streamoff BinaryEncoder::write(const char *str, size_t len)
   {
     if (len) {
       if (!_p->_innerSerialization)
@@ -233,11 +232,11 @@ namespace qi {
         setStatus(Status::WriteError);
       }
     }
-    return len;
+    return numericConvert<std::streamoff>(len);
   }
 
   /// Precondition: writableCountedRange(data, size)
-  int BinaryEncoder::write(const uint8_t* data, size_t size)
+  std::streamoff BinaryEncoder::write(const uint8_t* data, size_t size)
   {
     // TODO: add alignment checking when alignof is available on all supported
     // compilers (currently VS2013 doesn't support it).
@@ -249,7 +248,7 @@ namespace qi {
   void BinaryEncoder::writeString(const char *str, size_t len)
   {
     ++_p->_innerSerialization;
-    write((qi::uint32_t)len);
+    write(numericConvert<std::uint32_t>(len));
     --_p->_innerSerialization;
     if (!_p->_innerSerialization)
     {
@@ -268,8 +267,8 @@ namespace qi {
 
   void BinaryEncoder::write(const char *s)
   {
-    qi::uint32_t len = strlen(s);
-    writeString(s, len);
+    const auto len = strlen(s);
+    writeString(s, numericConvert<std::uint32_t>(len));
   }
 
   void BinaryEncoder::writeRaw(const qi::Buffer &meta) {
@@ -292,7 +291,7 @@ namespace qi {
     if (sig.isValid()) {
       QI_ASSERT(value.type());
       if (!recurse)
-        detail::serialize(value, *this, SerializeObjectCallback(), 0);
+        detail::serialize(value, *this, SerializeObjectCallback(), nullptr);
       else
         recurse();
     } else {
@@ -327,7 +326,7 @@ namespace qi {
     --_p->_innerSerialization;
   }
 
-  void BinaryEncoder::beginList(uint32_t size, const qi::Signature &elementSignature)
+  void BinaryEncoder::beginList(std::uint32_t size, const qi::Signature &elementSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "[" + elementSignature.toString();
@@ -342,7 +341,9 @@ namespace qi {
       signature() += "]";
   }
 
-  void BinaryEncoder::beginMap(uint32_t size, const qi::Signature &keySignature, const qi::Signature &valueSignature)
+  void BinaryEncoder::beginMap(std::uint32_t size,
+                               const qi::Signature& keySignature,
+                               const qi::Signature& valueSignature)
   {
     if (!_p->_innerSerialization)
       signature() += "{" + keySignature.toString() + valueSignature.toString() + "}";
@@ -419,7 +420,7 @@ namespace qi {
         , streamContext(tc)
       {}
 
-      void visitUnknown(AnyReference value)
+      BOOST_NORETURN void visitUnknown(AnyReference value)
       {
         std::stringstream ss;
         ss << "Type " << value.type()->infoString() <<" not serializable";
@@ -435,15 +436,15 @@ namespace qi {
       {
         switch((isSigned ? 1 : -1) * byteSize)
         {
-          case 0:  out.write((bool)!!value);    break;
-          case 1:  out.write((int8_t)value);  break;
-          case -1: out.write((uint8_t)value); break;
-          case 2:  out.write((int16_t)value); break;
-          case -2: out.write((uint16_t)value);break;
-          case 4:  out.write((int32_t)value); break;
-          case -4: out.write((uint32_t)value);break;
-          case 8:  out.write((int64_t)value); break;
-          case -8: out.write((uint64_t)value);break;
+          case 0:  out.write(static_cast<bool>(!!value));  break;
+          case 1:  out.write(static_cast<int8_t>(value));  break;
+          case -1: out.write(static_cast<uint8_t>(value)); break;
+          case 2:  out.write(static_cast<int16_t>(value)); break;
+          case -2: out.write(static_cast<uint16_t>(value));break;
+          case 4:  out.write(static_cast<int32_t>(value)); break;
+          case -4: out.write(static_cast<uint32_t>(value));break;
+          case 8:  out.write(static_cast<int64_t>(value)); break;
+          case -8: out.write(static_cast<uint64_t>(value));break;
           default: {
             std::stringstream ss;
             ss << "Unknown integer type " << isSigned << " " << byteSize;
@@ -455,9 +456,9 @@ namespace qi {
       void visitFloat(double value, int byteSize)
       {
         if (byteSize == 4)
-          out.write((float)value);
+          out.write(numericConvert<float>(value));
         else if (byteSize == 8)
-          out.write((double)value);
+          out.write(value);
         else {
           std::stringstream ss;
           ss << "serialize on unknown float type " << byteSize;
@@ -472,7 +473,8 @@ namespace qi {
 
       void visitList(AnyIterator it, AnyIterator end)
       {
-        out.beginList(value.size(), static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
+        out.beginList(numericConvert<std::uint32_t>(value.size()),
+                      static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
         for (; it != end; ++it)
           serialize(*it, out, serializeObjectCb, streamContext);
         out.endList();
@@ -486,8 +488,9 @@ namespace qi {
       void visitMap(AnyIterator it, AnyIterator end)
       {
         MapTypeInterface* type = static_cast<MapTypeInterface*>(value.type());
-        out.beginMap(value.size(), type->keyType()->signature(), type->elementType()->signature());
-        for(; it != end; ++it)
+        out.beginMap(numericConvert<std::uint32_t>(value.size()), type->keyType()->signature(),
+                     type->elementType()->signature());
+        for (; it != end; ++it)
         {
           AnyReference v = *it;
           serialize(v[0], out, serializeObjectCb, streamContext);
@@ -503,7 +506,7 @@ namespace qi {
         visitAnyObject(ao);
       }
 
-      void visitPointer(AnyReference pointee)
+      BOOST_NORETURN void visitPointer(AnyReference /*pointee*/)
       {
         std::stringstream ss;
         ss << "Pointer serialization not implemented";
@@ -542,7 +545,7 @@ namespace qi {
         }
       }
 
-      void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
+      void visitTuple(const std::string& /*name*/, const AnyReferenceVector& vals, const std::vector<std::string>& /*annotations*/)
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
@@ -607,10 +610,10 @@ namespace qi {
 
       void visitVoid()
       {
-        result = AnyReference(typeOf<void>(), 0);
+        result = AnyReference(typeOf<void>(), nullptr);
       }
 
-      void visitInt(int64_t value, bool isSigned, int byteSize)
+      void visitInt(int64_t /*value*/, bool isSigned, int byteSize)
       {
         switch((isSigned?1:-1)*byteSize)
         {
@@ -649,7 +652,7 @@ namespace qi {
         }
       }
 
-      void visitFloat(double value, int byteSize)
+      void visitFloat(double /*value*/, int byteSize)
       {
         if (byteSize == 4) {
           float t;
@@ -685,7 +688,7 @@ namespace qi {
       void visitList(AnyIterator, AnyIterator)
       {
         TypeInterface* elementType = static_cast<ListTypeInterface*>(result.type())->elementType();
-        qi::uint32_t sz = 0;
+        std::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status::Ok)
           return;
@@ -706,7 +709,7 @@ namespace qi {
       {
         TypeInterface* keyType = static_cast<MapTypeInterface*>(result.type())->keyType();
         TypeInterface* elementType = static_cast<MapTypeInterface*>(result.type())->elementType();
-        qi::uint32_t sz = 0;
+        std::uint32_t sz = 0;
         in.read(sz);
         if (in.status() != BinaryDecoder::Status::Ok)
           return;
@@ -754,14 +757,14 @@ namespace qi {
         // else leave result default-initialized
       }
 
-      void visitObject(GenericObject value)
+      void visitObject(GenericObject /*value*/)
       {
         std::stringstream ss;
         ss << "No signature deserializes to object";
         throw std::runtime_error(ss.str());
       }
 
-      void visitPointer(AnyReference pointee)
+      void visitPointer(AnyReference /*pointee*/)
       {
         std::stringstream ss;
         ss << "Pointer serialization not implemented";
@@ -788,7 +791,7 @@ namespace qi {
         }
       }
 
-      void visitDynamic(AnyReference pointee)
+      void visitDynamic(AnyReference /*pointee*/)
       {
         std::string sig;
         in.read(sig);
@@ -821,7 +824,7 @@ namespace qi {
       {
         Buffer b;
         in.read(b);
-        result.setRaw((char*)b.data(), b.size());
+        result.setRaw(static_cast<const char*>(b.data()), b.size());
       }
 
       void visitOptional(AnyReference value)

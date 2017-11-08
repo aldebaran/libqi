@@ -23,13 +23,7 @@ qiLogCategory("qi.Buffer");
 
 namespace qi
 {
-  BufferPrivate::BufferPrivate() // cppcheck-suppress uninitMemberVar
-    : _bigdata(0)
-    , _cachedSubBufferTotalSize(0)
-    , used(0)
-    , available(sizeof(_data))
-  {
-  }
+  BufferPrivate::BufferPrivate() = default;
 
   BufferPrivate::~BufferPrivate()
   {

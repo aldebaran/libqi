@@ -78,7 +78,7 @@ namespace detail {
     }
 
     template<typename P>
-    void inherits(int offset);
+    void inherits(std::ptrdiff_t offset);
 
     // Advertise anything, dispatch on {method, event, property} based on T.
     template<typename T>
@@ -92,7 +92,7 @@ namespace detail {
     unsigned int xAdvertiseSignal(const std::string &name, const qi::Signature& signature, SignalMemberGetter getter, int id = -1, bool isSignalProperty = false);
     unsigned int xAdvertiseProperty(const std::string& name, const qi::Signature& signature, PropertyMemberGetter getter, int id = -1);
     void xBuildFor(TypeInterface* type, bool autoRegister, qi::AnyFunction strandAccessor);
-    void inherits(TypeInterface* parentType, int offset);
+    void inherits(TypeInterface* parentType, std::ptrdiff_t offset);
 
     // Configuration
 
@@ -182,7 +182,7 @@ namespace detail {
  * within the namespace of the class
  */
 #define QI_REGISTER_OBJECT(name, ...) \
-static bool BOOST_PP_CAT(__qi_registration, __LINE__) = [] \
+static bool BOOST_PP_CAT(__qi_registration, __LINE__) QI_ATTR_UNUSED = [] \
 { \
   ::qi::ObjectTypeBuilder<name> b; \
   QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name, __VA_ARGS__) \
@@ -191,7 +191,7 @@ static bool BOOST_PP_CAT(__qi_registration, __LINE__) = [] \
 }();
 
 #define QI_REGISTER_MT_OBJECT(name, ...)                       \
-static bool BOOST_PP_CAT(__qi_registration, __LINE__) = [] \
+static bool BOOST_PP_CAT(__qi_registration, __LINE__) QI_ATTR_UNUSED = [] \
 { \
   ::qi::ObjectTypeBuilder<name> b; \
   b.setThreadingModel(qi::ObjectThreadingModel_MultiThread); \

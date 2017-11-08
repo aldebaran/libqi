@@ -59,6 +59,10 @@ namespace qi {
      */
     ~Application();
 
+    // non-copyable
+    Application(const Application&) = delete;
+    Application& operator=(const Application&) = delete;
+
     /**
      * \brief Wait until the end of the program.
      *
@@ -245,7 +249,7 @@ namespace qi {
  * \param func The handler that must be called at enter.
  */
 #define QI_AT_ENTER(func)                                               \
-  static bool QI_UNIQ_DEF(_qi_atenter) = ::qi::Application::atEnter(func);
+  static bool QI_UNIQ_DEF(_qi_atenter) QI_ATTR_UNUSED = ::qi::Application::atEnter(func);
 
 /**
  * \def QI_AT_EXIT(func)
@@ -253,7 +257,7 @@ namespace qi {
  * \param func The handler that must be called at exit.
  */
 #define QI_AT_EXIT(func)                                                \
-  static bool QI_UNIQ_DEF(_qi_atexit) = ::qi::Application::atExit(func);
+  static bool QI_UNIQ_DEF(_qi_atexit) QI_ATTR_UNUSED = ::qi::Application::atExit(func);
 
 //THIS IS INTERNAL
 //API is not maintained for this function

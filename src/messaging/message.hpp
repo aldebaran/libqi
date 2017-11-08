@@ -343,7 +343,8 @@ namespace qi {
                       SerializeObjectCallback onObject,
                       StreamContext* sctx)
     {
-      auto updateHeaderSize = ka::scoped([&] { _header.size = _buffer.totalSize(); });
+      auto updateHeaderSize =
+          ka::scoped([&] { _header.size = static_cast<qi::uint32_t>(_buffer.totalSize()); });
       qi::encodeBinary(&_buffer, ref, onObject, sctx);
     }
   };

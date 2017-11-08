@@ -31,6 +31,7 @@ QI_REGISTER_OBJECT(MiddleMan, callOnArgument)
 
 TEST(SendObjectToStandalone, MultiProcessPingPong_CallArgumentMethod)
 {
+  static const std::chrono::milliseconds sleepDuration{ 50 };
   using test::ScopedProcess;
   // Start a service directory in a separate process.
   const std::string sdPath = qi::path::findBin("simplesd");
@@ -40,7 +41,7 @@ TEST(SendObjectToStandalone, MultiProcessPingPong_CallArgumentMethod)
   auto client = qi::makeSession();
   for (int i = 0; i < 20; ++i)
   {
-    qi::os::msleep(50);
+    std::this_thread::sleep_for(sleepDuration);
     try
     {
       client->connect("tcp://127.0.0.1:54321");
@@ -62,7 +63,7 @@ TEST(SendObjectToStandalone, MultiProcessPingPong_CallArgumentMethod)
   auto session = qi::makeSession();
   session->connect("tcp://127.0.0.1:54321");
   session->waitForService("PingPongService").wait(5000);
-  qi::AnyObject serviceProxy = session->service("PingPongService");
+  qi::AnyObject serviceProxy = session->service("PingPongService").value();
   serviceProxy.call<void>("give", boost::make_shared<MiddleMan>());
   qi::AnyObject middleman = serviceProxy.call<qi::AnyObject>("take");
   qi::AnyObject precious = boost::make_shared<InterestingObject>();

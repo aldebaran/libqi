@@ -47,7 +47,7 @@ TEST(Range, BoundedRangeReadable) {
 
 TEST(Range, BoundedRangeHelperFunctionIterators) {
   using namespace ka;
-  std::array<int, 2> a{4, 1};
+  std::array<int, 2> a {{4, 1}};
   auto rng = bounded_range(begin(a), end(a));
   EXPECT_FALSE(is_empty(rng));
   EXPECT_EQ(4, front(rng));
@@ -60,7 +60,7 @@ TEST(Range, BoundedRangeHelperFunctionIterators) {
 
 TEST(Range, BoundedRangeHelperFunctionSequence) {
   using namespace ka;
-  std::array<int, 2> a{4, 1};
+  std::array<int, 2> a {{4, 1}};
   auto rng = bounded_range(a);
   EXPECT_FALSE(is_empty(rng));
   EXPECT_EQ(4, front(rng));
@@ -75,7 +75,7 @@ TEST(Range, BoundedRangeHelperFunctionSequenceIncr) {
   using namespace ka;
   using namespace functional_ops;
   using C = std::array<int, 2>;
-  C a{4, 1};
+  C a {{4, 1}};
   incr_t incr;
   auto rng = bounded_range(a, incr *= incr); // skip 'odd' iterators
   EXPECT_FALSE(is_empty(rng));
@@ -112,7 +112,7 @@ struct pair_iter_t {
 
 TEST(Range, BoundedRangeHelperFunctionSequenceCustom) {
   using namespace ka;
-  std::array<int, 2> a{4, 1};
+  std::array<int, 2> a {{4, 1}};
   pair_iter_t<decltype(begin(a))> p{begin(a), end(a)};
   auto rng = bounded_range(p);
   EXPECT_FALSE(is_empty(rng));
@@ -138,7 +138,7 @@ struct pair_iter_member_t {
 
 TEST(Range, BoundedRangeHelperFunctionSequenceCustomMember) {
   using namespace ka;
-  std::array<int, 2> a{4, 1};
+  std::array<int, 2> a {{4, 1}};
   pair_iter_member_t<decltype(begin(a))> p{begin(a), end(a)};
   auto rng = bounded_range(p);
   EXPECT_FALSE(is_empty(rng));

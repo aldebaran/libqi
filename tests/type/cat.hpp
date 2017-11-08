@@ -10,7 +10,7 @@ public:
     Cat() { meowVolume.set(0xCA72); }
     Cat(unsigned int val) { meowVolume.set(val); }
 
-    int meow() const { return meowVolume.get(); }
+    unsigned int meow() const { return meowVolume.get().value(); }
 
     qi::Property<unsigned int> meowVolume;
 };

@@ -271,7 +271,7 @@ namespace qi {
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(addresses);
-    f.connect(&SessionPrivate::listenStandaloneCont, this, p, _1);
+    f.then(std::bind(&SessionPrivate::listenStandaloneCont, this, p, std::placeholders::_1));
     return p.future();
   }
 

@@ -17,19 +17,20 @@
 #include <qi/testutils/testutils.hpp>
 #include <gtest/gtest.h>
 #include <thread>
+#include <random>
 
 qiLogCategory("test");
 
 const qi::MilliSeconds usualTimeout{ 200 };
 const std::chrono::milliseconds stdUsualTimeout{usualTimeout.count()};
 
-void setValueWait(boost::mutex& mutex, int waittime, int& i, int v)
+void setValueWait(boost::mutex& mutex, std::chrono::milliseconds waittime, int& i, int v)
 {
   boost::unique_lock<boost::mutex> lock(mutex, boost::try_to_lock);
   // we should never be called in parallel
   ASSERT_TRUE(lock.owns_lock());
-  if (waittime)
-    qi::os::msleep(waittime);
+  if (waittime != std::chrono::milliseconds::zero())
+    std::this_thread::sleep_for(waittime);
   i = v;
 }
 
@@ -40,12 +41,12 @@ TEST(TestStrand, StrandSimple)
   qi::Strand strand(*qi::getEventLoop());
   int i = 0;
   qi::Future<void> f1 = strand.async(boost::bind<void>(&setValueWait,
-        boost::ref(mutex), 100, boost::ref(i), 1));
-  qi::os::msleep(5);
+        boost::ref(mutex), std::chrono::milliseconds{ 100 }, boost::ref(i), 1));
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 5 });
   EXPECT_FALSE(f1.isFinished());
   qi::Future<void> f2 = strand.async(boost::bind<void>(&setValueWait,
-        boost::ref(mutex), 0, boost::ref(i), 2));
-  qi::sleepFor(usualTimeout);
+        boost::ref(mutex), std::chrono::milliseconds{ 0 }, boost::ref(i), 2));
+  std::this_thread::sleep_for(stdUsualTimeout);
   EXPECT_EQ(i, 2);
 }
 
@@ -110,40 +111,35 @@ TEST(TestStrand, StrandSchedulerForWithMoveOnlyArg)
   EXPECT_EQ(*expected, future.get());
 }
 
-
-static void fail()
-{
-  ASSERT_TRUE(false);
-}
-
 TEST(TestStrand, StrandCancel)
 {
   qi::Strand strand(*qi::getEventLoop());
   // cancel before scheduling
-  qi::Future<void> f1 = strand.asyncDelay(fail, qi::Seconds(1000));
-  f1.cancel();
-  ASSERT_EQ(qi::FutureState_Canceled, f1.wait());
+  auto f = strand.asyncDelay([]{}, qi::Seconds(1000));
+  f.cancel();
+  ASSERT_EQ(qi::FutureState_Canceled, f.wait());
 }
 
 TEST(TestStrand, StrandCancelScheduled)
 {
   qi::Strand strand(*qi::getEventLoop());
   // cancel before scheduling
-  qi::Future<void> f1 = strand.async(boost::bind(qi::os::msleep, 100));
-  qi::Future<void> f2 = strand.async(fail);
-  qi::os::msleep(30);
-  f2.cancel();
-  ASSERT_EQ(qi::FutureState_FinishedWithValue, f1.wait()) << f1.error();
-  ASSERT_EQ(qi::FutureState_Canceled, f2.wait());
+  qi::Promise<void> syncProm;
+  auto syncFut = syncProm.future();
+  strand.async([=]{ syncFut.wait(); }); // lock up the strand
+  auto scheduledTaskFut = strand.async([]{}); // no delay should schedule the callback right away.
+  scheduledTaskFut.cancel();
+  syncProm.setValue(nullptr);
+  ASSERT_EQ(qi::FutureState_Canceled, scheduledTaskFut.wait());
 }
 
-static void increment(boost::mutex& mutex, int waittime, std::atomic<unsigned int>& i)
+static void increment(boost::mutex& mutex, std::chrono::milliseconds waittime, std::atomic<unsigned int>& i)
 {
   boost::unique_lock<boost::mutex> lock(mutex, boost::try_to_lock);
   // we should never be called in parallel
   ASSERT_TRUE(lock.owns_lock());
-  if (waittime)
-    qi::os::msleep(waittime);
+  if (waittime != std::chrono::milliseconds::zero())
+    std::this_thread::sleep_for(waittime);
   ++i;
 }
 
@@ -159,10 +155,10 @@ TEST(TestStrand, AggressiveCancel)
   for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
   {
     qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
-          boost::ref(mutex), 1, boost::ref(i)));
+          boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i)));
     futures.push_back(f1);
     f1 = strand.async(boost::bind<void>(&increment,
-          boost::ref(mutex), 50, boost::ref(i)));
+          boost::ref(mutex), std::chrono::milliseconds{50}, boost::ref(i)));
     futures.push_back(f1);
   }
   for(qi::Future<void>& future: futures)
@@ -192,7 +188,7 @@ TEST(TestStrand, StrandDestruction)
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       futures.push_back(strand.async(boost::bind<void>(&increment,
-              boost::ref(mutex), 1, boost::ref(i))));
+              boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i))));
     }
   }
   for (auto& future : futures)
@@ -211,20 +207,20 @@ TEST(TestStrand, StrandDestructionWithMethodAndConcurrency)
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     futures.push_back(qi::getEventLoop()->async([&]{
             strand.async(boost::bind<void>(&increment,
-                boost::ref(mutex), 1, boost::ref(i)));
+                boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i)));
           }));
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     strand.async(boost::bind<void>(&increment,
-            boost::ref(mutex), 1, boost::ref(i)));
+            boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i)));
   strand.join();
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     futures.push_back(qi::getEventLoop()->async([&]{
             strand.async(boost::bind<void>(&increment,
-                boost::ref(mutex), 1, boost::ref(i)));
+                boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i)));
           }));
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     strand.async(boost::bind<void>(&increment,
-            boost::ref(mutex), 1, boost::ref(i)));
+            boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i)));
   for (auto& future : futures)
     ASSERT_TRUE(future.wait());
 }
@@ -240,10 +236,10 @@ TEST(TestStrand, StrandDestructionWithCancel)
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
-            boost::ref(mutex), 1, boost::ref(i)));
+            boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i)));
       futures.push_back(f1);
       f1 = strand.async(boost::bind<void>(&increment,
-            boost::ref(mutex), 50, boost::ref(i)));
+            boost::ref(mutex), std::chrono::milliseconds{50}, boost::ref(i)));
       futures.push_back(f1);
     }
     for(qi::Future<void>& future: futures)
@@ -293,24 +289,22 @@ TEST(TestStrand, StrandDestructionWithSchedulerFor)
     future.wait();
 }
 
-std::atomic<int> callcount;
-
 struct MyActor : qi::Actor
 {
-  std::atomic<bool> calling;
-  MyActor() : calling(0) {}
+  std::atomic<int> callcount { 0 };
+  std::atomic<bool> calling { false };
   ~MyActor() { joinTasks(); }
   int f(int end, qi::Promise<void> finished)
   {
-    int startval = prop.get();
+    int startval = prop.get().value();
     EXPECT_FALSE(calling);
     calling = true;
-    qi::os::msleep(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
     EXPECT_TRUE(calling);
     calling = false;
-    EXPECT_EQ(startval, prop.get());
+    EXPECT_EQ(startval, prop.get().value());
     if (++callcount == end + 1)
-      finished.setValue(0);
+      finished.setValue(nullptr);
     return 42;
   }
   qi::Future<int> val()
@@ -347,9 +341,10 @@ TEST(TestStrand, TypeErasedCall)
 TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
 {
   static const int TOTAL = 50;
-  srand(1828);
+  std::default_random_engine randEngine(1828);
+  std::uniform_int_distribution<int> distrib;
 
-  callcount = 0;
+  int callcount = 0;
   {
     boost::shared_ptr<MyActor> obj(new MyActor);
 
@@ -367,13 +362,14 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
     for (int i = 0; i < 25; ++i)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 50; ++i)
-      aobj.setProperty("prop", rand());
+      aobj.setProperty("prop", distrib(randEngine));
     QI_EMIT obj->sig(TOTAL);
     // we need one more call (the second test expects a periodic task to run at
     // least once)
     for (int i = 0; i < 26; ++i)
       aobj.async<void>("f", TOTAL, finished);
     finished.future().wait();
+    callcount = obj->callcount;
   }
   ASSERT_EQ(TOTAL + 1, callcount);
 }
@@ -387,9 +383,10 @@ void chaincall(qi::AnyObject aobj, qi::Promise<void> finished, int TOTAL)
 TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
 {
   static const int TOTAL = 300;
-  srand(1828);
+  std::default_random_engine randEngine(1828);
+  std::uniform_int_distribution<int> distrib;
 
-  callcount = 0;
+  int callcount = 0;
   {
     boost::shared_ptr<MyActor> obj(new MyActor);
     qi::AnyObject aobj(obj);
@@ -409,8 +406,6 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 25; ++i)
       prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
     for (int i = 0; i < 10; ++i)
-      prom.future().thenR<int>(&MyActor::f, obj.get(), TOTAL, finished);
-    for (int i = 0; i < 10; ++i)
       prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished));
     for (int i = 0; i < 5; ++i)
       prom.future().then(qi::bind(&MyActor::f, obj.get(), TOTAL, finished));
@@ -425,7 +420,7 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     for (int i = 0; i < 25; ++i)
       qi::async(qi::bind(&MyActor::f, obj, TOTAL, finished));
     for (int i = 0; i < 50; ++i)
-      aobj.setProperty("prop", rand());
+      aobj.setProperty("prop", distrib(randEngine));
     qi::Future<void> f = qi::async(boost::bind(chaincall, aobj, finished, TOTAL));
     prom.setValue(0);
     QI_EMIT signal(TOTAL);
@@ -436,23 +431,29 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
       qi::async(qi::bind(&MyActor::f, obj, TOTAL, finished));
     f.wait();
     finished.future().wait();
+    callcount = obj->callcount;
   }
-  ASSERT_LT(TOTAL, callcount.load());
+  ASSERT_LT(TOTAL, callcount);
 }
 
 TEST(TestStrand, FutureThenActorCancel)
 {
-  callcount = 0;
   {
     boost::shared_ptr<MyActor> obj(new MyActor);
 
     qi::Promise<void> finished;
 
     qi::Promise<int> prom;
-    qi::Future<int> masterFut = prom.future().thenR<int>(&MyActor::f, obj, _1, finished);
+    // FIXME: This is probably not what the original code meant to test, but it was naive and
+    // was relying on an implicit wait. This implementation is equivalent but it does not test much
+    // (as did the old test). The reason we didn't reimplement it like it was meant is that it would
+    // be racy with the current design of futures, actors and strands.
+    qi::Future<int> masterFut = prom.future().then(
+      [&](qi::Future<int> fut) { return qi::bind(&MyActor::f, obj, fut.value(), finished)().value(); });
     masterFut.cancel();
     ASSERT_TRUE(prom.isCancelRequested());
     prom.setValue(0);
+    ASSERT_TRUE(masterFut.hasValue());
     ASSERT_EQ(42, masterFut.value());
     ASSERT_NO_THROW(finished.future().value());
   }
@@ -480,7 +481,7 @@ void callLongCallbackWithDestructionHook(qi::Strand& strand, Functor&& toCallOnD
   auto callerOnDestruction =
       std::make_shared<CallerOnDestruction<Functor>>(std::forward<Functor>(toCallOnDestruction));
   // keeps alive the caller for some time, so that we can join and have it die in our hands
-  auto f = [callerOnDestruction]{ qi::sleepFor(usualTimeout); };
+  auto f = [callerOnDestruction]{ std::this_thread::sleep_for(stdUsualTimeout); };
   callerOnDestruction.reset();
   strand.async(std::move(f));
 }

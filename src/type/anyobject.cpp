@@ -16,7 +16,7 @@ qiLogCategory("qitype.object");
 namespace qi
 {
 
-int ObjectTypeInterface::inherits(TypeInterface* other)
+std::ptrdiff_t ObjectTypeInterface::inherits(TypeInterface* other)
 {
   /* A registered class C can have to TypeInterface* around:
   * - TypeImpl<C*>
@@ -25,25 +25,26 @@ int ObjectTypeInterface::inherits(TypeInterface* other)
   */
   if (this == other)
     return 0;
-  const std::vector<std::pair<TypeInterface*, int> >& parents = parentTypes();
+  const auto& parents = parentTypes();
   qiLogDebug() << infoString() <<" has " << parents.size() <<" parents";
-  for (unsigned i=0; i<parents.size(); ++i)
+  for (const auto& parentTypePair : parents)
   {
-    if (parents[i].first->info() == other->info())
-      return parents[i].second;
-    ObjectTypeInterface* op = dynamic_cast<ObjectTypeInterface*>(parents[i].first);
+    const auto parentType = parentTypePair.first;
+    const auto parentTypeOffset = parentTypePair.second;
+    if (parentType->info() == other->info())
+      return parentTypeOffset;
+    ObjectTypeInterface* op = dynamic_cast<ObjectTypeInterface*>(parentType);
     if (op)
     {
-      int offset = op->inherits(other);
+      auto offset = op->inherits(other);
       if (offset != INHERITS_FAILED)
       {
-        qiLogDebug() << "Inheritance offsets " << parents[i].second
-         << " " << offset;
-        return parents[i].second + offset;
+        qiLogDebug() << "Inheritance offsets " << parentTypeOffset << " " << offset;
+        return parentTypeOffset + offset;
       }
     }
-    qiLogDebug() << parents[i].first->infoString() << " does not match " << other->infoString()
-    <<" " << ((op != 0) == (dynamic_cast<ObjectTypeInterface*>(other) != 0));
+    qiLogDebug() << parentType->infoString() << " does not match " << other->infoString()
+    <<" " << ((op != 0) == (dynamic_cast<ObjectTypeInterface*>(other) != nullptr));
   }
   return INHERITS_FAILED;
 }

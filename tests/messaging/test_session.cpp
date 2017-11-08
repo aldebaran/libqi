@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <future>
+#include <chrono>
 
 #include <gtest/gtest.h>
 #include <boost/optional.hpp>
@@ -574,7 +575,7 @@ TEST(TestSession, ServiceRegistered)
   AnyObject ao;
   Promise<void> objectSetPromise;
   server.serviceRegistered.connect([&](unsigned int, std::string name){
-    ao = server.service(name);
+    ao = server.service(name).value();
     objectSetPromise.setValue(nullptr);
   });
 

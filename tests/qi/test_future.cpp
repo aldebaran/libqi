@@ -7,12 +7,15 @@
 #include <future>
 #include <list>
 #include <string>
+#include <thread>
+#include <chrono>
 #include <functional>
 #include <boost/thread.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <qi/log.hpp>
 #include <qi/tag.hpp>
+#include <qi/testutils/testutils.hpp>
 #include <ka/conceptpredicate.hpp>
 #include <ka/src.hpp>
 #include "test_future.hpp"
@@ -34,11 +37,11 @@ int SetValue::exchange(int v)
   return old;
 }
 
-int SetValue::delayExchange(int msDelay, int value)
+int SetValue::delayExchange(qi::MilliSeconds delay, int value)
 {
   qiLogDebug("test") << "delayexchange enter";
   state = 1;
-  qi::os::msleep(msDelay);
+  boost::this_thread::sleep_for(delay);
   state = 2;
   qiLogDebug("test") << "delayexchange leave";
   return exchange(value);
@@ -57,19 +60,19 @@ SetValue2::~SetValue2()
   qiLogVerbose("test") << "finishing dtor";
 }
 
-void SetValue2::delayExchangeP(int msDelay, int value, qi::Promise<int> result)
+void SetValue2::delayExchangeP(qi::MilliSeconds delay, int value, qi::Promise<int> result)
 {
-  result.setValue(delayExchange(msDelay, value));
+  result.setValue(delayExchange(delay, value));
 }
 
-qi::Future<int> SetValue2::asyncDelayExchange(int msDelay, int value)
+qi::Future<int> SetValue2::asyncDelayExchange(qi::MilliSeconds delay, int value)
 {
   qi::Promise<int> promise;
-  std::thread(&SetValue2::delayExchangeP, this, msDelay, value, promise);
+  std::thread(&SetValue2::delayExchangeP, this, delay, value, promise);
   return promise.future();
 }
 
-int block(int i, qi::Future<void> f)
+int block(int /*i*/, qi::Future<void> f)
 {
   f.wait();
   return 99;
@@ -217,7 +220,7 @@ TEST_F(FutureFixture, PromiseSetWhileWaitingOnFuture)
 }
 
 void producer(qi::Promise<int> pro) {
-  qi::os::msleep(100);
+  std::this_thread::sleep_for(std::chrono::milliseconds{100});
   pro.setValue(42);
 }
 
@@ -347,7 +350,7 @@ TEST_F(FutureFixture, TestPromiseAdapter)
     qi::adaptFuture(p.future(), p2);
     p.setValue(42);
     // wait for the result to be forwarded
-    qi::os::msleep(100);
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
     EXPECT_EQ(42, p2.value());
   }
   // Test for leakage
@@ -558,7 +561,7 @@ TEST(FutureTestCancel, AsyncCallCanceleable)
 static void doCancel(qi::Promise<int> promise)  { promise.setCanceled(); }
 static void doError(qi::Promise<int> promise)   { promise.setError("paf");}
 static void doValue(qi::Promise<int> promise)   { promise.setValue(42); }
-static void doNothing(qi::Promise<int> promise) { ; }
+static void doNothing(qi::Promise<int> /*promise*/) { ; }
 
 TEST(FutureTestCancel, CancelRequest)
 {
@@ -783,10 +786,7 @@ TEST(FutureTestUnwrap, Unwrap)
 
   prom2.setValue(42);
 
-  // TODO remove this when we have synchronous callbacks
-  qi::os::msleep(50);
-
-  ASSERT_TRUE(future.isFinished());
+  ASSERT_TRUE(test::finishesWithValue(future));
   ASSERT_EQ(42, future.value());
 }
 
@@ -800,10 +800,7 @@ TEST(FutureTestUnwrap, UnwrapError)
 
   prom.setError("fail");
 
-  // TODO remove this when we have synchronous callbacks
-  qi::os::msleep(50);
-
-  ASSERT_TRUE(future.hasError());
+  ASSERT_TRUE(test::finishesWithError(future));
   ASSERT_EQ("fail", future.error());
 }
 
@@ -821,17 +818,14 @@ TEST(FutureTestUnwrap, UnwrapError2)
 
   prom2.setError("fail");
 
-  // TODO remove this when we have synchronous callbacks
-  qi::os::msleep(50);
-
-  ASSERT_TRUE(future.hasError());
+  ASSERT_TRUE(test::finishesWithError(future));
   ASSERT_EQ("fail", future.error());
 }
 
 template <typename T>
 void setTrue(qi::Promise<T>& p, bool& b)
 {
-  ASSERT_FALSE(b);
+  EXPECT_FALSE(b);
   b = true;
 
   p.setCanceled();
@@ -850,11 +844,8 @@ TEST(FutureTestUnwrap, UnwrapCancel)
 
   future.cancel();
 
-  // TODO remove this when we have synchronous callbacks
-  qi::os::msleep(50);
-
   EXPECT_TRUE(prom.isCancelRequested());
-  EXPECT_TRUE(future.isCanceled());
+  ASSERT_TRUE(test::finishesAsCanceled(future));
   EXPECT_TRUE(canceled);
 }
 
@@ -878,11 +869,9 @@ TEST(FutureTestUnwrap, UnwrapCancel2)
 
   future.cancel();
 
-  // TODO remove this when we have synchronous callbacks
-  qi::os::msleep(50);
-
   EXPECT_FALSE(prom.isCancelRequested());
   EXPECT_TRUE(prom2.isCancelRequested());
+  ASSERT_TRUE(test::finishesAsCanceled(future));
   EXPECT_TRUE(future.isCanceled());
   EXPECT_FALSE(canceled);
   EXPECT_TRUE(canceled2);
@@ -961,8 +950,9 @@ static void mult42(qi::Promise<int> prom, int number) {
 }
 
 static void checkBarrier(qi::Promise<void> prom,
-                         std::vector< qi::Future<int> > results)
+                         qi::Future<std::vector< qi::Future<int>>> futResults)
 {
+  const auto results = futResults.value();
   for (int it = 0; it < BARRIER_N; ++it) {
     qi::Future<int> fut = results[it];
 
@@ -991,7 +981,7 @@ TEST(FutureBarrier, SimpleBarrier)
 
   // We wait for all futures of the for loop.
   barrier.future().wait();
-  qi::os::msleep(10);
+  std::this_thread::sleep_for(std::chrono::milliseconds{10});
   ASSERT_EQ(it, a.load());
 }
 
@@ -1102,7 +1092,7 @@ TEST(FutureTestWaitForFirst, SuccessfulTest) {
   for (int it = 0; it < BARRIER_N; ++it) {
     vect.push_back(emulateSet(it, it != 3));
   }
-  qi::Future<int> a = qi::waitForFirst<int>(vect);
+  qi::Future<int> a = qi::waitForFirst<int>(vect).value();
   ASSERT_FALSE(a.hasError());
   ASSERT_EQ(a.value(), 3);
 }
@@ -1113,7 +1103,7 @@ TEST(FutureTestWaitForFirst, FailingTest) {
   for (int it = 0; it < BARRIER_N; ++it) {
     vect.push_back(emulateSet(it, true));
   }
-  qi::Future<int> a = qi::waitForFirst<int>(vect);
+  qi::Future<int> a = qi::waitForFirst<int>(vect).value();
   ASSERT_TRUE(a.hasError());
 }
 
@@ -1176,7 +1166,7 @@ TEST(FutureTestAdaptFuture, WithVoid) {
 
   qi::adaptFuture(prom1.future(), prom2);
   while(prom2.future().isRunning())
-    qi::os::msleep(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
   ASSERT_TRUE(prom2.future().hasError());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_STREQ("foo", prom2.future().error().c_str());
@@ -1189,7 +1179,7 @@ TEST(FutureTestAdaptFuture, WithInt) {
 
   qi::adaptFuture(prom1.future(), prom2);
   while(prom2.future().isRunning())
-    qi::os::msleep(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
   ASSERT_TRUE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
   ASSERT_EQ(1, prom2.future().value());
@@ -1202,7 +1192,7 @@ TEST(FutureTestAdaptFuture, WithIntVoid) {
 
   qi::adaptFuture(prom1.future(), prom2);
   while(prom2.future().isRunning())
-    qi::os::msleep(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
   ASSERT_TRUE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
   ASSERT_EQ(NULL, prom2.future().value());
@@ -1215,7 +1205,7 @@ TEST(FutureTestAdaptFuture, PromiseCanceled) {
 
   qi::adaptFuture(prom1.future(), prom2);
   while(prom2.future().isRunning())
-    qi::os::msleep(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
   ASSERT_TRUE(prom2.future().isCanceled());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
@@ -1233,7 +1223,7 @@ TEST(FutureTestAdaptFuture, PromiseCancel) {
   qi::adaptFuture(prom1.future(), prom2);
   prom2.future().cancel();
   while(prom2.future().isRunning())
-    qi::os::msleep(5);
+    std::this_thread::sleep_for(std::chrono::milliseconds{5});
   ASSERT_TRUE(prom2.future().isCanceled());
   ASSERT_FALSE(prom2.future().hasValue());
   ASSERT_FALSE(prom2.future().hasError());
@@ -1281,7 +1271,7 @@ TEST(FutureTestFuturized, returnValueNoArgument)
   auto k = futurizeOutput([&] { wasCalled = true; return 42; });
   static_assert(std::is_same<qi::Future<int>, decltype(k())>::value, "");
   ASSERT_FALSE(wasCalled);
-  int x = k();
+  int x = k().value();
   ASSERT_TRUE(wasCalled);
   ASSERT_EQ(42, x);
 }
@@ -1306,7 +1296,7 @@ TEST(TestFuturized, returnValueWithArgument)
   static const int b = 2;
   static_assert(std::is_same<qi::Future<int>, decltype(k(a, b))>::value, "");
   ASSERT_FALSE(wasCalled);
-  int x = k(a, b);
+  int x = k(a, b).value();
   ASSERT_TRUE(wasCalled);
   ASSERT_EQ(a+b, x);
 }
@@ -1394,7 +1384,7 @@ TEST(Future, ValueThrowsOnTimeoutAsMilliSeconds)
 {
   using namespace qi;
   using namespace std::chrono;
-  const std::size_t ms = 100;
+  const int ms = 100;
   Promise<int> prom;
 
   const auto begin = steady_clock::now();

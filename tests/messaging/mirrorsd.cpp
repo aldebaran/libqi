@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     {
       std::lock_guard<std::mutex> l(m);
       registeredServices[serviceName] =
-        mirroredSd->registerService(serviceName, originalSd->service(serviceName));
+        mirroredSd->registerService(serviceName, originalSd->service(serviceName).value()).value();
     }
     catch (const std::exception& e)
     {

@@ -126,9 +126,9 @@ void runThreads(int threadCount, Callable&& callable, Args&&... args)
 }
 
 #define EXPECTCOUNTER(v)                                  \
-qi::os::msleep(1);                                        \
+  std::this_thread::sleep_for(std::chrono::milliseconds{1}); \
   for (unsigned t=0; t<200 && counter.load() - prev != v; ++t)  \
-    qi::os::msleep(5);                                    \
+    std::this_thread::sleep_for(std::chrono::milliseconds{5}); \
   EXPECT_EQ(v, counter.load() - prev);                    \
   prev = counter.load()
 

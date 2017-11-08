@@ -25,7 +25,7 @@
 
 qiLogCategory("test");
 
-qi::MilliSeconds usualTimeout{200};
+static const qi::MilliSeconds usualTimeout{200};
 
 int getint()
 {
@@ -73,7 +73,7 @@ TEST(TestCall, Convert)
 
   TestSessionPair p;
   p.server()->registerService("Serv", ob.object());
-  qi::AnyObject obj = p.client()->service("Serv");
+  qi::AnyObject obj = p.client()->service("Serv").value();
 
   EXPECT_EQ(42, obj.call<float>("getint"));
   EXPECT_ANY_THROW(obj.call<bool>("getint"));
@@ -120,12 +120,12 @@ void fooerr() {
   throw std::runtime_error("foobar");
 }
 
-int fakeRGBf(const std::string &name, int value, float duration)
+int fakeRGBf(const std::string& /*name*/, int /*value*/, float /*duration*/)
 {
   return (0);
 }
 
-int fakeRGBd(const std::string &name, int value, double duration)
+int fakeRGBd(const std::string& /*name*/, int /*value*/, double /*duration*/)
 {
   return (0);
 }
@@ -197,7 +197,7 @@ struct GenericTuple
   qi::AnyValue e2;
   qi::AnyValue e3;
 };
-QI_TYPE_STRUCT(GenericTuple, e1, e2, e3);
+QI_TYPE_STRUCT(GenericTuple, e1, e2, e3)
 
 struct SpecificTuple
 {
@@ -205,7 +205,7 @@ struct SpecificTuple
   double e2;
   std::map<std::string, float> e3;
 };
-QI_TYPE_STRUCT(SpecificTuple, e1, e2, e3);
+QI_TYPE_STRUCT(SpecificTuple, e1, e2, e3)
 
 double eatSpecific(const SpecificTuple& v)
 {
@@ -230,7 +230,7 @@ TEST(TestCall, CallBufferInList)
     boost::function<qi::AnyValue(qi::AnyValue)>(boost::bind(&pingCopy, _1, boost::ref(val))));
   qi::AnyObject obj(ob.object());
   p.server()->registerService("test", obj);
-  qi::AnyObject proxy = p.client()->service("test");
+  qi::AnyObject proxy = p.client()->service("test").value();
   std::vector<qi::AnyValue> args;
   args.push_back(qi::AnyValue::from(12));
   qi::Buffer buf;
@@ -264,14 +264,13 @@ TEST(TestCall, CallComplexType)
   std::list<std::pair<std::string, int> >  robots;
   TestSessionPair          p;
   qi::DynamicObjectBuilder ob;
-  int serviceID;
 
   ob.advertiseMethod("print", &print);
   qi::AnyObject obj(ob.object());
 
-  serviceID = p.server()->registerService("serviceCall", obj);
+  const auto serviceID = p.server()->registerService("serviceCall", obj).value();
 
-  qi::AnyObject proxy = p.client()->service("serviceCall");
+  qi::AnyObject proxy = p.client()->service("serviceCall").value();
 
   robots.push_back(std::make_pair("Gibouna", 1234567));
   robots.push_back(std::make_pair("Wall-E", 2345678));
@@ -289,14 +288,13 @@ TEST(TestCall, CallVoid)
   std::list<std::pair<std::string, int> >  robots;
   TestSessionPair          p;
   qi::DynamicObjectBuilder ob;
-  int serviceID;
 
   ob.advertiseMethod("foobar", &foobar);
   qi::AnyObject obj(ob.object());
 
-  serviceID = p.server()->registerService("serviceCall", obj);
+  const auto serviceID = p.server()->registerService("serviceCall", obj).value();
 
-  qi::AnyObject proxy = p.client()->service("serviceCall");
+  qi::AnyObject proxy = p.client()->service("serviceCall").value();
 
 
   std::cout << "Calling" << std::endl;
@@ -310,14 +308,13 @@ TEST(TestCall, CallVoidErr)
   std::list<std::pair<std::string, int> >  robots;
   TestSessionPair          p;
   qi::DynamicObjectBuilder ob;
-  int serviceID;
 
   ob.advertiseMethod("fooerr", &fooerr);
   qi::AnyObject obj(ob.object());
 
-  serviceID = p.server()->registerService("serviceCall", obj);
+  const auto serviceID = p.server()->registerService("serviceCall", obj).value();
 
-  qi::AnyObject proxy = p.client()->service("serviceCall");
+  qi::AnyObject proxy = p.client()->service("serviceCall").value();
 
   std::cout << "Calling" << std::endl;
   qi::Future<void> fut = proxy.async<void>("fooerr");
@@ -329,15 +326,14 @@ TEST(TestCall, TestDoubleToFloatConvertion)
 {
   TestSessionPair p;
   qi::DynamicObjectBuilder ob;
-  int serviceID;
   double duration = 0.42;
 
   ob.advertiseMethod("fakeRGB", &fakeRGBf);
   qi::AnyObject obj(ob.object());
 
-  serviceID = p.server()->registerService("serviceConv", obj);
+  const auto serviceID = p.server()->registerService("serviceConv", obj).value();
   ASSERT_TRUE(serviceID != 0);
-  qi::AnyObject proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv").value();
   ASSERT_TRUE(proxy);
 
   std::cout << "Calling FakeRGB" << std::endl;
@@ -348,15 +344,14 @@ TEST(TestCall, TestFloatToDoubleConvertion)
 {
   TestSessionPair p;
   qi::DynamicObjectBuilder ob;
-  int serviceID;
   float duration = 0.42f;
 
   ob.advertiseMethod("fakeRGB", &fakeRGBd);
   qi::AnyObject obj(ob.object());
 
-  serviceID = p.server()->registerService("serviceConv", obj);
+  const auto serviceID = p.server()->registerService("serviceConv", obj).value();
   ASSERT_TRUE(serviceID != 0);
-  qi::AnyObject proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv").value();
   ASSERT_TRUE(proxy);
 
   std::cout << "Calling FakeRGB" << std::endl;
@@ -383,11 +378,10 @@ qi::AnyObject createObject() {
 
 TEST(TestCall, TestGenericConversion) {
   TestSessionPair p;
-  int serviceID;
   qi::AnyObject obj = createObject();
-  serviceID = p.server()->registerService("serviceConv", obj);
+  const auto serviceID = p.server()->registerService("serviceConv", obj).value();
   ASSERT_TRUE(serviceID != 0);
-  qi::AnyObject proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv").value();
   ASSERT_TRUE(proxy);
 
   std::vector<std::string>      svec;
@@ -434,11 +428,10 @@ TEST(TestCall, TestGenericConversion) {
 
 TEST(TestCall, TestGenericConversionComplexList) {
   TestSessionPair p;
-  int serviceID;
   qi::AnyObject obj = createObject();
-  serviceID = p.server()->registerService("serviceConv", obj);
+  const auto serviceID = p.server()->registerService("serviceConv", obj).value();
   ASSERT_TRUE(serviceID != 0);
-  qi::AnyObject proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv").value();
   ASSERT_TRUE(proxy);
 
 
@@ -487,11 +480,10 @@ TEST(TestCall, TestGenericConversionComplexList) {
 
 TEST(TestCall, TestGenericConversionComplexMap) {
   TestSessionPair p;
-  int serviceID;
   qi::AnyObject obj = createObject();
-  serviceID = p.server()->registerService("serviceConv", obj);
+  const auto serviceID = p.server()->registerService("serviceConv", obj).value();
   ASSERT_TRUE(serviceID != 0);
-  qi::AnyObject proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv").value();
   ASSERT_TRUE(proxy);
 
 
@@ -529,11 +521,10 @@ TEST(TestCall, TestGenericConversionComplexMap) {
 
 TEST(TestCall, TestGenericConversionTuple) {
   TestSessionPair p;
-  int serviceID;
   qi::AnyObject obj = createObject();
-  serviceID = p.server()->registerService("serviceConv", obj);
+  const auto serviceID = p.server()->registerService("serviceConv", obj).value();
   ASSERT_TRUE(serviceID != 0);
-  qi::AnyObject proxy = p.client()->service("serviceConv");
+  qi::AnyObject proxy = p.client()->service("serviceConv").value();
   ASSERT_TRUE(proxy);
 
   qi::Future<double> f;
@@ -570,7 +561,7 @@ TEST(TestCall, PairClientListen)
   ob.advertiseMethod("addOne", &addOne);
   qi::AnyObject obj(ob.object());
   p.client()->registerService("adder", obj);
-  qi::AnyObject o = p.server()->service("adder");
+  qi::AnyObject o = p.server()->service("adder").value();
   ASSERT_TRUE(o);
 }
 
@@ -601,7 +592,7 @@ int makeObjectCall(qi::AnyObject ptr, const std::string& fname, int arg)
   return ptr.call<int>(fname, arg);
 }
 
-void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::AnyObject obj)
+void bounceFuture(qi::Future<int> s, qi::Promise<int> d, qi::AnyObject)
 {
   if (s.hasValue())
     d.setValue(s.value());
@@ -628,7 +619,7 @@ TEST(TestCall, TestObjectPassing)
   ob.advertiseMethod("bindObjectEvent", boost::function<void(qi::AnyObject, const std::string&)>(boost::bind(&bindObjectEvent, _1, _2, boost::ref(eventValue))));
   qi::AnyObject obj(ob.object());
   p.server()->registerService("s", obj);
-  qi::AnyObject proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s").value();
 
   qi::AnyObject unregisteredObj;
   {
@@ -677,7 +668,7 @@ TEST(TestCall, TestObjectPassingReverse)
   qi::AnyObject obj(ob.object());
 
   p.server()->registerService("s", obj);
-  qi::AnyObject proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s").value();
 
   qi::AnyObject unregisteredObj;
   {
@@ -727,7 +718,7 @@ TEST(TestCall, TestObjectPassingReturn)
   qi::AnyObject obj(ob.object());
 
   p.server()->registerService("s", obj);
-  qi::AnyObject proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s").value();
 
   qi::AnyObject adder = proxy.call<qi::AnyObject>("makeAdder");
   ASSERT_TRUE(weak.lock());
@@ -741,7 +732,7 @@ TEST(TestCall, TestObjectPassingReturn)
   ASSERT_TRUE(test::finishesWithValue(f));
   ASSERT_EQ(42, f.value());
   adder.reset();
-  qi::os::msleep(300);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 300 });
   ASSERT_FALSE(weak.lock());
 }
 
@@ -755,7 +746,7 @@ TEST(TestCall, TestConnectLambda)
   qi::AnyObject obj(ob.object());
 
   p.server()->registerService("s", obj);
-  qi::AnyObject proxy = p.client()->service("s");
+  qi::AnyObject proxy = p.client()->service("s").value();
 
   qi::AnyObject unregisteredObj;
   {
@@ -775,13 +766,11 @@ TEST(TestCall, TestConnectLambda)
   ASSERT_EQ(42, value.future().value());
 }
 
-auto ptr = boost::make_shared<int>(9999);
 TEST(TestCall, TestReturnSharedPtrRef)
 {
+  static const auto ptr = boost::make_shared<int>(9999);
   qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("over9000", static_cast<boost::shared_ptr<int>&(*)()>([]() -> boost::shared_ptr<int>& {
-          return ptr;
-        }));
+  ob.advertiseMethod("over9000", [&]() -> const boost::shared_ptr<int>& { return ptr; });
   qi::AnyObject obj(ob.object());
 
   auto p = obj.call<boost::shared_ptr<int>>("over9000");
@@ -819,10 +808,10 @@ public:
     qiLogDebug() << "Making a TestClass " << v << ' ' << tc;
     return boost::shared_ptr<TestClass>(tc);
   }
-  bool unregisterService(qi::Session* session, int sid, qi::Atomic<int>* checker)
+  bool unregisterService(qi::Session* session, unsigned int sid, qi::Atomic<int>* checker)
   {
     session->unregisterService(sid).wait(usualTimeout);
-    qi::os::msleep(100);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
     return !(checker->load());
   }
   int v;
@@ -840,7 +829,7 @@ TEST(TestCall, TestConcreteObjectPassingReturn)
   ob.advertiseMethod("getTest", &TestClass::make);
   qi::AnyObject obj(ob.object());
   p.server()->registerService("getter", obj);
-  qi::AnyObject proxy = p.client()->service("getter");
+  qi::AnyObject proxy = p.client()->service("getter").value();
   qi::AnyObject test = proxy.call<qi::AnyObject>("getTest", 1);
   ASSERT_EQ(3, test.call<int>("ping", 2));
 }
@@ -879,7 +868,7 @@ TEST(TestCall, Overflow)
   AnyObject obj = ob.object();
   p.server()->registerService("ping", obj);
 
-  AnyObject client = p.client()->service("ping");
+  AnyObject client = p.client()->service("ping").value();
   ASSERT_EQ(1, client.call<int>("pingChar", 1));
   try
   {
@@ -916,7 +905,7 @@ TEST(TestCall, ForceOverload)
   AnyObject obj = ob.object();
   p.server()->registerService("ping", obj);
 
-  AnyObject client = p.client()->service("ping");
+  AnyObject client = p.client()->service("ping").value();
   // no .value() on expectthrow: we expect a synchronous exception
   EXPECTTHROW(client.call<std::string>("pingInt", "foo"));
   ASSERT_EQ("foo", client.call<std::string>("ping", "foo"));
@@ -927,19 +916,19 @@ TEST(TestCall, ForceOverload)
   ASSERT_EQ("foo", client.call<std::string>("ping::(s)", "foo"));
 }
 
-void _delaySet(qi::Promise<int> p, unsigned long msDelay, int value)
+void _delaySet(qi::Promise<int> p, qi::MilliSeconds delay, int value)
 {
-  qi::os::msleep(msDelay);
+  boost::this_thread::sleep_for(delay);
   if (value == -1)
     p.setError("-1");
   else
     p.setValue(value);
 }
 
-qi::Future<int> delaySet(unsigned long msDelay, int value)
+qi::Future<int> delaySet(qi::MilliSeconds delay, int value)
 {
   qi::Promise<int> p;
-  boost::thread(_delaySet, p, msDelay, value);
+  boost::thread(_delaySet, p, delay, value);
   return p.future();
 }
 
@@ -951,7 +940,7 @@ TEST(TestCall, Future)
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject sobj = gob.object();
   p.server()->registerService("delayer", sobj);
-  qi::AnyObject obj = p.client()->service("delayer");
+  qi::AnyObject obj = p.client()->service("delayer").value();
 
   qi::Future<int> f = obj.async<int>("delaySet", 500, 41);
   // FIXME: this is highly racy
@@ -974,8 +963,8 @@ TEST(TestCall, CallOnFutureReturn)
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject sobj = gob.object();
   p.server()->registerService("delayer", sobj);
-  qi::AnyObject obj = p.client()->service("delayer");
-  int f = obj.call<int>("delaySet", 500, 41);
+  qi::AnyObject obj = p.client()->service("delayer").value();
+  int f = obj.call<int>("delaySet", qi::MilliSeconds{ 500 }, 41);
   ASSERT_EQ(41, f);
 }
 
@@ -989,7 +978,7 @@ TEST(TestCall, TestInvalidFuture)
                        []{ return qi::Future<void>(); }));
   ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   p.server()->registerService("test", ob.object());
-  qi::AnyObject proxy = p.client()->service("test");
+  qi::AnyObject proxy = p.client()->service("test").value();
 
   qi::Future<void> future = proxy.async<void>("getInvalid");
   ASSERT_EQ(qi::detail::InvalidFutureError, future.error());
@@ -1014,7 +1003,7 @@ TEST(TestCall, BadArguments)
   gob.advertiseMethod("arrrg", &arrrg);
   qi::AnyObject sobj = gob.object();
   p.server()->registerService("a", sobj);
-  qi::AnyObject obj = p.client()->service("a");
+  qi::AnyObject obj = p.client()->service("a").value();
   qi::Future<qi::AnyReference> f = obj.metaCall("arrrg::(i)", qi::GenericFunctionParameters());
   ASSERT_TRUE(test::finishesWithError(f));
 
@@ -1032,7 +1021,7 @@ TEST(TestCall, MetaCallFutureMatchesMethod)
 
   TestSessionPair sessions;
   sessions.server()->registerService("hip", obj);
-  qi::AnyObject remoteObj = sessions.client()->service("hip");
+  qi::AnyObject remoteObj = sessions.client()->service("hip").value();
 
   qi::Future<qi::AnyReference> future = remoteObj.metaCall("hop", qi::GenericFunctionParameters{});
   ASSERT_TRUE(test::isStillRunning(future, test::willDoNothing(), usualTimeout));
@@ -1050,7 +1039,7 @@ TEST(TestCall, MetaCallFutureMatchesMethodFuture)
 
   TestSessionPair sessions;
   sessions.server()->registerService("hip", obj);
-  qi::AnyObject remoteObj = sessions.client()->service("hip");
+  qi::AnyObject remoteObj = sessions.client()->service("hip").value();
 
   qi::Future<qi::AnyReference> future = remoteObj.metaCall("hop", qi::GenericFunctionParameters{});
   ASSERT_TRUE(test::isStillRunning(future, test::willDoNothing(), usualTimeout));
@@ -1063,10 +1052,12 @@ TEST(TestCall, DISABLED_Statistics)
 {
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
-  int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
+  const auto mid = gob.advertiseMethod("sleep", [](qi::MilliSeconds dura) {
+    boost::this_thread::sleep_for(dura);
+  });
   qi::AnyObject srv = gob.object();
   p.server()->registerService("sleep", srv);
-  qi::AnyObject obj = p.client()->service("sleep");
+  qi::AnyObject obj = p.client()->service("sleep").value();
   obj.call<void>("sleep", 10);
   EXPECT_TRUE(obj.stats().empty());
   obj.call<void>("enableStats", true);
@@ -1111,10 +1102,10 @@ TEST(TestCall, Dynamic)
   boost::shared_ptr<ArgPack> ap(new ArgPack);
   qi::AnyObject os = qi::AnyReference::from(ap).to<qi::AnyObject>();
   p.server()->registerService("packer", os);
-  qi::AnyObject o = p.client()->service("packer");
+  qi::AnyObject o = p.client()->service("packer").value();
   qi::detail::printMetaObject(std::cerr, o.metaObject());
   EXPECT_EQ(3, o.call<int>("callMe", 1, 2, 3));
-  qi::AnyValue args = o.property<qi::AnyValue>("onCall");
+  qi::AnyValue args = o.property<qi::AnyValue>("onCall").value();
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
@@ -1124,7 +1115,7 @@ class TestOverload
 public:
   const int& getI() const { return i;}
   int& getI() { return i;}
-  int foo(int i) {return 0;}
+  int foo(int) {return 0;}
   int foo(std::string) { return 1;}
   int i;
 };
@@ -1138,7 +1129,7 @@ TEST(TestAdvertise, Overload)
   builder.advertiseMethod("foo", (int(TestOverload::*)(std::string))&TestOverload::foo);
   qi::AnyObject o = builder.object(new TestOverload());
   p.server()->registerService("o", o);
-  qi::AnyObject c = p.client()->service("o");
+  qi::AnyObject c = p.client()->service("o").value();
   EXPECT_EQ(0, c.call<int>("foo", 1));
   EXPECT_EQ(0, c.call<int>("foo", 1.5));
   EXPECT_EQ(1, c.call<int>("foo", "bar"));
@@ -1165,29 +1156,29 @@ TEST(TestObjectT, Complete)
   // Server! This is expected to fail on client in sd mode, TestClass is no proxy
   qi::Object<TestClass> olocal = p.server()->service("s");
   ASSERT_TRUE(!!olocal);
-  EXPECT_EQ(12, olocal->ping(12));
-  EXPECT_EQ(12, (*olocal).ping(12));
+  EXPECT_EQ(12, olocal->ping(12).value());
+  EXPECT_EQ(12, (*olocal).ping(12).value());
   EXPECT_EQ(12, olocal.asGenericObject()->call<int>("ping", 12));
   EXPECT_EQ(12, olocal.call<int>("ping", 12));
   // Object<T> way, does not require proxy registration actually
 
   qi::Object<TestClassInterface> oproxy = p.client()->service("s");
   // Look! It's the same code as above!
-  EXPECT_EQ(12, oproxy->ping(12));
-  EXPECT_EQ(12, (*oproxy).ping(12));
+  EXPECT_EQ(12, oproxy->ping(12).value());
+  EXPECT_EQ(12, (*oproxy).ping(12).value());
   EXPECT_EQ(12, oproxy.asGenericObject()->call<int>("ping", 12));
   EXPECT_EQ(12, oproxy.call<int>("ping", 12));
 
   // No interface, Object<Empty>
-  qi::Object<> gproxy = p.client()->service("s");
+  qi::Object<> gproxy = p.client()->service("s").value();
   EXPECT_EQ(12, gproxy.call<int>("ping", 12));
 
   // old way for comparison. I don't see anything wrong with that :p
   boost::shared_ptr<TestClassInterface> oldproxy =
     qi::AnyValue(p.client()->service("s").value()).to<boost::shared_ptr<TestClassInterface> >();
   ASSERT_TRUE(!!oldproxy);
-  EXPECT_EQ(12, oldproxy->ping(12));
-  EXPECT_EQ(12, (*oldproxy).ping(12));
+  EXPECT_EQ(12, oldproxy->ping(12).value());
+  EXPECT_EQ(12, (*oldproxy).ping(12).value());
 }
 
 // hard enough to read without it
@@ -1212,17 +1203,17 @@ TEST(TestObjectT, Passing)
 
   Object<PassObject> pingerService(new PassObject);
   p.server()->registerService("pinger", pingerService);
-  AnyObject pinger = p.client()->service("pinger");
+  AnyObject pinger = p.client()->service("pinger").value();
   Object<TestClass> tc(new TestClass());
   Object<TestClassInterface> tcprox = tc;
   tcprox = pinger.call<Object<TestClassInterface> >("pingaa", tc);
-  EXPECT_EQ(42, tcprox->ping(42));
+  EXPECT_EQ(42, tcprox->ping(42).value());
   tcprox = pinger.call<Object<TestClassInterface> >("pingat", tc);
-  EXPECT_EQ(42, tcprox->ping(42));
+  EXPECT_EQ(42, tcprox->ping(42).value());
   tcprox = pinger.call<Object<TestClassInterface> >("pingta", tc);
-  EXPECT_EQ(42, tcprox->ping(42));
+  EXPECT_EQ(42, tcprox->ping(42).value());
   tcprox = pinger.call<Object<TestClassInterface> >("pingtt", tc);
-  EXPECT_EQ(42, tcprox->ping(42));
+  EXPECT_EQ(42, tcprox->ping(42).value());
 }
 
 TEST(TestObjectT, Doom)
@@ -1231,7 +1222,7 @@ TEST(TestObjectT, Doom)
 
   Object<PassObject> pingerService(new PassObject);
   p.server()->registerService("pinger", pingerService);
-  AnyObject pinger = p.client()->service("pinger");
+  AnyObject pinger = p.client()->service("pinger").value();
   Object<TestClass> tc(new TestClass());
   Object<TestClassInterface> tp = tc;
   // MUHAHAHAHAHA
@@ -1240,7 +1231,7 @@ TEST(TestObjectT, Doom)
     tp = pinger.call<Object<TestClassInterface> >("pingaa", tp);
     ASSERT_NO_THROW(tp.setProperty("prop", 42));
   }
-  ASSERT_EQ(42, tp->ping(42));
+  ASSERT_EQ(42, tp->ping(42).value());
 }
 
 TEST(TestObjectT, weak)
@@ -1271,7 +1262,7 @@ TEST(TestObject, callAndDropPointer)
   Session& s  = *p.server();
   qi::Atomic<int> checker;
   Object<TestClass> svc(new TestClass, boost::bind(&inc_atomic_and_delete, _1, &checker));
-  int sid = s.registerService("test", svc);
+  const auto sid = s.registerService("test", svc).value();
   qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
   // the object should be present while the call runs
@@ -1289,7 +1280,7 @@ TEST(TestObject, asyncCallAndDropPointer)
   Session& s  = *p.server();
   qi::Atomic<int> checker;
   Object<TestClass> svc(new TestClass, boost::bind(&inc_atomic_and_delete, _1, &checker));
-  int sid = s.registerService("test", svc);
+  const auto sid = s.registerService("test", svc).value();
   qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
   // the object should be present while the call runs
@@ -1298,7 +1289,7 @@ TEST(TestObject, asyncCallAndDropPointer)
   ASSERT_TRUE(f.value());
   // ... and should be gone eventually
   for (unsigned i=0; i<20 && !checker.load(); ++i)
-    qi::os::msleep(50);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   EXPECT_EQ(1, checker.load());
   EXPECT_EQ(currentDCount + 1, TestClass::destructionCount.load());
 }
@@ -1339,7 +1330,7 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
   TestSessionPair p;
   Session& s  = *p.server();
 
-  int sid = s.registerService("test", svc);
+  const auto sid = s.registerService("test", svc).value();
   qi::GenericObject* go = svc.asGenericObject();
   svc.reset();
   EXPECT_EQ(0, checker.load()); // are you there?
@@ -1349,7 +1340,7 @@ TEST(TestObject, asyncCallAndDropPointerGeneric)
   ASSERT_TRUE(f.value());
   // ... and should be gone by now, but maybe asynchronously
   for(unsigned i=0; i<10 && !checker.load(); ++i)
-    qi::os::msleep(100);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
   EXPECT_EQ(1, checker.load());
   EXPECT_EQ(currentDCount + 1, TestClass::destructionCount.load());
 }
@@ -1367,7 +1358,7 @@ TEST(TestObject, EarlyAbort)
   TestSessionPair p;
   AnyObject s = builder.object();
   p.server()->registerService("color", s);
-  AnyObject o = p.client()->service("color");
+  AnyObject o = p.client()->service("color").value();
   EXPECT_ANY_THROW(o.call<std::string>("inc"));
   EXPECT_EQ(0, a.load());
   a = 0;
@@ -1389,7 +1380,7 @@ struct ColorA
 };
 
 // only allow drop of a if it equals 1
-bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
+bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& /*fields*/,
                       const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                       const std::map<std::string, ::qi::AnyReference>& dropfields)
 {
@@ -1420,7 +1411,7 @@ bool colorFillHandler(std::map<std::string, ::qi::AnyValue>& fields,
 }
 
 QI_TYPE_STRUCT_REGISTER(Color, r, g, b);
-QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(ColorA, colorFillHandler, colorDropHandler);
+QI_TYPE_STRUCT_EXTENSION_CONVERT_HANDLERS(ColorA, colorFillHandler, colorDropHandler)
 QI_TYPE_STRUCT_REGISTER(ColorA, r, g, b, a);
 
 int getColor(Color& c) { return c.r+c.g+c.b;}
@@ -1439,7 +1430,7 @@ TEST(TestObject, StructVersioning)
   builder.advertiseMethod("setColorA", &setColorA);
   AnyObject s = builder.object();
   p.server()->registerService("color", s);
-  AnyObject o = p.client()->service("color");
+  AnyObject o = p.client()->service("color").value();
   Color c;
   ColorA ca;
   c = o.call<Color>("setColor", 0, 1, 2);
@@ -1471,9 +1462,9 @@ TEST(TestObject, StructVersioning)
   EXPECT_EQ_NT(5, o.call<int>("getColorA", ca));
 }
 
-qi::Atomic<int> onCounter;
-void onColor(Color& c) { ++onCounter;}
-void onColorA(ColorA& c) { ++onCounter;}
+static qi::Atomic<int> onCounter;
+void onColor(Color&) { ++onCounter;}
+void onColorA(ColorA&) { ++onCounter;}
 
 TEST(TestObject, StructVersioningEvent)
 {
@@ -1503,8 +1494,8 @@ TEST(TestObject, StructVersioningEvent)
   c2->connect(p.server()->url());
   AnyObject s = builder.object();
   p.server()->registerService("color", s);
-  AnyObject o = p.client()->service("color");
-  AnyObject o2 = c2->service("color");
+  AnyObject o = p.client()->service("color").value();
+  AnyObject o2 = c2->service("color").value();
   o.connect("onColor", &onColor);
   o.connect("onColorA", &onColor);
   o2.connect("onColor", &onColorA);
@@ -1519,7 +1510,8 @@ TEST(TestObject, StructVersioningEvent)
   o.post("onColorA", c);
   o2.post("onColor", ca);
   o2.post("onColorA", ca); /* FAILS, double-remote */
-  for (unsigned i=0; i<10 && onCounter.load() != 12; ++i) qi::os::msleep(1000);
+  for (unsigned i=0; i<10 && onCounter.load() != 12; ++i)
+    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
   EXPECT_EQ(12, onCounter.load());
 }
 
@@ -1550,7 +1542,7 @@ TEST(TestCall, TestAsyncFutureIsCancelable)
                        boost::bind(&getCancelableFuture, promise)));
   ob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
   p.server()->registerService("test", ob.object());
-  qi::AnyObject proxy = p.client()->service("test");
+  qi::AnyObject proxy = p.client()->service("test").value();
 
   qi::Future<void> future = proxy.async<void>("getCancelableFuture");
   future.cancel();
@@ -1593,7 +1585,7 @@ static void getAndSetObjProp(const TestSessionPair& p, const std::string& module
   else
     sess->connect(p.serviceDirectoryEndpoints()[0]);
 
-  qi::AnyObject obj = sess->service(module);
+  qi::AnyObject obj = sess->service(module).value();
   auto objProp = obj.property<std::vector<qi::AnyObject>>(prop).value();
 
   obj.call<void>("setProp");
@@ -1608,7 +1600,7 @@ TEST(TestCall, TestMultipleGetObjectProperty)
   qi::Object<DummyProp> dummyPropObj = qi::AnyReference::from(dummyProp).toObject();
 
   p.server()->registerService("Serv", dummyPropObj);
-  qi::AnyObject obj = p.server()->service("Serv");
+  qi::AnyObject obj = p.server()->service("Serv").value();
   obj.call<void>("setProp");
 
   for (int i = 0; i < 10; ++i)

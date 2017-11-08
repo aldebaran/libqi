@@ -13,6 +13,9 @@
 
 #include <gtest/gtest.h>
 
+#include <thread>
+#include <chrono>
+
 #ifdef _MSC_VER
 #  pragma warning( push )
 #  pragma warning( disable: 4355 )
@@ -26,7 +29,7 @@ namespace {
   {
     while (!promise.isCancelRequested())
     {
-      qi::os::msleep(2);
+      std::this_thread::sleep_for(std::chrono::milliseconds{ 2 });
     }
     promise.setCanceled();
   }
@@ -48,7 +51,7 @@ namespace {
     while (iterations)
     {
       --iterations;
-      qi::os::msleep(300);
+      std::this_thread::sleep_for(std::chrono::milliseconds{ 300 });
       if (promise.isCancelRequested())
       {
         promise.setCanceled();
@@ -124,7 +127,7 @@ TEST(TestScopedFutureGroup, cancelWhileProcessing)
 
     EXPECT_FALSE(group.empty());
     EXPECT_EQ(futures.size(), group.size());
-    qi::os::msleep(1000);
+    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
   }
 
   qi::waitForAll(futures);

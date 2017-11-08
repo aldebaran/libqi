@@ -98,7 +98,7 @@ TEST(EventLoop, async)
     EXPECT_TRUE(timeUntilCall >= SMALL_CALL_DELAY);
   }
 
-  qi::async<void>([]{}).value();
+  qi::async([]{}).value();
 }
 
 TEST(EventLoop, asyncFast)

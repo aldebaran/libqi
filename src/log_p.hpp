@@ -61,7 +61,7 @@ namespace qi
     }
     const std::string tidToString();
 
-    int rtrim(const char *msg);
+    std::size_t rtrim(const char *msg);
   }
 } // namespace qi::detail
 

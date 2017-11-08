@@ -275,7 +275,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject con
   }
 }
 
-const std::vector<std::pair<TypeInterface*, int> >& StaticObjectTypeBase::parentTypes()
+const std::vector<std::pair<TypeInterface*, std::ptrdiff_t> >& StaticObjectTypeBase::parentTypes()
 {
   return _data.parentTypes;
 }

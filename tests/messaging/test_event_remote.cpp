@@ -3,6 +3,8 @@
 */
 
 #include <map>
+#include <thread>
+#include <chrono>
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
@@ -36,15 +38,15 @@ protected:
     // In nightmare mode, there is a hidden service registered...
     unsigned int nbServices = TestMode::getTestMode() == TestMode::Mode_Nightmare ? 2 : 1;
 
-    ASSERT_GT(p.server()->registerService("coin", oserver), static_cast<unsigned int>(0));
+    ASSERT_GT(p.server()->registerService("coin", oserver).value(), static_cast<unsigned int>(0));
     EXPECT_EQ(nbServices, p.server()->services(qi::Session::ServiceLocality_Local).value().size());
 
-    std::vector<qi::ServiceInfo> services = p.client()->services();
+    std::vector<qi::ServiceInfo> services = p.client()->services().value();
     if (TestMode::getTestMode() == TestMode::Mode_Direct)
     {
       EXPECT_EQ(2U, services.size());
     }
-    oclient = p.client()->service("coin");
+    oclient = p.client()->service("coin").value();
     ASSERT_TRUE(oclient);
     payload = &prom;
   }
@@ -64,7 +66,7 @@ public:
 
 TEST_F(ObjectEventRemote, Simple)
 {
-  qi::SignalLink linkId = oclient.connect("fire", &onFire);
+  qi::SignalLink linkId = oclient.connect("fire", &onFire).value();
   EXPECT_LT((unsigned) 0, linkId);
   oserver.post("fire", 42);
   ASSERT_TRUE(payload->future().hasValue(2000));
@@ -74,7 +76,7 @@ TEST_F(ObjectEventRemote, Simple)
 
 TEST_F(ObjectEventRemote, RemoteEmit)
 {
-  qi::SignalLink linkId = oclient.connect("fire", &onFire);
+  qi::SignalLink linkId = oclient.connect("fire", &onFire).value();
   EXPECT_LT((unsigned) 0, linkId);
   oclient.post("fire", 43);
   ASSERT_TRUE(payload->future().hasValue(2000));
@@ -89,7 +91,7 @@ TEST_F(ObjectEventRemote, CoDeco)
   for (unsigned i=0; i<5; ++i)
   {
     *payload = qi::Promise<int>();
-    qi::SignalLink linkId = oclient.connect("fire", &onFire);
+    qi::SignalLink linkId = oclient.connect("fire", &onFire).value();
     qiLogDebug() << "connected with " << linkId;
     int exp;
     EXPECT_GE(linkId, (unsigned) 0);
@@ -139,7 +141,7 @@ TEST(TestSignal, TwoLongPost)
 
   clientOp.metaPost("sig1", params);
   for(unsigned int i=0; i<100 && (verifA == 0 || verifB == 0); ++i)
-    qi::os::msleep(10);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
   ASSERT_EQ(42, verifA);
   ASSERT_EQ(43, verifB);
 }

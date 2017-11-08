@@ -8,6 +8,9 @@
 
 #include <qi/clock.hpp>
 #include <qi/os.hpp>
+#include <boost/thread.hpp>
+#include <thread>
+#include <chrono>
 
 namespace chrono = boost::chrono;
 
@@ -48,8 +51,6 @@ TEST(QiClock, initialization)
 
 TEST(QiClock, clock_sleep_our)
 {
-  qi::sleepFor(qi::MilliSeconds(1));
-
   qi::sleepUntil(qi::SteadyClock::now() + qi::Seconds(1));
   qi::sleepUntil(qi::SteadyClock::now());
   qi::sleepUntil(qi::SteadyClock::now() - qi::Seconds(1));
@@ -159,7 +160,7 @@ TEST(QiClock, durationSince)
   const qi::MilliSeconds sleepDurationMs = boost::chrono::duration_cast<qi::MilliSeconds>(sleepDuration);
   const qi::MicroSeconds sleepDurationUs = boost::chrono::duration_cast<qi::MicroSeconds>(sleepDuration);
 
-  qi::sleepFor(sleepDuration);
+  boost::this_thread::sleep_for(sleepDuration);
   const qi::MilliSeconds durMs = qi::durationSince<qi::MilliSeconds>(tp);
   const qi::MicroSeconds durUs = qi::durationSince<qi::MicroSeconds>(tp);
   const qi::Duration tol = qi::MilliSeconds(1); // only needed on Windows

@@ -3,6 +3,8 @@
 */
 
 #include <map>
+#include <thread>
+#include <chrono>
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
@@ -293,13 +295,13 @@ TEST_F(ObjectEventRemoteConnect, disconnectDeadlock)
 {
   qi::Promise<void> doDisc, ready, discDone;
   boost::shared_ptr<qi::SignalLink> link = boost::make_shared<qi::SignalLink>();
-  *link = oclient1.connect("fire1", boost::function<void(int)>(boost::bind(slowDisconnect, ready, discDone, doDisc.future(), oclient1, link)));
+  *link = oclient1.connect("fire1", boost::function<void(int)>(boost::bind(slowDisconnect, ready, discDone, doDisc.future(), oclient1, link))).value();
   oserver1.post("fire1", 24);
   ready.future().wait();
   // a callback is running, trigger other disconnect
   qi::Future<void> discDone2 = qi::async(boost::bind(boost::function<void(qi::AnyObject, qi::SignalLink)>(&qi::AnyObject::disconnect), oclient1, *link));
   // wait and disconnect inside the callback
-  qi::os::msleep(10);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
   doDisc.setValue(0);
 
   // don't timeout
@@ -309,7 +311,7 @@ TEST_F(ObjectEventRemoteConnect, disconnectDeadlock)
 
 TEST_F(ObjectEventRemoteConnect, multipleConnect)
 {
-  int additional_timeout = 5;//time to wait after having received the correct number of callbacks
+  std::chrono::milliseconds additional_timeout{ 5 };//time to wait after having received the correct number of callbacks
   i = 0;
   qi::SignalLink link1 = oclient2.connect(se2, oserver1, callbackId).value(2000);
   qi::SignalLink link2 = oclient2.connect(se2, oserver1, callbackId).value(2000);
@@ -323,13 +325,13 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
   oclient2.post("fire2", 42);
   oclient2.post("fire2", 42);
 
-  int waiting_time = 0;
-  while(i._value != 8 && waiting_time < 10000)//waiting 10 seconds max
+  std::chrono::milliseconds waiting_time{ 0 };
+  while(i._value != 8 && waiting_time < std::chrono::seconds{ 10 }) //waiting 10 seconds max
   {
-    qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+    std::this_thread::sleep_for(additional_timeout); //additional timeout to wait for unwanted callback
     waiting_time += additional_timeout;
   }
-  qi::os::msleep(additional_timeout);
+  std::this_thread::sleep_for(additional_timeout);
   ASSERT_EQ(i._value, 8);
 
   //disconnect 3/4 callbacks
@@ -340,12 +342,12 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
   oclient2.post("fire2", 42);//post signal twice
   oclient2.post("fire2", 42);
 
-  while(i._value != 10 && waiting_time < 10000)//waiting 10 seconds max
+  while(i._value != 10 && waiting_time < std::chrono::seconds{ 10 })//waiting 10 seconds max
   {
-    qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+    std::this_thread::sleep_for(additional_timeout);
     waiting_time += additional_timeout;
   }
-  qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+  std::this_thread::sleep_for(additional_timeout);
   ASSERT_EQ(i._value, 10);
   //i = 0;
 
@@ -357,12 +359,12 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
   oclient2.post("fire2", 42);//post signal twice
   oclient2.post("fire2", 42);
 
-  while((i.load()) != 18 && waiting_time < 10000)//waiting 10 seconds max
+  while((i.load()) != 18 && waiting_time < std::chrono::seconds{ 10 })//waiting 10 seconds max
   {
-    qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+    std::this_thread::sleep_for(additional_timeout); //additional timeout to wait for unwanted callback
     waiting_time += additional_timeout;
   }
-  qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+  std::this_thread::sleep_for(additional_timeout); //additional timeout to wait for unwanted callback
   ASSERT_EQ(i.load(), 18);
 
   oclient2.disconnect(link1);
@@ -372,15 +374,16 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
 
   oclient2.post("fire2", 42);
 
-  qi::os::msleep(additional_timeout); //additional timeout to wait for unwanted callback
+  std::this_thread::sleep_for(additional_timeout); //additional timeout to wait for unwanted callback
   ASSERT_EQ(i.load(), 18);
 
 }
 
 TEST_F(ObjectEventRemoteConnect, serviceDirectoryEvent)
 {
+  const std::chrono::milliseconds additional_timeout{ 10 };//time to wait after having received the correct number of callbacks
   i = 0;
-  qi::AnyObject sd = p1.client()->service(qi::Session::serviceDirectoryServiceName());
+  qi::AnyObject sd = p1.client()->service(qi::Session::serviceDirectoryServiceName()).value();
 
   using SignalMap = std::map<unsigned int, qi::MetaSignal>;
   SignalMap s_map;
@@ -402,13 +405,13 @@ TEST_F(ObjectEventRemoteConnect, serviceDirectoryEvent)
 
   ASSERT_TRUE(p1.server()->registerService("test", oserver1).hasValue(1000));
 
-  int waiting_time = 0;
-  while(i.load() != 4 && waiting_time < 10000)
+  std::chrono::milliseconds waiting_time{ 0 };
+  while(i.load() != 4 && waiting_time < std::chrono::seconds{ 10 })
   {
-    qi::os::msleep(10);
-    waiting_time += 10;
+    std::this_thread::sleep_for(additional_timeout);
+    waiting_time += additional_timeout;
   }
-  qi::os::msleep(10);
+  std::this_thread::sleep_for(additional_timeout);
   ASSERT_EQ(i.load(), 4);
 }
 
@@ -423,7 +426,7 @@ TEST(ObjectEventRemoteDyn, PropertyConnectOnDynamicObject)
 
   qi::Promise<int> prom;
 
-  qi::AnyObject obj = p.client()->service("Serv");
+  qi::AnyObject obj = p.client()->service("Serv").value();
   obj.connect("prop", boost::function<void(int)>([&prom](int i){
           prom.setValue(i);
         }));

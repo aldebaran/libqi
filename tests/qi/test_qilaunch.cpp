@@ -255,12 +255,15 @@ TEST(system, InvalidBin)
 //============================================================================
 namespace
 {
-int randInt(int min, int max)
+
+std::default_random_engine randEngine()
 {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> dis(min, max);
-  return dis(gen);
+  static const auto randEngine = [] {
+    std::random_device rd;
+    std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
+    return std::default_random_engine{ seq };
+  }();
+  return randEngine;
 }
 
 char randomProcessChar()
@@ -271,7 +274,9 @@ char randomProcessChar()
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   "abcdefghijklmnopqrstuvwxyz";
   static int nofChars = strlen(characters) - 1;
-  return characters[randInt(1, nofChars)];
+  std::uniform_int_distribution<int> dis{ 1, nofChars };
+  auto engine = randEngine();
+  return characters[dis(engine)];
 }
 
 std::string randomProcessName()
@@ -287,7 +292,9 @@ std::string randomProcessName()
 
 int randomWrongPid()
 {
-  return randInt(100000, std::numeric_limits<int>::max());
+  std::uniform_int_distribution<int> dis{ 100000 };
+  auto engine = randEngine();
+  return dis(engine);
 }
 
 } // ends anonymous namespace

@@ -7,6 +7,9 @@
 
 #include <map>
 #include <unordered_map>
+#include <thread>
+#include <chrono>
+
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/assign/list_of.hpp>
@@ -184,12 +187,10 @@ public:
     return v1+v2;
   }
   // NO_SEGV will return a dummy value when 0 ptr instead of segv
-  #define CHECK(ptr) if ((!this || !ptr)&&getenv("NO_SEGV")) return -1
-  int addAdderByRef(Adder& b) { CHECK(&b); return v + b.v;}
-  int addAdderByConstRef(const Adder& b) {  CHECK(&b); return v + b.v;}
-  int addAdderByPtr(Adder* b) { CHECK(b); return v + b->v;}
-  int addAdderByConstPtr(const Adder* b) { CHECK(b); return v + b->v;}
-  #undef CHECK
+  int addAdderByRef(Adder& b) { return v + b.v; }
+  int addAdderByConstRef(const Adder& b) { return v + b.v; }
+  int addAdderByPtr(Adder* b) { return b ? v + b->v : -1;}
+  int addAdderByConstPtr(const Adder* b) { return b ? v + b->v : -1; }
   int v;
 };
 QI_TYPE_CONCRETE(Adder);
@@ -557,7 +558,7 @@ TEST(TestObject, SerializeComplex)
   comp.stuff.push_back(v);
 
   qi::DynamicObjectBuilder ob;
-  unsigned id = ob.advertiseMethod("echo", &echoBack);
+  auto id = ob.advertiseMethod("echo", &echoBack);
   qi::AnyObject obj(ob.object());
   std::cerr << obj.metaObject().methodMap()[id].toString() << std::endl;
   Complex res = obj.call<Complex>("echo", comp);
@@ -745,10 +746,10 @@ TEST(TestObject, CallBackRegistration)
  // obj->connect("testcb", boost::bind<void>(&ccb));
 }
 
-void _delaySet(qi::Promise<int> p, unsigned long msDelay, int value)
+void _delaySet(qi::Promise<int> p, qi::MilliSeconds delay, int value)
 {
   qiLogVerbose() << "Entering delaySet";
-  qi::os::msleep(msDelay);
+  boost::this_thread::sleep_for(delay);
   if (value == -1)
     p.setError("-1");
   else
@@ -756,17 +757,17 @@ void _delaySet(qi::Promise<int> p, unsigned long msDelay, int value)
   qiLogVerbose() << "Leaving delaySet";
 }
 
-qi::Future<int> delaySet(unsigned long msDelay, int value)
+qi::Future<int> delaySet(qi::MilliSeconds delay, int value)
 {
   qi::Promise<int> p;
-  boost::thread(_delaySet, p, msDelay, value);
+  boost::thread(_delaySet, p, delay, value);
   return p.future();
 }
 
-qi::FutureSync<int> delaySetSync(unsigned long msDelay, int value)
+qi::FutureSync<int> delaySetSync(qi::MilliSeconds delay, int value)
 {
   qi::Promise<int> p;
-  boost::thread(_delaySet, p, msDelay, value);
+  boost::thread(_delaySet, p, delay, value);
   return p.future();
 }
 
@@ -775,11 +776,11 @@ TEST(TestObject, Future)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySet", &delaySet);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj.async<int>("delaySet", 500, 41);
+  qi::Future<int> f = obj.async<int>("delaySet", qi::MilliSeconds{ 500 }, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f = obj.async<int>("delaySet", 500, -1);
+  f = obj.async<int>("delaySet", qi::MilliSeconds{ 500 }, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -794,11 +795,11 @@ void forward(qi::Future<int> f, qi::Promise<void> p) {
   p.setValue(0);
 }
 
-qi::Future<void> delaySetV(unsigned long msDelay, int value, qi::Promise<int>& prom)
+qi::Future<void> delaySetV(qi::MilliSeconds delay, int value, qi::Promise<int>& prom)
 {
   qi::Promise<void> p;
   prom.future().connect(boost::bind<void>(&forward, _1, p));
-  boost::thread(_delaySet, prom, msDelay, value);
+  boost::thread(_delaySet, prom, delay, value);
   return p.future();
 }
 
@@ -806,14 +807,15 @@ TEST(TestObject, FutureVoid)
 {
   qi::DynamicObjectBuilder gob;
   qi::Promise<int> prom;
-  gob.advertiseMethod("delaySet", boost::function<qi::Future<void>(unsigned long, int)>(boost::bind(&delaySetV, _1, _2, boost::ref(prom))));
+  gob.advertiseMethod("delaySet", boost::function<qi::Future<void>(qi::MilliSeconds, int)>(
+                                      boost::bind(&delaySetV, _1, _2, boost::ref(prom))));
   qi::AnyObject obj = gob.object();
-  qi::Future<void> f = obj.async<void>("delaySet", 500, 41);
+  qi::Future<void> f = obj.async<void>("delaySet", qi::MilliSeconds{ 500 }, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, prom.future().value());
   prom = qi::Promise<int>();
-  f = obj.async<void>("delaySet", 500, -1);
+  f = obj.async<void>("delaySet", qi::MilliSeconds{ 500 }, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -825,11 +827,11 @@ TEST(TestObject, FutureSync)
   qi::DynamicObjectBuilder gob;
   gob.advertiseMethod("delaySetSync", &delaySetSync);
   qi::AnyObject obj = gob.object();
-  qi::Future<int> f = obj.async<int>("delaySetSync", 500, 41);
+  qi::Future<int> f = obj.async<int>("delaySetSync", qi::MilliSeconds{ 500 }, 41);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_EQ(41, f.value());
-  f = obj.async<int>("delaySetSync", 500, -1);
+  f = obj.async<int>("delaySetSync", qi::MilliSeconds{ 500 }, -1);
   ASSERT_TRUE(!f.isFinished());
   f.wait();
   ASSERT_TRUE(f.hasError());
@@ -840,13 +842,15 @@ TEST(TestObject, FutureSync)
 TEST(TestObject, DISABLED_statisticsGeneric)
 {
   qi::DynamicObjectBuilder gob;
-  int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
+  const auto mid = gob.advertiseMethod("sleep", [](qi::MilliSeconds dura) {
+    boost::this_thread::sleep_for(dura);
+  });
   qi::AnyObject obj = gob.object();
-  obj.call<void>("sleep", 10);
+  obj.call<void>("sleep", qi::MilliSeconds{ 10 });
   EXPECT_TRUE(obj.stats().empty());
   obj.enableStats(true);
-  obj.call<void>("sleep", 10);
-  obj.call<void>("sleep", 100);
+  obj.call<void>("sleep", qi::MilliSeconds{ 10 });
+  obj.call<void>("sleep", qi::MilliSeconds{ 100 });
   qi::ObjectStatistics stats = obj.stats();
   EXPECT_EQ(1u, stats.size());
   qi::MethodStatistics m = stats[mid];
@@ -857,18 +861,18 @@ TEST(TestObject, DISABLED_statisticsGeneric)
   EXPECT_GT(0.01, m.system().maxValue());
   EXPECT_GT(0.01, m.user().maxValue());
   obj.clearStats();
-  obj.call<void>("sleep", 0);
+  obj.call<void>("sleep", qi::MilliSeconds{ 0 });
   stats = obj.stats();
   m = stats[mid];
   EXPECT_EQ(1u, m.count());
   obj.clearStats();
   obj.enableStats(false);
-  obj.call<void>("sleep", 0);
+  obj.call<void>("sleep", qi::MilliSeconds{ 0 });
   EXPECT_TRUE(obj.stats().empty());
 
   obj.clearStats();
   obj.enableStats(true);
-  obj.call<void>("sleep", 0);
+  obj.call<void>("sleep", qi::MilliSeconds{ 0 });
   stats = obj.call<qi::ObjectStatistics>("stats");
   m = stats[mid];
   EXPECT_EQ(1u, m.count());
@@ -878,7 +882,7 @@ TEST(TestObject, DISABLED_statisticsGeneric)
 TEST(TestObject, DISABLED_statisticsType)
 {
   qi::ObjectTypeBuilder<Adder> builder;
-  int mid = builder.advertiseMethod("add", &Adder::add);
+  const auto mid = builder.advertiseMethod("add", &Adder::add);
   Adder a1(1);
   qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
 
@@ -917,29 +921,31 @@ static bool comparator(qi::EventTrace e1, qi::EventTrace e2)
 TEST(TestObject, traceGeneric)
 {
   qi::DynamicObjectBuilder gob;
-  int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
-  int mid2 = gob.advertiseMethod("boom", &throw_exception);
+  const auto mid = gob.advertiseMethod("sleep", [](qi::MilliSeconds dura) {
+    boost::this_thread::sleep_for(dura);
+  });
+  const auto mid2 = gob.advertiseMethod("boom", &throw_exception);
   qi::AnyObject obj = gob.object();
   boost::mutex mutex;
   std::vector<qi::EventTrace> traces;
   qi::SignalLink id = obj.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
-    boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1));
-  obj.call<void>("sleep", 100);
+    boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1)).value();
+  obj.call<void>("sleep", qi::MilliSeconds{ 100 });
   for (unsigned i=0; i<20; ++i) {
     {
       boost::mutex::scoped_lock l(mutex);
       if (traces.size() >= 2)
         break;
     }
-    qi::os::msleep(50);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   }
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
-  EXPECT_EQ(mid, (int)traces[0].slotId());
+  EXPECT_EQ(mid, traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
   qi::int64_t delta =
     traces[1].timestamp().tv_sec*1000
@@ -948,7 +954,7 @@ TEST(TestObject, traceGeneric)
     - traces[0].timestamp().tv_usec/1000;
   EXPECT_LT(std::abs(delta - 100LL), 20LL); // be leniant
   ASSERT_TRUE(obj.call<bool>("isTraceEnabled"));
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   traces.clear();
   obj.async<void>("boom", "o<").wait();
   for (unsigned i=0; i<20; ++i) {
@@ -957,24 +963,24 @@ TEST(TestObject, traceGeneric)
       if (traces.size() >= 2)
         break;
     }
-    qi::os::msleep(50);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   }
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Error, traces[1].kind());
-  EXPECT_EQ(mid2, (int)traces[0].slotId());
+  EXPECT_EQ(mid2, traces[0].slotId());
   EXPECT_EQ(traces[0].id(), traces[1].id());
   obj.disconnect(id);
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   ASSERT_TRUE(!obj.call<bool>("isTraceEnabled"));
 }
 
 TEST(TestObject, traceType)
 {
   qi::ObjectTypeBuilder<Adder> builder;
-  int mid = builder.advertiseMethod("add", &Adder::add);
+  const auto mid = builder.advertiseMethod("add", &Adder::add);
   Adder a1(1);
   qi::AnyObject oa1 = builder.object(&a1, &qi::AnyObject::deleteGenericObjectOnly);
 
@@ -984,24 +990,24 @@ TEST(TestObject, traceType)
   std::vector<qi::EventTrace> traces;
   qi::SignalLink id = oa1.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
-    boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1));
+    boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1)).value();
 
   EXPECT_EQ(3, oa1.call<int>("add", 2));
   for (unsigned i=0; i<20; ++i) {
     boost::mutex::scoped_lock l(mutex);
     if (traces.size() >= 2)
       break;
-    qi::os::msleep(50);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   }
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   ASSERT_EQ(2u, traces.size());
   std::sort(traces.begin(), traces.end(), comparator); // events may not be in order
   EXPECT_EQ(qi::EventTrace::Event_Call, traces[0].kind());
   EXPECT_EQ(qi::EventTrace::Event_Result, traces[1].kind());
-  EXPECT_EQ(mid, (int)traces[0].slotId());
+  EXPECT_EQ(mid, traces[0].slotId());
   ASSERT_TRUE(oa1.call<bool>("isTraceEnabled"));
   oa1.disconnect(id);
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
   ASSERT_TRUE(!oa1.call<bool>("isTraceEnabled"));
 }
 
@@ -1108,7 +1114,7 @@ TEST(TestObject, AnyArguments)
   std::string sig = o.metaObject().findMethod("callMe")[0].parametersSignature().toString();
   EXPECT_EQ(sig, "m");
   o.call<void>("callMe", 1, 2, 3);
-  qi::AnyValue args = o.property<qi::AnyValue>("onCall");
+  qi::AnyValue args = o.property<qi::AnyValue>("onCall").value();
   std::vector<int> expect = boost::assign::list_of(1)(2)(3);
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
@@ -1161,7 +1167,7 @@ TEST(TestObject, DynAnyArguments)
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 
   o.call<void>("callMee3", 1, 2, 3);
-  args = ap.onCall.get();
+  args = ap.onCall.get().value();
   EXPECT_EQ(expect, args.to<std::vector<int> >());
 }
 
@@ -1245,9 +1251,9 @@ TEST(TestObject, CallingWithNullArgWorks)
 class Sleeper
 {
 public:
-  int msleep(int duration)
+  qi::MilliSeconds sleep(qi::MilliSeconds duration)
   {
-    qi::os::msleep(duration);
+    boost::this_thread::sleep_for(duration);
     return duration;
   }
   Sleeper()
@@ -1264,7 +1270,7 @@ public:
 
 qi::Atomic<int> Sleeper::dtorCount;
 
-QI_REGISTER_OBJECT(Sleeper, msleep);
+QI_REGISTER_OBJECT(Sleeper, sleep);
 
 class Apple
 {

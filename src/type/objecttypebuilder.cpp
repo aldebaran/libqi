@@ -133,9 +133,9 @@ namespace qi {
     return _p->type;
   }
 
-  void ObjectTypeBuilderBase::inherits(TypeInterface* type, int offset)
+  void ObjectTypeBuilderBase::inherits(TypeInterface* type, std::ptrdiff_t offset)
   {
-    std::vector<std::pair<TypeInterface*, int> >& p = _p->data.parentTypes;
+    auto& p = _p->data.parentTypes;
     if (type->info() != _p->data.classType->info() && std::find(p.begin(), p.end(),
       std::make_pair(type, offset)) == p.end())
     {

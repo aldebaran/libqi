@@ -30,7 +30,8 @@ public:
   void func1(qi::Atomic<int>* r, int)
   {
     // hackish sleep so that asynchronous trigger detection is safer
-    qi::os::msleep(1); ++*r;
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 1 });
+    ++*r;
   }
   void func2(qi::Atomic<int>* r, int, int) { ++*r; }
 };
@@ -101,7 +102,7 @@ TEST(TestSignal, TestCompilation)
   s(42);
 
   while (res.load() != 6)
-    qi::os::msleep(10);
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
 
   ASSERT_EQ(6, res.load());
   ASSERT_TRUE(prom.future().isFinished());
@@ -330,7 +331,7 @@ TEST(TestSignal, SignalSignal2)
   st.sig.connect(st.sig2);
   qiLogDebug() << "sigptrs are " << &st.sig << " " << &st.sig2;
   st.sig(4242);
-  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)));
+  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)).value());
   assert(spy.recordCount() == 1u);
   EXPECT_EQ(4242, spy.lastRecord().arg<int>(0));
 }
@@ -340,7 +341,7 @@ TEST(TestSignal, SignalN)
   qi::Signal<int> sig;
   qi::SignalSpy spy(sig);
   sig(5);
-  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)));
+  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)).value());
   ASSERT_EQ(5, spy.lastRecord().arg<int>(0));
 }
 
@@ -365,14 +366,17 @@ TEST(TestSignal, SignalNBind)
   qi::detail::printMetaObject(std::cerr, op.metaObject());
   op.connect("s1", (boost::function<void(int)>)boost::bind<void>(&lol, _1, boost::ref(res)));
   op.post("s1", 2);
-  for (unsigned i=0; i<30 && res!=2; ++i) qi::os::msleep(10);
+  for (unsigned i=0; i<30 && res!=2; ++i)
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
   ASSERT_EQ(2, res);
   so->s1(3);
-  for (unsigned i=0; i<30 && res!=3; ++i) qi::os::msleep(10);
+  for (unsigned i=0; i<30 && res!=3; ++i)
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
   ASSERT_EQ(3, res);
   so->s0.connect( boost::bind<void>(&lol, 42, boost::ref(res)));
   op.post("s0");
-  for (unsigned i=0; i<30 && res!=42; ++i) qi::os::msleep(10);
+  for (unsigned i=0; i<30 && res!=42; ++i)
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
   ASSERT_EQ(42, res);
 }
 
@@ -386,7 +390,7 @@ TEST(TestSignal, SignalThrow)
   qi::Signal<> sig;
   sig.connect(boost::bind<void>(&foothrow));
   ASSERT_NO_THROW(sig());
-  qi::os::msleep(50);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 50 });
 }
 
 
@@ -507,7 +511,7 @@ TEST(TestSignalSpy, Disconnection)
   auto i = 5;
   while (sig.hasSubscribers() && i-- > 0)
   {
-    qi::sleepFor(qi::MilliSeconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   // ensure it did happen
   EXPECT_FALSE(sig.hasSubscribers());
@@ -519,7 +523,7 @@ TEST(TestSignalSpy, Counter)
   qi::SignalSpy sp(sig);
   QI_EMIT sig(1);
   QI_EMIT sig(1);
-  ASSERT_TRUE(sp.waitUntil(2, usualTimeout));
+  ASSERT_TRUE(sp.waitUntil(2, usualTimeout).value());
   ASSERT_EQ(sp.recordCount(), 2u);
 
   qi::DynamicObjectBuilder ob;
@@ -528,7 +532,7 @@ TEST(TestSignalSpy, Counter)
   qi::SignalSpy sp2(obj, "signal");
   QI_EMIT sig(1);
   QI_EMIT sig(1);
-  ASSERT_TRUE(sp2.waitUntil(2, usualTimeout));
+  ASSERT_TRUE(sp2.waitUntil(2, usualTimeout).value());
   ASSERT_EQ(sp2.recordCount(), 2u);
 }
 
@@ -538,7 +542,7 @@ TEST(TestSignalSpy, Async)
   qi::SignalSpy sp(sig);
   qi::async(boost::bind(boost::ref(sig), 1));
   qi::async(boost::bind(boost::ref(sig), 1));
-  ASSERT_TRUE(sp.waitUntil(2, usualTimeout));
+  ASSERT_TRUE(sp.waitUntil(2, usualTimeout).value());
   ASSERT_EQ(sp.recordCount(), 2u);
 }
 

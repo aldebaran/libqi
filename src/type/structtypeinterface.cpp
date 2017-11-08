@@ -4,6 +4,7 @@
 */
 #include <qi/type/typeinterface.hpp>
 #include <qi/anyvalue.hpp>
+#include <qi/numeric.hpp>
 
 namespace qi
 {
@@ -30,8 +31,8 @@ namespace qi
   std::vector<void*> StructTypeInterface::get(void* storage)
   {
     std::vector<void*> result;
-    unsigned count = memberTypes().size();
-    for (unsigned i=0; i<count; ++i)
+    const auto count = qi::numericConvert<unsigned int>(memberTypes().size());
+    for (auto i = 0u; i < count; ++i)
       result.push_back(get(storage, i));
     return result;
   }

@@ -13,6 +13,7 @@
 #include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/messaging/servicedirectoryproxy.hpp>
 #include <qi/url.hpp>
+#include <qi/macro.hpp>
 
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm/transform.hpp>
@@ -292,12 +293,15 @@ private:
 
 const Seconds ServiceDirectoryProxy::Impl::initTryDelay { 1 };
 
+QI_WARNING_PUSH()
+QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore connected deprecation warnings
 ServiceDirectoryProxy::ServiceDirectoryProxy(bool enforceAuth)
   : _p(new Impl(enforceAuth))
   , connected(_p->connected)
   , status(_p->status)
 {
 }
+QI_WARNING_POP()
 
 ServiceDirectoryProxy::~ServiceDirectoryProxy() = default;
 
@@ -769,7 +773,7 @@ void ServiceDirectoryProxy::Impl::unmirrorServiceToSDUnsync(const std::string& s
     const auto remoteId = serviceIndexIt->second.remoteId;
     qiLogVerbose() << "Unmirroring service '" << serviceName << "' to service directory, (#"
                    << localId << ").";
-    _sdClient->unregisterService(serviceIndexIt->second.remoteId).value();
+    _sdClient->unregisterService(remoteId).value();
     qiLogVerbose() << "Unmirrored service '" << serviceName << "' to service directory, (#"
                    << localId << ").";
   }

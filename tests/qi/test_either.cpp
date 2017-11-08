@@ -30,10 +30,10 @@ TEST(Either, Visit)
   using E = Either<std::string, int>;
   {
     E e{"abc"};
-    ASSERT_EQ(3, visit(Norm{}, e));
+    ASSERT_EQ(3u, visit(Norm{}, e));
   }
   {
     E e{12};
-    ASSERT_EQ(12, visit(Norm{}, e));
+    ASSERT_EQ(12u, visit(Norm{}, e));
   }
 }

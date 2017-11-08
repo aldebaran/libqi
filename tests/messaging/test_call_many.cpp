@@ -50,8 +50,8 @@ TEST(Test, Recurse)
             p2.client()->waitForService("coin1").wait(serviceWaitDefaultTimeout));
   ASSERT_EQ(qi::FutureState_FinishedWithValue,
             p1.client()->waitForService("coin2").wait(serviceWaitDefaultTimeout));
-  oclient1 = p2.client()->service("coin1");
-  oclient2 = p1.client()->service("coin2");
+  oclient1 = p2.client()->service("coin1").value();
+  oclient2 = p1.client()->service("coin2").value();
   int niter = 1000;
   if (TestMode::getTestMode() == TestMode::Mode_SSL)
   {

@@ -226,7 +226,10 @@ namespace qi {
         metaObjFut = sr->remoteObject->fetchMetaObject();
 
         qiLogVerbose() << "Fetching metaobject (1) for requestId = " << requestId;
-        metaObjFut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+        metaObjFut.connect(track(
+          boost::bind(
+            &Session_Service::onRemoteObjectComplete, this, _1, requestId),
+          this));
         mustSetPromise = false;
       }
       return;
@@ -257,7 +260,10 @@ namespace qi {
       //ask the remoteObject to fetch the metaObject
       metaObjFut = sr->remoteObject->fetchMetaObject();
       qiLogVerbose() << "Fetching metaobject (2) for requestId = " << requestId;
-      metaObjFut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+      metaObjFut.connect(track(
+        boost::bind(
+          &Session_Service::onRemoteObjectComplete, this, _1, requestId),
+        this));
       mustSetPromise = false;
       return;
     }
@@ -548,7 +554,7 @@ namespace qi {
       qiLogVerbose() << "Requesting socket from cache. service = '" << service << "', "
         "requestId = " << requestId;
       Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value(), protocol);
-      f.connect(&Session_Service::onTransportSocketResult, this, _1, requestId);
+      f.connect(track(boost::bind(&Session_Service::onTransportSocketResult, this, _1, requestId), this));
       mustSetPromise = false;
     }, this));
     return result;

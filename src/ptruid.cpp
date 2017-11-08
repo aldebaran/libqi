@@ -9,6 +9,7 @@
 #include <iostream>
 #include <boost/algorithm/hex.hpp>
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <qi/ptruid.hpp>
 #include <ka/sha1.hpp>
 #include <qi/uuid.hpp>
@@ -40,6 +41,7 @@ namespace qi
         boost::copy(machineUuid, begin(buffer))
       )
     );
+    boost::ignore_unused(it);
 
     // The array size computation use the assumption that
     // for any Uuid u, u.end() - u.begin() == sizeof(UUid).

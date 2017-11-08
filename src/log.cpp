@@ -102,7 +102,7 @@ namespace qi {
         logline << fct << "() ";
       if (context & qi::LogContextAttr_Return)
         logline << std::endl;
-      logline.write(msg, qi::detail::rtrim(msg));
+      logline.write(msg, static_cast<std::streamsize>(qi::detail::rtrim(msg)));
       logline << std::endl;
 
       return logline.str();
@@ -181,7 +181,8 @@ namespace qi {
       csvline << "\"";
       std::string escapedMsg(msg);
       boost::algorithm::replace_all(escapedMsg, "\"", "\"\"");
-      csvline.write(escapedMsg.c_str(), qi::detail::rtrim(escapedMsg.c_str()));
+      csvline.write(escapedMsg.c_str(),
+                    static_cast<std::streamsize>(qi::detail::rtrim(escapedMsg.c_str())));
       csvline << "\"" << std::endl;
 
       return csvline.str();
@@ -208,16 +209,23 @@ namespace qi {
     /* Emulate previous behavior that ensured a single newline was
     * present at the end on message.
     */
-    int rtrim(const char *msg)
+    std::size_t rtrim(const char *msg)
     {
-      size_t p = strlen(msg) - 1;
+      const auto size = strlen(msg);
+      if (size == 0)
+        return 0u;
+      auto lastCharIndex = size - 1;
 
-      p -= (msg[p] == '\r')? 1:
-             (msg[p] == '\n')?
-               (p && msg[p-1] == '\r')? 2:1
-               :0;
-
-      return p+1;
+      if (msg[lastCharIndex] == '\r')
+        return size - 1u;
+      if (msg[lastCharIndex] == '\n')
+      {
+        if (lastCharIndex > 0 && msg[lastCharIndex - 1] == '\r')
+          return size - 2u;
+        else
+          return size - 1u;
+      }
+      return size;
     }
   }
 

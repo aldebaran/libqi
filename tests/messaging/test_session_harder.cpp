@@ -29,7 +29,7 @@ struct MyStruct {
 };
 
 qi::Seconds callTimeout{5};
-std::chrono::seconds unitTimeout{15};
+qi::Seconds unitTimeout{15};
 
 QI_TYPE_STRUCT(MyStruct, i, j, titi);
 
@@ -93,7 +93,7 @@ void alternateModule(qi::SessionPtr session) {
       continue;
     }
     std::cout << "Service TestToto registered" << std::endl;
-    qi::os::msleep(50);
+    std::this_thread::sleep_for(std::chrono::milliseconds{50});
     qi::Future<void> futun = session->unregisterService(fut.value());
     if (futun.hasError()) {
       std::cout << "Error unregistering service: " << futun.error() << std::endl;
@@ -105,15 +105,15 @@ void alternateModule(qi::SessionPtr session) {
 
 template <typename FunctionType>
 void repeatedlyCallServiceMaybeDying(
-    TestSessionPair& p, int nofAttempts, std::chrono::milliseconds timeout, FunctionType f)
+    TestSessionPair& p, int nofAttempts, qi::MilliSeconds timeout, FunctionType f)
 {
-  const auto endTime = std::chrono::steady_clock::now() + timeout;
+  const auto endTime = qi::SteadyClock::now() + timeout;
   auto server = p.server();
   ScopedThread worker{ [server] { alternateModule(server); } };
   ASSERT_EQ(qi::FutureState_FinishedWithValue,
             p.client()->waitForService("TestToto").wait(serviceWaitDefaultTimeout));
 
-  while (nofAttempts && (endTime > std::chrono::steady_clock::now()))
+  while (nofAttempts && (endTime > qi::SteadyClock::now()))
   {
     --nofAttempts;
     try
@@ -271,7 +271,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   f = traveler->connect(constellation1.serviceDirectoryEndpoints()[0].str());
   f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
-  qi::AnyObject proxy = constellation1.server()->service("test1");
+  qi::AnyObject proxy = constellation1.server()->service("test1").value();
   std::string res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler->close();
@@ -279,7 +279,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   f = traveler->connect(constellation2.serviceDirectoryEndpoints()[0].str());
   f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
-  proxy = constellation2.server()->service("test2");
+  proxy = constellation2.server()->service("test2").value();
   ASSERT_TRUE(!!proxy);
   res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
@@ -290,7 +290,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   if (f.hasError())
     qiLogError() << f.error();
   ASSERT_TRUE(!f.hasError());
-  proxy = constellation3.server()->service("test3");
+  proxy = constellation3.server()->service("test3").value();
   res = proxy.call<std::string>("reply", "plaf");
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler->close();

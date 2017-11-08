@@ -11,7 +11,7 @@ class SetValue: private boost::noncopyable
 public:
   SetValue(std::atomic<int>& tgt);
   int exchange(int v);
-  int delayExchange(int msDelay, int value);
+  int delayExchange(qi::MilliSeconds delay, int value);
   std::atomic<int>& target;
   std::atomic<int> state;
 };
@@ -21,8 +21,8 @@ class SetValue2: public SetValue, public qi::Trackable<SetValue2>
 public:
   SetValue2(std::atomic<int>& target);
   ~SetValue2();
-  void delayExchangeP(int msDelay, int value, qi::Promise<int> result);
-  qi::Future<int> asyncDelayExchange(int msDelay, int value);
+  void delayExchangeP(qi::MilliSeconds delay, int value, qi::Promise<int> result);
+  qi::Future<int> asyncDelayExchange(qi::MilliSeconds delay, int value);
 };
 
 int block(int i, qi::Future<void> f);

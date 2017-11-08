@@ -49,7 +49,7 @@ TEST_F(Module, Load)
 {
   session->loadService("naoqi.testanymodule.test");
 
-  qi::AnyObject o = session->service("test");
+  qi::AnyObject o = session->service("test").value();
   ASSERT_TRUE(o);
   int res = o.call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
@@ -60,7 +60,7 @@ TEST_F(Module, LoadTypeErased)
   qi::AnyObject osession = session;
   osession.call<void>("loadServiceRename", "naoqi.testanymodule.test", "test");
 
-  qi::AnyObject o = session->service("test");
+  qi::AnyObject o = session->service("test").value();
   ASSERT_TRUE(o);
   int res = o.call<int>("testMethod", 12);
   ASSERT_EQ(13, res);
@@ -94,7 +94,7 @@ TEST_F(Module, LoadWithSessionAndRename)
   //## register the Foo object as a service
   session->loadService("naoqi.testanymodulesession.Foo", "Bar");
 
-  qi::AnyObject o = session->service("Bar");
+  qi::AnyObject o = session->service("Bar").value();
   ASSERT_TRUE(o);
   int res = o.call<int>("bar");
 

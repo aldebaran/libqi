@@ -11,6 +11,7 @@
 #include <string>
 #include <qi/api.hpp>
 #include <qi/signature.hpp>
+#include <qi/type/fwd.hpp>
 
 /* A lot of class are found in this headers... to kill circular dependencies.
    Futhermore we need that all "default template" types are registered (included)
@@ -116,8 +117,10 @@ namespace qi {
   class QI_API TypeInterface
   {
   public:
+    virtual ~TypeInterface() = default;
+
     /// Get the TypeInfo corresponding to this type.
-    virtual const TypeInfo& info() =0;
+    virtual const TypeInfo& info() = 0;
 
     /**
      * Initialize and return a new storage, from nothing or a T*.
@@ -125,7 +128,7 @@ namespace qi {
      * If ptr is not null, it should be used as a storage (the method can
      * usually just return ptr in that case).
      */
-    virtual void* initializeStorage(void* ptr=0)=0;
+    virtual void* initializeStorage(void* ptr = nullptr) = 0;
 
     /**
      * Get pointer to type from pointer to storage.
@@ -137,12 +140,12 @@ namespace qi {
      * type.
      */
     // Use a pointer and not a reference to avoid the case where the compiler makes a copy on the stack
-    virtual void* ptrFromStorage(void**)=0;
+    virtual void* ptrFromStorage(void**) = 0;
 
     /// Allocate a storage and copy the value given as an argument.
-    virtual void* clone(void*)=0;
+    virtual void* clone(void*) = 0;
     /// Free all resources of a storage
-    virtual void destroy(void*)=0;
+    virtual void destroy(void*) = 0;
 
     /**
      * Get the kind of the data.
@@ -171,7 +174,7 @@ namespace qi {
      * will return [i]
      * @warning if resolveDynamic is true, a valid storage must be given
     */
-    qi::Signature signature(void* storage=0, bool resolveDynamic = false);
+    qi::Signature signature(void* storage = nullptr, bool resolveDynamic = false);
 
     ///@return a Type on which signature() returns sig.
     static TypeInterface* fromSignature(const qi::Signature& sig);
@@ -188,7 +191,7 @@ namespace qi {
   template<typename T> TypeInterface* typeOf();
 
   /// Get type from a value. No need to delete the result
-  template<typename T> TypeInterface* typeOf(const T& v)
+  template<typename T> TypeInterface* typeOf(const T&)
   {
     return typeOf<T>();
   }

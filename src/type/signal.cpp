@@ -13,6 +13,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/assert.hpp>
+#include <qi/numeric.hpp>
 #include <ka/algorithm.hpp>
 
 #include "signal_p.hpp"
@@ -88,6 +89,8 @@ namespace qi {
   SignalSubscriberPrivate::SignalSubscriberPrivate() = default;
   SignalSubscriberPrivate::~SignalSubscriberPrivate() = default;
 
+QI_WARNING_PUSH()
+QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore linkId deprecation warnings
   SignalSubscriber::SignalSubscriber()
     : _p(std::make_shared<SignalSubscriberPrivate>())
     , linkId(_p->linkId)
@@ -96,6 +99,7 @@ namespace qi {
 
   SignalSubscriber::SignalSubscriber(const SignalSubscriber& other) = default;
   SignalSubscriber& SignalSubscriber::operator=(const SignalSubscriber& other) = default;
+QI_WARNING_POP()
 
   SignalSubscriber::SignalSubscriber(const AnyObject& target, unsigned int method)
     : SignalSubscriber()
@@ -368,11 +372,12 @@ namespace qi {
     qiLogDebug() << this << " connecting new subscriber";
     QI_ASSERT(_p);
     // Check arity. Does not require to acquire weakLock.
-    int signalArity = signature().children().size();
-    int subscriberArity = -1;
+    // Convert the number of children to int because we expect it will never be bigger than INT_MAX.
+    const auto signalArity = qi::numericConvert<int>(signature().children().size());
+    auto subscriberArity = -1;
     Signature subscriberSignature = src.signature();
     if (subscriberSignature.isValid())
-      subscriberArity = subscriberSignature.children().size();
+      subscriberArity = static_cast<int>(subscriberSignature.children().size());
 
     if (signature() != "m" && subscriberSignature.isValid())
     {
@@ -383,7 +388,7 @@ namespace qi {
           << signalArity << " , got " << subscriberArity << ")";
         throw std::runtime_error(s.str());
       }
-      if (!signature().isConvertibleTo(subscriberSignature))
+      if (signature().isConvertibleTo(subscriberSignature) == 0.f)
       {
         std::stringstream s;
         s << "Subscriber is not compatible to signal : "
