@@ -15,11 +15,11 @@ namespace detail
     Future<void> timingOut;
     Promise<bool> waitingPromise;
 
-    void untrack()
+    Future<void> untrack()
     {
       QI_ASSERT(!waitingPromise.future().isRunning()); // just a security
-      trackedSignal.disconnect(signalLink);
       timingOut.cancel();
+      return trackedSignal.disconnectAsync(signalLink).andThen([](bool){});
     }
   };
 } // detail
