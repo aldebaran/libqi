@@ -510,6 +510,7 @@ namespace qi {
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)           \
     template <typename AF, typename ARG0 comma ATYPEDECL>           \
+    QI_API_DEPRECATED_MSG(Use overload taking only a function and not argument instead)\
     void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
                  FutureCallbackType type = FutureCallbackType_Auto);
     QI_GEN(genCall)
@@ -719,6 +720,7 @@ namespace qi {
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)     \
     template<typename AF, typename ARG0 comma ATYPEDECL>      \
+  QI_API_DEPRECATED_MSG(Use overload taking only a function and not argument instead)\
     void connect(const AF& fun, const ARG0& arg0 comma ADECL);
     QI_GEN(genCall)
 #undef genCall
