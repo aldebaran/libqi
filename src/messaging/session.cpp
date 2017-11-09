@@ -387,11 +387,12 @@ namespace qi {
           promise,
           link);
 
-    qi::Future<qi::AnyObject> s = service(servicename);
-    if (!s.hasError())
-      // service is already available, trigger manually (it's ok if it's
-      // triggered multiple time)
-      _p->onTrackedServiceAdded(servicename, servicename, promise, link);
+    service(servicename).async().then(track([=](Future<AnyObject> fut) {
+      if (!fut.hasError())
+      {
+        _p->onTrackedServiceAdded(servicename, servicename, promise, link);
+      }
+    }, this));
 
     return promise.future();
   }
