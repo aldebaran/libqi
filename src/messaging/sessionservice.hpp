@@ -79,12 +79,31 @@ namespace qi {
     boost::recursive_mutex          _remoteObjectsMutex;
 
   private:
+    // RAII type to ensure a promise is set in error by default.
+    //
+    // If the optional promise is not set, or the caller deactivated the set,
+    // or the promise is already set, the call will do nothing.
+    //
+    // The service request is also removed from the pending requests.
+    struct SetPromiseInError
+    {
+      Session_Service& session;
+      boost::optional<Promise<AnyObject>>& promise;
+      bool& mustSetPromise;
+      long requestId;
+
+      void operator()();
+    };
+
     TransportSocketCache   *_socketCache;
     ServiceDirectoryClient *_sdClient;  //not owned by us
     ObjectRegistrar        *_server;    //not owned by us
     ClientAuthenticatorFactoryPtr      _authFactory;
     bool _enforceAuth;
     friend inline void sessionServiceWaitBarrier(Session_Service* ptr);
+
+    void setErrorAndRemoveRequest(
+      Promise<AnyObject> p, const std::string& message, long requestId);
   };
 
 }
