@@ -9,7 +9,10 @@
 # pragma warning(disable: 4355)
 #endif
 
+#include <atomic>
+#include <sstream>
 #include <qi/session.hpp>
+#include <qi/scoped.hpp>
 #include "message.hpp"
 #include "messagesocket.hpp"
 #include <qi/anyobject.hpp>
@@ -369,7 +372,55 @@ namespace qi {
     promise.setCanceled();
   }
 
-  qi::FutureSync<void> Session::waitForService(const std::string& servicename)
+  FutureSync<void> Session::waitForService(const std::string& servicename)
+  {
+    return waitForService(servicename, defaultWaitForServiceTimeout());
+  }
+
+  FutureSync<void> Session::waitForService(const std::string& servicename, MilliSeconds timeout)
+  {
+    auto futService = waitForServiceImpl(servicename).async();
+
+    auto timeoutFlag = boost::make_shared<std::atomic_flag>();
+    (*timeoutFlag).clear();
+
+    // Too bad there's currently nothing to launch a task with a timeout...
+    auto timeoutTask = [=]() mutable {
+      const bool serviceTaskStillRunning = !(*timeoutFlag).test_and_set();
+      if (serviceTaskStillRunning)
+      {
+        futService.cancel();
+      }
+    };
+
+    auto futTimeout = asyncDelay(timeoutTask, timeout);
+
+    Promise<void> promise{[=](Promise<void>& p) mutable {
+      futService.cancel();
+      futTimeout.cancel();
+      p.setCanceled();
+    }};
+
+    futService.then([=](Future<void> f) mutable {
+      const bool timedout = (*timeoutFlag).test_and_set();
+      if (timedout)
+      {
+        // Flag is already set : the timeout already occurred.
+        std::ostringstream ss{"waitForService(\""};
+        ss << servicename << "\", " << timeout.count() << " ms): timeout expired.";
+        promise.setError(ss.str());
+      }
+      else
+      {
+        // Set the promise with the future result.
+        adaptFuture(futService, promise);
+      }
+    });
+
+    return promise.future();
+  }
+
+  qi::FutureSync<void> Session::waitForServiceImpl(const std::string& servicename)
   {
     boost::shared_ptr<qi::Atomic<int> > link =
       boost::make_shared<qi::Atomic<int> >(0);
@@ -396,9 +447,7 @@ namespace qi {
 
     return promise.future();
   }
-
 }
-
 
 #ifdef _MSC_VER
 # pragma warning( pop )
