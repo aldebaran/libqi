@@ -220,7 +220,9 @@ namespace qi {
      * .. versionadded:: 1.12
      * \endverbatim
      */
+    QI_API_DEPRECATED_MSG(please use std::this_thread::sleep_for instead)
     QI_API void sleep(unsigned int seconds);
+
     /**
      * \brief Sleep for the specified number of milliseconds.
      * \param milliseconds Number of milliseconds to sleep.
@@ -235,7 +237,9 @@ namespace qi {
      * .. versionadded:: 1.12
      * \endverbatim
      */
+    QI_API_DEPRECATED_MSG(please use std::this_thread::sleep_for instead)
     QI_API void msleep(unsigned int milliseconds);
+
     /**
      * \brief struct similar to POSIX timeval
      */
