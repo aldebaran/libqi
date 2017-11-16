@@ -14,7 +14,7 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/locale/encoding_utf.hpp>
 
-// #include <locale>  TODO: Use these includes when they become available on all platforms, 
+// #include <locale>  TODO: Use these includes when they become available on all platforms,
 // #include <codecvt> instead of replaced by boost.locale
 #include <type_traits>
 
@@ -160,6 +160,16 @@
 #define _QI_LOG_ISEMPTY(...) _QI_LOG_NARG_(dummy, ##__VA_ARGS__, _QI_LOG_REVERSEEMPTY)
 
 #endif
+
+namespace qi { namespace log{ namespace detail {
+// This type has no definition on purpose.
+class Secret;
+}}}
+
+// Ensures that there is at least one operator<< in the global namespace.
+// This is needed by the function template<T> LogStream& operator<<(LogStream&, T&&)
+// Thanks to GoogleTest devs for the idea
+void operator<<(const qi::log::detail::Secret&, int);
 
 namespace qi {
   namespace log{
@@ -321,6 +331,10 @@ namespace qi {
       template <typename T>
       friend LogStream& operator<<(LogStream& l, T&& t)
       {
+        // To allow all the types defined in NAOqi for which a operator<< for std::ostream is
+        // defined in the global namespace to be used in this function, declare that we use the
+        // overload in the global namespace.
+        using ::operator<<;
         l._oss << detail::narrow(std::forward<T>(t));
         return l;
       }
