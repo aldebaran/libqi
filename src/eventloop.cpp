@@ -348,7 +348,9 @@ namespace qi {
 
     if (!_work.load())
     {
-      qiLogError() << "Schedule attempt on destroyed thread pool";
+      // This seems to be an error but as we have this log a lot sometimes at the destruction
+      // of an event loop, it has been decided to tune it down.
+      qiLogVerbose() << "Schedule attempt on destroyed thread pool";
       return;
     }
 
