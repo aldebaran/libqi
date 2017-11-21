@@ -141,7 +141,15 @@ TYPED_TEST(NetResolveUrl, WrongUrl)
     ASSERT_EQ(badAddress<ErrorCode<N>>(), error);
   }
   {
-    const auto error = F{}(io, Url{"tcp://10.12.14.15:0"});
+    const auto error = F{}(io, Url{"tcp://10.12.14.15:-45"});
+    ASSERT_EQ(badAddress<ErrorCode<N>>(), error);
+  }
+  {
+    const auto error = F{}(io, Url{"tcp://10.12.14.15:123456"});
+    ASSERT_EQ(badAddress<ErrorCode<N>>(), error);
+  }
+  {
+    const auto error = F{}(io, Url{"tcp://10.12.14.15:abcd"});
     ASSERT_EQ(badAddress<ErrorCode<N>>(), error);
   }
 }

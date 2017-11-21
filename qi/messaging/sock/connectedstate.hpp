@@ -24,15 +24,10 @@ namespace qi
     ///
     /// NetSslSocket S
     template<typename S>
-    Url remoteEndpoint(S& socket, bool /*ssl*/)
+    Url remoteEndpoint(S& socket, bool ssl)
     {
-      auto endpoint = socket.lowest_layer().remote_endpoint();
-      // Forcing TCP is the legacy behavior.
-      // TODO: Change this with `ssl ? "tcps" : "tcp"` when sure of the impact.
-      return Url{
-        endpoint.address().to_string(),
-        "tcp",
-        endpoint.port()};
+      const auto endpoint = socket.lowest_layer().remote_endpoint();
+      return url(endpoint, SslEnabled{ssl});
     }
 
     /// Ouput of the connected state.

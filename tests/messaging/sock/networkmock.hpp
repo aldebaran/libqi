@@ -135,6 +135,7 @@ namespace mock
       struct lowest_layer_type
       {
         enum class shutdown_type {shutdown_both};
+        static const int max_connections = 42;
         using endpoint_type = _endpoint;
         void set_option(socket_option_no_delay_type) {}
 
@@ -193,9 +194,10 @@ namespace mock
       bool is_open() const {return true;}
       void set_option(accept_option_reuse_address_type) {}
       void bind(_endpoint) {}
-      void listen() {}
+      void listen(int, error_code_type&) {}
       void close(error_code_type&) {}
       static _anyAsyncAccepter async_accept;
+      _endpoint local_endpoint(error_code_type&) const { return {}; }
     };
     struct resolver_type
     {

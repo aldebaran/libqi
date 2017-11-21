@@ -40,7 +40,7 @@ TEST(NetAcceptConnectionContinuous, Success)
     }
   );
   auto fut = promiseAcceptFinished.future();
-  ASSERT_EQ(FutureState_FinishedWithValue, fut.waitFor(defaultTimeout));
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.waitFor(defaultTimeout)) << fut.error();
   ASSERT_TRUE(fut.value());
 }
 
@@ -79,28 +79,44 @@ TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
   using namespace qi;
   using namespace qi::sock;
   using N = NetworkAsio;
+  using E = Endpoint<Lowest<SslSocket<N>>>;
 
   auto& io = N::defaultIoService();
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  const Url url{"tcp://127.0.0.1:51234"};
   Promise<SocketPtr<N>> promiseAcceptFinished;
+  Promise<E> localEndpoint;
 
   AcceptConnectionContinuous<N> accept{io};
-  accept(context, url,
+  accept(context, "tcp://127.0.0.1:0",
     IpV6Enabled{false}, ReuseAddressEnabled{false},
-    [&](ErrorCode<N> erc, SocketPtr<N> socket) {
+    [&](ErrorCode<N> erc, SocketPtr<N> socket) { // onAccept
       if (erc)
       {
+        promiseAcceptFinished.setError(erc.message());
         throw std::runtime_error{std::string{"Accept error: "} + erc.message()};
       }
       promiseAcceptFinished.setValue(socket);
       return false;
+    },
+    [&](ErrorCode<N> erc, boost::optional<E> ep) { // onListen
+      if (erc)
+      {
+        localEndpoint.setError(erc.message());
+        throw std::runtime_error{std::string{"Listen error: "} + erc.message()};
+      }
+      if (!ep)
+      {
+        localEndpoint.setError("Local endpoint is undefined");
+        throw std::runtime_error{std::string{"Listen error: local endpoint is undefined"}};
+      }
+      localEndpoint.setValue(*ep);
     }
   );
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
-  connect(url, SslEnabled{false}, context, IpV6Enabled{false}, Side::client);
-  ASSERT_EQ(FutureState_FinishedWithValue, connect.complete().waitFor(defaultTimeout));
+  connect(url(localEndpoint.future().value(), SslEnabled{false}), SslEnabled{false}, context,
+          IpV6Enabled{false}, Side::client);
+  ASSERT_EQ(FutureState_FinishedWithValue, connect.complete().waitFor(defaultTimeout)) << connect.complete().error();
 
   auto fut = promiseAcceptFinished.future();
   ASSERT_EQ(FutureState_FinishedWithValue, fut.waitFor(defaultTimeout));

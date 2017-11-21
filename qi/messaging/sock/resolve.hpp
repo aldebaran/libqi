@@ -72,7 +72,7 @@ namespace qi { namespace sock {
     template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
     void operator()(const Url& url, Proc onComplete, Proc1 setupStop = Proc1{})
     {
-      if (!url.isValid() || url.port() == 0)
+      if (!url.isValid())
       {
         onComplete(badAddress<ErrorCode<N>>(), {});
         return;

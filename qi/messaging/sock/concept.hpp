@@ -140,6 +140,7 @@ namespace qi { namespace sock {
 ///     && socket.close(errorCodeLValue)
 ///     && Regular handle = socket.native_handle()
 ///     && Endpoint<S> e = const_socket.remote_endpoint()
+///     && int m = S::max_connections
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Lowest-layer of an SSL socket. It allows you to connect to an endpoint and
 /// close the connection.
@@ -213,15 +214,16 @@ namespace qi { namespace sock {
 ///           const bool reuse,
 ///           S socket,
 ///           const NetHandler handler,
-///           E errorCode, the following are valid:
+///           E& errorCode, the following are valid:
 ///          I& io = acceptor.get_io_service();
 ///       && acceptor.open(endpoint.protocol());
 ///       && bool b = const_acceptor.is_open();
 ///       && acceptor.set_option(O{reuse});
 ///       && acceptor.bind(endpoint);
-///       && acceptor.listen();
+///       && acceptor.listen(errorCode);
 ///       && acceptor.async_accept(socket, handler);
 ///       && acceptor.close(errorCode);
+///       && P localEp = const_acceptor.local_endpoint(errorCode);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Asynchronously accepts incomming connections on a given endpoint and provides
 /// the associated socket.

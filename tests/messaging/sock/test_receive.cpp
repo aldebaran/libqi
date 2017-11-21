@@ -418,15 +418,16 @@ TEST(NetReceiveMessage, Asio)
   using namespace qi;
   using namespace qi::sock;
   using N = NetworkAsio;
+  using E = Endpoint<Lowest<SslSocket<N>>>;
 
   auto& io = N::defaultIoService();
   SslContext<N> context{Method<SslContext<N>>::sslv23};
-  const Url url{"tcp://127.0.0.1:34987"};
 
   Promise<SocketPtr<N>> promiseConnect;
+  Promise<E> localEndpoint;
 
   AcceptConnectionContinuous<N> accept{io};
-  accept(context, url,
+  accept(context, "tcp://127.0.0.1:0",
     IpV6Enabled{false}, ReuseAddressEnabled{true},
     [=](ErrorCode<N> erc, SocketPtr<N> socket) mutable {
       if (erc)
@@ -436,14 +437,27 @@ TEST(NetReceiveMessage, Asio)
       }
       promiseConnect.setValue(socket);
       return false;
+    },
+    [&](ErrorCode<N> erc, boost::optional<E> ep) { // onListen
+      if (erc)
+      {
+        localEndpoint.setError(erc.message());
+        throw std::runtime_error{std::string{"Listen error: "} + erc.message()};
+      }
+      if (!ep)
+      {
+        localEndpoint.setError("Local endpoint is undefined");
+        throw std::runtime_error{std::string{"Listen error: local endpoint is undefined"}};
+      }
+      localEndpoint.setValue(*ep);
     }
   );
 
   // Connect client.
   using Side = HandshakeSide<SslSocket<N>>;
   ConnectSocketFuture<N> connect{io};
-  connect(url, SslEnabled{false}, context, IpV6Enabled{true},
-    Side::client);
+  connect(url(localEndpoint.future().value(), SslEnabled{false}), SslEnabled{false}, context,
+          IpV6Enabled{true}, Side::client);
   ASSERT_TRUE(connect.complete().hasValue()) << connect.complete().error();
   auto clientSideSocket = connect.complete().value();
 

@@ -6,6 +6,8 @@
 #include <sstream>
 #include <qi/type/typeinterface.hpp>
 
+qiLogCategory("qi.url");
+
 namespace qi {
 
   class UrlPrivate {
@@ -300,9 +302,25 @@ namespace qi {
       components |= HOST;
 
     if (place != std::string::npos) {
-      std::stringstream ss(_url.substr(place+1));
-      ss >> _port;
-      components |= PORT;
+      const auto strPort = _url.substr(place+1);
+      // std::stol raises an exception if the conversion fails, instead prefer strtol that sets errno
+      char* end = nullptr;
+      errno = 0;
+      const auto longPort = std::strtol(strPort.data(), &end, 10);
+      if (errno == 0 && end == strPort.data() + strPort.size()
+          && longPort >= std::numeric_limits<uint16_t>::min()
+          && longPort <= std::numeric_limits<uint16_t>::max())
+      {
+        _port = static_cast<uint16_t>(longPort);
+        components |= PORT;
+      }
+      else
+      {
+        const auto localErrno = errno;
+        qiLogWarning() << "Could not parse port '" << strPort << "' from url '" << url
+                       << "' (errno:" << localErrno << ", strerror:'" << std::strerror(localErrno)
+                       << "')";
+      }
     }
 
     port = _port;

@@ -13,12 +13,24 @@
 #include <qi/messaging/sock/socketptr.hpp>
 #include <qi/future.hpp>
 #include <qi/macroregular.hpp>
+#include <qi/url.hpp>
 
 /// @file
 /// Contains procedure transformations (to transform a procedure into a "stranded"
 /// equivalent for example) and lockable adapters around a socket.
 
 namespace qi { namespace sock {
+
+  /// The URL of the endpoint
+  /// NetEndpoint E
+  template<typename E>
+  Url url(const E& ep, SslEnabled ssl)
+  {
+    return Url{
+      ep.address().to_string(),
+      *ssl ? "tcps" : "tcp",
+      ep.port()};
+  }
 
   /// A polymorphic transformation that takes a procedure and returns a
   /// "stranded" equivalent.
