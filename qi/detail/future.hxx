@@ -317,7 +317,7 @@ namespace detail {
     FutureBaseTyped<T>::~FutureBaseTyped()
     {
       boost::recursive_mutex::scoped_lock lock(mutex());
-      if (_onDestroyed && hasValue(0))
+      if (_onDestroyed && state() == FutureState_FinishedWithValue)
         _onDestroyed(_value);
     }
 
