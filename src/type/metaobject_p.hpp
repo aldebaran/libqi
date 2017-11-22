@@ -1,13 +1,17 @@
-#pragma once
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2012-2017 Softbank Robotics Europe
 **  See COPYING for the license
 */
 
 #ifndef _SRC_METAOBJECT_P_HPP_
 #define _SRC_METAOBJECT_P_HPP_
+#pragma once
 
+#include <array>
+#include <qi/macroregular.hpp>
+#include <qi/range.hpp>
 #include <qi/atomic.hpp>
+#include <qi/detail/sha1.hpp>
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metaobject.hpp>
 #include <qi/type/metamethod.hpp>
@@ -185,6 +189,9 @@ namespace qi {
 
     // true if cache must be refreshed
     mutable bool                        _dirtyCache;
+
+
+    detail::SHA1Digest                  _contentSHA1;
 
     // Global uid for event subscribers.
     static qi::Atomic<int> uid;

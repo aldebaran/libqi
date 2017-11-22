@@ -2,6 +2,7 @@ qi_create_gtest(
   test_type
 
   SRC
+  "test_object.hpp"
   "test_anymodule.cpp"
   "test_async.cpp"
   "test_clocktype.cpp"

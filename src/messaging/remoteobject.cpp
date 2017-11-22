@@ -515,7 +515,7 @@ namespace qi {
     unsigned int event = linkId >> 32;
     //disconnect locally
     Future<void> fut = DynamicObject::metaDisconnect(linkId);
-    return fut.then([=](Future<void> f) -> Future<void>
+    return fut.then(track([=](Future<void> f) -> Future<void>
     {
       if (f.hasError())
       {
@@ -558,7 +558,7 @@ namespace qi {
           return _self.async<void>("unregisterEvent", _service, event, toDisco);
       }
       return f;
-    }).unwrap();
+    }, this)).unwrap();
   }
 
   void RemoteObject::close(const std::string& reason, bool fromSignal)
@@ -575,7 +575,7 @@ namespace qi {
         qiLogDebug() << "Removing connection from socket " << (void*)socket.get();
         socket->messagePendingDisconnect(_service, MessageSocket::ALL_OBJECTS, _linkMessageDispatcher);
         if (!fromSignal)
-          socket->disconnected.disconnect(_linkDisconnected);
+          socket->disconnected.disconnectAsync(_linkDisconnected);
     }
     std::map<int, qi::Promise<AnyReference> > promises;
     {

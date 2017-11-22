@@ -88,7 +88,7 @@ namespace qi {
     return sig->connect(fun);
   }
 
-  bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId)
+  void MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId)
   {
     // Do not hold the lock when invoking disconnect()
     // or deadlock may occur as disconnect() waits for
@@ -101,9 +101,9 @@ namespace qi {
       if (it != _signalMap.end())
         sig = it->second;
       else
-        return false;
+        return;
     }
-    bool ok = sig->disconnect(linkId);
+    sig->disconnectAsync(linkId);
     if (!sig->hasSubscribers())
     {
       // We need to re-acquire lock and check emptyness when locked
@@ -113,7 +113,6 @@ namespace qi {
        if (it != _signalMap.end() && !it->second->hasSubscribers())
          _signalMap.erase(it);
     }
-    return ok;
   }
 
   void MessageDispatcher::cleanPendingMessages()

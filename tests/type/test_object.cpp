@@ -9,6 +9,9 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/assign/list_of.hpp>
+
+#include "test_object.hpp"
+
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
@@ -1315,54 +1318,6 @@ TEST(TestObject, Factory)
   EXPECT_EQ(188, fruit.call<int>("getWeight"));
   EXPECT_EQ("green", fruit.call<std::string>("getType"));
 
-}
-
-qi::GenericFunctionParameters args(
-  qi::AutoAnyReference p1=qi::AutoAnyReference(),
-  qi::AutoAnyReference p2=qi::AutoAnyReference(),
-  qi::AutoAnyReference p3=qi::AutoAnyReference())
-{
-  qi::GenericFunctionParameters res;
-  if (p1.type()) res.push_back(p1); else return res;
-  if (p2.type()) res.push_back(p2); else return res;
-  if (p3.type()) res.push_back(p3); else return res;
-  return res;
-}
-
-TEST(TestMetaObject, findMethod)
-{
-  qi::MetaObjectBuilder b;
-  unsigned int f   = b.addMethod("i", "f", "(i)").id;
-  unsigned int g1  = b.addMethod("i", "g", "(i)").id;
-  unsigned int g2  = b.addMethod("i", "g", "(ii)").id;
-  unsigned int h1i = b.addMethod("i", "h", "(i)").id;
-  unsigned int h1s = b.addMethod("i", "h", "(s)").id;
-  unsigned int h2  = b.addMethod("i", "h", "(ii)").id;
-
-  qi::MetaObject mo = b.metaObject();
-  bool canCache;
-  int mid;
-  mid = mo.findMethod("f", args(1), &canCache);
-  EXPECT_EQ(mid, (int)f); EXPECT_TRUE(canCache);
-  mid = mo.findMethod("g", args(1), &canCache);
-  EXPECT_EQ(mid, (int)g1); EXPECT_TRUE(canCache);
-  mid = mo.findMethod("g", args(1, 1), &canCache);
-  EXPECT_EQ(mid, (int)g2); EXPECT_TRUE(canCache);
-  // no garantee is made on result of findmethod(g, "foo"), so not tested
-  mid = mo.findMethod("h", args(1), &canCache);
-  EXPECT_EQ(mid, (int)h1i); EXPECT_FALSE(canCache);
-  mid = mo.findMethod("h", args("foo"), &canCache);
-  EXPECT_EQ(mid, (int)h1s); EXPECT_FALSE(canCache);
-  mid = mo.findMethod("h", args(1, 1), &canCache);
-  EXPECT_EQ(mid, (int)h2); EXPECT_TRUE(canCache);
-
-  mid = mo.findMethod("h::(i)", args(1), &canCache);
-  EXPECT_EQ(mid, (int)h1i); EXPECT_TRUE(canCache);
-
-  // check null canCache
-  mo.findMethod("h::(i)", args(1), 0);
-  mid = mo.findMethod("h", args("foo"), 0);
-  EXPECT_TRUE(true);
 }
 
 static void calla() {

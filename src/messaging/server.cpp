@@ -276,9 +276,9 @@ namespace qi {
 
   void Server::disconnectSignals(const MessageSocketPtr& socket, const SocketSubscriber& subscriber)
   {
-    socket->connected.disconnectAll();
-    socket->disconnected.disconnect(subscriber.disconnected);
-    socket->messageReady.disconnect(subscriber.messageReady);
+    socket->connected.disconnectAllAsync();
+    socket->disconnected.disconnectAsync(subscriber.disconnected);
+    socket->messageReady.disconnectAsync(subscriber.messageReady);
     socket->disconnect();
   }
 

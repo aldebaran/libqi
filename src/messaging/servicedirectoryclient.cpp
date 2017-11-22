@@ -336,7 +336,7 @@ namespace qi {
     try {
       if (add != 0)
       {
-        _object.disconnect(add);
+        _object.disconnect(add).async();
       }
     } catch (std::runtime_error &e) {
       qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
@@ -344,7 +344,7 @@ namespace qi {
     try {
       if (remove != 0)
       {
-        _object.disconnect(remove);
+        _object.disconnect(remove).async();
       }
     } catch (std::runtime_error &e) {
         qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();

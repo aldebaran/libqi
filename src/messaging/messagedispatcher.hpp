@@ -38,7 +38,7 @@ namespace qi {
 
     static const unsigned int ALL_OBJECTS;
     qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
-    bool           messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId);
+    void           messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId);
 
   public:
     using Target = std::pair<unsigned int, unsigned int>;
