@@ -445,6 +445,10 @@ namespace qi {
       boost::recursive_mutex::scoped_lock l(_requestsMutex);
       _requests[requestId] = rq;
     }
+    rq->promise.setOnCancel([=](Promise<AnyObject>& p) mutable {
+      removeRequest(requestId);
+      p.setCanceled();
+    });
     qi::Future<qi::AnyObject> result = rq->promise.future();
     //rq is not valid anymore after addCallbacks, because it could have been handled and cleaned
     fut.connect(track([=](Future<ServiceInfo> fut) -> void

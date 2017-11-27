@@ -570,5 +570,6 @@ TEST(QiSession, WaitForServiceCanceled)
 
   qi::Future<void> future = pair.client()->waitForService("serviceTest");
   future.cancel();
+  future.wait();
   EXPECT_TRUE(future.isCanceled());
 }

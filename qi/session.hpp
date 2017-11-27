@@ -55,13 +55,33 @@ namespace qi {
 
     qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
-    qi::FutureSync< qi::AnyObject > service(const std::string &aservice)
+    static qi::MilliSeconds defaultServiceTimeout()
     {
-      return service(aservice, "");
+      return qi::Minutes{1};
     }
 
-    qi::FutureSync< qi::AnyObject > service(const std::string &service,
-                                            const std::string &protocol);
+    qi::FutureSync<qi::AnyObject> service(const std::string& name)
+    {
+      return service(name, "", defaultServiceTimeout());
+    }
+
+    qi::FutureSync<qi::AnyObject> service(const std::string& name, qi::MilliSeconds timeout)
+    {
+      return service(name, "", timeout);
+    }
+
+    qi::FutureSync< qi::AnyObject > service(const std::string& name,
+                                            const std::string& protocol)
+    {
+      return service(name, protocol, defaultServiceTimeout());
+    }
+
+    /// Returns the asked service.
+    ///
+    /// If the timeout triggers, the returned future is canceled.
+    qi::FutureSync< qi::AnyObject > service(const std::string& name,
+                                            const std::string& protocol,
+                                            qi::MilliSeconds timeout);
 
     //Server
     qi::FutureSync<void> listen(const qi::Url &address);
@@ -136,7 +156,7 @@ QI_GEN(genCall)
 
     /** Waits for a service to become available and fails if the timeout has expired.
      * The future is set immediately if the service is already available.
-     * The future is set in error if the timeout triggered.
+     * The future is canceled if the timeout triggered.
      */
     FutureSync<void> waitForService(const std::string& servicename, MilliSeconds timeout);
 
@@ -156,7 +176,7 @@ QI_GEN(genCall)
 
     inline static MilliSeconds defaultWaitForServiceTimeout()
     {
-      return MilliSeconds{1000 * 60 * 5}; // 5 minutes
+      return Minutes{5};
     }
 
   protected:

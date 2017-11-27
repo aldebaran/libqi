@@ -226,7 +226,9 @@ static bool _qiregisterSession() {
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, services);
   builder.advertiseMethod("services", &servicesBouncer);
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, const std::string&, qi::MilliSeconds));
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, qi::MilliSeconds));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listen);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, endpoints);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, setIdentity);

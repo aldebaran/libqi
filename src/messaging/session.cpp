@@ -215,15 +215,14 @@ namespace qi {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::FutureSync< qi::AnyObject > Session::service(const std::string &service,
-                                               const std::string &protocol)
+  qi::FutureSync< qi::AnyObject > Session::service(
+    const std::string& service, const std::string& protocol, qi::MilliSeconds timeout)
   {
     if (!isConnected()) {
       return qi::makeFutureError< qi::AnyObject >("Session not connected.");
     }
-    return _p->_serviceHandler.service(service, protocol);
+    return cancelOnTimeout(_p->_serviceHandler.service(service, protocol), timeout);
   }
-
 
   qi::FutureSync<void> Session::listen(const qi::Url &address)
   {
@@ -379,45 +378,7 @@ namespace qi {
 
   FutureSync<void> Session::waitForService(const std::string& servicename, MilliSeconds timeout)
   {
-    auto futService = waitForServiceImpl(servicename).async();
-
-    auto timeoutFlag = boost::make_shared<std::atomic_flag>();
-    (*timeoutFlag).clear();
-
-    // Too bad there's currently nothing to launch a task with a timeout...
-    auto timeoutTask = [=]() mutable {
-      const bool serviceTaskStillRunning = !(*timeoutFlag).test_and_set();
-      if (serviceTaskStillRunning)
-      {
-        futService.cancel();
-      }
-    };
-
-    auto futTimeout = asyncDelay(timeoutTask, timeout);
-
-    Promise<void> promise{[=](Promise<void>& p) mutable {
-      futService.cancel();
-      futTimeout.cancel();
-      p.setCanceled();
-    }};
-
-    futService.then([=](Future<void> f) mutable {
-      const bool timedout = (*timeoutFlag).test_and_set();
-      if (timedout)
-      {
-        // Flag is already set : the timeout already occurred.
-        std::ostringstream ss{"waitForService(\""};
-        ss << servicename << "\", " << timeout.count() << " ms): timeout expired.";
-        promise.setError(ss.str());
-      }
-      else
-      {
-        // Set the promise with the future result.
-        adaptFuture(futService, promise);
-      }
-    });
-
-    return promise.future();
+    return cancelOnTimeout(waitForServiceImpl(servicename).async(), timeout);
   }
 
   qi::FutureSync<void> Session::waitForServiceImpl(const std::string& servicename)
