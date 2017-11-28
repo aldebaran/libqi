@@ -123,67 +123,78 @@ TEST(TestSignal, EmitSharedPointerWithNoSubscriber)
   QI_EMIT signal(boost::make_shared<int>(42));
 }
 
-void write42(boost::shared_ptr<int> ptr)
+void write42(qi::Promise<int> prom)
 {
-  *ptr = 42;
+  prom.setValue(42);
 }
 
-TEST(TestSignal, EmitSharedPointerWithDirectSubscriber)
+TEST(TestSignal, EmitPromiseWithDirectSubscriber)
 {
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
-  qi::Signal<boost::shared_ptr<int> > sig;
+  qi::Signal<qi::Promise<int>> sig;
   sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Direct);
-  {
-    auto ptr = boost::make_shared<int>(12);
-    QI_EMIT sig(ptr);
-  };
+  qi::Promise<int> prom;
+  QI_EMIT sig(prom);
+
+  // no need to wait for the promise, a value should already be set
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, prom.future().wait(0));
+  ASSERT_EQ(42, prom.future().value());
 }
 
-TEST(TestSignal, EmitSharedPointerWithQueuedSubscriber)
+TEST(TestSignal, EmitPromiseWithQueuedSubscriber)
 {
   // Redundant with Copy test, but just to be sure, check that shared_ptr
   // is correctly transmited.
-  qi::Signal<boost::shared_ptr<int> > sig;
+  qi::Signal<qi::Promise<int>> sig;
   sig.connect(qi::AnyFunction::from(&write42)).setCallType(qi::MetaCallType_Queued);
-  {
-    auto ptr = boost::make_shared<int>(12);
-    QI_EMIT sig(ptr);
-  };
+  qi::Promise<int> prom;
+  QI_EMIT sig(prom);
+
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, prom.future().wait(usualTimeout));
+  ASSERT_EQ(42, prom.future().value());
 }
 
 TEST(TestSignal, DisconnectAsynchronouslyFromCallback)
 {
   qi::SignalLink link;
   qi::Signal<void> signal;
-  link = signal.connect([&]{ signal.disconnectAsync(link); });
+  qi::Promise<bool> p;
+  link = signal.connect([&]{ adaptFuture(signal.disconnectAsync(link), p); });
   QI_EMIT signal();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
 
 TEST(TestSignal, DisconnectSynchronouslyFromCallback)
 {
   qi::SignalLink link;
   qi::Signal<void> signal;
-  link = signal.connect([&]{ signal.disconnect(link); });
+  qi::Promise<bool> p;
+  link = signal.connect([&]{ p.setValue(signal.disconnect(link)); });
   QI_EMIT signal();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
 
 TEST(TestSignal, DisconnectAsynchronouslyFromAsyncCallback)
 {
   qi::SignalLink link;
   qi::Signal<void> signal;
-  link = signal.connect([&]{ signal.disconnectAsync(link); })
+  qi::Promise<bool> p;
+  link = signal.connect([&]{ adaptFuture(signal.disconnectAsync(link), p); })
       .setCallType(qi::MetaCallType_Queued);
   QI_EMIT signal();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
 
 TEST(TestSignal, DisconnectSynchronouslyFromAsyncCallback)
 {
   qi::SignalLink link;
   qi::Signal<void> signal;
-  link = signal.connect([&]{ signal.disconnect(link); })
+  qi::Promise<bool> p;
+  link = signal.connect([&]{ p.setValue(signal.disconnect(link)); })
       .setCallType(qi::MetaCallType_Queued);
   QI_EMIT signal();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
 
 void byRef(int& i, bool* done)
