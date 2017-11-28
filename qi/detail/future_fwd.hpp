@@ -1089,38 +1089,6 @@ namespace qi {
   {
     return semiLift(std::forward<Proc>(p), UnitFuture{});
   }
-
-  /// Cancels the future when the timeout expires.
-  ///
-  /// The output future is the same as the input one, to allow functional
-  /// composition.
-  template<typename T, typename Duration>
-  Future<T> cancelOnTimeout(Future<T> fut, Duration timeout)
-  {
-    auto timeoutTask = [=]() mutable {
-      static const char* const errorMsg =
-        "cancelOnTimeout: timeout task failed to cancel the running task: ";
-      try
-      {
-        // This condition is racy, but the goal is to avoid useless logs
-        // (in the catch clauses).
-        if (fut.isRunning())
-        {
-          fut.cancel();
-        }
-      }
-      catch (const std::runtime_error& e)
-      {
-        qiLogVerbose("qi.Future") << errorMsg << "detail=" << e.what();
-      }
-      catch (...)
-      {
-        qiLogVerbose("qi.Future") << errorMsg << "No detail.";
-      }
-    };
-    asyncDelay(timeoutTask, timeout);
-    return fut;
-  }
 }
 
 #ifdef _MSC_VER

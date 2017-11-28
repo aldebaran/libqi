@@ -88,6 +88,14 @@ inline Future<R> async(detail::Function<R()> callback);
 QI_GEN(genCall)
 #undef genCall
 #endif
+
+/// Cancels the future when the timeout expires.
+///
+/// The output future is the same as the input one, to allow functional
+/// composition.
+template<typename T, typename Duration>
+Future<T> cancelOnTimeout(Future<T> fut, Duration timeout);
+
 } // qi
 
 #include <qi/detail/async.hxx>
