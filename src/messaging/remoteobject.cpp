@@ -298,12 +298,8 @@ namespace qi {
             + " to " + returnSignature.toString();
       }
     }
-    /* The promise will be set:
-     - From here in case of error
-     - From a network callback, called asynchronously in thread pool
-     So it is safe to use a sync promise.
-     */
-    qi::Promise<AnyReference> out(FutureCallbackType_Sync);
+
+    qi::Promise<AnyReference> out;
     qi::Message msg;
     MessageSocketPtr sock;
     // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();
