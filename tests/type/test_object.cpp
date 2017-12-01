@@ -830,7 +830,8 @@ TEST(TestObject, FutureSync)
   std::cerr << "ERR " << f.error() << std::endl;
 }
 
-TEST(TestObject, statisticsGeneric)
+// TODO: fix races in ObjectStatistics to reenable this test
+TEST(TestObject, DISABLED_statisticsGeneric)
 {
   qi::DynamicObjectBuilder gob;
   int mid = gob.advertiseMethod("sleep", &qi::os::msleep);
@@ -867,7 +868,8 @@ TEST(TestObject, statisticsGeneric)
   EXPECT_EQ(1u, m.count());
 }
 
-TEST(TestObject, statisticsType)
+// TODO: fix races in ObjectStatistics to reenable this test
+TEST(TestObject, DISABLED_statisticsType)
 {
   qi::ObjectTypeBuilder<Adder> builder;
   int mid = builder.advertiseMethod("add", &Adder::add);
