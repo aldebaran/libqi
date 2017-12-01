@@ -28,6 +28,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/locks.hpp>
 #include <boost/program_options.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/algorithm/string.hpp>
@@ -245,22 +246,22 @@ namespace qi {
       void run();
       void printLog();
       // Invoke handlers who enabled given level/category
-      void dispatch(const qi::LogLevel,
-                    const qi::Clock::time_point date,
-                    const qi::SystemClock::time_point systemDate,
-                    const char*,
-                    const char*,
-                    const char*,
-                    const char*,
-                    int);
-      void dispatch(const qi::LogLevel level,
-                    const qi::Clock::time_point date,
-                    const qi::SystemClock::time_point systemDate,
-                    detail::Category& category,
-                    const char* log,
-                    const char* file,
-                    const char* function,
-                    int line);
+      void dispatch_unsynchronized(const qi::LogLevel,
+                                   const qi::Clock::time_point date,
+                                   const qi::SystemClock::time_point systemDate,
+                                   const char*,
+                                   const char*,
+                                   const char*,
+                                   const char*,
+                                   int);
+      void dispatch_unsynchronized(const qi::LogLevel level,
+                                   const qi::Clock::time_point date,
+                                   const qi::SystemClock::time_point systemDate,
+                                   detail::Category& category,
+                                   const char* log,
+                                   const char* file,
+                                   const char* function,
+                                   int line);
       Handler* logHandler(SubscriberId id);
 
       void setSynchronousLog(bool sync);
@@ -305,20 +306,18 @@ namespace qi {
 
     // categories must be accessible at static init: cannot go in Log class
     using CategoryMap = std::map<std::string, detail::Category*>;
-    static CategoryMap* _glCategories = nullptr;
     inline CategoryMap& _categories()
     {
-      if (!_glCategories)
-        _glCategories = new CategoryMap;
+      static CategoryMap* _glCategories;
+      QI_ONCE(_glCategories = new CategoryMap);
       return *_glCategories;
     }
 
     // protects globs and categories, both the map and the per-category vector
-    static boost::recursive_mutex          *_glMutex   = nullptr;
     inline boost::recursive_mutex& _mutex()
     {
-      if (!_glMutex)
-        _glMutex = new boost::recursive_mutex();
+      static boost::recursive_mutex* _glMutex;
+      QI_ONCE(_glMutex = new boost::recursive_mutex());
       return *_glMutex;
     }
 
@@ -530,42 +529,39 @@ namespace qi {
     void Log::printLog()
     {
       privateLog* pl = nullptr;
-      boost::mutex::scoped_lock lock(LogHandlerLock);
+
+      boost::recursive_mutex::scoped_lock lock(_mutex(), boost::defer_lock);
+      boost::mutex::scoped_lock lockHandlers(LogInstance->LogHandlerLock, boost::defer_lock);
+      boost::lock(lock, lockHandlers);
       while (logs.pop(pl))
       {
-        dispatch(pl->_logLevel,
-                 pl->_date,
-                 pl->_systemDate,
-                 pl->_category,
-                 pl->_log,
-                 pl->_file,
-                 pl->_function,
-                 pl->_line);
+        dispatch_unsynchronized(pl->_logLevel, pl->_date, pl->_systemDate, pl->_category, pl->_log,
+                                pl->_file, pl->_function, pl->_line);
       }
     }
 
-    void Log::dispatch(const qi::LogLevel level,
-                       const qi::Clock::time_point date,
-                       const qi::SystemClock::time_point systemDate,
-                       const char*  category,
-                       const char* log,
-                       const char* file,
-                       const char* function,
-                       int line)
+    void Log::dispatch_unsynchronized(const qi::LogLevel level,
+                                      const qi::Clock::time_point date,
+                                      const qi::SystemClock::time_point systemDate,
+                                      const char* category,
+                                      const char* log,
+                                      const char* file,
+                                      const char* function,
+                                      int line)
     {
-      dispatch(level, date, systemDate, *addCategory(category), log, file, function, line);
+      dispatch_unsynchronized(level, date, systemDate, *addCategory(category), log, file, function,
+                              line);
     }
 
-    void Log::dispatch(const qi::LogLevel level,
-                       const qi::Clock::time_point date,
-                       const qi::SystemClock::time_point systemDate,
-                       detail::Category& category,
-                       const char* log,
-                       const char* file,
-                       const char* function,
-                       int line)
+    void Log::dispatch_unsynchronized(const qi::LogLevel level,
+                                      const qi::Clock::time_point date,
+                                      const qi::SystemClock::time_point systemDate,
+                                      detail::Category& category,
+                                      const char* log,
+                                      const char* file,
+                                      const char* function,
+                                      int line)
     {
-      boost::recursive_mutex::scoped_lock lock(_mutex());
       if (!logHandlers.empty())
       {
         LogHandlerMap::iterator it;
@@ -719,10 +715,15 @@ namespace qi {
       qi::SystemClock::time_point systemDate = qi::SystemClock::now();
       if (LogInstance->SyncLog)
       {
+        boost::recursive_mutex::scoped_lock lock(_mutex(), boost::defer_lock);
+        boost::mutex::scoped_lock lockHandlers(LogInstance->LogHandlerLock, boost::defer_lock);
+        boost::lock(lock, lockHandlers);
         if (category)
-          LogInstance->dispatch(verb, date, systemDate, *category, msg, file, fct, line);
+          LogInstance->dispatch_unsynchronized(verb, date, systemDate, *category, msg, file, fct,
+                                               line);
         else
-          LogInstance->dispatch(verb, date, systemDate, categoryStr, msg, file, fct, line);
+          LogInstance->dispatch_unsynchronized(verb, date, systemDate, categoryStr, msg, file, fct,
+                                               line);
       }
       else
       {
