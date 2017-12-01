@@ -9,6 +9,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
 #include <qi/anymodule.hpp>
+#include <qi/scoped.hpp>
 
 class Module : public ::testing::Test
 {
@@ -63,7 +64,9 @@ TEST_F(Module, LoadByHandWithSession)
 {
   qi::AnyModule foomod = qi::import("naoqi.testanymodulesession");
   qi::AnyObject ao = foomod.call<qi::AnyObject>("Foo", session);
-  session->registerService("Foo", ao);
+  auto scopeUnregister = qi::scoped(session->registerService("Foo", ao).value(),
+                                    [&](unsigned int id) { session->unregisterService(id); });
+
   int res = ao.call<int>("bar");
 
   ASSERT_EQ(42, res);
