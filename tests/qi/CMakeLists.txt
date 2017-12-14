@@ -79,6 +79,16 @@ qi_create_gtest(test_helptext_session
   TIMEOUT 120
 )
 
+qi_create_test(periodictask_always_die_gracefully
+  test_periodictask_kill.cpp
+ARGUMENTS
+  --qi-standalone
+TIMEOUT
+  10
+DEPENDS
+  qi
+)
+
 qi_create_gtest(test_qipath SRC "test_qipath.cpp" "../../src/utils.cpp" DEPENDS qi)
 
 # test with the default chrono io, which is v1 in boost 1.55

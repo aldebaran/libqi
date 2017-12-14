@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 #include <qi/periodictask.hpp>
 #include "test_future.hpp"
+#include <boost/algorithm/cxx11/all_of.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 
 void empty() {}
 
@@ -39,20 +42,32 @@ TEST(TestPeriodicTask, FutureFuck)
 
 TEST(TestPeriodicTask, Basic)
 {
-  qi::Atomic<int> a;
-  qi::PeriodicTask pt;
-  pt.setCallback(&inc, std::ref(a));
-  pt.setUsPeriod(100000);
-  pt.start();
-  qi::os::msleep(450);
-  EXPECT_GE(2, std::abs(*a - 5)); // be leniant for our overloaded buildslaves
-  pt.stop();
-  int cur = *a;
-  qi::os::msleep(60);
-  EXPECT_EQ(cur, *a); // stop means stop
-  pt.start();
-  qi::os::msleep(150);
-  EXPECT_GE(1, std::abs(*a - cur - 2));
+  static const qi::MilliSeconds sleepDuration { 100 }; // big enough to not block the periodic task too much
+  static const qi::MilliSeconds period{ 10 };
+  static const int assertCount = 20;
+  std::vector<bool> assertions;
+  {
+    qi::SteadyClockTimePoint last;
+    qi::Strand strand;
+    qi::PeriodicTask pt;
+    pt.setPeriod(period);
+    pt.setCallback([&] {
+      strand.async([&] {
+        const auto now = qi::SteadyClock::now();
+        const auto success = now - last >= period;
+        assertions.push_back(success);
+        last = now;
+      }).value();
+    });
+    pt.start(false); // false = not immediately
+    while (strand.async([&]{ return assertions.size(); }).value() < assertCount)
+      qi::sleepFor(sleepDuration);
+    pt.stop();
+  }
+  EXPECT_TRUE(boost::algorithm::all_of(assertions, qi::IdTransfo{}))
+      << boost::join(assertions | boost::adaptors::transformed(
+                                   [](bool v) -> std::string { return v ? "true" : "false"; }),
+                     ", ");
 }
 
 TEST(TestPeriodicTask, Stop)
@@ -78,20 +93,6 @@ TEST(TestPeriodicTask, StopFromTask)
   qi::int64_t now = qi::os::ustime();
   pt.stop();
   EXPECT_GE(100000, qi::os::ustime() - now);
-}
-
-static void pdelete(qi::PeriodicTask* p)
-{
-  delete p;
-}
-
-TEST(TestPeriodicTask, DeleteFromTask)
-{
-  qi::PeriodicTask* pt = new qi::PeriodicTask();
-  pt->setCallback(boost::bind(pdelete, pt));
-  pt->setUsPeriod(10000000);
-  pt->start();
-  qi::os::msleep(200); // wait for actual start
 }
 
 TEST(TestPeriodicTask, DeadLock)
@@ -159,18 +160,20 @@ TEST(TestPeriodicTask, TriggerStartStop)
   qi::Atomic<int> a;
   pt.setCallback(&inc, std::ref(a));
   pt.setUsPeriod(1000);
-  std::vector<qi::Future<void> > futures;
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
-  futures.push_back(qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))));
-  while (true)
+  qi::Future<void> futures[] {
+    qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))),
+    qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))),
+    qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))),
+    qi::getEventLoop()->async(boost::bind(&loopTrigger, std::ref(pt))),
+  };
+  while(true)
   {
-    bool stop = true;
-    for (unsigned int i = 0; i < futures.size(); ++i)
-      stop = stop && futures[i].wait(0) == qi::FutureState_FinishedWithValue;
-    if (stop)
-      break;
+    if (boost::algorithm::all_of(futures, [](qi::Future<void> fut) {
+          return fut.wait(0) == qi::FutureState_FinishedWithValue;
+        }))
+    {
+        break;
+    }
     pt.start();
     qi::os::msleep(10);
     pt.stop();
