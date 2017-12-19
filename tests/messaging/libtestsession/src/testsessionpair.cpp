@@ -30,8 +30,8 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
     _sd->setIdentity(qi::path::findData("qi", "server.key"),
                      qi::path::findData("qi", "server.crt"));
   }
-  gwUrl = test::adaptScheme(gwUrl);
-  sdUrl = test::adaptScheme(sdUrl);
+  gwUrl = test::adaptScheme(gwUrl, mode);
+  sdUrl = test::adaptScheme(sdUrl, mode);
 
   qi::UrlVector endpoints;
   _sd->listenStandalone(std::move(sdUrl));

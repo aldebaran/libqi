@@ -136,9 +136,9 @@ extern TestMode::Mode testMode;
 
 namespace test
 {
-  inline std::string adaptScheme(std::string url)
+  inline std::string adaptScheme(std::string url, TestMode::Mode mode = TestMode::getTestMode())
   {
-    if (TestMode::getTestMode() == TestMode::Mode_SSL)
+    if (mode == TestMode::Mode_SSL)
     {
       static const boost::string_ref tcpScheme{ "tcp://" };
       if (boost::starts_with(url, tcpScheme))
