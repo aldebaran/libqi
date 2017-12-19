@@ -20,6 +20,8 @@
 
 qiLogCategory("qi.test.property");
 
+using namespace qi;
+
 namespace test
 {
   template< template< class ... > class PropertyType >
@@ -247,4 +249,21 @@ TYPED_TEST(TestPropertyWithContainerType, CanBeInstanciatedWithContainer)
 {
   qi::Property<TypeParam> p;
   SUCCEED();
+}
+
+TEST(TestReadOnlyProperty, Get)
+{
+  Property<int> source{ 42 };
+  ReadOnlyProperty<int> prop{ source };
+  EXPECT_EQ(42, prop.get().value());
+  EXPECT_EQ(42, prop.value().value().to<int>());
+}
+
+TEST(TestReadOnlyProperty, SetThroughAdaptedProperty)
+{
+  Property<int> source{ 42 };
+  ReadOnlyProperty<int> prop{ source };
+  EXPECT_EQ(42, prop.get().value());
+  source.set(51).value();
+  EXPECT_EQ(51, prop.get().value());
 }
