@@ -10,6 +10,7 @@
 #include <boost/thread/locks.hpp>
 #include <qi/future.hpp>
 #include <qi/property.hpp>
+#include <ka/errorhandling.hpp>
 
 namespace qi
 {
@@ -26,11 +27,15 @@ namespace qi
   }
 
   template<typename T>
-  PropertyImpl<T>::PropertyImpl(Getter getter, Setter setter,
-    SignalBase::OnSubscribers onsubscribe)
-  : SignalF<void(const T&)>(std::move(onsubscribe))
-  , _getter(std::move(getter))
-  , _setter(std::move(setter))
+  SignalingProperty<T>::SignalingProperty(SignalBase::OnSubscribers onsubscribe)
+    : SignalF<void(const T&)>(std::move(onsubscribe))
+  {
+  }
+
+  template<typename T>
+  SignalingProperty<T>::SignalingProperty(ExecutionContext* execContext,
+                                          SignalBase::OnSubscribers onsubscribe)
+    : SignalF<void(const T&)>(execContext, std::move(onsubscribe))
   {
   }
 
@@ -39,20 +44,29 @@ namespace qi
                                 Getter getter,
                                 Setter setter,
                                 SignalBase::OnSubscribers onsubscribe)
-    : SignalF<void(const T&)>(execContext, std::move(onsubscribe))
+    : SignalingProperty<T>(execContext, std::move(onsubscribe))
     , _getter(std::move(getter))
     , _setter(std::move(setter))
   {
   }
 
-  template<typename T>
+  template <typename T>
+  PropertyImpl<T>::PropertyImpl(Getter getter, Setter setter, SignalBase::OnSubscribers onsubscribe)
+    : SignalingProperty<T>(std::move(onsubscribe))
+    , _getter(std::move(getter))
+    , _setter(std::move(setter))
+  {
+  }
+
+  template <typename T>
   PropertyImpl<T>::PropertyImpl(AutoAnyReference defaultValue,
-    Getter getter, Setter setter,
-    SignalBase::OnSubscribers onsubscribe)
-  : SignalF<void(const T&)>(std::move(onsubscribe))
-  , _getter(std::move(getter))
-  , _setter(std::move(setter))
-  , _value(defaultValue.to<T>())
+                                Getter getter,
+                                Setter setter,
+                                SignalBase::OnSubscribers onsubscribe)
+    : SignalingProperty<T>(std::move(onsubscribe))
+    , _getter(std::move(getter))
+    , _setter(std::move(setter))
+    , _value(defaultValue.to<T>())
   {
   }
 
@@ -62,7 +76,7 @@ namespace qi
                                 Getter getter,
                                 Setter setter,
                                 SignalBase::OnSubscribers onsubscribe)
-    : SignalF<void(const T&)>(execContext, std::move(onsubscribe))
+    : SignalingProperty<T>(execContext, std::move(onsubscribe))
     , _getter(std::move(getter))
     , _setter(std::move(setter))
     , _value(defaultValue.to<T>())
@@ -92,6 +106,45 @@ namespace qi
       _value = v;
       (*this)(_value);
     }
+  }
+
+
+  template<typename T>
+  ReadOnlyProperty<T>::ReadOnlyProperty(SignalingProperty<T>& s)
+    : _source{ s }
+    , _subscription{ s.connect(track([=](const T& val){ (*this)(val); }, this)) }
+  {
+  }
+
+  template<typename T>
+  ReadOnlyProperty<T>::~ReadOnlyProperty()
+  {
+    ka::invoke_catch(qi::exceptionLogError("qi.type.readonlyproperty",
+                                           "Error while destroying a read only property"),
+                     [&] {
+                       Trackable<ReadOnlyProperty>::destroy();
+                       _source.disconnectAsync(_subscription);
+                     });
+  }
+
+  template<typename T>
+  FutureSync<T> ReadOnlyProperty<T>::get() const
+  {
+    return _source.get();
+  }
+
+  template<typename T>
+  FutureSync<AnyValue> ReadOnlyProperty<T>::value() const
+  {
+    return _source.get().async().then(FutureCallbackType_Sync, [](const T& v) {
+      return AnyValue::from(v);
+    });
+  }
+
+  template<typename T>
+  FutureSync<void> ReadOnlyProperty<T>::setValue(AutoAnyReference)
+  {
+    return makeFutureError<void>("Property is read-only, it cannot be set from this interface.");
   }
 
 
