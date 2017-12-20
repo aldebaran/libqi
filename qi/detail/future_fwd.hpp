@@ -412,6 +412,7 @@ namespace qi {
      * @brief Same as thenR(), but the callback is called only if this future finishes with a value.
      *
      * The callback will receive the value of this future, as opposed to this future itself.
+     * In the case of Future<void>, the callback shall accept a void* parameter.
      *
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
@@ -438,6 +439,7 @@ namespace qi {
      * @brief Same as then(), but the callback is called only if this future finishes with a value.
      *
      * The callback will receive the value of this future, as opposed to this future itself.
+     * In the case of Future<void>, the callback shall accept a void* parameter.
      *
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
