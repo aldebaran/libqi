@@ -786,7 +786,7 @@ namespace qi {
 
     /** notify all future that a value has been set.
      *  throw if state != running
-     *  If T is void \p value must be 0
+     *  If T is void \p value must be nullptr
      */
     void setValue(const ValueType &value) {
       _f._p->setValue(_f, value);
