@@ -18,12 +18,8 @@ namespace qi
   template <typename F, typename Arg0, typename... Args>
   SignalSubscriber SignalF<T>::connect(F&& func, Arg0&& arg0, Args&&... args)
   {
-    int curId;
-    SignalLink* trackLink;
-    createNewTrackLink(curId, trackLink);
     SignalSubscriber s =
       connect(qi::bind(std::forward<F>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...));
-    *trackLink = s;
     return s;
   }
 
