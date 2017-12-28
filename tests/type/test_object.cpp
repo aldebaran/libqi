@@ -206,7 +206,7 @@ template<typename T> bool checkValue(qi::AnyReference v, const T& val)
   return ok;
 }
 
-TEST(TestObject, Typing)
+TEST(TestFunction, Typing)
 {
   qiLogDebug() << "vfun";
   qi::AnyFunction fv = qi::AnyFunction::from(&vfun);
@@ -225,7 +225,7 @@ TEST(TestObject, Typing)
   ASSERT_TRUE(checkValue(res, 42));
 }
 
-TEST(TestObject, ABI)
+TEST(TestFunction, ABI)
 {
   using namespace qi;
   // We must declare inheritance between Foo and Parent
@@ -333,7 +333,7 @@ qi::AnyObject getobj()
   return b.object();
 }
 
-TEST(TestAnyFunction, Call)
+TEST(TestFunction, Call)
 {
   qi::AnyFunction f = qi::AnyFunction::from(&summ);
   ASSERT_EQ(10, f.call<int>(1, 2, 3, "lola"));
@@ -342,7 +342,7 @@ TEST(TestAnyFunction, Call)
   ASSERT_FALSE(obj.lock());
 }
 
-TEST(TestObject, Simple) {
+TEST(TestObject, Methods) {
   Foo                   foo;
   qi::DynamicObjectBuilder ob;
 
@@ -429,7 +429,7 @@ YetAnotherPoint swapPoint(const YetAnotherPoint& b)
   return point(b.y, b.x);
 }
 
-TEST(TestObject, SerializeSimple)
+TEST(TestObject, SerializationOfCalls)
 {
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("swapPoint", &swapPoint);
