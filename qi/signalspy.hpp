@@ -24,14 +24,16 @@ class QI_API SignalSpy: public Actor
 {
 public:
   /// Constructor taking a signal instance.
+  /// The signal instance must outlive the signal spy.
   template<typename... Args>
   SignalSpy(SignalF<void(Args...)>& signal)
     : _records()
   {
-    signal.connect(stranded([this](const Args&... args)
+    SignalLink link = signal.connect(stranded([this](const Args&... args)
     {
       this->recordCallback(args...);
     }));
+    _disconnect = [link, &signal]{ signal.disconnect(link); };
   }
 
   /// Constructor taking a type-erased signal.
@@ -76,10 +78,13 @@ public:
   FutureSync<bool> waitUntil(size_t nofRecords, const Duration& timeout) const;
 
 private:
+  /// Disconnects from the signal.
+  std::function<void()> _disconnect;
+
   /// The signal records.
   std::vector<Record> _records;
 
-  /// Emitted for internal synchronziation.
+  /// Emitted for internal synchronization.
   mutable Signal<void> recorded;
 
   /// Internal generic typed callback for signals.

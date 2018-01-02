@@ -475,6 +475,23 @@ TEST(TestSignal, WithExecutionContext)
 // ===========================================================
 // Signal Spy
 // -----------------------------------------------------------
+TEST(TestSignalSpy, Disconnection)
+{
+  qi::Signal<int> sig;
+  {
+    qi::SignalSpy sp(sig);
+  }
+  QI_EMIT sig(1);
+  // let some time for the disconnection to happen
+  auto i = 5;
+  while (sig.hasSubscribers() && i-- > 0)
+  {
+    qi::sleepFor(qi::MilliSeconds(10));
+  }
+  // ensure it did happen
+  EXPECT_FALSE(sig.hasSubscribers());
+}
+
 TEST(TestSignalSpy, Counter)
 {
   qi::Signal<int> sig;

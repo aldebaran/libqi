@@ -28,17 +28,26 @@ SignalSpy::SignalSpy(qi::AnyObject& object, const std::string& signalOrPropertyN
   : _records()
 {
   using namespace ka::functional_ops;
-  object.connect(
+  SignalLink link = object.connect(
     signalOrPropertyName,
     qi::AnyFunction::fromDynamicFunction(
         SrcFuture{} * stranded([this](qi::AnyReferenceVector anything) {
           return this->recordAnyCallback(anything);
         })
     ));
+  _disconnect = [link, object]{ object.disconnect(link).value(); };
 }
 
 SignalSpy::~SignalSpy()
 {
+  try
+  {
+    _disconnect();
+  }
+  catch (const std::exception& e)
+  {
+    qiLogDebug() << "Error while disconnecting from signal: " << e.what();
+  }
   joinTasks();
 }
 
