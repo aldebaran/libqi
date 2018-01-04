@@ -71,7 +71,7 @@ if(QI_WITH_TESTS)
     qitestutils
     testsession
 
-    TIMEOUT 120
+    TIMEOUT 200
   )
 
   # Tests on Application require a separate binary
@@ -122,7 +122,7 @@ qi_create_gmock(
   qi
   qitestutils
 
-  TIMEOUT 30
+  TIMEOUT 120
 )
 
 # those are idl tests that currently only

@@ -241,7 +241,7 @@ TYPED_TEST(NetMessageSocket, DestroyNotConnectedAsio)
   SignalConnectionPtr signalConnection;
   {
     auto clientSideSocket = makeMessageSocket(this->scheme());
-    const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+    const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
     signalConnection = connectSignals(clientSideSocket);
 
     // Check that signal were not emitted.
@@ -265,7 +265,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
 
   // We also want to check that signals are emitted.
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   auto signalConnection = connectSignals(clientSideSocket);
 
   Future<void> fut0 = clientSideSocket->connect(url);
@@ -293,7 +293,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
     TransportServer server;
     const auto url = this->listen(server).url;
     auto clientSideSocket = makeMessageSocket(this->scheme());
-    const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+    const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
     signalConnection = connectSignals(clientSideSocket);
 
     Future<void> fut0 = clientSideSocket->connect(url);
@@ -314,7 +314,7 @@ TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
   using namespace qi::sock;
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   auto signalConnection = connectSignals(clientSideSocket);
 
   MessageAddress address{1234, 5, 9876, 107};
@@ -335,7 +335,7 @@ TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
   const auto url = this->listen(server).url;
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   Future<void> fut0 = clientSideSocket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
 
@@ -352,7 +352,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileNotConnectedAsio)
   using namespace qi::sock;
 
   auto socket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ socket->disconnect(); });
+  const auto _ = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
   ASSERT_FALSE(socket->disconnect().hasError());
 }
 
@@ -372,7 +372,7 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
 
   Promise<void> promiseReceivedMessage;
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   clientSideSocket->messageReady.connect([&](const Message& msgReceived) mutable {
     if (!messageEqual(msgReceived, msgSent)) throw std::runtime_error("messages are not equal.");
     promiseReceivedMessage.setValue(0);
@@ -403,7 +403,7 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
 
   const int messageCount = 100;
   MessageAddress address{1234, 5, 9876, 107};
@@ -455,7 +455,7 @@ TYPED_TEST(NetMessageSocket, PrematureDestroy)
   auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   clientSideSocket->connect(url);
 }
 
@@ -614,7 +614,7 @@ TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
 
   // Connect the client.
   auto socket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ socket->disconnect(); });
+  const auto _ = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
   Future<void> fut = socket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 
@@ -625,7 +625,7 @@ TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
   {
     t = std::thread{[&] {
       promiseRun.future().wait();
-      socket->disconnect();
+      socket->disconnect().wait(defaultTimeout);
     }};
   }
 
@@ -648,7 +648,7 @@ TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect(); });
+  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   const unsigned sendThreadCount = 100u;
   const unsigned perSendThreadMessageCount = 200u;
   const unsigned messageCount = sendThreadCount * perSendThreadMessageCount;
@@ -707,7 +707,7 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
   };
   auto socket = makeMessageSocket(scheme);
-  const auto _2 = scoped([=]{ socket->disconnect(); });
+  const auto _2 = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
   Future<void> futCo = socket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeout));
   Future<void> futDisco = socket->disconnect();
@@ -725,7 +725,7 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
   const std::string protocol{"tcp"};
   const Url url{protocol + "://127.0.0.1:54321"};
   MessageSocketPtr socket;
-  const auto _ = scoped([=]{ if (socket) socket->disconnect(); });
+  const auto _ = scoped([=]{ if (socket) socket->disconnect().wait(defaultTimeout); });
   {
     test::ScopedProcess _{
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}

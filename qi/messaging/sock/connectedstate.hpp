@@ -157,6 +157,7 @@ namespace qi
             ioServiceStranded([=] {
               self->_shuttingdown = true;
               auto socket = (*self->_result)->socket;
+              socket->lowest_layer().cancel();
               socket->lowest_layer().shutdown(ShutdownMode<Lowest<SslSocket<N>>>::shutdown_both);
             })();
           }
