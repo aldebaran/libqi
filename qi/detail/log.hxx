@@ -183,7 +183,7 @@ namespace qi {
 
       // Hack required to silence spurious warning in compile-time disabled macros
       // We need an operator with priority below << and above &&
-      inline bool operator<(bool b, const NullStream& ns)
+      inline bool operator<(bool /*b*/, const NullStream& /*ns*/)
       {
         return false;
       }
