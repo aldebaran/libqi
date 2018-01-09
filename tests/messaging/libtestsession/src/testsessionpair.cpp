@@ -11,10 +11,12 @@
 #include <testsession/testsession.hpp>
 #include <testsession/testsessionpair.hpp>
 
+qiLogCategory("test.sessionpair");
+
 const TestSessionPair::ShareServiceDirectory_tag TestSessionPair::ShareServiceDirectory{};
 
 TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
-  : _mode(mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode)
+  : _mode(mode)
   , _sd(qi::makeSession())
   , _gw(_mode == TestMode::Mode_Gateway ? new qi::Gateway : nullptr)
 {
@@ -35,10 +37,12 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
 
   qi::UrlVector endpoints;
   _sd->listenStandalone(std::move(sdUrl));
+  qiLogInfo() << "ServiceDirectory listening on endpoint '" << _sd->endpoints()[0].str() << "'";
   if (gatewayMode)
   {
     _gw->attachToServiceDirectory(_sd->url()).wait();
     _gw->listen(std::move(gwUrl));
+    qiLogInfo() << "Gateway listening on endpoint '" << _gw->endpoints()[0].str() << "'";
     endpoints = _gw->endpoints();
   }
   else
@@ -46,6 +50,7 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
     endpoints = _sd->endpoints();
   }
 
+  qiLogInfo() << "Server and client will connect to endpoint '" << endpoints[0].str() << "'";
   _server.reset(new TestSession(endpoints[0].str(), true, _mode));
   if (_mode != TestMode::Mode_Direct) // no client in direct mode
   {
@@ -53,16 +58,22 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
   }
 }
 
-TestSessionPair::TestSessionPair(ShareServiceDirectory_tag t, const TestSessionPair& other, TestMode::Mode mode)
-  : TestSessionPair(mode == TestMode::Mode_Gateway ? other.gateway().endpoints().front() :
-                                                     other.sd()->endpoints().front(), mode)
-{}
+TestSessionPair::TestSessionPair(ShareServiceDirectory_tag t,
+                                 const TestSessionPair& other,
+                                 TestMode::Mode mode)
+  : TestSessionPair(mode == TestMode::Mode_Gateway ?
+                        other.gateway().endpoints().front() :
+                        other.sd()->endpoints().front(),
+                    mode)
+{
+}
 
 TestSessionPair::TestSessionPair(const qi::Url& sdEndpoint, TestMode::Mode mode)
-  : _mode(mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode)
+  : _mode(mode)
   , _server(new TestSession(sdEndpoint.str(), true, _mode))
   , _client(_mode == TestMode::Mode_Direct ? nullptr : new TestSession(sdEndpoint.str(), false, _mode))
 {
+  qiLogInfo() << "Server and client connected to endpoint '" << sdEndpoint.str() << "'";
 }
 
 qi::SessionPtr TestSessionPair::client() const

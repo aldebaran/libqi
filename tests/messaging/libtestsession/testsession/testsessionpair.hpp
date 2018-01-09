@@ -47,25 +47,28 @@ public:
   static const ShareServiceDirectory_tag ShareServiceDirectory;
 
   /*!
-   * Constructs a session pair that will instanciate a service directory and possibly a gateway if mode is Mode_Gateway
-   * or if it is Mode_Default and TestMode::getTestMode() returns Mode_Gateway. The server and the client will connect
+   * Constructs a session pair that will instanciate a service directory and possibly a gateway if
+   * mode is Mode_Gateway. The server and the client will connect
    * to the endpoint that was created (the service directory or the gateway if it was instanciated).
-   * \note The newly created session will not instanciate a service directory or a gateway of its own.
+   * \note The newly created session will not instanciate a service directory or a gateway of its
+   * own.
    */
-  TestSessionPair(TestMode::Mode mode = TestMode::Mode_Default, std::string sdUrl = "tcp://0.0.0.0:0");
+  TestSessionPair(TestMode::Mode mode = TestMode::getTestMode(), std::string sdUrl = "tcp://0.0.0.0:0");
 
   /*!
    * Constructs a session pair that will connect the server and the client to the service directory (or
    * the gateway, depending on mode) of the other session pair, so that both sessions share the same.
    * \note The newly created session will not instanciate a service directory or a gateway of its own.
    */
-  TestSessionPair(ShareServiceDirectory_tag, const TestSessionPair& other, TestMode::Mode mode = TestMode::Mode_Default);
+  TestSessionPair(ShareServiceDirectory_tag,
+                  const TestSessionPair& other,
+                  TestMode::Mode mode = TestMode::getTestMode());
 
   /*!
    * Constructs a session pair that will connect the server and the client to sdEndpoint.
    * \note The newly created session will not instanciate a service directory or a gateway of its own.
    */
-  TestSessionPair(const qi::Url& sdEndpoint, TestMode::Mode mode = TestMode::Mode_Default);
+  TestSessionPair(const qi::Url& sdEndpoint, TestMode::Mode mode = TestMode::getTestMode());
 
   ~TestSessionPair() = default;
 

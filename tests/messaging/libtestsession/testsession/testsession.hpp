@@ -103,8 +103,7 @@ public:
     Mode_Random,
     Mode_Nightmare,
     Mode_NetworkMap,
-    Mode_SSL,
-    Mode_Default
+    Mode_SSL
   };
 
 public:
