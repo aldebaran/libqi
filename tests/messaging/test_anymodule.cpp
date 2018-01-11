@@ -11,6 +11,8 @@
 #include <qi/anymodule.hpp>
 #include <qi/scoped.hpp>
 
+qiLogCategory("qi.test.anymodule");
+
 class Module : public ::testing::Test
 {
 protected:
@@ -21,7 +23,22 @@ protected:
   }
   void TearDown() override
   {
-    session->close();
+    try
+    {
+      session->close();
+    }
+    catch (const std::exception& ex)
+    {
+      qiLogError() << "Error while closing session: " << ex.what();
+    }
+    catch (const boost::exception& ex)
+    {
+      qiLogError() << "Error while closing session: " << boost::diagnostic_information(ex);
+    }
+    catch (...)
+    {
+      qiLogError() << "Unknown error while closing session";
+    }
     session = nullptr;
   }
 
