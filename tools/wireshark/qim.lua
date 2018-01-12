@@ -13,7 +13,7 @@ magic_F = ProtoField.uint32("qim.magic", "Magic", base["HEX"])
 id_F = ProtoField.uint32("qim.id","Id")
 size_F = ProtoField.uint32("qim.size","Size")
 version_F = ProtoField.uint16("qim.version","Version")
-type_F = ProtoField.uint8("qim.type","Type")
+type_F = ProtoField.string("qim.type","Type")
 flags_F = ProtoField.uint8("qim.flags","Flags")
 service_F = ProtoField.uint32("qim.service","Service")
 object_F = ProtoField.uint32("qim.object","Object")
@@ -61,9 +61,14 @@ function qim_proto.dissector(buffer,pinfo,tree)
     offset = offset + 2
     subtree:add_le(version_F, version)
 
-    local typez = buffer(offset, 1)
+    local typez = buffer(offset, 1):uint() + 1
     offset = offset + 1
-    subtree:add_le(type_F, typez)
+    types = { "None", "Call", "Reply", "Error", "Post", "Event", "Capability", "Cancel", "Cancelled" }
+
+    if types[typez] == nil
+    then subtree:add(type_F, "Unknown")
+    else subtree:add(type_F, types[typez])
+    end
 
     local flags = buffer(offset, 1)
     offset = offset + 1
