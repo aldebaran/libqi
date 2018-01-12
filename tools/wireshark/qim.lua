@@ -35,9 +35,9 @@ function qim_proto.dissector(buffer,pinfo,tree)
     return
   end
 
-  offset = 68
-  local magic = buffer(offset, 4)
-  offset = offset + 4
+  buffer = ByteArray.tvb(tcp_data(0,-1), "TCP data")
+  local magic = buffer(0, 4)
+  offset = 4
 
   if tostring(magic) == "42dead42" then
     local subtree = tree:add(qim_proto,"qi::Messaging")
