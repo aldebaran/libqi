@@ -18,7 +18,7 @@ flags_F = ProtoField.uint8("qim.flags","Flags")
 service_F = ProtoField.uint32("qim.service","Service")
 object_F = ProtoField.uint32("qim.object","Object")
 action_F = ProtoField.uint32("qim.action","Action")
-data_F = ProtoField.string("qim.data", "Data")
+data_F = ProtoField.bytes("qim.data", "Data")
 
 
 qim_proto.fields = {src_F, dst_F, magic_F, id_F, size_F, version_F, type_F, flags_F, service_F, object_F, action_F, data_F}
@@ -82,7 +82,7 @@ function qim_proto.dissector(buffer,pinfo,tree)
     subtree:add_le(action_F, action)
 
     local data = buffer(offset, buffer:len() - offset)
-    subtree:add(data_F, tostring(data))
+    subtree:add(data_F, data)
   end
 end
 
