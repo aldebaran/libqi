@@ -15,11 +15,13 @@
 #include <qi/anyfunction.hpp>
 #include <qi/types.hpp>
 #include <qi/macroregular.hpp>
+#include <qi/assert.hpp>
+#include <qi/scoped.hpp>
 #include <boost/weak_ptr.hpp>
 
 namespace qi {
 
-  class QI_API MessageAddress {
+  class MessageAddress {
   public:
     MessageAddress()
       : messageId(0)
@@ -53,29 +55,37 @@ namespace qi {
   using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   class ObjectHost;
 
-  class QI_API Message {
+  class Message
+  {
   public:
-    struct QI_API Header
+    struct Header
     {
-      qi::uint32_t magic = 0;
-      qi::uint32_t id = 0;
+      qi::uint32_t magic = magicCookie;
+      qi::uint32_t id = newMessageId();
       qi::uint32_t size = 0;
-      qi::uint16_t version = 0;
+      qi::uint16_t version = currentVersion();
       qi::uint8_t  type = 0;
       qi::uint8_t  flags = 0;
       qi::uint32_t service = 0;
       qi::uint32_t object = 0;
       qi::uint32_t action = 0;
 
-      Header();
+      bool operator==(const Header& b) const
+      {
+        return magic == b.magic && id == b.id && size == b.size &&
+               version == b.version && type == b.type &&
+               flags == b.flags && service == b.service &&
+               object == b.object && action == b.action;
+      }
 
-      bool operator==(const Header& b) const;
-
-      static unsigned int currentVersion()
+      static inline qi::uint16_t currentVersion()
       {
         return 0;
       }
-      static const unsigned int magicCookie;
+
+      QI_API static qi::uint32_t newMessageId();
+
+      QI_API static const qi::uint32_t magicCookie;
     };
     static_assert(sizeof(Header) == 28, "Message::Header does not have the right size!");
 
@@ -152,76 +162,198 @@ namespace qi {
      */
     static const unsigned int TypeFlag_ReturnType = 2;
 
-    static const char* typeToString(Type t);
-    static const char* actionToString(unsigned int action, unsigned int service);
+    QI_API static const char* typeToString(Type t);
+    QI_API static const char* actionToString(unsigned int action, unsigned int service);
 
     Message() = default;
-    Message(Type type, const MessageAddress &address);
 
-    void setAddress(const MessageAddress &address);
+    Message(Type type, const MessageAddress &address)
+    {
+      setType(type);
+      setAddress(address);
+    }
 
-    void         setId(unsigned int id);
-    unsigned int id() const;
+    void setAddress(const MessageAddress &address)
+    {
+      _header.id = address.messageId;
+      _header.service = address.serviceId;
+      _header.object = address.objectId;
+      _header.action = address.functionId;
+    }
 
-    void         setVersion(qi::uint16_t type);
-    unsigned int version() const;
+    void setId(unsigned int id)
+    {
+      _header.id = id;
+    }
 
-    void         setType(Type type);
-    Type         type() const;
+    unsigned int id() const
+    {
+      return _header.id;
+    }
 
-    void         setFlags(qi::uint8_t flags);
-    void         addFlags(qi::uint8_t flags);
-    qi::uint8_t  flags() const;
+    void setVersion(qi::uint16_t version)
+    {
+      _header.version = version;
+    }
 
-    void         setService(qi::uint32_t service);
-    unsigned int service() const;
+    unsigned int version() const
+    {
+      return _header.version;
+    }
 
-    void         setObject(qi::uint32_t object);
-    unsigned int object() const;
+    void setType(Type type)
+    {
+      _header.type = type;
+    }
 
-    void         setFunction(qi::uint32_t function);
-    unsigned int function() const;
+    Type type() const
+    {
+      return static_cast<Message::Type>(_header.type);
+    }
 
-    void         setEvent(qi::uint32_t event);
-    unsigned int event() const;
+    void setFlags(qi::uint8_t flags)
+    {
+      _header.flags = flags;
+    }
 
-    unsigned int action() const;
+    void addFlags(qi::uint8_t flags)
+    {
+      _header.flags |= flags;
+    }
 
-    void          setBuffer(const Buffer &buffer);
-    void          setBuffer(Buffer&& buffer);
+    qi::uint8_t  flags() const
+    {
+      return _header.flags;
+    }
 
-    const Buffer& buffer() const;
-    Buffer        extractBuffer();
+    void setService(qi::uint32_t service)
+    {
+      _header.service = service;
+    }
 
-    void          setError(const std::string &error);
+    unsigned int service() const
+    {
+      return _header.service;
+    }
+
+    void setObject(qi::uint32_t object)
+    {
+      _header.object = object;
+    }
+
+    unsigned int object() const
+    {
+      return _header.object;
+    }
+
+    QI_API void setFunction(qi::uint32_t function);
+
+    QI_API unsigned int function() const;
+
+    QI_API void setEvent(qi::uint32_t event);
+
+    QI_API unsigned int event() const;
+
+    unsigned int action() const
+    {
+      return _header.action;
+    }
+
+    void setBuffer(const Buffer &buffer)
+    {
+      _buffer = buffer;
+      _header.size = static_cast<qi::uint32_t>(_buffer.totalSize());
+    }
+
+    void setBuffer(Buffer&& buffer)
+    {
+      _buffer = std::move(buffer);
+      _header.size = static_cast<qi::uint32_t>(_buffer.totalSize());
+    }
+
+    const Buffer& buffer() const
+    {
+      return _buffer;
+    }
+
+    Buffer extractBuffer()
+    {
+      Buffer extracted = std::move(_buffer);
+      _buffer.clear();
+      return extracted;
+    }
+
+    void setError(const std::string &error)
+    {
+      QI_ASSERT(type() == Type_Error && "called setError on a non Type_Error message");
+
+      // Clear the buffer before setting an error.
+      _buffer.clear();
+      _header.size = static_cast<qi::uint32_t>(_buffer.totalSize());
+
+      // Error message is of type m (dynamic)
+      AnyValue v(AnyReference::from(error), false, false);
+      setValue(AnyReference::from(v), "m");
+    }
 
     ///@return signature, set by setParameters() or setSignature()
+    QI_API AnyReference value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
 
-    AnyReference value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
-    void setValue(const AutoAnyReference& value, const Signature& signature,
-                  boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
-    void setValues(const std::vector<qi::AnyReference>& values, boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
+    QI_API void setValue(const AutoAnyReference& value,
+                  const Signature& signature,
+                  boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
+                  StreamContext* streamContext = 0);
+
+    QI_API void setValues(const std::vector<qi::AnyReference>& values,
+                   boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
+                   StreamContext* streamContext = 0);
 
     /// Convert values to \p targetSignature and assign to payload.
-    void setValues(const std::vector<qi::AnyReference>& values, const qi::Signature& targetSignature, boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
-    /// Append additional data to payload
-    void appendValue(const AutoAnyReference& value, boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{}, StreamContext* streamContext = 0);
-    MessageAddress address() const;
-    inline Header& header() {return _header;}
-    inline const Header& header() const {return _header;}
+    QI_API void setValues(const std::vector<qi::AnyReference>& values,
+                   const qi::Signature& targetSignature,
+                   boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
+                   StreamContext* streamContext = 0);
 
-    bool         isValid() const;
-    bool operator==(const Message& b) const;
+    /// Append additional data to payload
+    QI_API void appendValue(const AutoAnyReference& value,
+                     boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
+                     StreamContext* streamContext = 0);
+
+    MessageAddress address() const
+    {
+      return MessageAddress(_header.id, _header.service, _header.object, _header.action);
+    }
+
+    Header& header() {return _header;}
+
+    const Header& header() const {return _header;}
+
+    bool operator==(const Message& b) const
+    {
+      return _header == b._header && signature == b.signature && _buffer == b._buffer;
+    }
 
   private:
     Buffer _buffer;
     std::string signature;
     Header _header;
 
-    void encodeBinary(const qi::AutoAnyReference &ref, SerializeObjectCallback onObject, StreamContext* sctx);
+    void encodeBinary(const qi::AutoAnyReference& ref,
+                      SerializeObjectCallback onObject,
+                      StreamContext* sctx)
+    {
+      auto updateHeaderSize = qi::scoped([&] { _header.size = _buffer.totalSize(); });
+      qi::encodeBinary(&_buffer, ref, onObject, sctx);
+    }
   };
 
-  QI_API std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address);
+  inline std::ostream& operator<<(std::ostream& os, const qi::MessageAddress &address)
+  {
+    os << "{" << address.serviceId << "." << address.objectId << "." << address.functionId
+       << ", id:" << address.messageId << "}";
+    return os;
+  }
+
   QI_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 }
 
