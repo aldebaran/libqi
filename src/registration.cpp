@@ -226,7 +226,9 @@ static bool _qiregisterSession() {
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, services);
   builder.advertiseMethod("services", &servicesBouncer);
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, const std::string&, qi::MilliSeconds));
   QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, service, qi::FutureSync<qi::AnyObject>, (const std::string&, qi::MilliSeconds));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, listen);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, endpoints);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, setIdentity);
@@ -238,7 +240,8 @@ static bool _qiregisterSession() {
   // these two methods are variadic, make a dynamic bouncer
   builder.advertiseMethod("loadServiceRename", qi::AnyFunction::fromDynamicFunction(&sessionLoadService));
   builder.advertiseMethod("callModule", qi::AnyFunction::fromDynamicFunction(&sessionCallModule));
-  QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, waitForService);
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, waitForService, qi::FutureSync<void>, (const std::string&, qi::MilliSeconds));
+  QI_OBJECT_BUILDER_ADVERTISE_OVERLOAD(builder, qi::Session, waitForService, qi::FutureSync<void>, (const std::string&));
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceRegistered);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceUnregistered);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, connected);

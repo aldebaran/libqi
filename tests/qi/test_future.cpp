@@ -17,6 +17,8 @@
 
 qiLogCategory("test");
 
+static const qi::MilliSeconds defaultWaitTimeout{500};
+
 SetValue::SetValue(std::atomic<int>& tgt)
   : target(tgt)
   , state(0)
@@ -1113,6 +1115,58 @@ TEST(TestWaitForFirst, FailingTest) {
   ASSERT_TRUE(a.hasError());
 }
 
+namespace
+{
+  struct SetCanceled
+  {
+    void operator()(qi::Promise<void>& p) const
+    {
+      p.setCanceled();
+    }
+  };
+}
+
+TEST(TestCancelOnTimeout, TimeoutCauseCancel)
+{
+  using namespace qi;
+  Promise<void> p{SetCanceled{}};
+  auto fut = p.future();
+  cancelOnTimeout(fut, MilliSeconds{1});
+  ASSERT_EQ(FutureState_Canceled, fut.wait(defaultWaitTimeout));
+}
+
+TEST(TestCancelOnTimeout, AlreadyFinishedWithValue)
+{
+  using namespace qi;
+  Promise<void> p{SetCanceled{}};
+  auto fut = p.future();
+  p.setValue(nullptr);
+  cancelOnTimeout(fut, MilliSeconds{1});
+  ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultWaitTimeout));
+}
+
+TEST(TestCancelOnTimeout, AlreadyFinishedWithError)
+{
+  using namespace qi;
+  Promise<void> p{SetCanceled{}};
+  auto fut = p.future();
+  p.setError("");
+  cancelOnTimeout(fut, MilliSeconds{1});
+  ASSERT_EQ(FutureState_FinishedWithError, fut.wait(defaultWaitTimeout));
+}
+
+TEST(TestCancelOnTimeout, TimeoutCauseCancelAsync)
+{
+  using namespace qi;
+  auto fut = async([]() {
+    std::this_thread::sleep_for(std::chrono::seconds{3});
+  });
+  cancelOnTimeout(fut, MilliSeconds{1});
+
+  // No cancel callback was specified, so the future is still running.
+  ASSERT_EQ(FutureState_Running, fut.wait(defaultWaitTimeout));
+}
+
 TEST(TestAdaptFuture, WithVoid) {
   qi::Promise<void> prom1;
   qi::Promise<void> prom2;
@@ -1254,4 +1308,3 @@ TEST(TestFuturized, returnValueWithArgument)
   ASSERT_TRUE(wasCalled);
   ASSERT_EQ(a+b, x);
 }
-

@@ -9,6 +9,7 @@
 # pragma warning(disable: 4355)
 #endif
 
+#include <qi/scoped.hpp>
 #include "sessionservice.hpp"
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
@@ -133,19 +134,66 @@ namespace qi {
     }
   } // session_service_private
 
+  // Bind the 'set in error' of the promise and request removal.
+  void Session_Service::setErrorAndRemoveRequest(
+    Promise<AnyObject> p, const std::string& message, long requestId)
+  {
+    try
+    {
+      p.setError(message);
+    }
+    catch (...)
+    {
+      qiLogDebug() << "Exception launched while trying to set the `service()` promise. "
+        "Exception ignored because we are in a fallback case. " <<
+        "requestId=" << requestId;
+    }
+    removeRequest(requestId);
+  }
+
+  namespace
+  {
+    void logWarningUnknownServiceRequest(const std::string& caller, long requestId)
+    {
+      qiLogWarning() << caller << ": Unknown service request. "
+        "requestId = " << requestId;
+    }
+  } // namespace
+
+  void Session_Service::SetPromiseInError::operator()()
+  {
+    if (promise && mustSetPromise && !(*promise).future().isFinished())
+    {
+      // It's ok to try removing the request even if it has already been removed.
+      session.setErrorAndRemoveRequest(
+        *promise,
+        "Fallback: error because no value has been provided for service request id "
+          + os::to_string(requestId) + ".",
+        requestId);
+    }
+  }
+
   void Session_Service::onAuthentication(const MessageSocket::SocketEventData& data, long requestId, MessageSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old)
   {
     static const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
     boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
+    {
+      logWarningUnknownServiceRequest("onAuthentication", requestId);
       return;
+    }
+
+    // Ensure the promise is always set.
+    boost::optional<Promise<AnyObject>> promise = sr->promise;
+    bool mustSetPromise = true;
+    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+
     if (data.which() == MessageSocket::Event_Error)
     {
       if (old)
         socket->socketEvent.disconnect(*old);
-      sr->promise.setError(boost::get<std::string>(data));
-      removeRequest(requestId);
+      setErrorAndRemoveRequest(sr->promise, boost::get<std::string>(data), requestId);
       return;
     }
 
@@ -166,16 +214,20 @@ namespace qi {
           error << "Error while authenticating: " << msg.value("s", socket).to<std::string>();
         else
           error << "Expected a message for function #" << Message::ServerFunction_Authenticate << " (authentication), received a message for function " << function;
-        sr->promise.setError(error.str());
-        removeRequest(requestId);
+        setErrorAndRemoveRequest(sr->promise, error.str(), requestId);
       }
       else
       {
         session_service_private::sendCapabilities(socket);
         qi::Future<void> metaObjFut;
         sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
+
+        // TODO 40203: check if it's possible that the following future is never set.
         metaObjFut = sr->remoteObject->fetchMetaObject();
+
+        qiLogVerbose() << "Fetching metaobject (1) for requestId = " << requestId;
         metaObjFut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+        mustSetPromise = false;
       }
       return;
     }
@@ -190,9 +242,8 @@ namespace qi {
     {
       if (old)
         socket->socketEvent.disconnect(*old);
-      std::string error = "Invalid authentication state token.";
-      sr->promise.setError(error);
-      removeRequest(requestId);
+      const std::string error = "Invalid authentication state token.";
+      setErrorAndRemoveRequest(sr->promise, error, requestId);
       qiLogInfo() << error;
       return;
     }
@@ -204,7 +255,9 @@ namespace qi {
       sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
       //ask the remoteObject to fetch the metaObject
       metaObjFut = sr->remoteObject->fetchMetaObject();
+      qiLogVerbose() << "Fetching metaobject (2) for requestId = " << requestId;
       metaObjFut.connect(&Session_Service::onRemoteObjectComplete, this, _1, requestId);
+      mustSetPromise = false;
       return;
     }
 
@@ -217,20 +270,31 @@ namespace qi {
     socket->send(authMsg);
   }
 
-  void Session_Service::onTransportSocketResult(qi::Future<MessageSocketPtr> value, long requestId) {
-    qiLogDebug() << "Got transport socket for service";
+  void Session_Service::onTransportSocketResult(qi::Future<MessageSocketPtr> value, long requestId)
+  {
+    qiLogVerbose() << "Got transport socket for service. requestId = " << requestId;
+
+    bool mustSetPromise = true;
+    boost::optional<Promise<AnyObject>> promise;
+    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+
     {
       boost::recursive_mutex::scoped_lock sl(_requestsMutex);
       ServiceRequest *sr = serviceRequest(requestId);
       if (!sr)
+      {
+        logWarningUnknownServiceRequest("onTransportSocketResult", requestId);
         return;
+      }
+      promise = sr->promise;
 
-      if (value.hasError()) {
-        sr->promise.setError(value.error());
-        removeRequest(requestId);
+      if (value.hasError())
+      {
+        setErrorAndRemoveRequest(sr->promise, value.error(), requestId);
         return;
       }
     }
+
     MessageSocketPtr socket = value.value();
 
     // If true, this socket came from the socket cache and has already been identified.
@@ -245,6 +309,7 @@ namespace qi {
       dummy.setFunction(qi::Message::ServerFunction_Authenticate);
       dummy.setValue(AnyValue::from(cm), typeOf<CapabilityMap>()->signature());
       onAuthentication(MessageSocket::SocketEventData(dummy), requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
+      mustSetPromise = false;
       return;
     }
     ClientAuthenticatorPtr authenticator = _authFactory->newAuthenticator();
@@ -256,7 +321,7 @@ namespace qi {
     }
     SignalSubscriberPtr protSubscriber(new SignalSubscriber);
     *protSubscriber = socket->socketEvent.connect(&Session_Service::onAuthentication, this, _1, requestId, socket, authenticator, protSubscriber);
-
+    mustSetPromise = false;
 
     Message msgCapabilities;
     msgCapabilities.setFunction(Message::ServerFunction_Authenticate);
@@ -276,15 +341,22 @@ namespace qi {
   }
 
   void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {
-    qiLogDebug() << "Got metaobject";
+    qiLogVerbose() << "Got metaobject for request id = " << requestId;
     boost::recursive_mutex::scoped_lock l(_requestsMutex);
     ServiceRequest *sr = serviceRequest(requestId);
     if (!sr)
+    {
+      logWarningUnknownServiceRequest("onRemoteObjectComplete", requestId);
       return;
+    }
 
-    if (future.hasError()) {
-      sr->promise.setError(future.error());
-      removeRequest(requestId);
+    bool mustSetPromise = true;
+    boost::optional<Promise<AnyObject>> promise = sr->promise;
+    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+
+    if (future.hasError())
+    {
+      setErrorAndRemoveRequest(sr->promise, future.error(), requestId);
       return;
     }
 
@@ -301,6 +373,8 @@ namespace qi {
 
         AnyObject o = makeDynamicAnyObject(sr->remoteObject);
         //register the remote object in the cache
+
+        // If this throws, the promise will be set because of the `scoped` object.
         addService(sr->name, o);
         sr->promise.setValue(o);
         sr->remoteObject = 0;
@@ -323,7 +397,6 @@ namespace qi {
   qi::Future<qi::AnyObject> Session_Service::service(const std::string &service,
                                                      const std::string &protocol)
   {
-    qi::Future<qi::AnyObject> result;
     if (protocol == "" || protocol == "local") {
       //qiLogError() << "service is not implemented for local service, it always return a remote service";
       //look for local object registered in the server
@@ -341,7 +414,9 @@ namespace qi {
     {
       boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
       RemoteObjectMap::iterator it = _remoteObjects.find(service);
-      if (it != _remoteObjects.end()) {
+      if (it != _remoteObjects.end())
+      {
+        qiLogVerbose() << "Found service '" << service << "' in the registered remote objects.";
         return qi::Future<qi::AnyObject>(it->second);
       }
     }
@@ -353,41 +428,65 @@ namespace qi {
       {
         if (it->second->name == service)
         {
+          qiLogVerbose() << "Found service '" << service << "' in the pending service requests.";
           return it->second->promise.future();
         }
       }
     }
 
+    // TODO 40203: check if it's possible that the following future is never set.
     qi::Future<qi::ServiceInfo> fut = _sdClient->service(service);
     ServiceRequest *rq = new ServiceRequest(service);
     long requestId = ++_requestsIndex;
+    qiLogVerbose() << "Asynchronously asking service '" << service << "' to SD client. "
+      "requestId = " << os::to_string(requestId);
 
     {
       boost::recursive_mutex::scoped_lock l(_requestsMutex);
       _requests[requestId] = rq;
     }
-    result = rq->promise.future();
+    rq->promise.setOnCancel([=](Promise<AnyObject>& p) mutable {
+      removeRequest(requestId);
+      p.setCanceled();
+    });
+    qi::Future<qi::AnyObject> result = rq->promise.future();
     //rq is not valid anymore after addCallbacks, because it could have been handled and cleaned
-    fut.connect(track([=](Future<ServiceInfo> result) -> void
+    fut.connect(track([=](Future<ServiceInfo> fut) -> void
     {
       qiLogDebug() << "Got serviceinfo message";
+
+      // Ensure that the promise is always set, even in case of exception.
+      bool mustSetPromise = true;
+      boost::optional<Promise<AnyObject>> promise;
+      auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+
       {
         boost::recursive_mutex::scoped_lock sl(_requestsMutex);
         ServiceRequest *sr = serviceRequest(requestId);
         if (!sr)
-          return;
-        if (result.hasError()) {
-          sr->promise.setError(result.error());
-          removeRequest(requestId);
+        {
+          logWarningUnknownServiceRequest("service() ServiceInfo continuation", requestId);
           return;
         }
-        const qi::ServiceInfo &si = result.value();
+
+        qiLogVerbose() << "Received answer from SD client for service '" << sr->name << "'. "
+          "requestId = " << requestId;
+        promise = sr->promise;
+
+        if (fut.hasError())
+        {
+          setErrorAndRemoveRequest(*promise, fut.error(), requestId);
+          return;
+        }
+        const qi::ServiceInfo& si = fut.value();
         sr->serviceId = si.serviceId();
         if (_sdClient->isLocal())
         { // Wait! If sd is local, we necessarily have an open socket
           // on which service was registered, whose lifetime is bound
           // to the service
+          // TODO 40203: Could this block forever?
           MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
+
           if (!s) // weird
             qiLogVerbose() << "_socketOfService returned 0";
           else
@@ -397,6 +496,7 @@ namespace qi {
             {
               qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
               onTransportSocketResult(qi::Future<MessageSocketPtr>(s), requestId);
+              mustSetPromise = false;
               return;
             }
           }
@@ -406,8 +506,7 @@ namespace qi {
           std::stringstream ss;
           ss << "No endpoints returned for service:" << sr->name << " (id:" << sr->serviceId << ")";
           qiLogVerbose() << ss.str();
-          sr->promise.setError(ss.str());
-          removeRequest(requestId);
+          setErrorAndRemoveRequest(*promise, ss.str(), requestId);
           return;
         }
 
@@ -427,13 +526,15 @@ namespace qi {
             std::stringstream ss;
             ss << "No " << protocol << " endpoint available for service:" << sr->name << " (id:" << sr->serviceId << ")";
             qiLogVerbose() << ss.str();
-            sr->promise.setError(ss.str());
+            setErrorAndRemoveRequest(*promise, ss.str(), requestId);
           }
         }
       }
-      qiLogDebug() << "Requesting socket from cache";
-      qi::Future<qi::MessageSocketPtr> fut = _socketCache->socket(result.value(), protocol);
-      fut.connect(&Session_Service::onTransportSocketResult, this, _1, requestId);
+      qiLogVerbose() << "Requesting socket from cache. service = '" << service << "', "
+        "requestId = " << requestId;
+      Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value(), protocol);
+      f.connect(&Session_Service::onTransportSocketResult, this, _1, requestId);
+      mustSetPromise = false;
     }, this));
     return result;
   }

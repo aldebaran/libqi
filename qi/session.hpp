@@ -8,6 +8,7 @@
 #define _QI_MESSAGING_SESSION_HPP_
 
 #include <qi/api.hpp>
+#include <qi/clock.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/authproviderfactory.hpp>
 #include <qi/messaging/clientauthenticatorfactory.hpp>
@@ -54,13 +55,33 @@ namespace qi {
 
     qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
 
-    qi::FutureSync< qi::AnyObject > service(const std::string &aservice)
+    static qi::MilliSeconds defaultServiceTimeout()
     {
-      return service(aservice, "");
+      return qi::Minutes{1};
     }
 
-    qi::FutureSync< qi::AnyObject > service(const std::string &service,
-                                            const std::string &protocol);
+    qi::FutureSync<qi::AnyObject> service(const std::string& name)
+    {
+      return service(name, "", defaultServiceTimeout());
+    }
+
+    qi::FutureSync<qi::AnyObject> service(const std::string& name, qi::MilliSeconds timeout)
+    {
+      return service(name, "", timeout);
+    }
+
+    qi::FutureSync< qi::AnyObject > service(const std::string& name,
+                                            const std::string& protocol)
+    {
+      return service(name, protocol, defaultServiceTimeout());
+    }
+
+    /// Returns the asked service.
+    ///
+    /// If the timeout triggers, the returned future is canceled.
+    qi::FutureSync< qi::AnyObject > service(const std::string& name,
+                                            const std::string& protocol,
+                                            qi::MilliSeconds timeout);
 
     //Server
     qi::FutureSync<void> listen(const qi::Url &address);
@@ -133,8 +154,15 @@ QI_GEN(genCall)
 #undef genCall
 #undef pushi
 
+    /** Waits for a service to become available and fails if the timeout has expired.
+     * The future is set immediately if the service is already available.
+     * The future is canceled if the timeout triggered.
+     */
+    FutureSync<void> waitForService(const std::string& servicename, MilliSeconds timeout);
+
     /** Waits for a service to become available. The future is set immediately
      * if the service is already available.
+     * The timeout used is given by `defaultWaitForServiceTimeout()`.
      */
     qi::FutureSync<void> waitForService(const std::string& service);
 
@@ -146,6 +174,11 @@ QI_GEN(genCall)
     // C4251
     qi::Signal<std::string>               disconnected;
 
+    inline static MilliSeconds defaultWaitForServiceTimeout()
+    {
+      return Minutes{5};
+    }
+
   protected:
     friend class SessionPrivate;
     boost::shared_ptr<SessionPrivate>    _p;
@@ -154,6 +187,8 @@ QI_GEN(genCall)
     qi::Future<AnyValue> _callModule(const std::string& moduleName,
         const AnyReferenceVector& args,
         qi::MetaCallType metacallType);
+
+    qi::FutureSync<void> waitForServiceImpl(const std::string& service);
   };
 
   using SessionPtr = boost::shared_ptr<Session>;

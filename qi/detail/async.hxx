@@ -112,5 +112,38 @@ inline QI_API_DEPRECATED Future<R> async(const AF& fun, const ARG0& arg0 comma A
 QI_GEN(genCall)
 #undef genCall
 #endif
+
+/// Cancels the future when the timeout expires.
+///
+/// The output future is the same as the input one, to allow functional
+/// composition.
+template<typename T, typename Duration>
+Future<T> cancelOnTimeout(Future<T> fut, Duration timeout)
+{
+  auto timeoutTask = [=]() mutable {
+    static const char* const errorMsg =
+      "cancelOnTimeout: timeout task failed to cancel the running task: ";
+    try
+    {
+      // This condition is racy, but the goal is to avoid useless logs
+      // (in the catch clauses).
+      if (fut.isRunning())
+      {
+        fut.cancel();
+      }
+    }
+    catch (const std::runtime_error& e)
+    {
+      qiLogVerbose("qi.Future") << errorMsg << "detail=" << e.what();
+    }
+    catch (...)
+    {
+      qiLogVerbose("qi.Future") << errorMsg << "No detail.";
+    }
+  };
+  asyncDelay(timeoutTask, timeout);
+  return fut;
+}
+
 } // qi
 #endif  // _QI_DETAIL_ASYNC_HXX_

@@ -9,7 +9,10 @@
 # pragma warning(disable: 4355)
 #endif
 
+#include <atomic>
+#include <sstream>
 #include <qi/session.hpp>
+#include <qi/scoped.hpp>
 #include "message.hpp"
 #include "messagesocket.hpp"
 #include <qi/anyobject.hpp>
@@ -212,15 +215,14 @@ namespace qi {
     return _p->_servicesHandler.services(locality);
   }
 
-  qi::FutureSync< qi::AnyObject > Session::service(const std::string &service,
-                                               const std::string &protocol)
+  qi::FutureSync< qi::AnyObject > Session::service(
+    const std::string& service, const std::string& protocol, qi::MilliSeconds timeout)
   {
     if (!isConnected()) {
       return qi::makeFutureError< qi::AnyObject >("Session not connected.");
     }
-    return _p->_serviceHandler.service(service, protocol);
+    return cancelOnTimeout(_p->_serviceHandler.service(service, protocol), timeout);
   }
-
 
   qi::FutureSync<void> Session::listen(const qi::Url &address)
   {
@@ -369,7 +371,17 @@ namespace qi {
     promise.setCanceled();
   }
 
-  qi::FutureSync<void> Session::waitForService(const std::string& servicename)
+  FutureSync<void> Session::waitForService(const std::string& servicename)
+  {
+    return waitForService(servicename, defaultWaitForServiceTimeout());
+  }
+
+  FutureSync<void> Session::waitForService(const std::string& servicename, MilliSeconds timeout)
+  {
+    return cancelOnTimeout(waitForServiceImpl(servicename).async(), timeout);
+  }
+
+  qi::FutureSync<void> Session::waitForServiceImpl(const std::string& servicename)
   {
     boost::shared_ptr<qi::Atomic<int> > link =
       boost::make_shared<qi::Atomic<int> >(0);
@@ -387,17 +399,16 @@ namespace qi {
           promise,
           link);
 
-    qi::Future<qi::AnyObject> s = service(servicename);
-    if (!s.hasError())
-      // service is already available, trigger manually (it's ok if it's
-      // triggered multiple time)
-      _p->onTrackedServiceAdded(servicename, servicename, promise, link);
+    service(servicename).async().then(track([=](Future<AnyObject> fut) {
+      if (!fut.hasError())
+      {
+        _p->onTrackedServiceAdded(servicename, servicename, promise, link);
+      }
+    }, this));
 
     return promise.future();
   }
-
 }
-
 
 #ifdef _MSC_VER
 # pragma warning( pop )

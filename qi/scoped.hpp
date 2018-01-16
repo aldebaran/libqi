@@ -1,6 +1,9 @@
 #pragma once
+#include <functional>
+#include <utility>
 #include <qi/functional.hpp>
 #include <qi/type/traits.hpp>
+#include <qi/utility.hpp>
 #include <qi/macroregular.hpp>
 
 namespace qi
@@ -70,7 +73,7 @@ namespace qi
     /// Regular T1, FunctionObject<U (T1)> F1 where
     ///   T1 is convertible to T, F1 is convertible to F
     template<typename T1, typename F1>
-    Scoped(T1&& t1, F1&& f1) : value(std::forward<T1>(t1)), f(std::forward<F1>(f1))
+    Scoped(T1&& t1, F1&& f1) : value(fwd<T1>(t1)), f(fwd<F1>(f1))
     {
     }
     Scoped() = default;
@@ -117,7 +120,7 @@ namespace qi
     /// We must ensure this cannot be (ab)used as a copy constructor (hence EnableIf).
     template<typename G, typename = traits::EnableIf<!std::is_base_of<Scoped, G>::value>>
     explicit Scoped(G&& f)
-      : f(std::forward<G>(f))
+      : f(fwd<G>(f))
     {
     }
     Scoped() = default;
@@ -153,7 +156,7 @@ namespace qi
   template<typename T, typename F>
   Scoped<traits::Decay<T>, traits::Decay<F>> scoped(T&& value, F&& f)
   {
-    return Scoped<traits::Decay<T>, traits::Decay<F>>{std::forward<T>(value), std::forward<F>(f)};
+    return Scoped<traits::Decay<T>, traits::Decay<F>>{fwd<T>(value), fwd<F>(f)};
   }
 
   /// Returns a Scoped for the given function.
@@ -162,7 +165,7 @@ namespace qi
   /// FunctionObject<U (T)> F where U is not constrained
   template<typename F>
   Scoped<void, traits::Decay<F>> scoped(F&& f) {
-      return Scoped<void, traits::Decay<F>>{std::forward<F>(f)};
+      return Scoped<void, traits::Decay<F>>{fwd<F>(f)};
   }
 
   /// Applies an action and applies its retraction on scope exit.
@@ -198,10 +201,10 @@ namespace qi
     -> Scoped<std::reference_wrapper<T>, traits::Decay<G>>
   {
     // Apply the action now.
-    std::forward<F>(f)(value);
+    fwd<F>(f)(value);
 
     // Apply the retraction on scope exit.
-    return scoped(std::ref(value), std::forward<G>(retraction));
+    return scoped(std::ref(value), fwd<G>(retraction));
   }
 
   /// Applies an action and applies its retraction on scope exit.
@@ -216,7 +219,7 @@ namespace qi
   // A lambda is not used because of the non-evaluated decltype context.
     -> Scoped<std::reference_wrapper<T>, vs13::Retract<traits::Decay<F>>>
   {
-    return scopedApplyAndRetract(value, std::forward<F>(f), retract(f));
+    return scopedApplyAndRetract(value, fwd<F>(f), retract(f));
   }
 
   /// Restores a value on scope exit.
@@ -248,15 +251,15 @@ namespace qi
   // A lambda is not used because of the non-evaluated decltype context.
     -> decltype(scopedApplyAndRetract(
       value,
-      makeMoveAssign<T>(std::forward<U>(newValue)),
+      makeMoveAssign<T>(fwd<U>(newValue)),
       makeMoveAssign<T>(std::move(value))))
   {
     return scopedApplyAndRetract(
       value,
 
-      // Will perform: value = std::move(Decay<U>(std::forward<U>(newValue)));
+      // Will perform: value = std::move(Decay<U>(fwd<U>(newValue)));
       // (c++ is beautiful :D)
-      makeMoveAssign<T>(std::forward<U>(newValue)),
+      makeMoveAssign<T>(fwd<U>(newValue)),
 
       // Will perform: value = std::move(Decay<T>(std::move(oldValue));
       // `oldValue` is `value` when entering this procedure.
