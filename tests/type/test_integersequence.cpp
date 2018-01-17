@@ -68,7 +68,7 @@ namespace test
   template<typename Tuple, std::size_t... I>
   std::ostream& print(std::ostream& o, const Tuple& x, qi::index_sequence<I...>)
   {
-    using swallow = int[];
+    using swallow = std::initializer_list<int>;
     (void)swallow{0, (void(o << std::get<I>(x) << ' '), 0)...};
     return o;
   }
