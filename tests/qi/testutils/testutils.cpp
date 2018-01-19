@@ -31,6 +31,7 @@ namespace test
 
   const std::chrono::milliseconds ScopedProcess::defaultWaitReadyDuration{ 500 };
 
+
   ScopedProcess::ScopedProcess(const std::string& executable,
                                const ScopedProcess::Strings& arguments,
                                std::chrono::milliseconds waitReadyDuration)

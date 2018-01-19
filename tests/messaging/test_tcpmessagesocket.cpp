@@ -708,9 +708,9 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
   };
   auto socket = makeMessageSocket(scheme);
   const auto _2 = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
-  Future<void> futCo = socket->connect(url);
+  Future<void> futCo = test::attemptConnect(*socket, url);
   ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeout));
-  Future<void> futDisco = socket->disconnect();
+  Future<void> futDisco = socket->disconnect().async();
   ASSERT_EQ(FutureState_FinishedWithValue, futDisco.wait(defaultTimeout));
 }
 
@@ -731,7 +731,7 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
     };
     socket = makeMessageSocket(protocol);
-    Future<void> fut = socket->connect(url);
+    Future<void> fut = test::attemptConnect(*socket, url);
     ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
   }
   std::this_thread::sleep_for(std::chrono::milliseconds{500});

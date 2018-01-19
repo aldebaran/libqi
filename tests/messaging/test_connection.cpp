@@ -199,7 +199,7 @@ TEST_F(Connection, testBuffer)
 TEST(ConnectionToStandalone, TcpThenTcps)
 {
   using namespace qi;
-  using std::chrono::milliseconds;
+  using namespace std::chrono;
   using test::ScopedProcess;
 
   // Register a service in another process.
@@ -208,13 +208,11 @@ TEST(ConnectionToStandalone, TcpThenTcps)
   ScopedProcess remoteServiceOwner{
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=tcps://127.0.0.1:54321"}};
 
-  std::this_thread::sleep_for(milliseconds{50});
-
   Session sessionTcp;
-  auto futTcp = sessionTcp.connect("tcp://127.0.0.1:54321");
-  ASSERT_TRUE(futTcp.hasError(1000)); // milliseconds
+  auto futTcp = test::attemptConnect(sessionTcp, "tcp://127.0.0.1:54321");
+  ASSERT_TRUE(test::finishesWithError(futTcp));
 
   Session sessionTcps;
-  auto futTcps = sessionTcps.connect("tcps://127.0.0.1:54321");
-  ASSERT_TRUE(futTcps.hasValue(1000)); // milliseconds
+  auto futTcps = test::attemptConnect(sessionTcps, "tcps://127.0.0.1:54321");
+  ASSERT_TRUE(test::finishesWithValue(futTcps));
 }

@@ -204,4 +204,27 @@ namespace test
   {
     return isStillRunning(fut.async(), qi::fwd<Args>(args)...);
   }
+
+  static const auto defaultConnectionAttemptTimeout = qi::Seconds{10};
+
+  /// Preconditions: attempts >= 0
+  ///
+  /// With Network N:
+  /// qi::TcpMessageSocket<N> S, qi::Url U
+  template<class S, class U>
+  qi::Future<void> attemptConnect(S& socket, U url, qi::MilliSeconds timeout = defaultConnectionAttemptTimeout)
+  {
+    qi::Future<void> result;
+    qi::FutureState state = qi::FutureState_None;
+    const auto deadline = qi::SteadyClock::now() + timeout;
+    while (qi::SteadyClock::now() < deadline && state != qi::FutureState_FinishedWithValue)
+    {
+      if (state != qi::FutureState_Running)
+        result = socket.connect(url).async();
+
+      state = result.wait(defaultConnectionAttemptTimeout);
+    }
+    return result;
+  }
+
 } // namespace test
