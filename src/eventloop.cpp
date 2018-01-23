@@ -441,78 +441,136 @@ namespace qi {
   }
 
   EventLoop::EventLoop(std::string name, int nthreads, bool spawnOnOverload)
-    : _p(new EventLoopAsio(nthreads, name, spawnOnOverload)) // TODO: use make_unique once we can use C++14
+    : _p(std::make_shared<EventLoopAsio>(nthreads, name, spawnOnOverload))
     , _name(name)
   {
   }
 
   EventLoop::~EventLoop()
   {
-    // nothing to do
+    // TODO after compiler upgrades: auto p = std::atomic_exchange(&_p, {});
+    // We need to acquire a copy of the ptr but also reset the member ptr.
+    ImplPtr localImpl;
+    swap(_p, localImpl);
+
+    while (localImpl.use_count() > 1) // Until we are the sole owner.
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    }
+  }
+
+  // With P = std::shared_ptr<T>
+  // boost::synchronized_value<P> PP
+  // Procedure<U (P)> Proc1
+  // Procedure<U ()> Proc2
+  template<typename PP, typename Proc1, typename Proc2 = qi::NoOpProcedure<void()>>
+    auto safeCall(PP& syncPtr, Proc1&& proc, Proc2&& onFail = Proc2{})
+      -> decltype(std::forward<Proc1>(proc)(syncPtr.get()))
+  {
+    if (auto ptr = syncPtr.get()) // Keep alive for the time of the call
+      return std::forward<Proc1>(proc)(ptr);
+    else
+      return std::forward<Proc2>(onFail)();
   }
 
   bool EventLoop::isInThisContext()
   {
-    return _p->isInThisContext();
+    return safeCall(_p, [](const ImplPtr& impl){
+        return impl->isInThisContext();
+      }
+    , []{
+        qiLogDebug() << "EventLoop::isInThisContext() called while EventLoop instance is destroying - ignored.";
+        return false;
+      }
+    );
   }
 
   void EventLoop::join()
   {
     qiLogDebug() << __FUNCTION__ << " is deprecated, the EventLoop is automatically joined when stopped";
-    _p->join();
+    return safeCall(_p, [](const ImplPtr& impl) {
+      return impl->join();
+    });
   }
 
   void EventLoop::start(int nthreads)
   {
-    qiLogDebug() << __FUNCTION__ <<" is deprecated, the EventLoop is automatically started when constructed";
-    _p->start(nthreads);
+    qiLogDebug() << __FUNCTION__ << " is deprecated, the EventLoop is automatically started when constructed";
+    return safeCall(_p, [=](const ImplPtr& impl) {
+      return impl->start(nthreads);
+    });
   }
 
   void EventLoop::stop()
   {
     qiLogDebug() << __FUNCTION__ << " is deprecated, the EventLoop is automatically stopped when destroyed";
-    _p->stop();
+    return safeCall(_p, [](const ImplPtr& impl){
+      return impl->stop();
+    });
   }
 
   void *EventLoop::nativeHandle()
   {
-    return _p->nativeHandle();
+    return safeCall(_p, [](const ImplPtr& impl){
+      return impl->nativeHandle();
+    }
+    , []{ return nullptr; });
   }
 
   void EventLoop::postDelayImpl(boost::function<void()> callback,
       qi::Duration delay)
   {
-    qiLogDebug() << this << " EventLoop post " << &callback;
-    _p->post(delay, callback);
-    qiLogDebug() << this << " EventLoop post done " << &callback;
+    return safeCall(_p, [&](const ImplPtr& impl){
+      qiLogDebug() << this << " EventLoop post " << &callback;
+      impl->post(delay, callback);
+      qiLogDebug() << this << " EventLoop post done " << &callback;
+    });
   }
 
   void EventLoop::post(const boost::function<void()>& callback,
       qi::SteadyClockTimePoint timepoint)
   {
-    qiLogDebug() << this << " EventLoop post " << &callback;
-    _p->post(timepoint, callback);
-    qiLogDebug() << this << " EventLoop post done " << &callback;
+    return safeCall(_p, [&](const ImplPtr& impl){
+      qiLogDebug() << this << " EventLoop post " << &callback;
+      impl->post(timepoint, callback);
+      qiLogDebug() << this << " EventLoop post done " << &callback;
+    });
   }
+
+  namespace {
+    qi::Future<void> onDestructingError()
+    {
+      return qi::makeFutureError<void>("Async call attempted while EventLoop instance is destroying.");
+    }
+  }
+
 
   qi::Future<void> EventLoop::asyncDelayImpl(boost::function<void()> callback, qi::Duration delay)
   {
-    return _p->asyncCall(delay, callback);
+    return safeCall(_p, [&](const ImplPtr& impl) {
+        return impl->asyncCall(delay, callback);
+      }, onDestructingError );
   }
 
   qi::Future<void> EventLoop::asyncAtImpl(boost::function<void()> callback, qi::SteadyClockTimePoint timepoint)
   {
-    return _p->asyncCall(timepoint, callback);
+    return safeCall(_p, [&](const ImplPtr& impl){
+      return impl->asyncCall(timepoint, callback);
+    }, onDestructingError );
   }
 
   void EventLoop::setEmergencyCallback(boost::function<void()> cb)
   {
-    *_p->_emergencyCallback = cb;
+    return safeCall(_p, [&](const ImplPtr& impl){
+      *impl->_emergencyCallback = cb;
+    });
   }
 
   void EventLoop::setMaxThreads(unsigned int max)
   {
-    _p->setMaxThreads(max);
+    return safeCall(_p, [=](const ImplPtr& impl){
+      return impl->setMaxThreads(max);
+    });
   }
 
   struct MonitorContext

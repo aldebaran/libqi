@@ -11,7 +11,7 @@
 #  pragma warning( disable: 4503 ) // decorated name length
 # endif
 
-# include <boost/shared_ptr.hpp>
+# include <boost/thread/synchronized_value.hpp>
 # include <boost/function.hpp>
 
 # include <qi/types.hpp>
@@ -163,7 +163,8 @@ namespace qi
     Future<void> monitorEventLoop(EventLoop* helper, uint64_t maxUsDelay);
 
   private:
-    std::unique_ptr<EventLoopPrivate> _p;
+    using ImplPtr = std::shared_ptr<EventLoopPrivate>;
+    boost::synchronized_value<ImplPtr> _p;
     std::string       _name;
 
     void postImpl(boost::function<void()> callback) override
