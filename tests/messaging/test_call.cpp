@@ -562,34 +562,6 @@ TEST(TestCall, TestGenericConversionTuple) {
 }
 
 
-void set_true(bool* b)
-{
-  *b = true;
-}
-
-int service_call(qi::SessionPtr s, const std::string& obj,
-  const std::string& method, int arg)
-{
-  qiLogDebug() << "TEST: servicecall";
-  qi::AnyObject o = s->service(obj);
-  return o.call<int>(method, arg);
-}
-
-void servicecall_addone(qi::Promise<int>& prom, qi::SessionPtr s)
-{
-  qiLogDebug() << "TEST: call servicecall";
-  qi::AnyObject obj2Proxy = s->service("caller");
-  qiLogDebug() << "TEST: got service";
-  qi::Future<int> v = obj2Proxy.async<int>("serviceCall", "adder", "addOne", 5);
-  v.wait(usualTimeout);
-  if (!v.isFinished())
-    prom.setError("timeout");
-  else if (v.hasError())
-    prom.setError(v.error());
-  else
-    prom.setValue(v.value());
-}
-
 TEST(TestCall, PairClientListen)
 {
   TestSessionPair p;
@@ -599,36 +571,6 @@ TEST(TestCall, PairClientListen)
   p.client()->registerService("adder", obj);
   qi::AnyObject o = p.server()->service("adder");
   ASSERT_TRUE(o);
-}
-
-TEST(TestCall, DeadLock)
-{
-  // This test deadlocks if all objects are in the same monothreaded event loop
-  std::unique_ptr<qi::EventLoop> ev( new qi::EventLoop{} );
-  ev->start();
-  // One object calls another, both in singleThread mode
-  TestSessionPair p;
-
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("addOne", &addOne);
-  qi::AnyObject obj(ob.object());
-  p.server()->registerService("adder", obj);
-
-  qi::DynamicObjectBuilder ob2;
-  ob2.advertiseMethod("serviceCall",
-    (boost::function<int(std::string, std::string, int)>)
-    boost::bind(&service_call, p.client(), _1, _2, _3));
-  qi::AnyObject obj2(ob2.object());
-  p.client()->registerService("caller", obj2);
-
-  qi::Promise<int> prom;
-
-  // From the object event loop of process 'server', call a method from
-  // object in client, which will call back a method in server
-  qiLogDebug() << "TEST: go async servicecall_addone";
-  qi::getEventLoop()->async(
-    boost::bind(&servicecall_addone, boost::ref(prom), p.server()));
-  ASSERT_EQ(6, prom.future().value(2000));
 }
 
 void onEvent(int v, qi::Promise<int>& eventValue, qi::AnyObject* ptr)
