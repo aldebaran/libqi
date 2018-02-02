@@ -16,12 +16,14 @@ version_F = ProtoField.uint16("qim.version","Version")
 type_F = ProtoField.string("qim.type","Type")
 flags_F = ProtoField.uint8("qim.flags","Flags")
 service_F = ProtoField.uint32("qim.service","Service")
+service_desc_F = ProtoField.string("qim.action","Service description")
 object_F = ProtoField.uint32("qim.object","Object")
 action_F = ProtoField.uint32("qim.action","Action")
+action_desc_F = ProtoField.string("qim.action","Action description")
 data_F = ProtoField.bytes("qim.data", "Data")
 
 
-qim_proto.fields = {src_F, dst_F, magic_F, id_F, size_F, version_F, type_F, flags_F, service_F, object_F, action_F, data_F}
+qim_proto.fields = {src_F, dst_F, magic_F, id_F, size_F, version_F, type_F, flags_F, service_F, service_desc_F, object_F, action_F, action_desc_F, data_F}
 
 function qim_proto.dissector(buffer,pinfo,tree)
   local tcp_src = tcp_src_f()
@@ -61,7 +63,7 @@ function qim_proto.dissector(buffer,pinfo,tree)
     offset = offset + 2
     subtree:add_le(version_F, version)
 
-    local typez = buffer(offset, 1):uint() + 1
+    local typez = buffer(offset, 1):le_uint() + 1
     offset = offset + 1
     types = { "None", "Call", "Reply", "Error", "Post", "Event", "Capability", "Cancel", "Cancelled" }
 
@@ -78,6 +80,13 @@ function qim_proto.dissector(buffer,pinfo,tree)
     offset = offset + 4
     subtree:add_le(service_F, service)
 
+    local service_uid = service:le_uint() + 1
+    services = { "ServiceServer", "ServiceDirectory" }
+
+    if services[service_uid] ~= nil then
+        subtree:add(service_desc_F, services[service_uid])
+    end
+
     local object = buffer(offset, 4)
     offset = offset + 4
     subtree:add_le(object_F, object)
@@ -85,6 +94,20 @@ function qim_proto.dissector(buffer,pinfo,tree)
     local action = buffer(offset, 4)
     offset = offset + 4
     subtree:add_le(action_F, action)
+
+    local action_uid = action:le_uint() + 1
+    actions = { "registerEvent", "unregisterEvent", "metaObject", "terminate",
+        "getProperty", "setProperty", "properties", "registerEventWithSignature" }
+
+    local metaobject_method = 9
+    local server_service_uid = 1
+
+    if action_uid == metaobject_method and
+        service_uid == server_service_uid then
+        subtree:add(action_desc_F, "authenticate")
+    elseif actions[action_uid] ~= nil then
+        subtree:add(action_desc_F, actions[action_uid])
+    end
 
     local data = buffer(offset, buffer:len() - offset)
     subtree:add(data_F, data)
