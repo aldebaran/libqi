@@ -22,13 +22,19 @@ class AuthProviderFactory;
 using AuthProviderFactoryPtr = boost::shared_ptr<AuthProviderFactory>;
 class ClientAuthenticatorFactory;
 using ClientAuthenticatorFactoryPtr = boost::shared_ptr<ClientAuthenticatorFactory>;
-class GatewayPrivate;
-using GatewayPrivatePtr = std::unique_ptr<GatewayPrivate>;
 
 class QI_API Gateway
 {
-  GatewayPrivatePtr _p;
+  class Impl;
+  std::unique_ptr<Impl> _p;
 public:
+  enum class IdValidationStatus
+  {
+    Valid,                ///< The provided identity is stored and checked as valid.
+    Invalid,              ///< The provided identity is invalid.
+    PendingCheckOnListen, ///< The provided identity is stored and will be checked on next listen.
+  };
+
   /**
    * @param enforceAuth If set to true, reject clients that try to skip the authentication step. If false, accept all
    * incoming connections whether or not they authentify.
@@ -40,7 +46,11 @@ public:
 
   UrlVector endpoints() const;
   bool listen(const Url& url);
+
+  QI_API_DEPRECATED_MSG("Use setValidateIdentity() instead.")
   bool setIdentity(const std::string& key, const std::string& crt);
+
+  Future<IdValidationStatus> setValidateIdentity(const std::string& key, const std::string& crt);
   qi::Future<void> attachToServiceDirectory(const Url& serviceDirectoryUrl);
   void close();
 };

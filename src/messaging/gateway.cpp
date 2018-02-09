@@ -14,8 +14,31 @@ qiLogCategory("qimessaging.gateway");
 namespace qi
 {
 
+namespace
+{
+
+void logAnyMirroringFailure(const MirroringResults& results)
+{
+  std::ostringstream errorMsg;
+  bool atLeastOneFailed = false;
+  for (const auto& result : results)
+  {
+    if (result.status == MirroringResult::Status::Failed_Error)
+    {
+      if (atLeastOneFailed)
+        errorMsg << ", ";
+      errorMsg << result.serviceName;
+      atLeastOneFailed = true;
+    }
+  }
+  if (atLeastOneFailed)
+    qiLogWarning() << "Failed to mirror the following services: " << errorMsg.str();
+}
+
+}
+
 Gateway::Gateway(bool enforceAuth)
-  : _p(new GatewayPrivate(enforceAuth))
+  : _p(new Gateway::Impl(enforceAuth))
   , connected(_p->connected)
 {
 }
@@ -42,21 +65,28 @@ bool Gateway::setIdentity(const std::string& key, const std::string& crt)
   return _p->setIdentity(key, crt).value();
 }
 
-qi::Future<void> Gateway::attachToServiceDirectory(const Url& serviceDirectoryUrl)
+Future<Gateway::IdValidationStatus> Gateway::setValidateIdentity(const std::string& key,
+                                                                 const std::string& crt)
 {
-  return _p->connect(serviceDirectoryUrl);
+  return _p->setValidateIdentity(key, crt);
 }
 
-GatewayPrivate::GatewayPrivate(bool enforceAuth)
+
+qi::Future<void> Gateway::attachToServiceDirectory(const Url& serviceDirectoryUrl)
+{
+  return _p->connect(serviceDirectoryUrl).andThen(&logAnyMirroringFailure);
+}
+
+Gateway::Impl::Impl(bool enforceAuth)
   : _isEnforcedAuth(enforceAuth)
 {}
 
-GatewayPrivate::~GatewayPrivate()
+Gateway::Impl::~Impl()
 {
   try
   {
-    closeNow();
     _strand.join();
+    closeUnsync();
   }
   catch (const std::exception& ex)
   {
@@ -68,88 +98,134 @@ GatewayPrivate::~GatewayPrivate()
   }
 }
 
-void GatewayPrivate::closeNow()
+void Gateway::Impl::closeUnsync()
 {
   connected = false;
   // TODO: consider chain the following operations asynchronously and return a future
   _server.reset();
   _sdClient.reset();
-  _registeredServices.clear();
 }
 
-Future<void> GatewayPrivate::close()
+Future<void> Gateway::Impl::close()
 {
-  return _strand.async([&]{ closeNow(); });
+  return _strand.async([&]{
+    closeUnsync();
+  });
 }
 
-Future<UrlVector> GatewayPrivate::endpoints() const
+Future<UrlVector> Gateway::Impl::endpoints() const
 {
-  return _strand.async([&]{ return _server->endpoints(); });
+  return _strand.async([&]{
+    return _server ? _server->endpoints() : UrlVector{};
+  });
 }
 
-Future<bool> GatewayPrivate::listen(const Url& url)
+Future<bool> Gateway::Impl::listen(const Url& url)
 {
   return _strand.async([=] {
     _listenUrl = url;
     try
     {
-      _server = recreateServer();
-      return _server->listenStandalone(url).async().then([url](Future<void> listenFut) {
-        if (listenFut.hasError())
-        {
-          qiLogError() << "Error while trying to listen at '" << url.str()
-                       << "': " << listenFut.error();
-          return false;
-        }
-        return true;
-      });
+      _server = createServerUnsync();
+      return mirrorAllServices()
+          .andThen(&logAnyMirroringFailure)
+          .andThen(_strand.unwrappedSchedulerFor([=](void*) {
+            if (!_server)
+              throw std::runtime_error{ "No server available to listen" };
+            return _server->listenStandalone(url).async().then([url](Future<void> listenFut) {
+              if (listenFut.hasError())
+              {
+                qiLogError() << "Error while trying to listen at '" << url.str()
+                             << "': " << listenFut.error();
+                return false;
+              }
+              return true;
+            });
+          })).unwrap();
     }
     catch (const std::exception& ex)
     {
       qiLogError() << "Exception caught while trying to listen at '" << url.str()
                    << "': " << ex.what();
-      return Future<bool>{false};
+      throw;
     }
   }).unwrap();
 }
 
-Future<bool> GatewayPrivate::setIdentity(const std::string& key, const std::string& crt)
+Future<bool> Gateway::Impl::setIdentity(const std::string& key, const std::string& crt)
 {
-  return _strand.async([=] {
-    auto res = _server->setIdentity(key, crt);
-    _identity = { key, crt };
-    return res;
+  return setValidateIdentity(key, crt).andThen([](IdValidationStatus status) {
+    return status == IdValidationStatus::Valid;
   });
 }
 
-Future<void> GatewayPrivate::connect(const Url& sdUrl)
+Future<Gateway::IdValidationStatus> Gateway::Impl::setValidateIdentity(const std::string& key,
+                                                                       const std::string& crt)
 {
-  if (!sdUrl.isValid()) return makeFutureError<void>("Invalid service directory URL");
+  return _strand.async([=] {
+    if (key.empty() || crt.empty())
+    {
+      _identity.reset();
+      return IdValidationStatus::Invalid;
+    }
+    _identity = Identity{ key, crt };
+    if (!_server)
+      return IdValidationStatus::PendingCheckOnListen;
+    return _server->setIdentity(key, crt) ? IdValidationStatus::Valid : IdValidationStatus::Invalid;
+  });
+}
+
+Future<MirroringResults> Gateway::Impl::connect(const Url& sdUrl)
+{
+  if (!sdUrl.isValid()) return makeFutureError<MirroringResults>("Invalid service directory URL");
   return _strand.async([=] {
     _sdClient.reset(new Session);
     return _sdClient->connect(sdUrl)
         .async()
         .andThen(_strand.unwrappedSchedulerFor([=](void*) {
           connected = true;
-          return bindServicesToServiceDirectory(sdUrl);
+          return bindToServiceDirectoryUnsync(sdUrl);
         }))
         .unwrap()
-        .then(_strand.schedulerFor([=](Future<void> connectFut) {
+        .then(_strand.unwrappedSchedulerFor([=](Future<MirroringResults> connectFut) {
           // If any error occurred during connection, no need to keep the SD client alive
           if (connectFut.hasError())
             _sdClient.reset();
+          return connectFut;
         })).unwrap();
   }).unwrap();
 }
 
-bool GatewayPrivate::mirrorService(const std::string& serviceName)
+Future<MirroringResults> Gateway::Impl::mirrorAllServices()
 {
-  qiLogInfo() << "Mirrorring service '" << serviceName << "'";
+  return _strand.async([=] {
+    if (!_sdClient)
+      return makeFutureError<MirroringResults>("Not connected to service directory");
+    qiLogVerbose() << "Mirroring services: requesting list of services from ServiceDirectory";
+    return _sdClient->services().async().andThen(_strand.schedulerFor(
+        [=](const std::vector<ServiceInfo>& services) {
+          qiLogVerbose() << "Mirroring services: received list of services from the ServiceDirectory";
+          MirroringResults results;
+          for (const auto& serviceInfo : services)
+            results.push_back({ serviceInfo.name(), mirrorServiceUnsync(serviceInfo.name()) });
+          return results;
+        })).unwrap();
+  }).unwrap();
+}
+
+MirroringResult::Status Gateway::Impl::mirrorServiceUnsync(const std::string& serviceName)
+{
+  qiLogInfo() << "Mirroring service '" << serviceName << "'";
   if (serviceName == Session::serviceDirectoryServiceName())
   {
-    qiLogVerbose() << "Service '" << serviceName << "' should not be mirrorred, skipping";
-    return false;
+    qiLogVerbose() << "Service '" << serviceName << "' should not be mirrored, skipping";
+    return MirroringResult::Status::Skipped;
   }
+
+  if (!_server)
+    return MirroringResult::Status::Failed_NotListening;
+  if (!_sdClient)
+    return MirroringResult::Status::Failed_NoSdConnection;
 
   boost::optional<unsigned int> serviceId;
   try
@@ -158,12 +234,10 @@ bool GatewayPrivate::mirrorService(const std::string& serviceName)
     serviceId =
         _server->registerService(serviceName, _sdClient->service(serviceName).value()).value();
     qiLogVerbose() << "Service '" << serviceName << "' registered to the gateway local server";
-    _registeredServices[serviceName] = *serviceId;
-    return true;
   }
   catch (const std::exception& e)
   {
-    qiLogError() << "An error occurred while mirrorring service '" << serviceName
+    qiLogError() << "An error occurred while mirroring service '" << serviceName
                  << "': " << e.what();
     if (serviceId)
     {
@@ -172,38 +246,39 @@ bool GatewayPrivate::mirrorService(const std::string& serviceName)
       _server->unregisterService(*serviceId).value();
       qiLogVerbose() << "Service '" << serviceName << "' unregistered from the gateway local server";
     }
-    return false;
+    return MirroringResult::Status::Failed_Error;
   }
+  return MirroringResult::Status::Done;
 }
 
-Future<void> GatewayPrivate::bindServicesToServiceDirectory(const Url& url)
+Future<MirroringResults> Gateway::Impl::bindToServiceDirectoryUnsync(const Url& url)
 {
-  _registeredServices.clear();
+  if (!_sdClient)
+    return makeFutureError<MirroringResults>("Not connected to service directory");
 
-  qiLogInfo() << "Will now mirror " << url.str() << "'s services to "
-              << (_listenUrl.isValid() ? _listenUrl.str() : "no url");
+  qiLogInfo() << "Binding to service directory at url '" << url.str() << "'";
 
-    // When one of the services is registered to the original service
-    // directory, register it to this service directory.
-  bool success = false;
+  bool bindingSucceeded = false;
 
+  // When one of the services is registered to the original service
+  // directory, register it to this service directory.
   auto scopedDisconnectServiceRegistered =
-      scoped(_sdClient->serviceRegistered
-                 .connect(_strand.schedulerFor(
-                     [=](unsigned int, const std::string& service) { mirrorService(service); })),
+      scoped(_sdClient->serviceRegistered.connect(_strand.schedulerFor(
+                 [=](unsigned int, const std::string& service) { mirrorServiceUnsync(service); })),
              [&](const SignalSubscriber& sigSub) {
-               if (!success)
+               if (!bindingSucceeded)
                  _sdClient->serviceRegistered.disconnect(sigSub.link());
              });
 
   // When one of the services we track is unregistered from the original service
   // directory, unregister it from the this service directory.
   auto scopedDisconnectServiceUnregistered =
-      scoped(_sdClient->serviceUnregistered
-                 .connect(_strand.schedulerFor(
-                     [=](unsigned int, const std::string& service) { removeService(service); })),
+      scoped(_sdClient->serviceUnregistered.connect(
+                 _strand.schedulerFor([=](unsigned int id, const std::string& service) {
+                   removeServiceUnsync(id, service);
+                 })),
              [&](const SignalSubscriber& sigSub) {
-               if (!success)
+               if (!bindingSucceeded)
                  _sdClient->serviceUnregistered.disconnect(sigSub.link());
              });
 
@@ -211,109 +286,101 @@ Future<void> GatewayPrivate::bindServicesToServiceDirectory(const Url& url)
   auto scopedDisconnectDisconnected =
       scoped(_sdClient->disconnected
                  .connect(_strand.schedulerFor([=](const std::string& reason) {
-                   resetConnectionToServiceDirectory(url, reason);
+                   resetConnectionToServiceDirectoryUnsync(url, reason);
                  })),
              [&](const SignalSubscriber& sigSub) {
-               if (!success)
+               if (!bindingSucceeded)
                  _sdClient->disconnected.disconnect(sigSub.link());
              });
 
   // Mirror all services already available
-  const auto servicesFut = _sdClient->services().async().andThen(_strand.schedulerFor(
-        [=](const std::vector<ServiceInfo>& services) {
-          for (const auto& serviceInfo : services)
-            mirrorService(serviceInfo.name());
-        })).unwrap();
+  const auto servicesFut = mirrorAllServices();
 
-  success = true;
+  bindingSucceeded = true;
   return servicesFut;
 }
 
-void GatewayPrivate::resetConnectionToServiceDirectory(const Url& url, const std::string& reason)
+void Gateway::Impl::resetConnectionToServiceDirectoryUnsync(const Url& url, const std::string& reason)
 {
   qiLogWarning() << "Lost connection to the ServiceDirectory: " << reason;
 
-  closeNow();
+  closeUnsync();
 
   static const Duration retryTimer = Seconds{ 1 };
   asyncDelay(_strand.schedulerFor([=]{ retryConnect(url, retryTimer); }), retryTimer);
 }
 
-bool GatewayPrivate::removeService(const std::string& service)
+void Gateway::Impl::removeServiceUnsync(unsigned int id, const std::string& service)
 {
-  auto it = _registeredServices.find(service);
-  if (it == _registeredServices.end())
-    return false;
-  const auto id = it->second;
-  _registeredServices.erase(it);
+  if (!_server)
+    return;
 
   try
   {
     _server->unregisterService(id);
     qiLogInfo() << "Removed unregistered service " << service;
-    return true;
   }
   catch (const std::exception& e)
   {
     qiLogInfo() << "Error while unregistering " << service << ": " << e.what();
-    return false;
+    throw;
   }
 }
 
-Future<void> GatewayPrivate::retryConnect(const Url& sdUrl, Duration lastTimer)
+Future<void> Gateway::Impl::retryConnect(const Url& sdUrl, Duration lastTimer)
 {
-  return connect(sdUrl).then(_strand.unwrappedSchedulerFor([=](const Future<void>& connectFuture)
-    {
-      if (connectFuture.hasError())
-      {
-        auto newTimer = lastTimer * 2;
-        qiLogWarning() << "Can't reach ServiceDirectory at address " << sdUrl.str()
-                       << ", retrying in "
-                       << boost::chrono::duration_cast<Seconds>(lastTimer).count() << "sec.";
-        return asyncDelay(_strand.schedulerFor([=]{ retryConnect(sdUrl, newTimer); }), newTimer);
-      }
-      else
-      {
-        qiLogInfo() << "Successfully reestablished connection to the ServiceDirectory at address "
-                    << sdUrl.str();
-        if (!_listenUrl.isValid())
-          return Future<void>{ nullptr };
+  return connect(sdUrl)
+      .then(_strand.unwrappedSchedulerFor([=](const Future<MirroringResults>& connectFuture) {
+        if (connectFuture.hasError())
+        {
+          auto newTimer = lastTimer * 2;
+          qiLogWarning() << "Can't reach ServiceDirectory at address " << sdUrl.str()
+                         << ", retrying in "
+                         << boost::chrono::duration_cast<Seconds>(lastTimer).count() << "sec.";
+          return asyncDelay(_strand.schedulerFor([=] { retryConnect(sdUrl, newTimer); }), newTimer);
+        }
+        else
+        {
+          qiLogInfo() << "Successfully reestablished connection to the ServiceDirectory at address "
+                      << sdUrl.str();
+          logAnyMirroringFailure(connectFuture.value());
 
-        qiLogInfo() << "Trying to listen to " << _listenUrl.str();
-        const auto listenUrl = _listenUrl;
-        return listen(_listenUrl).then([listenUrl](Future<bool> futSuccess){
-          if (!futSuccess.hasError() && futSuccess.value())
-          {
-            qiLogInfo() << "Listening to " << listenUrl.str();
+          if (!_listenUrl.isValid())
             return Future<void>{ nullptr };
-          }
-          else
-          {
-            std::ostringstream oss;
-            oss << "Listening to " << listenUrl.str() << " failed";
-            const auto msg = oss.str();
-            qiLogInfo() << msg;
-            return makeFutureError<void>(msg);
-          }
-        }).unwrap();
-      }
-  })).unwrap();
+
+          const auto listenUrl = _listenUrl;
+          qiLogInfo() << "Trying to listen to " << listenUrl.str();
+          return listen(_listenUrl)
+              .then([listenUrl](Future<bool> futSuccess) {
+                if (!futSuccess.hasError() && futSuccess.value())
+                {
+                  qiLogInfo() << "Listening to " << listenUrl.str();
+                  return Future<void>{ nullptr };
+                }
+                else
+                {
+                  std::ostringstream oss;
+                  oss << "Listening to " << listenUrl.str() << " failed";
+                  const auto msg = oss.str();
+                  qiLogInfo() << msg;
+                  return makeFutureError<void>(msg);
+                }
+              })
+              .unwrap();
+        }
+      }))
+      .unwrap();
 }
 
-std::unique_ptr<Session> GatewayPrivate::recreateServer()
+std::unique_ptr<Session> Gateway::Impl::createServerUnsync()
 {
   std::unique_ptr<Session> server{ new Session{ _isEnforcedAuth } };
 
-  if (!_identity.first.empty() && !_identity.second.empty())
-    server->setIdentity(_identity.first, _identity.second);
-
-  for (const auto& serviceNameId : _registeredServices)
+  if (_identity && !server->setIdentity(_identity->key, _identity->crt))
   {
-    const auto serviceName = serviceNameId.first;
-    server->registerService(serviceName, _sdClient->service(serviceName).value());
+    throw std::runtime_error{ "Invalid identity parameters : key: '" + _identity->key +
+                              "', crt: '" + _identity->crt + "'" };
   }
-
   return server;
 }
-
 }
