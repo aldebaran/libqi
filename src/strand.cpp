@@ -14,6 +14,21 @@ qiLogCategory("qi.strand");
 
 namespace qi {
 
+namespace
+{
+  // Executes the callback immediately. This function returns a Future for consistency with the
+  // async functions and simplicity of use. The future will be in error if the callback throws
+  // an exception.
+  // Procedure<void()> Proc
+  template<typename Proc>
+  Future<void> execNow(Proc&& proc)
+  {
+    Promise<void> p;
+    detail::setPromiseFromCallWithExceptionSupport(p, std::forward<Proc>(proc));
+    return p.future();
+  }
+}
+
 enum class StrandPrivate::State
 {
   None,
@@ -57,6 +72,9 @@ Future<void> StrandPrivate::asyncAtImpl(boost::function<void()> cb, qi::SteadyCl
 
 Future<void> StrandPrivate::asyncDelayImpl(boost::function<void()> cb, qi::Duration delay)
 {
+  if (delay == qi::Duration::zero() && isInThisContext())
+    return execNow(std::move(cb));
+
   boost::shared_ptr<Callback> cbStruct = createCallback(std::move(cb));
   cbStruct->promise =
     qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
@@ -239,6 +257,11 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
   }
 }
 
+bool StrandPrivate::isInThisContext() const
+{
+  return _processingThread == qi::os::gettid();
+}
+
 Strand::Strand()
   : _p(new StrandPrivate(*qi::getEventLoop()))
 {
@@ -343,11 +366,11 @@ void Strand::postImpl(boost::function<void()> callback)
     prv->enqueue(prv->createCallback(std::move(callback)));
 }
 
-bool Strand::isInThisContext()
+bool Strand::isInThisContext() const
 {
   auto prv = boost::atomic_load(&_p);
   if (prv)
-    return prv->_processingThread == qi::os::gettid();
+    return prv->isInThisContext();
   else
     return false;
 }

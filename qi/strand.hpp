@@ -66,9 +66,8 @@ public:
 
   void process();
   void cancel(boost::shared_ptr<Callback> cbStruct);
+  bool isInThisContext() const override;
 
-  // don't care
-  bool isInThisContext() override { QI_ASSERT(false); throw 0; }
   void postImpl(boost::function<void()> callback) override { QI_ASSERT(false); throw 0; }
   qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
   { QI_ASSERT(false); throw 0; }
@@ -149,7 +148,7 @@ public:
    * \return true if current code is running in this strand, false otherwise. If the strand is dying (destroy() has been
    * called, returns false)
    */
-  bool isInThisContext() override;
+  bool isInThisContext() const override;
 
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})

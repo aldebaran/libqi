@@ -93,7 +93,7 @@ public:
   }
 
   /// return true if the current thread is in this context
-  virtual bool isInThisContext() = 0;
+  virtual bool isInThisContext() const = 0;
 
 protected:
   virtual void postImpl(boost::function<void()> callback) = 0;
