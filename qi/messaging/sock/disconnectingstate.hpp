@@ -30,14 +30,20 @@ namespace qi
         : _socket(socket)
         , _disconnectedPromise(disconnectedPromise)
       {
-        QI_LOG_DEBUG_SOCKET(_socket.get()) << "Entering Disconnecting state";
+      }
+      Disconnecting() = default;
+      void operator()()
+      {
         // The socket is the output of the connecting state. It this state fails,
         // we don't have any socket, so it is null here.
         // Even in this case, we still enter the disconnecting state for
         // consistency reasons.
-        if (socket)
+        if (_socket)
         {
+          // We copy members to avoid having a reference to this in the lambda (and having to handle
+          // lifetime issues).
           auto completePromise = _completePromise;
+          auto socket = _socket;
           socket->get_io_service().wrap([=]() mutable {
             QI_LOG_DEBUG_SOCKET(socket.get()) << "Disconnecting: before socket close";
             close<N>(socket);
@@ -49,21 +55,6 @@ namespace qi
           // Nothing to do: disconnection is therefore complete.
           _completePromise.setValue(nullptr);
         }
-      }
-      // TODO: replace by "= default" when get rid of VS2013.
-      Disconnecting(Disconnecting&& x)
-        : _socket(std::move(x._socket))
-        , _disconnectedPromise(std::move(x._disconnectedPromise))
-        , _completePromise(std::move(x._completePromise))
-      {
-      }
-      // TODO: replace by "= default" when get rid of VS2013.
-      Disconnecting& operator=(Disconnecting&& x)
-      {
-        _socket = std::move(x._socket);
-        _disconnectedPromise = std::move(x._disconnectedPromise);
-        _completePromise = std::move(x._completePromise);
-        return *this;
       }
       Future<void> disconnectedPromise() const
       {

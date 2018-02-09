@@ -497,12 +497,16 @@ namespace qi {
   {
     bool wasConnected = false;
     {
-      boost::recursive_mutex::scoped_lock lock(_stateMutex);
-      DisconnectingState dis{socket, promiseDisconnected};
-      wasConnected = (getStatus() == Status::Connected);
-      _state = std::move(dis);
+      DisconnectingState disconnect{socket, promiseDisconnected};
+      {
+        boost::recursive_mutex::scoped_lock lock(_stateMutex);
+        wasConnected = (getStatus() == Status::Connected);
+        QI_LOG_DEBUG_SOCKET(socket.get()) << "Entering Disconnecting state";
+        _state = disconnect;
+      }
+      disconnect();
       auto self = shared_from_this();
-      asDisconnecting(_state).complete().then([=](Future<void> fut) mutable {
+      disconnect.complete().then([=](Future<void> fut) mutable {
         if (fut.hasError())
         {
           QI_LOG_WARNING_SOCKET(socket.get()) << "Error while disconnecting: " << fut.error();
