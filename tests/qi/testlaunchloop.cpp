@@ -4,15 +4,15 @@
  * found in the COPYING file.
  */
 
-#include <stdlib.h>
-#include <qi/os.hpp>
+#include <thread>
+
 
 int main(int argc, char* argv[])
 {
   int i = 0;
   while(i < 30) // 30 secs to be killed
   {
-    qi::os::sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     i++;
   }
   return 0;

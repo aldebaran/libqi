@@ -8,6 +8,9 @@
 
 #include <testsession/testsession.hpp>
 #include "testsession_p.hpp"
+#include <qi/testutils/testutils.hpp>
+
+using namespace qi;
 
 TestSession::TestSession(const std::string &serviceDirectoryUrl, bool listen, TestMode::Mode mode)
 {

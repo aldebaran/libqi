@@ -13,12 +13,12 @@ public:
   Foo(const SessionPtr& session)
     : _session(session)
   {
-    _session->service("ServiceDirectory"); // SEGV?
+    _session->service(Session::serviceDirectoryServiceName());
   }
 
   int bar()
   {
-    _session->service("ServiceDirectory"); // SEGV?
+    _session->service(Session::serviceDirectoryServiceName());
     return 42;
   }
 

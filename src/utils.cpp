@@ -50,19 +50,15 @@ std::wstring wrandomstr(std::wstring::size_type sz) {
   return s;
 }
 
-std::string fsconcat(const std::string &p0,
-                     const std::string &p1,
-                     const std::string &p2,
-                     const std::string &p3,
-                     const std::string &p4,
-                     const std::string &p5)
+std::string fsconcat(const std::vector<std::string>& parts)
 {
-  boost::filesystem::path p(p0, qi::unicodeFacet());
-  p.append(p1, qi::unicodeFacet());
-  p.append(p2, qi::unicodeFacet());
-  p.append(p3, qi::unicodeFacet());
-  p.append(p4, qi::unicodeFacet());
-  p.append(p5, qi::unicodeFacet());
-
+  boost::filesystem::path p;
+  for (const auto& part : parts)
+  {
+    if (!part.empty())
+    {
+      p.append(part, qi::unicodeFacet());
+    }
+  }
   return p.make_preferred().string(qi::unicodeFacet());
 }

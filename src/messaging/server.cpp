@@ -103,8 +103,8 @@ namespace qi {
     QI_ASSERT(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
            "Connecting a signal that already exists.");
 
-    subscriber.messageReady =
-        socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+    subscriber.messageReady = socket->messageReady.connect(
+        track([=](const Message& msg) { onMessageReady(msg, socket); }, this));
   }
 
   void Server::onTransportServerNewConnection(MessageSocketPtr socket, bool startReading)
@@ -125,8 +125,8 @@ namespace qi {
     auto& subscriber = inserted.first->second;
 
     QI_ASSERT(subscriber.disconnected == qi::SignalBase::invalidSignalLink && "Connecting a signal that already exists.");
-    subscriber.disconnected =
-        socket->disconnected.connect(&Server::onSocketDisconnected, this, socket, _1);
+    subscriber.disconnected = socket->disconnected.connect(
+        track([=](const std::string& reason) { onSocketDisconnected(socket, reason); }, this));
 
     // If false : the socket is only being registered, and has already been authenticated. The connection
     // was made elsewhere.
@@ -136,10 +136,12 @@ namespace qi {
       auto signalLink = boost::make_shared<qi::SignalLink>();
       auto first = boost::make_shared<bool>(true);
       // We are reading on the socket for the first time : the first message has to be the capabilities
-      *signalLink = socket->messageReady.connect(
-            &Server::onMessageReadyNotAuthenticated, this, _1, socket,
-            _authProviderFactory->newProvider(), first, signalLink)
-          .setCallType(MetaCallType_Direct);
+      auto provider = _authProviderFactory->newProvider();
+      *signalLink = socket->messageReady.connect(track(
+          [=](const Message& msg) {
+            onMessageReadyNotAuthenticated(msg, socket, provider, first, signalLink);
+          },
+          this));
 
       socket->ensureReading();
     }
@@ -147,8 +149,8 @@ namespace qi {
     {
       QI_ASSERT(subscriber.messageReady == qi::SignalBase::invalidSignalLink &&
              "Connecting a signal that already exists.");
-      subscriber.messageReady =
-          socket->messageReady.connect(&Server::onMessageReady, this, _1, socket).setCallType(MetaCallType_Direct);
+      subscriber.messageReady = socket->messageReady.connect(
+          track([=](const Message& msg) { onMessageReady(msg, socket); }, this));
     }
   }
 

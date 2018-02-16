@@ -104,7 +104,6 @@ set(QI_H qi/detail/async.hxx
          qi/path.hpp
          qi/path_conf.hpp
          qi/periodictask.hpp
-         qi/qi.hpp
          qi/stats.hpp
          qi/trackable.hpp
          qi/translator.hpp
@@ -132,13 +131,19 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/disconnectingstate.hpp
          qi/messaging/sock/error.hpp
          qi/messaging/sock/macrolog.hpp
+         qi/messaging/sock/socketptr.hpp
+         qi/messaging/sock/sslcontextptr.hpp
+         qi/messaging/sock/socketwithcontext.hpp
          qi/messaging/sock/networkasio.hpp
          qi/messaging/sock/option.hpp
          qi/messaging/sock/receive.hpp
          qi/messaging/sock/resolve.hpp
          qi/messaging/sock/send.hpp
          qi/messaging/sock/traits.hpp
-         qi/utility.hpp)
+         qi/moveoncopy.hpp
+         qi/mutex.hpp
+         qi/utility.hpp
+         qi/mutablestore.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp
@@ -269,8 +274,8 @@ set(QITYPE_H       qi/anyfunction.hpp
                    qi/type/typeinterface.hpp
                    qi/type/typeobject.hpp
                    qi/type/typedispatcher.hpp
-                   qi/type/traits.hpp)
-
+                   qi/type/traits.hpp
+                   qi/type/integersequence.hpp)
 
 
 set(QITYPE_C src/type/binarycodec.cpp
@@ -297,6 +302,7 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/objecttypebuilder.cpp
              src/type/signal.cpp
              src/type/signal_p.hpp
+             src/type/signalspy.cpp
              src/type/signatureconvertor.cpp
              src/type/signatureconvertor.hpp
              src/type/staticobjecttype.cpp
@@ -331,10 +337,6 @@ set(QIM_C src/messaging/applicationsession.cpp
           src/messaging/clientauthenticator.cpp
           src/messaging/gateway_p.hpp
           src/messaging/gateway.cpp
-          src/messaging/gwsdclient.hpp
-          src/messaging/gwsdclient.cpp
-          src/messaging/gwobjecthost.hpp
-          src/messaging/gwobjecthost.cpp
           src/messaging/message.hpp
           src/messaging/message.cpp
           src/messaging/messagedispatcher.hpp

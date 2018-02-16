@@ -170,6 +170,7 @@ TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnInt
 
 TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
 {
+  using test::ScopedProcess;
   ScopedProcess mainSd{simpleSdPath, {"--qi-listen-url=tcp://127.0.0.1:54321", "--qi-standalone"}};
   auto mainClient = qi::makeSession();
   for (int i = 0; i < 20; ++i)
@@ -263,7 +264,6 @@ TEST(ServiceDirectory, NoThreadSpawnOnClientClose)
   qiLogVerbose() << "Waiting for objects destruction";
   for (auto& future : futures)
   {
-    auto state = future.waitFor(qi::MilliSeconds(200));
-    ASSERT_EQ(qi::FutureState_FinishedWithValue, state);
+    ASSERT_TRUE(test::finishesWithValue(future));
   }
 }

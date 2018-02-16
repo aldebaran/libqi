@@ -4,14 +4,19 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <future>
 #include <qi/application.hpp>
 #include <gtest/gtest.h>
 #include <qi/detail/conceptpredicate.hpp>
+#include "test_functional_common.hpp"
 #include <qi/functional.hpp>
 #include <qi/detail/conceptpredicate.hpp>
 #include <qi/range.hpp>
 #include <qi/future.hpp>
 #include <qi/type/traits.hpp>
+#include <qi/utility.hpp>
+#include <qi/mutablestore.hpp>
+#include <qi/mutex.hpp>
 #include "tools.hpp"
 
 TEST(FunctionalPolymorphicConstantFunction, RegularNonVoid)
@@ -362,7 +367,7 @@ TEST(FunctionalMoveAssign, Basic)
   MoveAssign<MoveOnly, MoveOnly> moveAssign{std::move(original)};
   MoveOnly x{i + 1};
   moveAssign(x); // x = std::move(original);
-  ASSERT_EQ(i, x.value);
+  ASSERT_EQ(i, *x);
 }
 
 TEST(FunctionalIncr, Regular)
@@ -519,4 +524,279 @@ TEST(FunctionalDecr, IsomorphicBidirectionalIterator)
   inv(b);
   decr(b);
   ASSERT_EQ("les", *b);
+}
+
+TEST(FunctionalApply, Tuple)
+{
+  using namespace qi;
+  auto g = [](int i, char c, float f) {
+    return std::make_tuple(i, c, f);
+  };
+  const auto args = std::make_tuple(5, 'a', 3.14f);
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, Pair)
+{
+  using namespace qi;
+  auto g = [](int i, char c) {
+    return std::make_pair(i, c);
+  };
+  const auto args = std::make_pair(5, 'a');
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, Array)
+{
+  using namespace qi;
+  auto g = [](int i, int j, int k, int l) {
+    return std::array<int, 4>{i, j, k, l};
+  };
+  const std::array<int, 4> args = {0, 1, 2, 3};
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, Custom)
+{
+  using namespace qi;
+  using X = test::X<int, char, float>;
+  auto g = [](int i, char c, float f) {
+    return X{i, c, f};
+  };
+  const X args{5, 'a', 3.14f};
+  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, apply(g)(args));
+}
+
+TEST(FunctionalApply, MoveOnly)
+{
+  using namespace qi;
+  using test::MoveOnly;
+  auto g = [](MoveOnly<int> i, MoveOnly<char> c, MoveOnly<float> f) {
+    return std::make_tuple(*i, *c, *f);
+  };
+  const auto res = std::make_tuple(5, 'a', 3.14f);
+  {
+    auto args = std::make_tuple(MoveOnly<int>{5}, MoveOnly<char>{'a'}, MoveOnly<float>{3.14f});
+    ASSERT_EQ(res, apply(g, std::move(args)));
+  }
+  {
+    auto args = std::make_tuple(MoveOnly<int>{5}, MoveOnly<char>{'a'}, MoveOnly<float>{3.14f});
+    ASSERT_EQ(res, apply(g)(std::move(args)));
+  }
+}
+
+struct TrivialScopeLockable
+{
+  bool success;
+  friend bool scopelock(TrivialScopeLockable& x) { return x.success; }
+};
+
+struct StrictScopeLockable
+{
+  struct Lock
+  {
+    test::MoveOnly<bool*> locked;
+
+    Lock(bool* l) : locked{ l } { **locked = true; }
+    ~Lock() { **locked = false; }
+
+    Lock(Lock&& o) : locked{std::move(o.locked)} {}
+    Lock& operator=(Lock&& o) { locked = std::move(o.locked); return *this; }
+
+    explicit operator bool() const { return true; }
+  };
+
+  friend Lock scopelock(StrictScopeLockable& l)
+  {
+    return Lock{ l.locked };
+  }
+
+  bool* locked;
+};
+
+TEST(FunctionalScopeLock, ReturnsVoidSuccess)
+{
+  using namespace qi;
+  using L = TrivialScopeLockable;
+
+  bool called = false;
+  // TODO: pass by value instead of mutable store when source is available
+  auto proc = scopeLockProc([&]{ called = true; }, makeMutableStore(L{ true }));
+  proc();
+  ASSERT_TRUE(called);
+}
+
+TEST(FunctionalScopeLock, ReturnsVoidFailure)
+{
+  using namespace qi;
+  using L = TrivialScopeLockable;
+
+  bool called = false;
+  // TODO: pass by value instead of mutable store when source is available
+  auto proc = scopeLockProc([&]{ called = true; }, makeMutableStore(L{ false }));
+  proc();
+  ASSERT_FALSE(called);
+}
+
+TEST(FunctionalScopeLock, ReturnsProcResultOnLockSuccess)
+{
+  using namespace qi;
+  using L = TrivialScopeLockable;
+
+  // TODO: pass by value instead of mutable store when source is available
+  auto proc = scopeLockProc([](int i){ return i + 10; }, makeMutableStore(L{ true }));
+  auto res = proc(5);
+  ASSERT_TRUE(res);
+  ASSERT_EQ(15, res.value());
+}
+
+TEST(FunctionalScopeLock, ReturnsEmptyOptionalOnLockFailure)
+{
+  using namespace qi;
+  using L = TrivialScopeLockable;
+
+  // TODO: pass by value instead of mutable store when source is available
+  auto proc = scopeLockProc([](int i){ return i + 10; }, makeMutableStore(L{ false }));
+  auto res = proc(12);
+  ASSERT_FALSE(res);
+}
+
+TEST(FunctionalScopeLock, StaysLockedUntilProcIsFinished)
+{
+  using namespace qi;
+  using L = StrictScopeLockable;
+
+  bool locked = false;
+  // TODO: pass by value instead of mutable store when source is available
+  auto proc = scopeLockProc(
+      [&] {
+        if (!locked)
+          throw std::runtime_error("was not locked");
+      },
+      makeMutableStore(L{ &locked }));
+  ASSERT_NO_THROW(proc());
+  ASSERT_FALSE(locked);
+}
+
+using SharedPtrTypes = testing::Types<std::shared_ptr<int>,
+                                      boost::shared_ptr<int>>;
+
+template<typename T>
+struct FunctionalScopeLockWeakPtr : testing::Test
+{
+};
+
+TYPED_TEST_CASE(FunctionalScopeLockWeakPtr, SharedPtrTypes);
+
+TYPED_TEST(FunctionalScopeLockWeakPtr, SuccessfulLock)
+{
+  using namespace qi;
+  using ShPtr = TypeParam;
+
+  ShPtr shptr{ new int{ 42 } };
+  auto wkptr = weakPtr(shptr);
+  auto l = scopelock(wkptr);
+  ASSERT_TRUE(l);
+  ASSERT_EQ(2, l.use_count());
+  ASSERT_EQ(shptr.get(), l.get());
+}
+
+TYPED_TEST(FunctionalScopeLockWeakPtr, FailureExpired)
+{
+  using namespace qi;
+  using ShPtr = TypeParam;
+
+  ShPtr shptr;
+  auto wkptr = weakPtr(shptr);
+  auto l = scopelock(wkptr);
+  ASSERT_FALSE(l);
+}
+
+TEST(FunctionalScopeLock, AtomicFlag)
+{
+  using namespace qi;
+
+  std::atomic_flag atomic = ATOMIC_FLAG_INIT;
+  auto l = scopelock(atomic);
+  ASSERT_TRUE(l);
+  ASSERT_TRUE(atomic.test_and_set());
+}
+
+TEST(FunctionalScopeLock, AtomicFlagAlreadySet)
+{
+  using namespace qi;
+
+  std::atomic_flag atomic = ATOMIC_FLAG_INIT;
+  atomic.test_and_set();
+  auto l = scopelock(atomic);
+  ASSERT_FALSE(l);
+}
+
+namespace
+{
+  template<typename M>
+  bool isLocked(M& m)
+  {
+     return std::async(std::launch::async, [&]{
+       return !std::unique_lock<M>{ m, std::try_to_lock };
+     }).get();
+  }
+}
+
+using MutexTypes = testing::Types<std::mutex,
+                                  std::recursive_mutex,
+                                  std::timed_mutex,
+                                  std::recursive_timed_mutex,
+                                  boost::mutex,
+                                  boost::recursive_mutex,
+                                  boost::timed_mutex,
+                                  boost::recursive_timed_mutex,
+                                  boost::shared_mutex>;
+
+template<typename T>
+struct FunctionalScopeLockMutexes : testing::Test
+{
+};
+
+TYPED_TEST_CASE(FunctionalScopeLockMutexes, MutexTypes);
+
+TYPED_TEST(FunctionalScopeLockMutexes, Mutexes)
+{
+  using namespace qi;
+  using Mutex = TypeParam;
+
+  Mutex m;
+  ASSERT_FALSE(isLocked(m));
+  {
+    auto l = scopelock(m);
+    ASSERT_TRUE(l);
+    ASSERT_TRUE(isLocked(m));
+  }
+  ASSERT_FALSE(isLocked(m));
+}
+
+TEST(FunctionalScopeLockTransfo, Basic)
+{
+  using namespace qi;
+
+  std::mutex m;
+  int count = 0;
+  const auto syncTransfo = scopeLockTransfo(&m);
+  std::vector<Future<void>> futs;
+  for (int i = 0; i < 10; ++i)
+  {
+    futs.push_back(async(syncTransfo([&]{
+      if (!isLocked(m))
+        throw std::runtime_error("Mutex was not locked");
+      ++count;
+    })));
+  }
+
+  for (const auto& fut : futs)
+    ASSERT_EQ(FutureState_FinishedWithValue, fut.wait()) << fut.error();
+  ASSERT_EQ(10, count);
 }

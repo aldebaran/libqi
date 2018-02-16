@@ -124,12 +124,44 @@ TEST(RelationPredicate, isReflexive)
   }
 }
 
+namespace {
+  // Tag-identified int.
+  // Used below to define a broken equality.
+  static int nextIntTag = 0;
+  struct Int
+  {
+    int i;
+    int tag;
+
+    explicit Int(int i) : i(i), tag(nextIntTag++) {
+    }
+    Int() : i{0}, tag(nextIntTag++) {}
+    Int(const Int& x) : i(x.i), tag(nextIntTag++) {
+    }
+    void operator=(const Int& x) {
+      i = x.i;
+      tag = nextIntTag++;
+    }
+    friend bool operator==(Int x, Int y) {
+      return x.i == y.i;
+    }
+    friend bool operator<(Int x, Int y) {
+      return x.i < y.i;
+    }
+    friend void operator++(Int& x) {
+      ++x.i;
+    }
+    QI_GENERATE_FRIEND_REGULAR_DERIVED_OPS(Int)
+  };
+} // namespace
+
 TEST(RelationPredicate, isSymmetric)
 {
   using namespace qi;
   using namespace qi::detail;
   using namespace test;
-  using N = int;
+
+  using N = Int;
   auto ints0To9 = incrRange(N{0}, N{10}); // 10 is excluded
   {
     auto eq = [](N a, N b) {return a == b;};
@@ -138,11 +170,16 @@ TEST(RelationPredicate, isSymmetric)
     EXPECT_TRUE(isSymmetric(eq, ints0To9));
     EXPECT_FALSE(isSymmetric(lt, ints0To9));
     EXPECT_TRUE(isSymmetric(ne, ints0To9));
-    EXPECT_TRUE(isSymmetric(eq, repeatRange(5, 10)));
+    EXPECT_TRUE(isSymmetric(eq, repeatRange(N{5}, N{10})));
   }
   {
+    // We test here with a relation that is not symmetric : we use a tag to identify instances.
+    // The tag is unique to the instance.
     auto brokenEq = [=](const N& a, const N& b) mutable {
-      if (a == N{3} && b == N{3}) return &a < &b;
+      // Make it fail for a specific value : it will be true in one direction, but not in the other.
+      if (a == N{3} && b == N{3}) {
+        return a.tag < b.tag;
+      }
       return a == b;
     };
     EXPECT_FALSE(isSymmetric(brokenEq, ints0To9));

@@ -45,9 +45,19 @@ namespace
   {
     return boostCode;
   }
+
+  /// This fixture will ensure that logs in tests of its test case are synchronous which makes
+  /// them simpler to implement.
+  struct TestErrorHandling : testing::Test
+  {
+    static void SetUpTestCase()
+    {
+      qi::log::setSynchronousLog(true);
+    }
+  };
 }
 
-TEST(ExceptionValue, Basic)
+TEST_F(TestErrorHandling, ExceptionValueBasic)
 {
   using namespace qi;
   ASSERT_EQ(stdCode, exceptionCode(std::runtime_error{""}));
@@ -55,7 +65,7 @@ TEST(ExceptionValue, Basic)
   ASSERT_EQ(unknownCode, exceptionCode());
 }
 
-TEST(ExceptionValue, Regular)
+TEST_F(TestErrorHandling, ExceptionValueRegular)
 {
   using namespace qi;
   using F = ExceptionValue<int>;
@@ -64,19 +74,20 @@ TEST(ExceptionValue, Regular)
     {F{0, 0, 0}, F{0, 0, 1}, F{0, 1, 0}, F{1, 0, 0}, F{0, 1, 1}, F{1, 1, 1}}));
 }
 
-TEST(ExceptionLogError, Basic)
+TEST_F(TestErrorHandling, ExceptionLogErrorBasic)
 {
   using namespace qi;
-  using namespace boost::algorithm;
   static const std::string prefix{"prefix"}, handlerName{"test"};
-  const std::array<const char*, 3> expected{"standard exception", "boost exception", "unknown exception"};
+  const std::array<const char*, 3> expected{{"standard exception", "boost exception", "unknown exception"}};
   int i = 0;
+
   log::addHandler(handlerName,
     [&](LogLevel, Clock::time_point, SystemClock::time_point, const char*, std::string msg, const char*, const char*, int) {
-      const auto exp = prefix + ": " + expected.at(i);
-      if (!starts_with(msg, exp))
-        throw std::runtime_error("'" + msg + "' does not start with '" + exp + "'");
-      ++i;
+      const auto exp = prefix + ": " + expected.at(static_cast<std::size_t>(i));
+      if (boost::algorithm::starts_with(msg, exp))
+      {
+        ++i;
+      }
     }
   );
   auto s = scoped([&] {
@@ -86,9 +97,10 @@ TEST(ExceptionLogError, Basic)
   log(std::runtime_error{""});
   log(BoostError{""});
   log();
+  ASSERT_EQ(3, i);
 }
 
-TEST(ExceptionLogError, Regular)
+TEST_F(TestErrorHandling, ExceptionLogErrorRegular)
 {
   using namespace qi;
   using F = ExceptionLogError<std::string>;
@@ -97,7 +109,7 @@ TEST(ExceptionLogError, Regular)
     {F{"a", "a"}, F{"a", "b"}, F{"b", "b"}, F{"ab", "b"}}));
 }
 
-TEST(ExceptionHandleException, Regular)
+TEST_F(TestErrorHandling, ExceptionHandleExceptionRegular)
 {
   using namespace qi;
   HandleExceptionAndRethrow<PolymorphicConstantFunction<void>> h;
@@ -105,13 +117,13 @@ TEST(ExceptionHandleException, Regular)
 }
 
 template<typename T>
-struct ExceptionHandleException : testing::Test {};
+struct TestErrorHandlingExceptionParam : TestErrorHandling {};
 
 using exceptions = testing::Types<std::runtime_error, BoostError, std::string>;
 
-TYPED_TEST_CASE(ExceptionHandleException, exceptions);
+TYPED_TEST_CASE(TestErrorHandlingExceptionParam, exceptions);
 
-TYPED_TEST(ExceptionHandleException, Rethrow)
+TYPED_TEST(TestErrorHandlingExceptionParam, ExceptionHandleExceptionRethrow)
 {
   using Exception = TypeParam;
   using namespace qi;
@@ -147,7 +159,7 @@ struct Append
   }
 };
 
-TEST(ExceptionHandleException, LogStdException)
+TEST_F(TestErrorHandling, HandleExceptionRethrowLogsStdException)
 {
   using namespace qi;
   std::string log;
@@ -167,7 +179,7 @@ TEST(ExceptionHandleException, LogStdException)
   ASSERT_EQ(msg, log);
 }
 
-TEST(ExceptionInvokeCatch, NoException)
+TEST_F(TestErrorHandling, NoException)
 {
   using namespace qi;
   const auto twice = [](int i) {
@@ -177,12 +189,7 @@ TEST(ExceptionInvokeCatch, NoException)
   ASSERT_EQ(6, n);
 }
 
-template<typename T>
-struct ExceptionInvokeCatchThrow : testing::Test {};
-
-TYPED_TEST_CASE(ExceptionInvokeCatchThrow, exceptions);
-
-TYPED_TEST(ExceptionInvokeCatchThrow, ExceptionValue)
+TYPED_TEST(TestErrorHandlingExceptionParam, InvokeCatchCodeValue)
 {
   using Exception = TypeParam;
   using namespace qi;
@@ -193,37 +200,18 @@ TYPED_TEST(ExceptionInvokeCatchThrow, ExceptionValue)
   ASSERT_EQ(code<Exception>(), n);
 }
 
-TEST(ExceptionInvokeCatch, HandleExceptionAndRethrow_StdException)
+TYPED_TEST(TestErrorHandlingExceptionParam, InvokeCatchHandleExceptionAndRethrow)
 {
+  using Exception = TypeParam;
   using namespace qi;
   const auto f = [](int) {
-    throw std::runtime_error{""};
+    throw Exception{""};
   };
   HandleExceptionAndRethrow<PolymorphicConstantFunction<void>> rethrow;
-  EXPECT_THROW(invokeCatch(rethrow, f, 3), std::runtime_error);
+  EXPECT_THROW(invokeCatch(rethrow, f, 3), Exception);
 }
 
-TEST(ExceptionInvokeCatch, HandleExceptionAndRethrow_BoostException)
-{
-  using namespace qi;
-  const auto f = [](int) {
-    throw BoostError{};
-  };
-  HandleExceptionAndRethrow<PolymorphicConstantFunction<void>> rethrow;
-  EXPECT_THROW(invokeCatch(rethrow, f, 3), BoostError);
-}
-
-TEST(ExceptionInvokeCatch, HandleExceptionAndRethrow_UnknownException)
-{
-  using namespace qi;
-  const auto f = [](int) {
-    throw 'z';
-  };
-  HandleExceptionAndRethrow<PolymorphicConstantFunction<void>> rethrow;
-  EXPECT_THROW(invokeCatch(rethrow, f, 3), char);
-}
-
-TEST(ExceptionInvokeCatch, HandleExceptionAndRethrowLog_StdException)
+TEST_F(TestErrorHandling, InvokeCatchHandleExceptionAndRethrowLogStdException)
 {
   using namespace qi;
   std::string log;

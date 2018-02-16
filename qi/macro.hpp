@@ -294,6 +294,13 @@ namespace qi {
  */
 #define QI_NOEXCEPT(cond) BOOST_NOEXCEPT_IF(cond)
 
+/**
+ * \def QI_NOEXCEPT_EXPR(expr)
+ * \brief Specify that a function may throw if the given expression may throw.
+ *        Do nothing if noexcept is not available.
+ */
+#define QI_NOEXCEPT_EXPR(expr) BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(expr))
+
 /// The only currently supported compiler that doesn't support member function
 /// reference qualifiers is the visual studio 2013 one.
 /// BOOST_COMP_MSVC == 0 means that the compiler is not a visual studio compiler.

@@ -8,6 +8,8 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <thread>
 
 #include <gtest/gtest.h>
 
@@ -18,6 +20,7 @@
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/binarycodec.hpp>
+#include <qi/testutils/testutils.hpp>
 
 qiLogCategory("test");
 
@@ -191,4 +194,25 @@ TEST_F(Connection, testBuffer)
     qi::decodeBinary(&br, &reply);
     ASSERT_EQ(challenge, reply);
   }
+}
+
+TEST(ConnectionToStandalone, TcpThenTcps)
+{
+  using namespace qi;
+  using namespace std::chrono;
+  using test::ScopedProcess;
+
+  // Register a service in another process.
+  const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
+
+  ScopedProcess remoteServiceOwner{
+    remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=tcps://127.0.0.1:54321"}};
+
+  Session sessionTcp;
+  auto futTcp = test::attemptConnect(sessionTcp, "tcp://127.0.0.1:54321");
+  ASSERT_TRUE(test::finishesWithError(futTcp));
+
+  Session sessionTcps;
+  auto futTcps = test::attemptConnect(sessionTcps, "tcps://127.0.0.1:54321");
+  ASSERT_TRUE(test::finishesWithValue(futTcps));
 }

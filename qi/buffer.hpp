@@ -210,6 +210,7 @@ namespace qi
      */
     size_t read(void* buffer, size_t offset = 0, size_t length = 0) const;
 
+    bool operator==(const Buffer& b) const;
   private:
     friend class BufferReader;
     // CS4251
@@ -283,9 +284,9 @@ namespace qi
     size_t position() const;
 
   private:
-    Buffer _buffer;
-    size_t _cursor;
-    size_t _subCursor; // position in sub-buffers
+    const Buffer* _buffer;
+    size_t  _cursor;
+    size_t  _subCursor; // position in sub-buffers
   };
 
   namespace detail {

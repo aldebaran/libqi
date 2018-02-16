@@ -73,7 +73,11 @@
 #define _TESTS_LIBTESTSESSION_TESTSESSION_HPP_
 
 #include <stdexcept>
+#include <gtest/gtest.h>
+#include <boost/utility/string_ref.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <qi/session.hpp>
+#include <qi/type/traits.hpp>
 
 #define ENVIRON_VARIABLE "TESTMODE"
 
@@ -99,8 +103,7 @@ public:
     Mode_Random,
     Mode_Nightmare,
     Mode_NetworkMap,
-    Mode_SSL,
-    Mode_Default
+    Mode_SSL
   };
 
 public:
@@ -129,4 +132,34 @@ private:
 };
 
 extern TestMode::Mode testMode;
+
+namespace test
+{
+  inline std::string adaptScheme(std::string url, TestMode::Mode mode = TestMode::getTestMode())
+  {
+    if (mode == TestMode::Mode_SSL)
+    {
+      static const boost::string_ref tcpScheme{ "tcp://" };
+      if (boost::starts_with(url, tcpScheme))
+      {
+        url.replace(0, tcpScheme.size(), "tcps://");
+      }
+    }
+    return url;
+  }
+
+  inline qi::Url defaultListenUrl()
+  {
+    return "tcp://127.0.0.1:0";
+  }
+
+  inline qi::Url url(const qi::Session& sess)
+  {
+    const auto& endpoints = sess.endpoints();
+    if (endpoints.empty())
+      throw std::runtime_error("Session has no endpoint to connect to");
+    return endpoints.front();
+  }
+}
+
 #endif // !_TESTS_LIBTESTSESSION_TESTSESSION_HPP_

@@ -9,6 +9,9 @@
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
 #include <qi/anymodule.hpp>
+#include <qi/scoped.hpp>
+
+qiLogCategory("qi.test.anymodule");
 
 class Module : public ::testing::Test
 {
@@ -20,7 +23,22 @@ protected:
   }
   void TearDown() override
   {
-    session->close();
+    try
+    {
+      session->close();
+    }
+    catch (const std::exception& ex)
+    {
+      qiLogError() << "Error while closing session: " << ex.what();
+    }
+    catch (const boost::exception& ex)
+    {
+      qiLogError() << "Error while closing session: " << boost::diagnostic_information(ex);
+    }
+    catch (...)
+    {
+      qiLogError() << "Unknown error while closing session";
+    }
     session = nullptr;
   }
 
@@ -63,7 +81,9 @@ TEST_F(Module, LoadByHandWithSession)
 {
   qi::AnyModule foomod = qi::import("naoqi.testanymodulesession");
   qi::AnyObject ao = foomod.call<qi::AnyObject>("Foo", session);
-  session->registerService("Foo", ao);
+  auto scopeUnregister = qi::scoped(session->registerService("Foo", ao).value(),
+                                    [&](unsigned int id) { session->unregisterService(id); });
+
   int res = ao.call<int>("bar");
 
   ASSERT_EQ(42, res);

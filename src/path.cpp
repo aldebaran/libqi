@@ -12,6 +12,7 @@
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
+#include <qi/atomic.hpp>
 
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
@@ -497,10 +498,7 @@ namespace qi
 
   SDKLayout* getInstance()
   {
-    if (gInstance == NULL) {
-      gInstance = new SDKLayout();
-    }
-
+    QI_THREADSAFE_NEW(gInstance);
     return gInstance;
   }
 

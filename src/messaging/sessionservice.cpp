@@ -320,9 +320,12 @@ namespace qi {
         authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
     }
     SignalSubscriberPtr protSubscriber(new SignalSubscriber);
-    *protSubscriber = socket->socketEvent.connect(&Session_Service::onAuthentication, this, _1, requestId, socket, authenticator, protSubscriber);
+    *protSubscriber = socket->socketEvent.connect(track(
+        [=](const MessageSocket::SocketEventData& data) {
+          onAuthentication(data, requestId, socket, authenticator, protSubscriber);
+        },
+        this));
     mustSetPromise = false;
-
     Message msgCapabilities;
     msgCapabilities.setFunction(Message::ServerFunction_Authenticate);
     msgCapabilities.setService(Message::Service_Server);

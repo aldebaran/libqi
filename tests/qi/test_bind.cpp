@@ -123,23 +123,17 @@ TEST(TestBind, Trackable)
 
   // check waiting behavior of destroy
   std::atomic<int> notify{0};
-  qi::int64_t time;
   {
     SetValue2 s1(v);
     boost::thread(wrap,
       qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 10),
       0,
       std::ref(notify));
-    time = qi::os::ustime();
     // wait enough for operation to start
     while (!notify)
       qi::os::msleep(10);
-    qi::os::msleep(20);
-    time = qi::os::ustime();
     // exit scope, deleting s1, which should block until operation terminates
   }
-  time = qi::os::ustime() - time;
-  EXPECT_GT(time, 60000); // 100 - 20 - 10 - margin
   EXPECT_EQ(10, v);
 
   // check disable-call behavior again in our more complex threaded setup

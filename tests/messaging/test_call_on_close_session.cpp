@@ -16,93 +16,84 @@
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
+#include <qi/testutils/testutils.hpp>
 
-qiLogCategory("QiSession.Test");
+qiLogCategory("qi.test_call_on_close_session");
 
-static std::string reply(const std::string &msg)
+using namespace qi;
+using namespace test;
+
+namespace
 {
-  qi::os::msleep(300);
-  std::cout << msg << std::endl;
-  return msg;
-}
+  static const auto iterations = 100;
+  static const auto dummyServiceName = "serviceTest";
 
-TEST(QiSession, CallOnCloseSession)
-{
-  qi::SessionPtr sd = qi::makeSession();
-  sd->listenStandalone("tcp://0.0.0.0:0").async();
-
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  int timeToWaitMs = 1;
-
-  for(int j = 0; j < 10 ; j ++)
+  std::string waitAndReply(qi::Promise<void> startPromise, const std::string& msg)
   {
-    for (int i = 0; i < 10; i++)
-    {
-      TestSessionPair p{TestMode::Mode_SD};
-      std::cout << "time to wait is:" << timeToWaitMs << std::endl;
+    startPromise.future().wait();
+    return msg;
+  }
 
-      qi::SessionPtr s1 = p.server();
-      qi::SessionPtr s2 = p.client();
-
-      s1->registerService("service1", ob.object());
-
-      qi::AnyObject myService;
-      myService = s2->service("service1");
-
-      auto myCall = [&](qi::AnyObject myService)
-      {
-        try
-        {
-          myService.call<std::string>("reply::s(s)", "ok");
-          qi::os::msleep(300);
-        }
-        catch(std::exception e)
-        {
-          std::cout << e.what() << std::endl;
-        }
-      };
-
-      std::async(std::launch::async, myCall, myService);
-      qi::os::msleep(timeToWaitMs);
-      s1->close();
-      qi::os::msleep(3);
-    }
-    timeToWaitMs = timeToWaitMs + 2;
+  AnyObject dummyDynamicObject()
+  {
+    DynamicObjectBuilder ob;
+    ob.advertiseMethod("waitAndReply", &waitAndReply);
+    return ob.object();
   }
 }
 
-TEST(QiSession, GettingServiceWhileDisconnecting)
+TEST(TestCallOnCloseSession, CloseSessionBeforeCallEnds)
 {
-  qi::SessionPtr server = qi::makeSession();
-  server->listenStandalone("tcp://0.0.0.0:0");
+  auto obj = dummyDynamicObject();
 
-  qi::DynamicObjectBuilder builder;
-  qi::AnyObject object(builder.object());
-
-  std::string serviceName = "sarace";
-  server->registerService(serviceName, object);
-
-  qi::SessionPtr client = qi::makeSession();
-
-  for(int i = 0; i < 100; ++i)
+  for (int i = 0; i < iterations; i++)
   {
-    client->connect(server->endpoints()[0]);
-    qi::Future<void> closing = client->close().async();
+    TestSessionPair sessionPair;
+    auto& server = *sessionPair.server();
+    auto& client = *sessionPair.client();
+
+    ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
+
+    AnyObject myService;
+    ASSERT_TRUE(finishesWithValue(client.service(dummyServiceName), willAssignValue(myService)));
+
+    Promise<void> startReplyPromise;
+    auto f = std::async(std::launch::async,
+                        [&] { myService.call<std::string>("waitAndReply", "ok", startReplyPromise); });
+    ASSERT_TRUE(finishesWithValue(server.close()));
+    startReplyPromise.setValue(nullptr);
+    EXPECT_ANY_THROW(f.get());
+  }
+}
+
+TEST(TestCallOnCloseSession, GettingServiceWhileDisconnecting)
+{
+  auto object = dummyDynamicObject();
+
+  for(int i = 0; i < iterations; ++i)
+  {
+    TestSessionPair sessionPair;
+    auto& server = *sessionPair.server();
+    auto& client = *sessionPair.client();
+
+    ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, object)));
+
+    auto closing = client.close().async();
     try
     {
-      qi::AnyObject remoteObject = client->service(serviceName);
-      bool remoteObjectWasFound = remoteObject;
-      ASSERT_TRUE(remoteObjectWasFound);
+      AnyObject remoteObject = client.service(dummyServiceName).value();
+      ASSERT_TRUE(remoteObject); // if future did not throw at this point, then object must be valid
     }
-    catch(const qi::FutureException& e)
+    catch(const FutureException& e)
     {
       qiLogDebug() << "Got expected error: " << e.what();
+      SUCCEED() << "Got expected error: " << e.what();
     }
     catch(const std::exception& e)
     {
       qiLogDebug() << "Got standard error: " << e.what();
+      FAIL() << "Got standard error: " << e.what();
     }
-    closing.wait();
+    ASSERT_TRUE(finishesWithValue(closing));
   }
 }

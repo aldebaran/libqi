@@ -128,11 +128,6 @@ namespace
     callsync_* wrapped_;
   };
 
-  static void reco_sync(qi::Promise<void> prom)
-  {
-    prom.setValue(0);
-  }
-
   TEST_F(TestGateway, testSimpleMethodCallGwService)
   {
     qi::SessionPtr client = connectClientToGw();
@@ -174,21 +169,27 @@ namespace
   {
     SessionPtr client = connectClientToGw();
     SessionPtr serviceHost = connectClientToSd();
-    qi::Promise<int> sync;
-    qi::Future<int> fut = sync.future();
 
-    serviceHost->serviceRegistered.connect(&serviceRegistered, _1, sync);
-    serviceHost->registerService("my_service", makeBaseService());
-    fut.wait();
-    //sync.reset();
-    sync = qi::Promise<int>();
-    fut = sync.future();
-    qi::AnyObject service = client->service("my_service");
-    int value = rand();
-    service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value)));
-    service.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
+    {
+      qi::Promise<int> sync;
+      serviceHost->serviceRegistered.connect(&serviceRegistered, _1, sync);
+      serviceHost->registerService("my_service", makeBaseService());
+      sync.future().wait();
+    }
+
+    qi::AnyObject service;
+    int value;
+    {
+      qi::Promise<int> sync;
+      auto fut = sync.future();
+      ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(qi::MilliSeconds{ 100 }));
+      service = client->service("my_service");
+      value = rand();
+      service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value)));
+      service.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+    }
 
     int res = service.call<int>("echoValue", value);
     ASSERT_EQ(res, value);
@@ -198,27 +199,16 @@ namespace
   {
     SessionPtr client = connectClientToGw();
     SessionPtr serviceHost = connectClientToSd();
-    bool success = false;
+
     qi::AnyObject service;
+    ASSERT_ANY_THROW(service = client->service("my_service"));
 
-    try {
-      service = client->service("my_service");
-    } catch (const std::runtime_error&) {
-      success = true;
-    }
-    ASSERT_TRUE(success);
-    success = false;
-
-    int id = serviceHost->registerService("my_service", makeBaseService());
+    int id = serviceHost->registerService("my_service", makeBaseService()).value();
+    ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(qi::MilliSeconds{ 100 }));
     service = client->service("my_service");
     ASSERT_EQ(service.call<int>("echoValue", 44), 44);
     serviceHost->unregisterService(id);
-    try {
-      service.call<int>("echoValue", 44);
-    } catch (const std::exception&) {
-      success = true;
-    }
-    ASSERT_TRUE(success);
+    ASSERT_ANY_THROW(service.call<int>("echoValue", 44));
   }
 
   TEST_F(TestGateway, testSignalsProperlyDisconnected)
@@ -318,14 +308,17 @@ namespace
       clients[i]->close();
   }
 
-  static void disco_sync(qi::Promise<void> prom, int* atomix, boost::mutex* moutex)
+  void setPromiseIfCountEquals(qi::Promise<void> prom, std::atomic<int>& count, int value)
   {
-    boost::mutex::scoped_lock lock(*moutex);
-    ++*atomix;
-    if (*atomix == 2)
+    if (++count == value)
     {
-      prom.setValue(0);
+      prom.setValue(nullptr);
     }
+  }
+
+  void setPromise(qi::Promise<void> prom)
+  {
+    prom.setValue(nullptr);
   }
 
   TEST_F(TestGateway, testOnSDDeathGwReconnectsAndStillWorksProperly)
@@ -333,14 +326,13 @@ namespace
     SessionPtr serviceHost = connectClientToGw();
     SessionPtr client = connectClientToGw();
     qi::Session nextSD;
-    int count = 0;
-    boost::mutex moutex;
-    qi::Promise<void> sync;
+    std::atomic<int> count{ 0 };
     qi::AnyObject service;
     qi::Url origUrl = sd_.url();
 
-    qi::SignalLink shl = serviceHost->disconnected.connect(&disco_sync, sync, &count, &moutex);
-    qi::SignalLink cl = client->disconnected.connect(&disco_sync, sync, &count, &moutex);
+    qi::Promise<void> sync;
+    qi::SignalLink shl = serviceHost->disconnected.connect(setPromiseIfCountEquals, sync, std::ref(count), 2);
+    qi::SignalLink cl = client->disconnected.connect(setPromiseIfCountEquals, sync, std::ref(count), 2);
     serviceHost->registerService("my_service", makeBaseService());
     service = client->service("my_service");
     int value = rand();
@@ -349,11 +341,15 @@ namespace
     sd_.close();
     sync.future().wait();
 
-    //sync.reset();
-    sync = qi::Promise<void>();
-    gw_.connected.connect(reco_sync, sync);
-    nextSD.listenStandalone(origUrl);
-    sync.future().wait();
+    {
+      qi::Promise<void> sync;
+      gw_.connected.connect(setPromise, sync);
+      nextSD.listenStandalone(origUrl);
+      sync.future().wait();
+    }
+
+    // Wait for GW to relisten. This should be removed once the GW has been reimplemented.
+    qi::sleepFor(qi::MilliSeconds{ 100 });
 
     serviceHost->connect(gw_.endpoints()[0]);
     client->connect(gw_.endpoints()[0]);

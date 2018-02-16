@@ -12,6 +12,8 @@ int ping(int v)
     throw std::runtime_error("Invalid argument ");
 }
 
+static const auto gEventLoopName = "TestEventLoop";
+
 TEST(EventLoop, EventLoopCanPostWithDuration)
 {
   std::mutex m;
@@ -23,24 +25,18 @@ TEST(EventLoop, EventLoopCanPostWithDuration)
     cv.notify_one();
   };
 
-  qi::EventLoop loop;
-  loop.start(1);
+  qi::EventLoop loop{ gEventLoopName, 1 };
   {
     std::unique_lock<std::mutex> l{m};
     loop.post(cb, qi::MilliSeconds{1});
     ASSERT_EQ(std::cv_status::no_timeout, cv.wait_for(l, std::chrono::milliseconds{100}));
   }
-  loop.stop();
-  loop.join();
 }
 
 TEST(EventLoop, EventLoopCanAsyncDelay)
 {
-  qi::EventLoop loop;
-  loop.start(1);
-  loop.asyncDelay([]{}, qi::MilliSeconds{1}).value(100);
-  loop.stop();
-  loop.join();
+  qi::EventLoop loop{ gEventLoopName, 1 };
+  loop.asyncDelay([] {}, qi::MilliSeconds{ 1 }).value(100);
 }
 
 TEST(EventLoop, asyncNoop)

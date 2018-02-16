@@ -308,12 +308,48 @@ namespace qi
 /// concept Mutable(T) =
 ///      Regular(T)
 ///   && Readable(T)
-///   && With T t:
+///   && With const T t:
 ///     `*t = x` is well-formed and establishes `*t == x`
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A Mutable is a type that you can dereference. The dereferenced value can be
 /// modified.
 /// Typical models are: pointers, iterators, boost::optional
+/// Note: Constness of a value of a Mutable type does not imply constness of the
+///   referenced value (same behavior as native pointers).
+///
+///
+/// ## Tuple
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Tuple(T) =
+///      Regular(T)
+///   && With T t, constexpr std::size_t I, the following is valid:
+///        constexpr std::size_t N = std::tuple_size<T>::value;
+///     && auto& x = std::get<I>(t); // for I in [0, N)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// A Tuple is a heterogeneous container that can be unpacked.
+/// See `apply` for an example of unpacking.
+/// Typical models are: std::tuple, std::pair, std::array
+/// Note: Any user-defined type can be made to model this concept.
+///
+///
+/// ## ScopeLockable
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept ScopeLockable(T) =
+///   With T& t, the following is valid:
+///     {
+///       if (auto lock = scopelock(t))
+///       {
+///         // In this scope, t is locked.
+///       }
+///     }
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// A ScopeLockable ensures that a guarantee is true during the lifetime of the object acquired
+/// from the call to the scopelock function (often called  a "lock", as in the example).
+/// The guarantee could be, for example, a safe mutually exclusive access to some data, or an
+/// acquisition and release of a resource, or another similarly symetric mechanism.
+/// Typical models are: std::mutex, std::recursive_mutex, std::weak_ptr<T>, std::atomic_flag,
+/// boost::synchronized_value<T>.
 ///
 ///
 /// # Range concept definitions

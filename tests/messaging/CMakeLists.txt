@@ -21,7 +21,7 @@ if(QI_WITH_TESTS)
   qi_stage_dir(".")
 
   # General tests
-  qi_create_gtest(
+  qi_create_gmock(
     test_messaging
 
     "test_anymodule.cpp"
@@ -37,6 +37,9 @@ if(QI_WITH_TESTS)
 #    "test_with_gateway.cpp" # TODO: repair
     "test_without_gateway.cpp"
     "test_streamcontext.cpp"
+    "test_send_object_standalone.cpp"
+    "test_message.cpp"
+
     DEPENDS
     qi
     qitestutils
@@ -65,9 +68,10 @@ if(QI_WITH_TESTS)
 
     DEPENDS
     qi
+    qitestutils
     testsession
 
-    TIMEOUT 120
+    TIMEOUT 200
   )
 
   # Tests on Application require a separate binary
@@ -86,7 +90,6 @@ endif()
 # Some tests target internal classes
 set(MESSAGING_SOURCES
   "../../src/messaging/boundobject.cpp"
-  "../../src/messaging/message.cpp"
   "../../src/messaging/messagedispatcher.cpp"
   "../../src/messaging/objecthost.cpp"
   "../../src/messaging/remoteobject.cpp"
@@ -97,7 +100,7 @@ set(MESSAGING_SOURCES
   "../../src/messaging/transportsocketcache.cpp"
 )
 
-qi_create_gtest(
+qi_create_gmock(
   test_messaging_internal
 
   "test_messaging_internal.cpp"
@@ -117,8 +120,9 @@ qi_create_gtest(
 
   DEPENDS
   qi
+  qitestutils
 
-  TIMEOUT 30
+  TIMEOUT 120
 )
 
 # those are idl tests that currently only

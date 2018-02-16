@@ -10,8 +10,9 @@
 
 #include <qi/os.hpp>
 #include <testsession/testsession.hpp>
+#include <boost/optional.hpp>
 
-TestMode::Mode testMode = TestMode::Mode_Default;
+static boost::optional<TestMode::Mode> globalTestMode;
 
 void TestMode::help()
 {
@@ -30,7 +31,6 @@ void TestMode::initTestMode(int argc, char **argv)
   int i = 0;
   unsigned int id;
   std::map<std::string, TestMode::Mode>  _convert;
-  extern TestMode::Mode testMode;
   std::string variable;
 
   // Print help
@@ -61,7 +61,7 @@ void TestMode::initTestMode(int argc, char **argv)
     if (_convert.find(variable) == _convert.end())
       throw TestSessionError("Environment variable : Unknown value.");
 
-    testMode = _convert[variable];
+    globalTestMode = _convert[variable];
     return;
   }
 
@@ -76,7 +76,7 @@ void TestMode::initTestMode(int argc, char **argv)
       if (variable.empty() == true || _convert.find(variable) == _convert.end())
         throw TestSessionError("--mode : Unknown value.");
 
-      testMode = _convert[variable];
+      globalTestMode = _convert[variable];
       return;
     }
     i++;
@@ -85,19 +85,15 @@ void TestMode::initTestMode(int argc, char **argv)
 
 TestMode::Mode TestMode::getTestMode()
 {
-  extern TestMode::Mode testMode;
-
-  // Check testMode, if not set raise exception.
-  if (testMode == TestMode::Mode_Default)
+  // Check globalTestMode, if not set raise exception.
+  if (!globalTestMode)
     throw TestSessionError("TestMod is not set. Use TESTMODE environment variable or TestMode::initTestMode(argc, argv).");
 
-  return testMode;
+  return *globalTestMode;
 }
 
 void TestMode::forceTestMode(TestMode::Mode mode)
 {
-  extern TestMode::Mode testMode;
-
   // #1 Set value in global variable
-  testMode = mode;
+  globalTestMode = mode;
 }

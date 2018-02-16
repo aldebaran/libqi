@@ -99,31 +99,25 @@ namespace qi
   template<typename T>
   FutureSync<T> Property<T>::get() const
   {
-    boost::mutex::scoped_lock lock(_mutex);
-    return FutureSync<T>(this->getImpl());
+    return _strand.async([&]{ return this->getImpl(); });
   }
 
   template<typename T>
   FutureSync<void> Property<T>::set(const T& v)
   {
-    boost::mutex::scoped_lock lock(_mutex);
-    this->setImpl(v);
-    return FutureSync<void>(0);
+    return _strand.async([=]{ this->setImpl(v); });
   }
 
   template<typename T>
   FutureSync<AnyValue> Property<T>::value() const
   {
-    boost::mutex::scoped_lock lock(_mutex);
-    return FutureSync<AnyValue>(AnyValue::from(this->getImpl()));
+    return _strand.async( [&]{ return AnyValue::from(this->getImpl()); });
   }
 
   template<typename T>
   FutureSync<void> Property<T>::setValue(AutoAnyReference value)
   {
-    boost::mutex::scoped_lock lock(_mutex);
-    this->setImpl(value.to<T>());
-    return FutureSync<void>(0);
+    return _strand.async([=]{ this->setImpl(value.to<T>()); });
   }
 }
 

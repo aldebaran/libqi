@@ -12,32 +12,39 @@
 #include <qi/future.hpp>
 #include <qi/clock.hpp>
 #include <qi/macroregular.hpp>
+#include <qi/moveoncopy.hpp>
 #include <qi/os.hpp>
+#include <qi/utility.hpp>
 
 /// @file
 /// Contains functions and types related to socket connection.
 
 namespace qi { namespace sock {
 
-  /// Network N
-  template<typename N>
-  SocketPtr<N> createSocket(IoService<N>& io, SslEnabled ssl, SslContext<N>& context)
+  /// Network N,
+  /// With NetSslSocket S and Mutable<S> M:
+  ///   S is compatible with N,
+  ///   Procedure<M ()> Proc
+  template<typename N, typename Proc>
+  auto createSocket(SslEnabled ssl, Proc makeSocket) -> decltype(makeSocket())
   {
-    auto socket = boost::make_shared<SslSocket<N>>(io, context);
+    auto socket = makeSocket();
     if (*ssl)
     {
-      socket->set_verify_mode(N::sslVerifyNone());
+      (*socket).set_verify_mode(N::sslVerifyNone());
     }
     return socket;
   }
 
   /// Network N,
-  /// Readable<SslSocket<N>> S,
-  /// Procedure<void (ErrorCode<N>)> Proc,
-  /// Procedure<void (SocketPtr<N>)> Proc1
-  template<typename N, typename S, typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
-  void sslHandshake(S socket, HandshakeSide<SslSocket<N>> side,
-    Proc onComplete, Proc1 setupStop = Proc1{})
+  /// With NetSslSocket S and Mutable<S> M:
+  ///   S is compatible with N,
+  ///   HandshakeSide<S> H,
+  ///   Procedure<void (ErrorCode<N>, M)> Proc,
+  ///   Procedure<void (M)> Proc1
+  template<typename N, typename M, typename H,
+           typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+  void sslHandshake(M socket, H side, Proc onComplete, Proc1 setupStop = Proc1{})
   {
     (*socket).async_handshake(side,
       [=](ErrorCode<N> erc) mutable { // onSslHandshakeDone
@@ -59,13 +66,15 @@ namespace qi { namespace sock {
   /// For ssl connections, a "no delay" option is set.
   ///
   /// Network N,
-  /// Readable<SslSocket<N>> S,
-  /// Procedure<void (ErrorCode<N>)> Proc,
-  /// Procedure<void (SocketPtr<N>)> Proc1
-  template<typename N, typename S, typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
-  void connect(S socket, const Entry<Resolver<N>>& entry, Proc onComplete,
-    SslEnabled ssl, HandshakeSide<SslSocket<N>> side,
-    const boost::optional<Seconds>& tcpPingTimeout, Proc1 setupStop = Proc1{})
+  /// With NetSslSocket S and Mutable<S> M:
+  ///   S is compatible with N,
+  ///   HandshakeSide<S> H,
+  ///   Procedure<void (ErrorCode<N>, M)> Proc,
+  ///   Procedure<void (M)> Proc1
+  template<typename N, typename M, typename H,
+           typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+  void connect(M socket, const Entry<Resolver<N>>& entry, Proc onComplete, SslEnabled ssl, H side,
+               const boost::optional<Seconds>& tcpPingTimeout, Proc1 setupStop = Proc1{})
   {
     (*socket).lowest_layer().async_connect(entry,
       [=](ErrorCode<N> erc) mutable { // onConnectDone
@@ -75,7 +84,7 @@ namespace qi { namespace sock {
           return;
         }
         // Options can be set only once the socket is connected.
-        setSocketOptions<N>(*socket, tcpPingTimeout);
+        setSocketOptions<N>(socket, tcpPingTimeout);
         if (*ssl)
         {
           sslHandshake<N>(socket, side, onComplete, setupStop);
@@ -95,14 +104,14 @@ namespace qi { namespace sock {
   ///
   /// Usage:
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// ConnectSocket<N> connect{ioService};
+  /// ConnectSocket<N, S> connect{ioService};
   /// connect(Url{"tcp://1.2.3.4:9876"}, handler,
   ///   SslEnabled{false}, IpV6Enabled{false});
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// The handler signature must be callable as:
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// handler(ErrorCode<N>, SocketPtr<N>);
+  /// handler(ErrorCode<N>, Mutable<S>);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// The socket will be null if an error occurs.
@@ -124,7 +133,7 @@ namespace qi { namespace sock {
   /// ConnectSocket<N> connect{ioService};
   /// connect(Url{"tcp://1.2.3.4:9876"}, handler,
   ///   SslEnabled{false}, IpV6Enabled{false},
-  ///   SetupConnectionStop<N>{promiseStop.future()});
+  ///   makeSetupConnectionStop<N>{promiseStop.future());
   /// // ...
   /// promiseStop.setValue(nullptr);
   /// // if not already complete, the completion handler will be called with a
@@ -133,11 +142,15 @@ namespace qi { namespace sock {
   ///
   /// From a more technical point of view, the different connecting steps
   /// are: URL resolving, socket connecting and SSL handshake if needed.
-  template<typename N>
+  ///
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N,
+  template<typename N, typename S>
   class ConnectSocket
   {
     using OptionalEntry = boost::optional<Entry<Resolver<N>>>;
-    using Handshake = HandshakeSide<SslSocket<N>>;
+    using Handshake = HandshakeSide<S>;
     ResolveUrl<N> _resolve;
   public:
   // QuasiRegular (if ResolveUrl<N> is QuasiRegular):
@@ -148,17 +161,19 @@ namespace qi { namespace sock {
     {
     }
   // Procedure:
-    /// Procedure<void (ErrorCode<N>, SocketPtr)> Proc,
-    /// Procedure<void (Resolver<N>& || SocketPtr<N>)> Proc1
-    template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
-    void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context,
-        IpV6Enabled ipV6, Handshake side, Proc onComplete,
+    /// With Mutable<S> M:
+    ///   Procedure<M ()> Proc0,
+    ///   Procedure<void (ErrorCode<N>, M)> Proc1,
+    ///   Procedure<void (Resolver<N>& || M)> Proc2
+    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>>
+    void operator()(const Url& url, SslEnabled ssl, Proc0 makeSocket,
+        IpV6Enabled ipV6, Handshake side, Proc1 onComplete,
         const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
-        Proc1 setupStop = Proc1{})
+        Proc2 setupStop = Proc2{})
     {
       auto& io = _resolve.getIoService();
       _resolve(url, ipV6,
-        [=, &io, &context](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
+        [=, &io](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
           if (erc)
           {
             onComplete(erc, {});
@@ -169,7 +184,7 @@ namespace qi { namespace sock {
             onComplete(hostNotFound<ErrorCode<N>>(), {});
             return;
           }
-          auto socket = createSocket<N>(io, ssl, context);
+          auto socket = createSocket<N>(ssl, makeSocket);
           connect<N>(socket, entry.value(), onComplete, ssl, side, tcpPingTimeout, setupStop);
         },
         setupStop
@@ -183,11 +198,12 @@ namespace qi { namespace sock {
     /// server accepting an incoming connection.
     /// This overload is provided for uniformity purpose.
     ///
-    /// Procedure<void (ErrorCode<N>, SocketPtr)> Proc,
-    /// Procedure<void (SocketPtr<N>)> Proc1
-    template<typename S, typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
-    void operator()(SslEnabled ssl, const S& socket, Handshake side,
-      Proc onComplete, Proc1 setupStop = Proc1{})
+    /// With Mutable<S> M:
+    ///   Procedure<void (ErrorCode<N>, M> Proc1,
+    ///   Procedure<void (M)> Proc2
+    template<typename M, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>>
+    void operator()(SslEnabled ssl, M socket, Handshake side,
+      Proc1 onComplete, Proc2 setupStop = Proc2{})
     {
       if (*ssl)
       {
@@ -208,13 +224,15 @@ namespace qi { namespace sock {
   ///
   /// The code is specified because it is portable, but the message is not.
   ///
-  /// Network N
-  template<typename N>
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
+  template<typename N, typename S>
   struct ConnectHandler
   {
-    Promise<SocketPtr<N>> _complete;
+    Promise<SocketPtr<S>> _complete;
   // Procedure:
-    void operator()(const ErrorCode<N>& erc, const SocketPtr<N>& socket)
+    void operator()(const ErrorCode<N>& erc, const SocketPtr<S>& socket)
     {
       if (erc)
       {
@@ -244,28 +262,32 @@ namespace qi { namespace sock {
   ///
   /// Remark: See `ConnectSocket` for an explanation on the stop.
   ///
-  /// Network N
-  template<typename N>
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
+  template<typename N, typename S>
   class ConnectSocketFuture
   {
-    using Handshake = HandshakeSide<SslSocket<N>>;
+    using Handshake = HandshakeSide<S>;
     // Member declaration order must not be changed!
-    ConnectSocket<N> _connect;
-    Promise<SocketPtr<N>> _complete;
+    ConnectSocket<N, S> _connect;
+    Promise<SocketPtr<S>> _complete;
   public:
     explicit ConnectSocketFuture(IoService<N>& io)
       : _connect{io}
     {
     }
   // Procedure:
-    /// Procedure<void (Resolver<N>& || SocketPtr<N>)> Proc
-    template<typename Proc = PolymorphicConstantFunction<void>>
-    void operator()(const Url& url, SslEnabled ssl, SslContext<N>& context, IpV6Enabled ipV6,
+    /// With Mutable<S> M:
+    ///   Procedure<M ()> Proc0,
+    ///   Procedure<void (Resolver<N>& || M)> Proc1
+    template<typename Proc0, typename Proc1 = PolymorphicConstantFunction<void>>
+    void operator()(const Url& url, SslEnabled ssl, Proc0 makeSocket, IpV6Enabled ipV6,
       Handshake side, const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
-      Proc setupStop = {})
+      Proc1 setupStop = {})
     {
-      _connect(url, ssl, context, ipV6, side, ConnectHandler<N>{_complete}, tcpPingTimeout,
-        setupStop);
+      _connect(url, ssl, makeSocket, ipV6, side, ConnectHandler<N, S>{_complete},
+               tcpPingTimeout, setupStop);
     }
 
     /// Use this overload if the socket is available _and_ already connected (this
@@ -274,14 +296,15 @@ namespace qi { namespace sock {
     /// This is to keep a unique state flow:
     /// connecting -> connected -> disconnecting -> disconnected
     ///
-    /// Procedure<void (SocketPtr<N>)> Proc
-    template<typename Proc = PolymorphicConstantFunction<void>>
-    void operator()(SslEnabled ssl, const SocketPtr<N>& s, Handshake side, Proc setupStop = {})
+    /// With Mutable<S> M:
+    ///   Procedure<void (M)> Proc
+    template<typename M, typename Proc = PolymorphicConstantFunction<void>>
+    void operator()(SslEnabled ssl, M s, Handshake side, Proc setupStop = {})
     {
-      _connect(ssl, s, side, ConnectHandler<N>{_complete}, setupStop);
+      _connect(ssl, s, side, ConnectHandler<N, S>{_complete}, setupStop);
     }
   // Custom:
-    Future<SocketPtr<N>> complete()
+    Future<SocketPtr<S>> complete()
     {
       return _complete.future();
     }

@@ -2,6 +2,7 @@
 #ifndef _QI_SOCK_ACCEPT_HPP
 #define _QI_SOCK_ACCEPT_HPP
 #include <boost/make_shared.hpp>
+#include <boost/optional.hpp>
 #include <qi/messaging/sock/concept.hpp>
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/messaging/sock/error.hpp>
@@ -26,7 +27,11 @@ namespace qi { namespace sock {
   ///
   /// Example: accepting connections until an error occurs
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// acceptConnection(acceptor, sslContext, [](ErrorCode<N> erc, SocketPtr<N> socket) {
+  /// acceptConnection(acceptor, [&] {
+  ///     return makeSocketWithContextPtr<N>(io_service,
+  ///                                        makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///   },
+  ///   [](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
   ///   if (erc)
   ///   {
   ///     // handle error...
@@ -46,8 +51,11 @@ namespace qi { namespace sock {
   ///   // members, contructors, destructor...
   ///   void acceptOne()
   ///   {
-  ///     SslContext<N> context{SslContext<N>::sslv23};
-  ///     acceptConnection(_acceptor, context, [=](ErrorCode<N> erc, SocketPtr<N> socket) {
+  ///     acceptConnection(_acceptor, [&] {
+  ///           return makeSocketWithContextPtr<N>(io_service,
+  ///                                              makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///         },
+  ///         [=](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
   ///         if (erc)
   ///         {
   ///           // handle error...
@@ -64,19 +72,24 @@ namespace qi { namespace sock {
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Network N,
-  /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
-  /// Transformation<Procedure> F0,
-  /// Transformation<Procedure<void (Args...)>> F1
-  template<typename N, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
-  void acceptConnection(Acceptor<N>& acceptor, SslContext<N>& context,
-    Proc onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
+  /// With NetSslSocket S and Mutable<NetSslSocket> M:
+  ///   S is compatible with N,
+  ///   Procedure<M ()> Proc0,
+  ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
+  ///   Transformation<Procedure> F0,
+  ///   Transformation<Procedure<void (Args...)>> F1
+  template<typename N, typename Proc0, typename Proc1,
+           typename F0 = IdTransfo, typename F1 = IdTransfo>
+  void acceptConnection(Acceptor<N>& acceptor, Proc0 makeSocket,
+    Proc1 onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
-    SocketPtr<N> socket = boost::make_shared<SslSocket<N>>(acceptor.get_io_service(), context);
+    auto socket = makeSocket();
     acceptor.async_accept((*socket).next_layer(), syncTransfo(lifetimeTransfo(
-      [=, &acceptor, &context](const ErrorCode<N>& erc) mutable {
+      [=, &acceptor](const ErrorCode<N>& erc) mutable {
         if (onAccept(erc, socket)) // true means "must continue"
         {
-          acceptConnection<N>(acceptor, context, onAccept, lifetimeTransfo, syncTransfo);
+          acceptConnection<N>(acceptor, makeSocket, onAccept,
+                              lifetimeTransfo, syncTransfo);
         }
       })));
   }
@@ -84,17 +97,25 @@ namespace qi { namespace sock {
   /// Set up the acceptor to make it listen on the given endpoint.
   ///
   /// The steps are: opening, binding, setting options and listening.
-  /// If any step fails, an exception is thrown.
+  /// If any step but listen fails, an exception is thrown.
+  /// The error code resulting of the listen is passed to onListen.
   ///
-  /// Network N
-  template<typename N>
-  void listen(Acceptor<N>& acceptor, const Endpoint<Lowest<SslSocket<N>>>& endpoint,
-    ReuseAddressEnabled reuse)
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N,
+  /// Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<SslSocket<N>>>>)> Proc
+  template<typename N, typename S, typename Proc = PolymorphicConstantFunction<void>>
+  void listen(Acceptor<N>& acceptor, const Endpoint<Lowest<S>>& endpoint,
+    ReuseAddressEnabled reuse, Proc onListen = {})
   {
     acceptor.open(endpoint.protocol());
     acceptor.set_option(AcceptOptionReuseAddress<N>{*reuse});
     acceptor.bind(endpoint);
-    acceptor.listen();
+    ErrorCode<N> erc;
+    acceptor.listen(Lowest<SslSocket<N>>::max_connections, erc);
+    ErrorCode<N> localEpErc;
+    const auto localEp = acceptor.local_endpoint(localEpErc);
+    onListen(erc, localEpErc ? boost::none : boost::make_optional(localEp));
   }
 
   /// Accept new connections until told to stop.
@@ -141,11 +162,14 @@ namespace qi { namespace sock {
   ///
   /// Example: accepting one connection on an endpoint
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// Promise<SocketPtr<N>> promiseSocket;
+  /// Promise<SocketWithContextPtr<N>> promiseSocket;
   ///
-  /// AcceptConnectionContinuous<N> accept{N::defaultIoService(), sslContext,
+  /// auto& io = N::defaultIoService();
+  /// AcceptConnectionContinuous<N> accept{io, [&] {
+  ///     return makeSocketWithContextPtr<N>(io, makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///   },
   ///   endpoint, ReuseAddressEnabled{false},
-  ///   [&](ErrorCode<N> erc, SocketPtr<N> socket) {
+  ///   [&](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
   ///     if (erc)
   ///     {
   ///       promiseSocket.setError("accept error");
@@ -164,9 +188,13 @@ namespace qi { namespace sock {
   ///
   /// Example: accepting connections on a URL until an error occurs
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// AcceptConnectionContinuous<N> accept{N::defaultIoService()};
-  /// accept(sslContext, url, IpV6Enabled{false}, ReuseAddressEnabled{false},
-  ///   [&](ErrorCode<N> erc, SocketPtr<N> socket) {
+  /// auto& io = N::defaultIoService();
+  /// AcceptConnectionContinuous<N> accept{io};
+  /// accept([&] {
+  ///     return makeSocketWithContextPtr<N>(io, makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///   },
+  ///   url, IpV6Enabled{false}, ReuseAddressEnabled{false},
+  ///   [&](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
   ///     if (erc)
   ///     {
   ///       qiLogError() << "Accept error occurred. url = " << url;
@@ -183,21 +211,23 @@ namespace qi { namespace sock {
   /// If the instance is destroyed while an async accept is pending, the handler
   /// is called with an error.
   ///
-  /// Network N
-  template<typename N>
+  /// Network N,
+  /// With NetSslSocket S:
+  ///   S is compatible with N
+  template<typename N, typename S>
   class AcceptConnectionContinuous
   {
     using OptionalEntry = boost::optional<Entry<Resolver<N>>>;
     Acceptor<N> _acceptor;
     ResolveUrl<N> _resolve;
 
-    template<typename Proc, typename F0, typename F1>
-    void startAccept(SslContext<N>& context,
-        const Endpoint<Lowest<SslSocket<N>>>& endpoint, ReuseAddressEnabled reuse,
-        Proc onAccept, const F0& lifetimeTransfo, const F1& syncTransfo)
+    template<typename Proc0, typename Proc1, typename Proc2, typename F0, typename F1>
+    void startAccept(Proc0 makeSocket,
+        const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
+        Proc1 onAccept, Proc2 onListen, const F0& lifetimeTransfo, const F1& syncTransfo)
     {
-      listen<N>(_acceptor, endpoint, reuse);
-      acceptConnection<N>(_acceptor, context, onAccept, lifetimeTransfo, syncTransfo);
+      listen<N, S>(_acceptor, endpoint, reuse, onListen);
+      acceptConnection<N>(_acceptor, makeSocket, onAccept, lifetimeTransfo, syncTransfo);
     }
   public:
   // QuasiRegular:
@@ -207,28 +237,50 @@ namespace qi { namespace sock {
       , _resolve{io}
     {
     }
-  // Procedure:
-    /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
-    /// Transformation<Procedure> F0,
-    /// Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
-    void operator()(SslContext<N>& context,
-        const Endpoint<Lowest<SslSocket<N>>>& endpoint, ReuseAddressEnabled reuse,
-        const Proc& onAccept, const F0& lifetimeTransfo = {}, const F1& syncTransfo = {})
+
+    ~AcceptConnectionContinuous()
     {
-      startAccept(context, endpoint, reuse, onAccept, lifetimeTransfo, syncTransfo);
+      ErrorCode<N> erc;
+      _acceptor.close(erc);
+      if (erc)
+      {
+        qiLogVerbose(logCategory()) << "Error while closing acceptor " << this
+          << ": " << erc.message();
+      }
     }
 
-    /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
-    /// Transformation<Procedure> F0,
-    /// Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
-    void operator()(SslContext<N>& context, const Url& url,
-      IpV6Enabled ipV6, ReuseAddressEnabled reuse,
-      Proc onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
+  // Procedure:
+    /// With Mutable<S> M:
+    ///   Procedure<M ()> Proc0,
+    ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
+    ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
+    ///   Transformation<Procedure> F0,
+    ///   Transformation<Procedure<void (Args...)>> F1
+    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
+             typename F0 = IdTransfo, typename F1 = IdTransfo>
+    void operator()(Proc0 makeSocket,
+        const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
+        const Proc1& onAccept, const Proc2& onListen = {}, const F0& lifetimeTransfo = {},
+        const F1& syncTransfo = {})
+    {
+      startAccept(makeSocket, endpoint, reuse, onAccept, onListen, lifetimeTransfo, syncTransfo);
+    }
+
+    /// With Mutable<S> M:
+    ///   Procedure<M ()> Proc0,
+    ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
+    ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
+    ///   Transformation<Procedure> F0,
+    ///   Transformation<Procedure<void (Args...)>> F1
+    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
+             typename F0 = IdTransfo, typename F1 = IdTransfo>
+    void operator()(Proc0 makeSocket, const Url& url,
+        IpV6Enabled ipV6, ReuseAddressEnabled reuse,
+        Proc1 onAccept, Proc2 onListen = {},
+        F0 lifetimeTransfo = {}, F1 syncTransfo = {})
     {
       _resolve(url, ipV6, syncTransfo(lifetimeTransfo(
-        [=, &context](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable {
+        [=](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable {
           if (erc)
           {
             onAccept(erc, {});
@@ -239,32 +291,18 @@ namespace qi { namespace sock {
             onAccept(hostNotFound<ErrorCode<N>>(), {});
             return;
           }
-          startAccept(context, (*entry).endpoint(), reuse, onAccept,
+          startAccept(makeSocket, (*entry).endpoint(), reuse, onAccept, onListen,
             lifetimeTransfo, syncTransfo);
         }))
       );
     }
-
-    ~AcceptConnectionContinuous()
-    {
-      if (_acceptor.is_open())
-      {
-        ErrorCode<N> erc;
-        _acceptor.close(erc);
-        if (erc)
-        {
-          qiLogWarning(logCategory()) << "Error while closing acceptor " << this
-            << ": " << erc.message();
-        }
-      }
-    }
   };
 
-  template<typename N>
-  class AcceptConnectionContinuousTrack : public Trackable<AcceptConnectionContinuousTrack<N>>
+  template<typename N, typename S>
+  class AcceptConnectionContinuousTrack : public Trackable<AcceptConnectionContinuousTrack<N, S>>
   {
     using Trackable<AcceptConnectionContinuousTrack>::destroy;
-    AcceptConnectionContinuous<N> _accept;
+    AcceptConnectionContinuous<N, S> _accept;
   public:
   // QuasiRegular:
     QI_GENERATE_FRIEND_REGULAR_OPS_1(AcceptConnectionContinuousTrack, _accept)
@@ -273,25 +311,34 @@ namespace qi { namespace sock {
     {
     }
   // Procedure:
-    /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
-    /// Transformation<Procedure<void (Args...)>> F
-    template<typename Proc, typename F = IdTransfo>
-    void operator()(SslContext<N>& context,
-      const Endpoint<Lowest<SslSocket<N>>>& endpoint, ReuseAddressEnabled reuse,
-      const Proc& onAccept, const F& syncTransfo = {})
+    /// With Mutable<S> M:
+    ///   Procedure<M ()> Proc0,
+    ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
+    ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
+    ///   Transformation<Procedure<void (Args...)>> F
+    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
+             typename F = IdTransfo>
+    void operator()(Proc0 makeSocket,
+      const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
+      const Proc1& onAccept, const Proc2& onListen = {}, const F& syncTransfo = {})
     {
-      _accept(context, endpoint, reuse, onAccept, trackSilentTransfo(this), syncTransfo);
+      _accept(makeSocket, endpoint, reuse, onAccept, onListen,
+              trackSilentTransfo(this), syncTransfo);
     }
 
-    /// Procedure<bool (ErrorCode<N>, SocketPtr<N>)> Proc,
-    /// Transformation<Procedure> F0,
-    /// Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc, typename F = IdTransfo>
-    void operator()(SslContext<N>& context,
+    /// With Mutable<S> M:
+    ///   Procedure<M ()> Proc0,
+    ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
+    ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
+    ///   Transformation<Procedure<void (Args...)>> F
+    template<typename Proc0, typename Proc1, typename Proc2 = PolymorphicConstantFunction<void>,
+             typename F = IdTransfo>
+    void operator()(Proc0 makeSocket,
       const Url& url, IpV6Enabled ipV6, ReuseAddressEnabled reuse,
-      const Proc& onAccept, const F& syncTransfo = {})
+      const Proc1& onAccept, const Proc2& onListen = {}, const F& syncTransfo = {})
     {
-      _accept(context, url, ipV6, reuse, onAccept, trackSilentTransfo(this), syncTransfo);
+      _accept(makeSocket, url, ipV6, reuse, onAccept, onListen,
+              trackSilentTransfo(this), syncTransfo);
     }
 
     ~AcceptConnectionContinuousTrack()

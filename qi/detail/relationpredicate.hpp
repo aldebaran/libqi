@@ -176,8 +176,8 @@ namespace qi
           const auto& b = front(v1);
           const auto ab = r(a, b);
           const auto ba = r(b, a);
-          if (ab) QI_TRUE_OR_RETURN_FALSE(ba);
-          if (ba) QI_TRUE_OR_RETURN_FALSE(ab);
+          if (ab != ba)
+            return false;
         }
       }
       return true;

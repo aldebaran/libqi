@@ -10,7 +10,7 @@
 namespace qi {
 
   BufferReader::BufferReader(const Buffer& buffer)
-  : _buffer(buffer)
+  : _buffer(&buffer)
   , _cursor(0)
   , _subCursor(0)
   {
@@ -22,7 +22,7 @@ namespace qi {
 
   bool BufferReader::seek(size_t offset)
   {
-    if (_cursor + offset <= _buffer.size())
+    if (_cursor + offset <= _buffer->size())
     {
       _cursor += offset;
       return true;
@@ -35,8 +35,8 @@ namespace qi {
 
   void *BufferReader::peek(size_t offset) const
   {
-    if (_cursor + offset <= _buffer.size())
-      return _cursor + (unsigned char*)_buffer.data();
+    if (_cursor + offset <= _buffer->size())
+      return _cursor + (unsigned char*)_buffer->data();
     else
       return  nullptr;
   }
@@ -54,11 +54,11 @@ namespace qi {
 
   size_t BufferReader::read(void *data, size_t size)
   {
-    if (_buffer.size() - _cursor < size)
+    if (_buffer->size() - _cursor < size)
     {
-      size = _buffer.size() - _cursor;
+      size = _buffer->size() - _cursor;
     }
-    memcpy(data, (unsigned char*)(_buffer.data()) + _cursor, size);
+    memcpy(data, (unsigned char*)(_buffer->data()) + _cursor, size);
     _cursor += size;
 
     return size;
@@ -66,9 +66,9 @@ namespace qi {
 
   bool BufferReader::hasSubBuffer() const
   {
-    if (_buffer.subBuffers().size() <= _subCursor)
+    if (_buffer->subBuffers().size() <= _subCursor)
       return false;
-    if (_buffer.subBuffers()[_subCursor].first == _cursor)
+    if (_buffer->subBuffers()[_subCursor].first == _cursor)
       return true;
     return false;
   }
@@ -80,7 +80,7 @@ namespace qi {
 
     _cursor += sizeof(uint32_t);
 
-    return _buffer.subBuffers()[_subCursor++].second;
+    return _buffer->subBuffers()[_subCursor++].second;
   }
 
   size_t BufferReader::position() const

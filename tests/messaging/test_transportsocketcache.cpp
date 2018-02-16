@@ -12,6 +12,7 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <thread>
 #include <numeric>
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
@@ -78,6 +79,9 @@ TEST_F(TestTransportSocketCache, DisconnectReconnect)
   sock->disconnect();
   qiLogDebug() << "DISCONNECTING: end";
   ASSERT_FALSE(sock->isConnected()) << sock.get();
+
+  // the disconnected signal can take some time until it's received, so wait a bit
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
   qiLogDebug() << "RECONNECTING: begin";
   sockfut = cache_.socket(servInfo, endpoints[0].protocol());
   sock = sockfut.value();
@@ -183,7 +187,8 @@ TEST(TestCall, IPV6Accepted)
   ASSERT_FALSE(fut.hasError());
 
 
-  qi::MessageSocketPtr socket = qi::makeMessageSocket("tcp");
+  auto socket = qi::makeMessageSocket("tcp");
+  const auto _ = qi::scoped([=]{ socket->disconnect(); });
   fut = socket->connect(ipv6Url);
 
   ASSERT_FALSE(fut.hasError());
@@ -202,7 +207,8 @@ TEST(TestCall, IPV6Rejected)
   qi::Url ipv6Url("tcp://[::1]:4444");
   ASSERT_TRUE(ipv6Url.isValid());
 
-  qi::MessageSocketPtr socket = qi::makeMessageSocket("tcp");
+  auto socket = qi::makeMessageSocket("tcp");
+  const auto _ = qi::scoped([=]{ socket->disconnect(); });
   qi::Future<void> fut = socket->connect(ipv6Url);
 
   ASSERT_TRUE(fut.hasError());

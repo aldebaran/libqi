@@ -8,6 +8,7 @@
 #define _QI_DETAIL_ASYNC_HXX_
 
 #include <qi/async.hpp>
+#include <functional>
 
 namespace qi
 {
@@ -113,16 +114,11 @@ QI_GEN(genCall)
 #undef genCall
 #endif
 
-/// Cancels the future when the timeout expires.
-///
-/// The output future is the same as the input one, to allow functional
-/// composition.
-template<typename T, typename Duration>
-Future<T> cancelOnTimeout(Future<T> fut, Duration timeout)
+namespace detail
 {
-  auto timeoutTask = [=]() mutable {
-    static const char* const errorMsg =
-      "cancelOnTimeout: timeout task failed to cancel the running task: ";
+  template<typename T>
+  void tryCancel(Future<T>& fut, const char* errorMsg)
+  {
     try
     {
       // This condition is racy, but the goal is to avoid useless logs
@@ -140,8 +136,24 @@ Future<T> cancelOnTimeout(Future<T> fut, Duration timeout)
     {
       qiLogVerbose("qi.Future") << errorMsg << "No detail.";
     }
-  };
-  asyncDelay(timeoutTask, timeout);
+  }
+}
+
+/// Cancels the future when the timeout expires.
+///
+/// The output future is the same as the input one, to allow functional
+/// composition.
+template<typename T, typename Duration>
+Future<T> cancelOnTimeout(Future<T> fut, Duration timeout)
+{
+  auto cancelFut = asyncDelay(
+      [=]() mutable {
+        detail::tryCancel(fut, "cancelOnTimeout: timeout task failed to cancel the running task: ");
+      },
+      timeout);
+  fut.then([=](const Future<T>&) mutable {
+    detail::tryCancel(cancelFut, "cancelOnTimeout: running task failed to cancel the timeout task");
+  });
   return fut;
 }
 

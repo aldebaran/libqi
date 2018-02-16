@@ -28,7 +28,7 @@ namespace qi { namespace sock {
     using const_buffer_type = boost::asio::const_buffer;
     static io_service_type& defaultIoService()
     {
-      return *static_cast<io_service_type*>(getEventLoop()->nativeHandle());
+      return *static_cast<io_service_type*>(getNetworkEventLoop()->nativeHandle());
     }
     static auto sslVerifyNone() -> decltype(boost::asio::ssl::verify_none)
     {

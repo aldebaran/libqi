@@ -52,11 +52,12 @@ namespace qi {
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;
 
-    ObjectRegistrar        _serverObject;
-    Session_Service        _serviceHandler;
-    Session_Services       _servicesHandler;
-    Session_SD             _sd;
-    TransportSocketCache   _socketsCache;
+    ObjectRegistrar      _serverObject;
+    Session_Service      _serviceHandler;
+    Session_Services     _servicesHandler;
+    Session_SD           _sd;
+    TransportSocketCache _socketsCache;
+    std::atomic<bool>    _sdClientClosedByThis;
   };
 }
 

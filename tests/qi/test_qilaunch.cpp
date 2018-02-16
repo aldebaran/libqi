@@ -290,14 +290,6 @@ int randomWrongPid()
   return randInt(100000, std::numeric_limits<int>::max());
 }
 
-void waitForProcessInfoReady()
-{
-#if BOOST_OS_LINUX
-  qi::os::msleep(50); // on Linux, checking the executable name is racy
-#endif
-}
-
-
 } // ends anonymous namespace
 
 TEST(QiOs, isProcessRunningCrazyPid)
@@ -321,8 +313,7 @@ TEST(QiOs, isProcessRunningRealProcessWithSpaces)
 {
   const std::string executable("test launchloop with spaces");
   std::string executablePath = qi::path::findBin(executable);
-  const ScopedProcess p{executablePath};
-  waitForProcessInfoReady();
+  const test::ScopedProcess p{executablePath};
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
       << executablePath << " was not found running";
 }
@@ -331,8 +322,7 @@ TEST(QiOs, isProcessRunningRealProcess)
 {
   const std::string executable("testlaunchloop");
   const std::string executablePath = qi::path::findBin(executable);
-  const ScopedProcess p{executablePath};
-  waitForProcessInfoReady();
+  const test::ScopedProcess p{executablePath};
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable))
       << executablePath << " was not found running";
 }
@@ -341,7 +331,7 @@ TEST(QiOs, isProcessRunningRealProcessNoName)
 {
   const std::string executable("testlaunchloop");
   const std::string executablePath = qi::path::findBin(executable);
-  const ScopedProcess p{executablePath};
+  const test::ScopedProcess p{executablePath};
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid()));
 }
 
@@ -350,8 +340,7 @@ TEST(QiOs, isProcessRunningRealProcessWithArgs)
   const std::string executable("testlaunchloop");
   const std::string executablePath = qi::path::findBin(executable);
   const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
-  const ScopedProcess p{executablePath, args};
-  waitForProcessInfoReady();
+  const test::ScopedProcess p{executablePath, args};
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
@@ -360,8 +349,7 @@ TEST(QiOs, isProcessRunningRealProcessWithFilePathArg)
   const std::string executable("testlaunchloop");
   const std::string executablePath = qi::path::findBin(executable);
   const std::vector<std::string> args {"/nan/mais/allo/quoi" };
-  const ScopedProcess p{executablePath, args};
-  waitForProcessInfoReady();
+  const test::ScopedProcess p{executablePath, args};
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 
@@ -393,8 +381,7 @@ TEST(QiOs, isProcessRunningRealProcessWithArgsUnicode)
         executablePathWithExtension.bfsPath());
 
   const std::vector<std::string> args { "nan", "mais", "allo", "quoi" };
-  const ScopedProcess p{executablePathWithExtension.str(), args};
-  waitForProcessInfoReady();
+  const test::ScopedProcess p{executablePathWithExtension.str(), args};
   ASSERT_TRUE(qi::os::isProcessRunning(p.pid(), executable));
 }
 // Tests for isProcessRunning end ============================================

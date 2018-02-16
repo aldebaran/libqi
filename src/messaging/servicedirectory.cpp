@@ -355,7 +355,7 @@ namespace qi
   void Session_SD::updateServiceInfo()
   {
     ServiceInfo si;
-    si.setName("ServiceDirectory");
+    si.setName(Session::serviceDirectoryServiceName());
     si.setServiceId(qi::Message::Service_ServiceDirectory);
     si.setMachineId(qi::os::getMachineId());
     si.setEndpoints(_server->endpoints());
@@ -380,15 +380,19 @@ namespace qi
     qiLogInfo() << messInfo.str();
     auto f = barrier.future().andThen([&](const std::vector<Future<void>>& futures)
     {
-      std::string error = [&]
+      const auto error = [&]
       {
         std::stringstream ss;
+        bool prefixed = false;
         for (const auto& future: futures)
         {
           if (future.hasError())
           {
-            if (error.empty())
+            if (!prefixed)
+            {
               ss << "an error occurred when listening to one of the requested endpoints:";
+              prefixed = true;
+            }
             ss << std::endl << future.error();
           }
         }
@@ -406,7 +410,7 @@ namespace qi
       }
 
       ServiceInfo si;
-      si.setName("ServiceDirectory");
+      si.setName(Session::serviceDirectoryServiceName());
       si.setServiceId(qi::Message::Service_ServiceDirectory);
       si.setMachineId(qi::os::getMachineId());
       si.setProcessId(qi::os::getpid());

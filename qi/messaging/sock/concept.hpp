@@ -28,6 +28,7 @@ namespace qi { namespace sock {
 ///     && E e = fault<E>();
 ///     && E e = messageSize<E>();
 ///     && E e = connectionRefused<E>();
+///     && E e = shutdown<E>();
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Any network operation can result in an error. An error is convertible to a
 /// boolean: true means "error", false means "success".
@@ -139,6 +140,7 @@ namespace qi { namespace sock {
 ///     && socket.close(errorCodeLValue)
 ///     && Regular handle = socket.native_handle()
 ///     && Endpoint<S> e = const_socket.remote_endpoint()
+///     && int m = S::max_connections
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Lowest-layer of an SSL socket. It allows you to connect to an endpoint and
 /// close the connection.
@@ -163,11 +165,11 @@ namespace qi { namespace sock {
 /// ## NetIoService
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept NetIoService(I) =
-///   With I io, Procedure<void (ProcArgs...)> proc the following is valid:
+///   With I io, Procedure<T (ProcArgs...)> proc the following is valid:
 ///     Procedure<void (ProcArgs...)> proc2 = io.wrap(proc);
 ///     proc2(procArgs...);
-///     which means that `wrap` returns a procedure with the same signature as
-///     `proc`. Also, `wrap` is polymorphic: its accepts any void procedure.
+///     which means that `wrap` returns a procedure accepting the same parameters
+///     as `proc` but returning `void`.
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// An io service wrap a procedure (typically a network handler) to strand it.
 ///
@@ -212,15 +214,16 @@ namespace qi { namespace sock {
 ///           const bool reuse,
 ///           S socket,
 ///           const NetHandler handler,
-///           E errorCode, the following are valid:
+///           E& errorCode, the following are valid:
 ///          I& io = acceptor.get_io_service();
 ///       && acceptor.open(endpoint.protocol());
 ///       && bool b = const_acceptor.is_open();
 ///       && acceptor.set_option(O{reuse});
 ///       && acceptor.bind(endpoint);
-///       && acceptor.listen();
+///       && acceptor.listen(errorCode);
 ///       && acceptor.async_accept(socket, handler);
 ///       && acceptor.close(errorCode);
+///       && P localEp = const_acceptor.local_endpoint(errorCode);
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Asynchronously accepts incomming connections on a given endpoint and provides
 /// the associated socket.

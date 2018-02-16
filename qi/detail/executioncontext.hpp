@@ -7,10 +7,11 @@
 #ifndef _QI_EXECUTION_CONTEXT_HPP_
 #define _QI_EXECUTION_CONTEXT_HPP_
 
-#include <boost/function.hpp>
-#include <qi/clock.hpp>
-#include <qi/api.hpp>
 #include <type_traits>
+#include <boost/function.hpp>
+#include <qi/api.hpp>
+#include <qi/clock.hpp>
+#include <qi/type/traits.hpp>
 
 namespace qi
 {
@@ -77,12 +78,13 @@ public:
   /// post a callback to be executed as soon as possible
   template <typename F>
   void post(F&& callback);
+
   /// call a callback asynchronously to be executed on tp
-  template <typename F>
-  auto asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<typename std::decay<decltype(callback())>::type>;
+  template <typename F, typename R = traits::Decay<decltype(std::declval<F>()())>>
+  qi::Future<R> asyncAt(F&& callback, qi::SteadyClockTimePoint tp);
   /// call a callback asynchronously to be executed in delay
-  template <typename F>
-  auto asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<typename std::decay<decltype(callback())>::type>;
+  template <typename F, typename R = traits::Decay<decltype(std::declval<F>()())>>
+  qi::Future<R> asyncDelay(F&& callback, qi::Duration delay);
 
   template <typename F>
   auto async(F&& callback) -> decltype(asyncDelay(std::forward<F>(callback), qi::Duration(0)))
@@ -214,31 +216,27 @@ struct ToPost
   }
 };
 
-template <typename F>
-auto ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp) -> qi::Future<typename std::decay<decltype(callback())>::type>
+template <typename F, typename R>
+Future<R> ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp)
 {
-  using ReturnType = typename std::decay<decltype(callback())>::type;
-
-  ToPost<ReturnType, typename std::decay<F>::type> topost(std::move(callback));
+  ToPost<R, typename std::decay<F>::type> topost(std::move(callback));
   auto promise = topost.promise;
   qi::Future<void> f = asyncAtImpl(std::move(topost), tp);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
                             boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
-  f.connect(boost::bind(&detail::checkCanceled<ReturnType>, _1, promise), FutureCallbackType_Sync);
+  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
-template <typename F>
-auto ExecutionContext::asyncDelay(F&& callback, qi::Duration delay) -> qi::Future<typename std::decay<decltype(callback())>::type>
+template <typename F, typename R>
+Future<R> ExecutionContext::asyncDelay(F&& callback, qi::Duration delay)
 {
-  using ReturnType = typename std::decay<decltype(callback())>::type;
-
-  ToPost<ReturnType, typename std::decay<F>::type> topost(std::move(callback));
+  ToPost<R, typename std::decay<F>::type> topost(std::move(callback));
   auto promise = topost.promise;
   qi::Future<void> f = asyncDelayImpl(std::move(topost), delay);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
                             boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
-  f.connect(boost::bind(&detail::checkCanceled<ReturnType>, _1, promise), FutureCallbackType_Sync);
+  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 }

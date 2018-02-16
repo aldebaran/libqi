@@ -15,14 +15,18 @@ namespace qi
     ///
     /// The disconnected promise is stored only to be passed to the next state.
     /// It is not the responsibility of Disconnecting to set it.
-    template<typename N>
+    ///
+    /// Network N,
+    /// With NetSslSocket S:
+    ///   S is compatible with N
+    template<typename N, typename S>
     class Disconnecting
     {
-      SocketPtr<N> _socket;
+      SocketPtr<S> _socket;
       Promise<void> _disconnectedPromise;
       Promise<void> _completePromise;
     public:
-      Disconnecting(const SocketPtr<N>& socket, Promise<void> disconnectedPromise)
+      Disconnecting(const SocketPtr<S>& socket, Promise<void> disconnectedPromise)
         : _socket(socket)
         , _disconnectedPromise(disconnectedPromise)
       {

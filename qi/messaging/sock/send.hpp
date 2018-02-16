@@ -33,10 +33,9 @@ namespace qi { namespace sock {
   std::vector<ConstBuffer<N>> makeBuffers(const Message& msg)
   {
     // header buffer
-    ConstBuffer<N> headerBuffer = N::buffer(static_cast<const void*>(msg._p->getHeader()),
-      sizeof(MessagePrivate::MessageHeader));
+    ConstBuffer<N> headerBuffer = N::buffer(static_cast<const void*>(&msg.header()),
+      sizeof(Message::Header));
     std::vector<ConstBuffer<N>> buffers;
-    msg._p->complete();
     const auto& msgBuffer = msg.buffer();
 
     // A buffer has a header and data.
@@ -114,19 +113,19 @@ namespace qi { namespace sock {
       F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
     auto buffers = makeBuffers<N>(*cptrMsg);
-    auto writeCont = lifetimeTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
+    auto writeCont = syncTransfo(lifetimeTransfo([=](ErrorCode<N> erc, size_t /*len*/) mutable {
       if (auto optionalCptrNextMsg = onSent(erc, cptrMsg))
       {
         sendMessage<N>(socket, *optionalCptrNextMsg, onSent, ssl, lifetimeTransfo, syncTransfo);
       }
-    });
+    }));
     if (*ssl)
     {
-      N::async_write(*socket, std::move(buffers), syncTransfo(writeCont));
+      N::async_write(*socket, std::move(buffers), writeCont);
     }
     else
     {
-      N::async_write((*socket).next_layer(), std::move(buffers), syncTransfo(writeCont));
+      N::async_write((*socket).next_layer(), std::move(buffers), writeCont);
     }
   }
 
@@ -155,8 +154,8 @@ namespace qi { namespace sock {
   /// A sync procedure transformation can also be provided to wrap any
   /// callback passed to the network. A typical use is to strand the callback.
   ///
-  /// Network N, Mutable<SslSocket<N>> S
-  template<typename N, typename S = boost::shared_ptr<SslSocket<N>>>
+  /// Network N, Mutable<NetSslSocket> S
+  template<typename N, typename S>
   struct SendMessageEnqueue
   {
     using ReadableMessage = std::list<Message>::const_iterator;
@@ -267,6 +266,7 @@ namespace qi { namespace sock {
           }
           return itNext;
         };
+
       sendMessage<N>(_socket, itMsg, std::move(eraseAndReturnNextMessage), ssl,
         lifetimeTransfo, syncTransfo);
     }
@@ -279,7 +279,7 @@ namespace qi { namespace sock {
   /// the callback will be called with a `operation aborted` error.
   ///
   /// Network N
-  template<typename N, typename S = boost::shared_ptr<SslSocket<N>>>
+  template<typename N, typename S>
   struct SendMessageEnqueueTrack : Trackable<SendMessageEnqueueTrack<N, S>>
   {
     using ReadableMessage = typename SendMessageEnqueue<N, S>::ReadableMessage;

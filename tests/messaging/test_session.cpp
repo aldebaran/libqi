@@ -7,8 +7,10 @@
 
 #include <vector>
 #include <string>
+#include <future>
 
 #include <gtest/gtest.h>
+#include <boost/optional.hpp>
 
 #include <qi/session.hpp>
 #include <qi/anyobject.hpp>
@@ -17,559 +19,598 @@
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <qi/signalspy.hpp>
+#include <qi/testutils/testutils.hpp>
 
 #include <testsession/testsessionpair.hpp>
 
-qiLogCategory("test");
+using namespace qi;
+using namespace test;
 
-qi::Atomic<int> nThreadFinished;
-void create_session(bool bare)
+qiLogCategory("qi.test_session");
+
+namespace
 {
+  static const auto defaultWaitDisconnectedSignalDuration = std::chrono::milliseconds{ 200 };
+  static const auto defaultWaitLoopDuration = std::chrono::microseconds{ 50 };
+  static const auto dummyServiceName = "serviceTest";
+  static const auto invalidUrl = "invalid url";
+
+  struct SessionSequencer : Trackable<SessionSequencer>
   {
-    qi::Session s;
-    if (!bare)
-      s.listen("tcp://localhost:0");
+    ExecutionContext& execCtx;
+    Future<void> startFuture;
+    Future<void> stopFuture;
+    std::atomic<int> count;
+
+    SessionSequencer(ExecutionContext& execCtx,
+                     Future<void> startFuture = Future<void>{ nullptr },
+                     Future<void> stopFuture = Future<void>{ nullptr })
+      : execCtx(execCtx)
+      , startFuture{ startFuture }
+      , stopFuture{ stopFuture }
+      , count{ 0 }
+    {
+    }
+
+    ~SessionSequencer()
+    {
+      Trackable<SessionSequencer>::destroy();
+    }
+
+    Future<void> operator()(bool bare)
+    {
+      // All calls to the same object will wait for the same future to be set to create a session
+      // and make it listen, and then will wait again for another future to be set to stop it.
+      // This way it is more likely that calls to session creation and closing will really be
+      // concurrent.
+      auto startAndCloseSession = track([=] {
+        auto s = makeSession();
+        if (!bare)
+          s->listen("tcp://localhost:0");
+        ++count;
+        return stopFuture
+            .andThen(FutureCallbackType_Sync,
+                     [=](void*) { return execCtx.async([=]() { s->close(); }); })
+            .unwrap();
+      }, this);
+
+      return startFuture
+          .andThen(
+              FutureCallbackType_Sync,
+              track([=](void*) mutable { return execCtx.async(startAndCloseSession).unwrap(); },
+                    this))
+          .unwrap();
+    }
+  };
+
+  std::string reply(const std::string& msg)
+  {
+    return msg;
   }
-  ++nThreadFinished;
+
+  AnyObject dummyDynamicObject()
+  {
+    DynamicObjectBuilder ob;
+    ob.advertiseMethod("reply", &reply);
+    return ob.object();
+  }
 }
 
+namespace std
+{
+  std::ostream& operator<<(std::ostream& os, const std::vector<ServiceInfo>& services)
+  {
+    bool first = true;
+    for (const auto& service : services)
+    {
+      if (!first)
+      {
+        os << ", ";
+      }
+      os << service.name();
+      first = false;
+    }
+    return os;
+  }
+}
 
 // KEEP ME FIRST
-TEST(QiSession, createMany)
+TEST(TestSession, CreateMany)
 {
-  nThreadFinished = 0;
-  /* A lot of static init is going on, check that it is thread safe
-  */
-  boost::thread(create_session, true);
-  boost::thread(create_session, true);
-  boost::thread(create_session, true);
-  boost::thread(create_session, true);
-  qi::os::msleep(50);
-  boost::thread(create_session, false);
-  boost::thread(create_session, false);
-  boost::thread(create_session, false);
-  boost::thread(create_session, false);
-  qi::os::msleep(50);
-  boost::thread(create_session, false);
-  boost::thread(create_session, true);
-  boost::thread(create_session, false);
-  boost::thread(create_session, true);
-  while (nThreadFinished.load() != 12)
-    qi::os::msleep(10);
+  // avoid spawning threads in qi::Application event loop by using our own
+  EventLoop threadPool {"testsession_createmany_eventloop", 11, false};
+
+  Promise<void> startPromise;
+  Promise<void> stopPromise;
+
+  // A lot of static init is going on, check that it is thread safe
+  const auto sequenceSession =
+      std::make_shared<SessionSequencer>(threadPool, startPromise.future(), stopPromise.future());
+  const Future<void> futResults[] {
+    (*sequenceSession)(true),
+    (*sequenceSession)(true),
+    (*sequenceSession)(true),
+    (*sequenceSession)(true),
+    (*sequenceSession)(false),
+    (*sequenceSession)(false),
+    (*sequenceSession)(false),
+    (*sequenceSession)(false),
+    (*sequenceSession)(false),
+    (*sequenceSession)(true),
+    (*sequenceSession)(false),
+    (*sequenceSession)(true),
+  };
+
+  startPromise.setValue(nullptr);
+  while (sequenceSession->count != 12)
+  {
+    std::this_thread::sleep_for(defaultWaitLoopDuration);
+  }
+  stopPromise.setValue(nullptr);
+  for (auto& futResult : futResults)
+  {
+    futResult.wait();
+  }
 }
 
-TEST(QiSession, createOne)
+TEST(TestSession, CreateOne)
 {
-  auto session = qi::makeSession();
-  session->listenStandalone(qi::Url{"tcp://127.0.0.1:0"});
+  Session session;
+  ASSERT_TRUE(finishesWithValue(session.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(session.endpoints().empty());
 }
 
-TEST(QiSession, trivialDirectConnection)
+TEST(TestSession, TrivialDirectConnection)
 {
-  auto session1 = qi::makeSession();
-  auto session2 = qi::makeSession();
-  session1->listenStandalone(qi::Url{"tcp://127.0.0.1:0"});
-  session2->connect(session1->endpoints()[0]);
-  ASSERT_TRUE(session2->isConnected());
-  session2->close();
-  session1->close();
+  Session session1;
+  ASSERT_TRUE(finishesWithValue(session1.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(session1.endpoints().empty());
+
+  Session session2;
+  ASSERT_TRUE(finishesWithValue(session2.connect(test::url(session1)), willDoNothing(), qi::Seconds{1000}));
+  ASSERT_TRUE(session2.isConnected());
 }
 
-static void session_close(qi::SessionPtr s, qi::Atomic<int>* counter)
+namespace
 {
-  s->close();
-  ++(*counter);
+  Future<void> synchronizedClose(Future<void> closeStartFut, const SessionPtr& s)
+  {
+    const auto weakSession = weakPtr(s);
+    return closeStartFut.andThen([=](void*){
+      if (auto sharedSession = weakSession.lock())
+        return sharedSession->close().async();
+      return makeFutureError<void>("Session has been destroyed.");
+    }).unwrap();
+  }
+
 }
 
-TEST(QiSession, multiClose)
+TEST(TestSession, MultiClose)
 {
-  qi::Atomic<int> counter;
-  TestSessionPair p;
-  boost::thread(session_close, p.client(), &counter);
-  boost::thread(session_close, p.client(), &counter);
-  boost::thread(session_close, p.server(), &counter);
-  boost::thread(session_close, p.server(), &counter);
-  boost::thread(session_close, p.server(), &counter);
-  while (counter.load() != 5)
-    qi::os::msleep(50);
+  TestSessionPair sessionPair;
+  const auto& serverPtr = sessionPair.server();
+  const auto& clientPtr = sessionPair.client();
+
+  Promise<void> closeStartProm;
+  auto closeStartFut = closeStartProm.future();
+
+  const Future<void> futResults[] {
+    synchronizedClose(closeStartFut, clientPtr),
+    synchronizedClose(closeStartFut, clientPtr),
+    synchronizedClose(closeStartFut, clientPtr),
+    synchronizedClose(closeStartFut, serverPtr),
+    synchronizedClose(closeStartFut, serverPtr),
+    synchronizedClose(closeStartFut, serverPtr),
+  };
+  closeStartProm.setValue(nullptr);
+
+  for (auto& futResult : futResults)
+  {
+    ASSERT_TRUE(finishesWithValue(futResult)); // close succeeds even when already closed
+  }
 }
 
-static std::string reply(const std::string &msg)
+TEST(TestSession, SimpleConnectionToSd)
 {
-  return msg;
-}
-
-TEST(QiSession, simpleConnectionToSd)
-{
+  // TODO: This is more a test of TestSessionPair than Session itself, check if it is really useful
   TestSessionPair p;
   EXPECT_TRUE(p.client()->isConnected());
 }
 
-TEST(QiSession, multipleConnectionToNonReachableSd)
+TEST(TestSession, MultipleConnectionToNonReachableSd)
 {
-  qi::Session session;
-  qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
-  f.wait();
-  EXPECT_TRUE(f.hasError());
-  f = session.connect("tcp://127.0.0.1:1234");
-  f.wait();
-  EXPECT_TRUE(f.hasError());
-  f = session.connect("tcp://127.0.0.1:1234");
-  f.wait();
-  EXPECT_TRUE(f.hasError());
+  static const auto tryTotal = 3;
+  Session session;
+  const auto url = "tcp://127.0.0.1:1234";
+  for (int tryCount = 0; tryCount < tryTotal; ++tryCount)
+  {
+    ASSERT_TRUE(finishesWithError(session.connect(url)));
+  }
 }
 
-TEST(QiSession, connectOnSecondAttempt)
+TEST(TestSession, ConnectOnSecondAttempt)
 {
-  qi::Session session;
-  qi::Future<void> f = session.connect("tcp://127.0.0.1:1234");
-  f.wait();
-  EXPECT_TRUE(f.hasError());
-  qi::Session s2;
-  s2.listenStandalone("tcp://127.0.0.1:0");
-  f = session.connect(s2.url());
-  f.wait();
-  if (f.hasError())
-    qiLogWarning() << f.error();
-  EXPECT_FALSE(f.hasError());
+  Session client;
+  const auto url = "tcp://127.0.0.1:1234";
+  ASSERT_TRUE(finishesWithError(client.connect(url)));
+  ASSERT_FALSE(client.isConnected());
+
+  Session server;
+  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server.endpoints().empty());
+
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
 }
 
-TEST(QiSession, multipleConnectSuccess)
+TEST(TestSession, MultipleConnectSuccess)
 {
-  qi::Session session, sd;
-  sd.listenStandalone("tcp://127.0.0.1:0");
-  qiLogVerbose() <<"connect";
-  qi::Future<void> f = session.connect(sd.url());
-  qiLogVerbose() <<"wait";
-  f.wait();
-  EXPECT_FALSE(f.hasError()) << f.error();
-  qiLogVerbose() <<"close";
-  session.close();
-  qiLogVerbose() <<"connect";
-  f = session.connect(sd.url());
-  qiLogVerbose() <<"wait";
-  f.wait();
-  EXPECT_FALSE(f.hasError()) << f.error();
-  qiLogVerbose() <<"close";
-  session.close();
-  qiLogVerbose() <<"connect";
-  f = session.connect(sd.url());
-  qiLogVerbose() <<"wait";
-  f.wait();
-  if (f.hasError())
-    qiLogWarning() << f.error();
-  EXPECT_FALSE(f.hasError());
-  qiLogVerbose() <<"close";
-  session.close();
+  Session server;
+  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server.endpoints().empty());
+
+  Session client;
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
+
+  ASSERT_TRUE(finishesWithValue(client.close()));
+  ASSERT_FALSE(client.isConnected());
+
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
+
+  ASSERT_TRUE(finishesWithValue(client.close()));
+  ASSERT_FALSE(client.isConnected());
+
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
 }
 
-TEST(QiSession, simpleConnectionToNonReachableSd)
+TEST(TestSession, SimpleConnectionToNonReachableSd)
 {
-  qi::Session session;
-  EXPECT_ANY_THROW(session.connect("tcp://127.0.0.1:1234"));
+  Session session;
+  const auto url = "tcp://127.0.0.1:1234";
+  ASSERT_TRUE(finishesWithError(session.connect(url)));
+  ASSERT_FALSE(session.isConnected());
 
-  EXPECT_FALSE(session.isConnected());
-
-  session.close();
-  EXPECT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithValue(session.close()));
+  ASSERT_FALSE(session.isConnected());
 }
 
-TEST(QiSession, simpleConnectionToInvalidAddrToSd)
+TEST(TestSession, SimpleConnectionToInvalidAddrToSd)
 {
-  qi::Session session;
-  qi::Future<void> fConnected = session.connect("tcp://0.0.0.0:0");
+  Session session;
+  const auto url = "tcp://127.0.0.1:1234";
+  ASSERT_TRUE(finishesWithError(session.connect(url)));
+  ASSERT_FALSE(session.isConnected());
 
-  fConnected.wait();
-
-  EXPECT_TRUE(fConnected.hasError());
-  EXPECT_FALSE(session.isConnected());
-
-  session.close();
-  EXPECT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithValue(session.close()));
+  ASSERT_FALSE(session.isConnected());
 }
 
-TEST(QiSession, simpleConnectionToInvalidSd)
+TEST(TestSession, SimpleConnectionToInvalidSd)
 {
-  qi::Session session;
-  qi::Future<void> fConnected = session.connect("invalidAddress");
-  fConnected.wait(3000);
-  EXPECT_TRUE(fConnected.hasError());
-  EXPECT_FALSE(session.isConnected());
+  Session session;
+  ASSERT_TRUE(finishesWithError(session.connect(invalidUrl)));
+  ASSERT_FALSE(session.isConnected());
 
-  session.close();
-  EXPECT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithValue(session.close()));
+  ASSERT_FALSE(session.isConnected());
 }
 
-TEST(QiSession, testClose)
+TEST(TestSession, UnregistersServiceWhenClosed)
 {
-  qi::Session session;
+  TestSessionPair sessionPair;
+  auto& sd = *sessionPair.sd();
+  auto& server = *sessionPair.server();
 
-  qi::Session sd;
+  auto obj = dummyDynamicObject();
+  unsigned int serviceIndex = 0;
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj),
+                                willAssignValue(serviceIndex)));
+  ASSERT_TRUE(finishesWithValue(server.service(dummyServiceName)));
 
-  qi::Future<void> f = sd.listenStandalone("tcp://127.0.0.1:0");
-  f.wait(3000);
-  ASSERT_TRUE(!f.hasError());
+  ASSERT_TRUE(finishesWithValue(server.close()));
+  ASSERT_FALSE(server.isConnected());
 
-  f = session.connect(sd.endpoints()[0]);
-  f.wait(3000);
-  ASSERT_TRUE(!f.hasError());
+  ASSERT_TRUE(finishesWithError(server.services()));
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
+  ASSERT_TRUE(finishesWithValue(server.connect(test::url(sd))));
+  ASSERT_TRUE(server.isConnected());
 
-  f = session.listen("tcp://127.0.0.1:0");
-  f.wait(3000);
-  ASSERT_TRUE(!f.hasError());
-
-  // Wait for service id, otherwise register is asynchronous.
-  qi::Future<unsigned int> idx = session.registerService("serviceTest", obj);
-  ASSERT_FALSE(idx.hasError());
-
-  qi::AnyObject object = session.service("serviceTest");
-  EXPECT_TRUE(object);
-
-
-  session.close();
-  EXPECT_FALSE(session.isConnected());
-
-  EXPECT_ANY_THROW(session.services().value());
-
-  f = session.connect(sd.endpoints()[0]);
-  f.wait(3000);
-  if (f.hasError())
-    qiLogError() << f.error();
-  ASSERT_TRUE(!f.hasError());
-
-  EXPECT_ANY_THROW(session.unregisterService(idx.value()));
+  ASSERT_TRUE(finishesWithError(server.service(dummyServiceName)));
+  ASSERT_TRUE(finishesWithError(server.unregisterService(serviceIndex)));
 }
 
-TEST(QiSession, getSimpleService)
+TEST(TestSession, GetSimpleService)
 {
-  TestSessionPair pair;
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
-
-  pair.server()->registerService("serviceTest", obj);
-
-  qi::AnyObject object = pair.server()->service("serviceTest");
-  EXPECT_TRUE(object);
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
+  ASSERT_TRUE(finishesWithValue(server.service(dummyServiceName)));
 }
 
-TEST(QiSession, getSimpleServiceTwice)
+TEST(TestSession, GetSimpleServiceTwice)
 {
-  TestSessionPair pair;
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
+  auto& client = *sessionPair.client();
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
 
-  pair.server()->registerService("serviceTest", obj);
+  AnyObject obj1;
+  AnyObject obj2;
+  ASSERT_TRUE(finishesWithValue(client.service(dummyServiceName), willAssignValue(obj1)));
+  ASSERT_TRUE(finishesWithValue(client.service(dummyServiceName), willAssignValue(obj2)));
 
-  qi::Future<qi::AnyObject> f1 = pair.client()->service("serviceTest");
-  qi::Future<qi::AnyObject> f2 = pair.client()->service("serviceTest");
-  f1.wait();
-  f2.wait();
-
-  EXPECT_TRUE(f1.value().asGenericObject() == f2.value().asGenericObject());
+  ASSERT_TRUE(obj1.asGenericObject() == obj2.asGenericObject());
 }
 
-TEST(QiSession, getSimpleServiceTwiceUnexisting)
+TEST(TestSession, GetSimpleServiceTwiceUnexisting)
 {
-  TestSessionPair pair;
-
-  qi::Future<qi::AnyObject> f1 = pair.server()->service("xxxLOL");
-  qi::Future<qi::AnyObject> f2 = pair.server()->service("xxxLOL");
-  f1.wait();
-  f2.wait();
-
-  EXPECT_TRUE(f1.hasError());
-  EXPECT_TRUE(f2.hasError());
+  TestSessionPair sessionPair;
+  auto& client = *sessionPair.client();
+  ASSERT_TRUE(finishesWithError(client.service(dummyServiceName)));
+  ASSERT_TRUE(finishesWithError(client.service(dummyServiceName)));
 }
 
-TEST(QiSession, getUnregisterService)
+TEST(TestSession, GetUnregisterService)
 {
-  TestSessionPair p;
+  TestSessionPair sessionPair;
+  auto& client = *sessionPair.client();
+  ASSERT_TRUE(finishesWithError(client.service(dummyServiceName)));
+}
 
-  EXPECT_ANY_THROW({
-    qi::AnyObject object = p.client()->service("windowsVista(c)");
+TEST(TestSession, GetCloseService)
+{
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
+  auto& client = *sessionPair.client();
+
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
+  ASSERT_TRUE(finishesWithValue(server.close()));
+  ASSERT_FALSE(server.isConnected());
+  ASSERT_TRUE(finishesWithError(client.service(dummyServiceName)));
+}
+
+TEST(TestSession, AlreadyRegistered)
+{
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
+
+  auto obj = dummyDynamicObject();
+  unsigned int serviceIndex = 0;
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj),
+                                willAssignValue(serviceIndex)));
+  ASSERT_GE(serviceIndex, 0u);
+  ASSERT_TRUE(finishesWithError(server.registerService(dummyServiceName, obj)));
+}
+
+TEST(TestSession, Services)
+{
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
+  auto& client = *sessionPair.client();
+
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService("srv1.1", obj)));
+  ASSERT_TRUE(finishesWithValue(server.registerService("srv1.2", obj)));
+  ASSERT_TRUE(finishesWithValue(server.registerService("srv2.1", obj)));
+  ASSERT_TRUE(finishesWithValue(server.registerService("srv2.2", obj)));
+
+  auto serverServices = server.services();
+  auto clientServices = client.services();
+
+  // ServiceDirectory is listed too
+  ASSERT_EQ(5u, serverServices.value().size());
+  ASSERT_EQ(5u, clientServices.value().size());
+}
+
+TEST(TestSession, ServiceDirectoryEndpointsAreValid)
+{
+  Session session;
+  ASSERT_TRUE(finishesWithValue(session.listenStandalone("tcp://0.0.0.0:0")));
+  ASSERT_FALSE(session.endpoints().empty());
+
+  // The first endpoint has to be an accessible address/port.
+  ASSERT_NE(session.endpoints().at(0).host(), "0.0.0.0");
+  ASSERT_NE(session.endpoints().at(0).port(), 0);
+}
+
+TEST(TestSession, GetCallInConnect)
+{
+  TestSessionPair sessionPair;
+  auto& sd = *sessionPair.sd();
+  auto& server = *sessionPair.server();
+
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
+
+  AnyObject object;
+  ASSERT_TRUE(finishesWithValue(server.service(dummyServiceName), willAssignValue(object)));
+  ASSERT_TRUE(object);
+
+  auto session = makeSession();
+  Promise<bool> callbackFinishedPromise;
+  session->connected.connect([=]() mutable {
+    const bool result = session->services().hasValue();
+    callbackFinishedPromise.setValue(result);
   });
+  ASSERT_TRUE(finishesWithValue(session->connect(test::url(sd))));
 
-  p.client()->close();
-  EXPECT_FALSE(p.client()->isConnected());
+  auto futureResult = callbackFinishedPromise.future();
+  ASSERT_TRUE(finishesWithValue(futureResult) && futureResult.value());
 }
 
-TEST(QiSession, getCloseService)
+TEST(TestSession, SignalConnectedDisconnectedNotSend)
 {
-  TestSessionPair p;
+  Session session;
+  SignalSpy connectedSpy{ session.connected };
+  SignalSpy disconnectedSpy{ session.disconnected };
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
+  ASSERT_TRUE(finishesWithError(session.connect(invalidUrl)));
+  ASSERT_FALSE(session.isConnected());
 
-  p.server()->registerService("serviceTest", obj);
-  p.server()->close();
-
-  // Todo later, expect same behavior.
-  if (TestMode::getTestMode() != TestMode::Mode_Direct)
-  {
-    EXPECT_ANY_THROW({p.client()->service("serviceTest").value();});
-  }
-
-  p.client()->close();
-  EXPECT_FALSE(p.client()->isConnected());
+  ASSERT_EQ(0u, connectedSpy.recordCount());
+  ASSERT_EQ(0u, disconnectedSpy.recordCount());
 }
 
-TEST(QiSession, AlreadyRegistered)
+TEST(TestSession, SignalConnectedDisconnectedSend)
 {
-  TestSessionPair p;
+  Session server;
+  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server.endpoints().empty());
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
+  Session client;
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
 
+  SignalSpy disconnectedSpy{ client.disconnected };
+  ASSERT_EQ(0u, disconnectedSpy.recordCount());
 
-  ASSERT_GT(p.server()->registerService("service", obj), static_cast<unsigned int>(0));
-  EXPECT_ANY_THROW({p.server()->registerService("service", obj).value();});
+  ASSERT_TRUE(finishesWithValue(client.close()));
+  ASSERT_FALSE(client.isConnected());
 
+  // The disconnected signal is asynchronous, it can arrive late
+  std::this_thread::sleep_for(defaultWaitDisconnectedSignalDuration);
+  ASSERT_EQ(1u, disconnectedSpy.recordCount());
 }
 
-TEST(QiSession, Services)
+TEST(TestSession, AsyncConnect)
 {
-  TestSessionPair p;
-  qi::SessionPtr s1 = p.client();
-  qi::SessionPtr s2 = p.server();
+  // TODO: this test might be redundant with GetUnregisterService
+  Session server;
+  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server.endpoints().empty());
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
-  s1->registerService("srv1.1", obj);
-  s1->registerService("srv1.2", obj);
-  s2->registerService("srv2.1", obj);
-  s2->registerService("srv2.2", obj);
-  std::vector<qi::ServiceInfo> srv1 = s1->services();
-  std::vector<qi::ServiceInfo> srv2 = s2->services();
-  // serviceDirectory is listed to
-  if (srv1.size() != 5)
-  {
-    for (unsigned i=0; i<srv1.size(); ++i)
-      std::cerr << srv1[i].name() << " ";
-    std::cerr << std::endl;
-  }
-
-  ASSERT_EQ(5U, s1->services().value().size());
-  ASSERT_EQ(5U, s2->services().value().size());
+  Session client;
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
+  ASSERT_TRUE(finishesWithError(client.service("IDontWantToSegfaultHere")));
 }
 
-
-TEST(QiSession, TestServiceDirectoryEndpoints)
+TEST(TestSession, UrlOnClosed)
 {
-  qi::Session sd;
+  Session server;
+  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server.endpoints().empty());
 
-  qi::Future<void> f = sd.listenStandalone("tcp://0.0.0.0:0");
-  f.wait(3000);
-  ASSERT_TRUE(!f.hasError());
+  Session client;
+  ASSERT_ANY_THROW(client.url());
 
-  // but it's possible to get joinable addresses.
-  ASSERT_NE(sd.endpoints().at(0).host(),"0.0.0.0");
-  ASSERT_NE(sd.endpoints().at(0).port(), 0);
+  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
+  ASSERT_TRUE(client.isConnected());
+  ASSERT_NO_THROW(client.url());
+
+  ASSERT_TRUE(finishesWithValue(client.close()));
+  ASSERT_FALSE(client.isConnected());
+  ASSERT_ANY_THROW(client.url());
 }
 
-void onConnected(qi::Session *ses, qi::Promise<void> continueBaby) {
-  ses->services().value();
-  continueBaby.setValue(0);
-}
-
-TEST(QiSession, getCallInConnect)
-{
-  TestSessionPair pair;
-
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
-
-  pair.server()->registerService("serviceTest", obj);
-  qi::AnyObject object = pair.server()->service("serviceTest");
-
-  EXPECT_TRUE(object);
-  qi::Session ses;
-  qi::Promise<void> finito;
-
-  ses.connected.connect(boost::bind<void>(&onConnected, &ses, finito));
-  ses.connect(pair.serviceDirectoryEndpoints()[0]);
-  qi::Future<void> ff = finito.future();
-
-  ff.wait(2000);
-  EXPECT_TRUE(ff.isFinished());
-  EXPECT_TRUE(ses.isConnected());
-}
-
-TEST(QiSession, signalConnectedDisconnectedNotSend)
-{
-  qi::SessionPtr s = qi::makeSession();
-
-  qi::SignalSpy connectedSpy{s->connected};
-  qi::SignalSpy disconnectedSpy{s->disconnected};
-
-  try
-  {
-    s->connect("127.0.1");
-  }
-  catch (...)
-  { }
-
-  size_t expected = 0;
-  EXPECT_EQ(expected, connectedSpy.recordCount());
-  EXPECT_EQ(expected, disconnectedSpy.recordCount());
-}
-
-
-TEST(QiSession, signalConnectedDisconnectedSend)
-{
-  qi::Session sd;
-  sd.listenStandalone("tcp://127.0.0.1:0");
-
-  qi::Session s;
-  try
-  {
-    s.connect(sd.endpoints()[0]).value();
-  }
-  catch (...)
-  { }
-
-  qi::SignalSpy disconnectedSpy{s.disconnected};
-
-  size_t expectSend = 1;
-  size_t expectNotSend = 0;
-  EXPECT_EQ(expectNotSend, disconnectedSpy.recordCount());
-  s.close();
-  EXPECT_EQ(expectSend, disconnectedSpy.recordCount());
-}
-
-
-TEST(QiSession, asyncConnect) {
-  qi::Session sd;
-  sd.listenStandalone("tcp://127.0.0.1:0");
-
-  qi::Session s;
-  s.connect(sd.endpoints()[0]).async();
-  try {
-    //we dont know the success or failure of the operation.
-    qi::AnyObject obj = s.service("IDontWantToSegfaultHere");
-  } catch(...) {
-  }
-}
-
-TEST(QiSession, urlOnClosed)
-{
-  qi::Session sd;
-  sd.listenStandalone("tcp://127.0.0.1:0");
-  qi::Session s;
-  EXPECT_ANY_THROW(s.url());
-  s.connect(sd.endpoints()[0]);
-  EXPECT_NO_THROW(s.url());
-  s.close();
-  EXPECT_ANY_THROW(s.url());
-}
-
-TEST(QiSession, serviceRegisteredCtrl)
+TEST(TestSession, ServiceRegisteredCtrl)
 {
   // Control test for the test serviceRegistered, to ensure we properly detect
   // remote services
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
+  auto& client = *sessionPair.client();
 
-  qi::Session sd;
-  sd.listenStandalone("tcp://127.0.0.1:0");
-  qi::Session s;
-  s.connect(sd.endpoints()[0]);
-  sd.registerService("s", obj);
-  qi::AnyObject c = s.service("s");
-  ASSERT_TRUE(c);
-  qi::DynamicObject* dobj = (qi::DynamicObject*)c.asGenericObject()->value;
-  qi::DynamicObject* sdobj = (qi::DynamicObject*)obj.asGenericObject()->value;
-  ASSERT_NE(dobj, sdobj);
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
 
-  c = sd.service("s");
-  ASSERT_TRUE(c);
-  dobj = (qi::DynamicObject*)c.asGenericObject()->value;
-  sdobj = (qi::DynamicObject*)obj.asGenericObject()->value;
-  ASSERT_EQ(dobj, sdobj);
+  {
+    AnyObject c;
+    ASSERT_TRUE(finishesWithValue(client.service(dummyServiceName), willAssignValue(c)));
+    ASSERT_TRUE(c);
+    // only if we're not testing in direct mode should the objects be different
+    if (sessionPair.mode() != TestMode::Mode_Direct)
+    {
+      auto dobj = reinterpret_cast<DynamicObject*>(c.asGenericObject()->value);
+      auto sdobj = reinterpret_cast<DynamicObject*>(obj.asGenericObject()->value);
+      ASSERT_NE(dobj, sdobj);
+    }
+  }
+
+  {
+    AnyObject c;
+    ASSERT_TRUE(finishesWithValue(server.service(dummyServiceName), willAssignValue(c)));
+    ASSERT_TRUE(c);
+    const auto dobj = reinterpret_cast<DynamicObject*>(c.asGenericObject()->value);
+    const auto sdobj = reinterpret_cast<DynamicObject*>(obj.asGenericObject()->value);
+    ASSERT_EQ(dobj, sdobj);
+  }
 }
 
-
-void fetch_service(qi::Session& s, const std::string& name, qi::AnyObject& ao)
-{
-  ao = s.service(name);
-}
-
-TEST(QiSession, serviceRegistered)
+TEST(TestSession, ServiceRegistered)
 {
   // Check a nasty race situation where a service is advertised as registered
   // by the session before being realy present
   // The symptom is not a session.service() failure, but a spurious use of
   // remote mode.
-  qi::Session sd;
-  sd.listenStandalone("tcp://127.0.0.1:0");
-  qi::AnyObject ao;
-  sd.serviceRegistered.connect(&fetch_service, boost::ref(sd), _2, boost::ref(ao));
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
-  sd.registerService("s", obj);
-  for (unsigned i=0; i<200 && !ao; ++i)
-    qi::os::msleep(10);
+  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server.endpoints().empty());
+
+  AnyObject ao;
+  Promise<void> objectSetPromise;
+  server.serviceRegistered.connect([&](unsigned int, std::string name){
+    ao = server.service(name);
+    objectSetPromise.setValue(nullptr);
+  });
+
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
+  ASSERT_TRUE(finishesWithValue(objectSetPromise.future()));
+
   // check we got the object, and that it is not a remoteobject
   ASSERT_TRUE(ao);
-  qi::DynamicObject* dobj = (qi::DynamicObject*)ao.asGenericObject()->value;
-  ASSERT_TRUE(dobj);
-
-  ASSERT_EQ(obj.asGenericObject()->value, ao.asGenericObject()->value);
+  const auto aoGoVal = ao.asGenericObject()->value;
+  ASSERT_TRUE(aoGoVal);
+  ASSERT_EQ(obj.asGenericObject()->value, aoGoVal);
 }
 
-TEST(QiSession, reuseSd)
+TEST(TestSession, RegisterServiceFromClient)
 {
-  TestSessionPair pair;
+  TestSessionPair sessionPair;
+  auto& client = *sessionPair.client();
+  auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(client.registerService(dummyServiceName, obj)));
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
-
-  pair.client()->registerService("serviceTest", obj);
-
-  qi::AnyObject object = pair.sd()->service("serviceTest");
-  EXPECT_TRUE(object);
-  EXPECT_EQ("foo", object.call<std::string>("reply", "foo"));
+  AnyObject object;
+  ASSERT_TRUE(finishesWithValue(client.service(dummyServiceName), willAssignValue(object)));
+  ASSERT_TRUE(object);
+  ASSERT_EQ("foo", object.call<std::string>("reply", "foo"));
 }
 
-TEST(QiSession, WaitForService)
+TEST(TestSession, WaitForService)
 {
-  TestSessionPair pair;
+  TestSessionPair sessionPair;
+  auto& server = *sessionPair.server();
+  auto& client = *sessionPair.client();
 
-  qi::DynamicObjectBuilder ob;
-  ob.advertiseMethod("reply", &reply);
-  qi::AnyObject obj(ob.object());
+  auto obj = dummyDynamicObject();
 
-  unsigned int sid = pair.sd()->registerService("serviceTest", obj);
-  qi::Future<void> future = pair.client()->waitForService("serviceTest");
-  EXPECT_TRUE(future.hasValue());
-  pair.sd()->unregisterService(sid);
-
-  future = pair.client()->waitForService("serviceTest");
-  sid = pair.sd()->registerService("serviceTest", obj);
-  EXPECT_TRUE(future.hasValue());
+  unsigned int sid = 0;
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj), willAssignValue(sid)));
+  ASSERT_TRUE(finishesWithValue(client.waitForService(dummyServiceName)));
+  ASSERT_TRUE(finishesWithValue(server.unregisterService(sid)));
+  auto future = client.waitForService(dummyServiceName);
+  ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj), willAssignValue(sid)));
+  ASSERT_TRUE(finishesWithValue(future));
 }
 
-TEST(QiSession, WaitForServiceCanceled)
+TEST(TestSession, WaitForServiceCanceled)
 {
-  TestSessionPair pair;
+  TestSessionPair sessionPair;
+  auto& client = *sessionPair.client();
 
-  qi::Future<void> future = pair.client()->waitForService("serviceTest");
+  auto future = client.waitForService(dummyServiceName);
   future.cancel();
-  future.wait();
-  EXPECT_TRUE(future.isCanceled());
+  ASSERT_TRUE(finishesAsCanceled(future));
 }

@@ -100,8 +100,8 @@ namespace qi {
       _linkMessageDispatcher = socket->messagePendingConnect(_service,
         MessageSocket::ALL_OBJECTS,
         track(boost::bind<void>(&RemoteObject::onMessagePending, this, _1), this));
-      _linkDisconnected      = socket->disconnected.connect (
-         &RemoteObject::onSocketDisconnected, this, _1);
+      _linkDisconnected = socket->disconnected.connect(
+          track([=](const std::string& reason) { onSocketDisconnected(reason); }, this));
     }
   }
 
@@ -298,12 +298,8 @@ namespace qi {
             + " to " + returnSignature.toString();
       }
     }
-    /* The promise will be set:
-     - From here in case of error
-     - From a network callback, called asynchronously in thread pool
-     So it is safe to use a sync promise.
-     */
-    qi::Promise<AnyReference> out(FutureCallbackType_Sync);
+
+    qi::Promise<AnyReference> out;
     qi::Message msg;
     MessageSocketPtr sock;
     // qiLogDebug() << this << " metacall " << msg.service() << " " << msg.function() <<" " << msg.id();

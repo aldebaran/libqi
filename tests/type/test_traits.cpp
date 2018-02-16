@@ -23,7 +23,7 @@
 
 struct A {};
 
-TEST(TestTraits, RemoveRef)
+TEST(Traits, RemoveRef)
 {
   using namespace qi::traits;
 
@@ -57,7 +57,7 @@ TEST(TestTraits, RemoveRef)
 #endif
 }
 
-TEST(TestTraits, RemoveCv)
+TEST(Traits, RemoveCv)
 {
   using namespace qi::traits;
 
@@ -98,7 +98,7 @@ TEST(TestTraits, RemoveCv)
 #endif
 }
 
-TEST(TestTraits, RemoveCvRef)
+TEST(Traits, RemoveCvRef)
 {
   using namespace qi::traits;
 
@@ -146,7 +146,7 @@ TEST(TestTraits, RemoveCvRef)
   static_assert(Equal<RemoveCvRef<int&&>, int>::value, "");
 }
 
-TEST(TestTraits, HasMemberOperatorCallLambda)
+TEST(Traits, HasMemberOperatorCallLambda)
 {
   using namespace qi::traits;
   { // without return nor parameter
@@ -234,7 +234,7 @@ struct IntConstPtrFloatConst {
   int const* operator()(float) const {static const int i{0}; return &i;}
 };
 
-TEST(TestTraits, HasMemberOperatorCallClass)
+TEST(Traits, HasMemberOperatorCallClass)
 {
   using namespace qi::traits;
   static_assert(!HasMemberOperatorCall<NoOpCall>::value, "");
@@ -252,7 +252,7 @@ TEST(TestTraits, HasMemberOperatorCallClass)
   static_assert( HasMemberOperatorCall<boost::function<int const& (int, A*, float const&, double&)>>::value, "");
 }
 
-TEST(TestTraits, HasMemberOperatorCallBuiltin)
+TEST(Traits, HasMemberOperatorCallBuiltin)
 {
   using namespace qi::traits;
 
@@ -275,7 +275,7 @@ TEST(TestTraits, HasMemberOperatorCallBuiltin)
   static_assert(!HasMemberOperatorCall<float (A::*)(int, double&, A const&)>::value, "");
 }
 
-TEST(TestTraits, IsFunctionObjectLambda)
+TEST(Traits, IsFunctionObjectLambda)
 {
   using namespace qi::traits;
   { // without return nor parameter
@@ -319,7 +319,7 @@ TEST(TestTraits, IsFunctionObjectLambda)
   }
 }
 
-TEST(TestTraits, IsFunctionObjectClass)
+TEST(Traits, IsFunctionObjectClass)
 {
   using namespace qi::traits;
   static_assert(!IsFunctionObject<NoOpCall>::value, "");
@@ -337,7 +337,7 @@ TEST(TestTraits, IsFunctionObjectClass)
   static_assert( IsFunctionObject<boost::function<int const& (int, A*, float const&, double&)>>::value, "");
 }
 
-TEST(TestTraits, IsFunctionObjectBuiltin)
+TEST(Traits, IsFunctionObjectBuiltin)
 {
   using namespace qi::traits;
 
@@ -360,7 +360,7 @@ TEST(TestTraits, IsFunctionObjectBuiltin)
   static_assert(!IsFunctionObject<float (A::*)(int, double&, A const&)>::value, "");
 }
 
-TEST(TestTraits, FunctionLambda)
+TEST(Traits, FunctionLambda)
 {
   using namespace qi::traits;
   {
@@ -397,7 +397,7 @@ TEST(TestTraits, FunctionLambda)
   }
 }
 
-TEST(TestTraits, FunctionClass)
+TEST(Traits, FunctionClass)
 {
   using namespace qi::traits;
   using boost::function;
@@ -414,7 +414,7 @@ TEST(TestTraits, FunctionClass)
                     int const& (int, A*, float const&, double&)>::value, "");
 }
 
-TEST(TestTraits, FunctionBuiltin)
+TEST(Traits, FunctionBuiltin)
 {
   using namespace qi::traits;
   using boost::function;
@@ -444,7 +444,7 @@ namespace qi{ namespace traits{ namespace detail{
   };
 }}}
 
-TEST(TestTraits, IsContiguous)
+TEST(Traits, IsContiguous)
 {
   using namespace qi::traits;
 
@@ -482,7 +482,7 @@ TEST(TestTraits, IsContiguous)
   static_assert( IsContiguous<MyContiguousContainer>::value, "");
 }
 
-TEST(TestTraits, IsContiguousLike)
+TEST(Traits, IsContiguousLike)
 {
   using namespace qi::traits;
 
@@ -532,7 +532,7 @@ namespace qi{ namespace traits{ namespace detail{
   };
 }}}
 
-TEST(TestTraits, IsList)
+TEST(Traits, IsList)
 {
   using namespace qi::traits;
 
@@ -568,4 +568,111 @@ TEST(TestTraits, IsList)
 
   // custom
   static_assert( IsList<MyList>::value, "");
+}
+
+namespace test
+{
+  enum class Ctor
+  {
+    Default,
+    Copy,
+    Custom
+  };
+
+  std::ostream& operator<<(std::ostream& o, Ctor x)
+  {
+    switch (x)
+    {
+    case Ctor::Default: return o << "Ctor::Default";
+    case Ctor::Copy: return o << "Ctor::Copy";
+    case Ctor::Custom: return o << "Ctor::Custom";
+    }
+    return o << "...";
+  }
+
+  struct Base
+  {
+    Ctor ctor;
+    Base() : ctor(Ctor::Default)
+    {
+    }
+    Base(const Base&) : ctor(Ctor::Copy)
+    {
+    }
+    template<typename T>
+    Base(T&&, qi::traits::EnableIfNotBaseOf<Base, T>* = {}) : ctor(Ctor::Custom)
+    {
+    }
+  };
+
+  struct Derived0 : Base
+  {
+  };
+
+  struct Derived1 : Derived0
+  {
+  };
+} // namespace test
+
+TEST(Traits, EnableIfNotBaseOf)
+{
+  using namespace qi::traits;
+  using namespace test;
+  {
+    int x;
+    ASSERT_EQ(Ctor::Custom, Base(x).ctor);
+  }
+  {
+    Base b;
+    Base x(b);
+    ASSERT_EQ(Ctor::Copy, x.ctor);
+  }
+  {
+    Base x(Derived0{});
+    ASSERT_EQ(Ctor::Copy, x.ctor);
+  }
+  {
+    Base x(Derived1{});
+    ASSERT_EQ(Ctor::Copy, x.ctor);
+  }
+  {
+    Base b;
+    Base x(std::move(b));
+    ASSERT_EQ(Ctor::Copy, x.ctor);
+  }
+}
+
+TEST(Traits, Conditional)
+{
+  using namespace qi::traits;
+  static_assert(Equal<Conditional<true, int, float>, int>::value, "");
+  static_assert(Equal<Conditional<false, int, float>, float>::value, "");
+}
+
+template<typename Conjunction, bool value, typename Base>
+void assertConjunction()
+{
+  static_assert(Conjunction::value == value, "");
+  static_assert(std::is_base_of<Base, Conjunction>::value, "");
+}
+
+struct CustomTrue  { static const bool value = true; };
+struct CustomFalse { static const bool value = false; };
+
+TEST(Traits, Conjunction)
+{
+  using namespace qi::traits;
+  assertConjunction<Conjunction<>,                        true,  True>();
+  assertConjunction<Conjunction<True>,                    true,  True>();
+  assertConjunction<Conjunction<False>,                   false, False>();
+  assertConjunction<Conjunction<True, False>,             false, False>();
+  assertConjunction<Conjunction<False, True>,             false, False>();
+  assertConjunction<Conjunction<True, True>,              true,  True>();
+  assertConjunction<Conjunction<CustomTrue>,              true,  CustomTrue>();
+  assertConjunction<Conjunction<CustomFalse>,             false, CustomFalse>();
+  assertConjunction<Conjunction<CustomTrue, CustomFalse>, false, CustomFalse>();
+  assertConjunction<Conjunction<CustomFalse, CustomTrue>, false, CustomFalse>();
+  assertConjunction<Conjunction<CustomFalse, False>,      false, CustomFalse>();
+  assertConjunction<Conjunction<CustomTrue, CustomTrue>,  true,  CustomTrue>();
+  assertConjunction<Conjunction<True, CustomTrue>,        true,  CustomTrue>();
 }

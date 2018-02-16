@@ -40,12 +40,54 @@ namespace qi
     }
   }
 
+  BufferPrivate::BufferPrivate(const BufferPrivate& b)
+    : _bigdata(nullptr)
+    , _cachedSubBufferTotalSize(b._cachedSubBufferTotalSize)
+    , used(b.used)
+    , available(b.available)
+    , _subBuffers(b._subBuffers)
+  {
+    if (b._bigdata)
+    {
+      _bigdata = static_cast<unsigned char*>(malloc(b.used));
+      ::memcpy(_bigdata, b._bigdata, b.used);
+    }
+    else
+    {
+      ::memcpy(_data, b._data, b.used);
+    }
+  }
+
+  BufferPrivate& BufferPrivate::operator=(const BufferPrivate& b)
+  {
+    if (&b == this) return *this;
+    _cachedSubBufferTotalSize = b._cachedSubBufferTotalSize;
+    used = b.used;
+    available = b.available;
+    _subBuffers = b._subBuffers;
+    if (_bigdata)
+    {
+      free(_bigdata);
+      _bigdata = NULL;
+    }
+    if (b._bigdata)
+    {
+      _bigdata = static_cast<unsigned char*>(malloc(b.used));
+      ::memcpy(_bigdata, b._bigdata, b.used);
+    }
+    else
+    {
+      ::memcpy(_data, b._data, b.used);
+    }
+    return *this;
+  }
+
   struct MyPoolTag { };
   using buffer_pool = boost::singleton_pool<MyPoolTag, sizeof(BufferPrivate)>;
 
   void* BufferPrivate::operator new(size_t sz)
   {
-    QI_ASSERT(sz <= sizeof(BufferPrivate));
+    QI_ASSERT(sz == sizeof(BufferPrivate));
     return buffer_pool::malloc();
   }
 
@@ -54,7 +96,7 @@ namespace qi
     buffer_pool::free(ptr);
   }
 
-  int BufferPrivate::indexOfSubBuffer(size_t offset) const
+  boost::optional<size_t> BufferPrivate::indexOfSubBuffer(size_t offset) const
   {
     for(unsigned i = 0; i < _subBuffers.size(); ++i) {
       if (_subBuffers[i].first == offset) {
@@ -62,45 +104,32 @@ namespace qi
       }
     }
 
-    return -1;
+    return {};
   }
 
-  Buffer::Buffer()
-    : _p(boost::make_shared<BufferPrivate>())
+  bool operator==(const BufferPrivate& a, const BufferPrivate& b)
   {
-  }
-
-  Buffer::Buffer(const Buffer& b)
-  {
-    (*this) = b;
-  }
-
-  Buffer& Buffer::operator=(const Buffer& b)
-  {
-    _p = b._p;
-    return *this;
-  }
-
-  Buffer::Buffer(Buffer&& b)
-    : _p(std::move(b._p))
-  {
-    // The default state of a qi::Buffer contains a valid BufferPrivate pointer.
-    b._p = boost::make_shared<BufferPrivate>();
-  }
-
-  Buffer& Buffer::operator=(Buffer&& b)
-  {
-    _p = std::move(b._p);
-    b._p = boost::make_shared<BufferPrivate>();
-    return *this;
+    if (a.used != b.used) return false;
+    // The "available" member is ignored as it does not affect the behavior of the object.
+    // Idem for _cachedSubBufferTotalSize which is a cached data.
+    const auto aData = a.data();
+    const auto bData = b.data();
+    const bool aIsNull = (aData == nullptr);
+    const bool bIsNull = (bData == nullptr);
+    if (aIsNull != bIsNull) return false;
+    if (aIsNull) return true; // Both are null.
+    // Neither a nor b are null. We also know that a.used == b.used.
+    return std::equal(aData, aData + a.used, bData) && a._subBuffers == b._subBuffers;
   }
 
   unsigned char* BufferPrivate::data()
   {
-    if (_bigdata)
-      return (_bigdata);
+    return _bigdata ? _bigdata : _data;
+  }
 
-    return (_data);
+  const unsigned char* BufferPrivate::data() const
+  {
+    return const_cast<BufferPrivate*>(this)->data();
   }
 
   bool BufferPrivate::resize(size_t neededSize)
@@ -118,6 +147,36 @@ namespace qi
     available = neededSize;
     _bigdata = newBigdata; // Don't worry, realloc free previous buffer if needed
     return true;
+  }
+
+  Buffer::Buffer()
+    : _p(boost::make_shared<BufferPrivate>())
+  {
+  }
+
+  Buffer::Buffer(const Buffer& b)
+    : _p(boost::make_shared<BufferPrivate>(*b._p))
+  {
+  }
+
+  Buffer& Buffer::operator=(const Buffer& b)
+  {
+    _p = boost::make_shared<BufferPrivate>(*b._p);
+    return *this;
+  }
+
+  Buffer::Buffer(Buffer&& b)
+    : _p(std::move(b._p))
+  {
+    // The default state of a qi::Buffer contains a valid BufferPrivate pointer.
+    b._p = boost::make_shared<BufferPrivate>();
+  }
+
+  Buffer& Buffer::operator=(Buffer&& b)
+  {
+    _p = std::move(b._p);
+    b._p = boost::make_shared<BufferPrivate>();
+    return *this;
   }
 
   bool Buffer::write(const void *data, size_t size)
@@ -151,17 +210,19 @@ namespace qi
 
   bool Buffer::hasSubBuffer(size_t offset) const
   {
-    return (_p->indexOfSubBuffer(offset) != -1);
+    return _p->indexOfSubBuffer(offset) ? true : false;
   }
 
   const Buffer& Buffer::subBuffer(size_t offset) const
   {
-    int index = _p->indexOfSubBuffer(offset);
-
-    if (index == -1)
+    if (const auto index = _p->indexOfSubBuffer(offset))
+    {
+      return _p->_subBuffers[*index].second;
+    }
+    else
+    {
       throw std::runtime_error("No sub-buffer at the specified offset.");
-
-    return _p->_subBuffers[index].second;
+    }
   }
 
   size_t Buffer::size() const
@@ -234,6 +295,13 @@ namespace qi
     size_t copy = std::min(length, _p->used - offset);
     memcpy(buffer, (char*)_p->data()+offset, copy);
     return copy;
+  }
+
+  bool Buffer::operator==(const Buffer& b) const
+  {
+    const bool aHasBuffer = (_p.get() != nullptr);
+    const bool bHasBuffer = (b._p.get() != nullptr);
+    return (aHasBuffer == bHasBuffer) && (!aHasBuffer || *_p == *b._p);
   }
 
   namespace detail {

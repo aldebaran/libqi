@@ -5,6 +5,7 @@
 #include <boost/optional.hpp>
 #include <gtest/gtest.h>
 #include <qi/messaging/sock/send.hpp>
+#include <qi/messaging/sock/sslcontextptr.hpp>
 #include <qi/future.hpp>
 #include <qi/scoped.hpp>
 #include "src/messaging/message.hpp"
@@ -22,25 +23,26 @@ TEST(NetSendMessage, FailsOnWrite)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   auto _ = scopedSetAndRestore(
     N::_async_write_next_layer,
-    [](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-      h(Error{Error::unknown}, 0u);
+    [](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      h(ErrorCode<N>{ErrorCode<N>::unknown}, 0u);
     }
   );
   IoService<N> io;
-  auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   Message sentMsg;
-  Promise<std::pair<Error, Message*>> promise;
-  auto onComplete = [&](Error e, Message* m) {
+  Promise<std::pair<ErrorCode<N>, Message*>> promise;
+  auto onComplete = [&](ErrorCode<N> e, Message* m) {
     promise.setValue({e, m});
     return boost::optional<Message*>{};
   };
   sendMessage<N>(socket, &sentMsg, onComplete, SslEnabled{false});
   auto fut = promise.future();
   ASSERT_TRUE(fut.hasValue());
-  ASSERT_EQ(fut.value().first, Error{Error::unknown});
+  ASSERT_EQ(fut.value().first, ErrorCode<N>{ErrorCode<N>::unknown});
   ASSERT_EQ(fut.value().second, &sentMsg);
 }
 
@@ -48,25 +50,26 @@ TEST(NetSendMessage, SuccessSingleMessage)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   auto _ = scopedSetAndRestore(
     N::_async_write_next_layer,
-    [](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-      h(Error{Error::success}, 0u);
+    [](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      h(ErrorCode<N>{ErrorCode<N>::success}, 0u);
     }
   );
   IoService<N> io;
-  auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   Message sentMsg;
-  Promise<std::pair<Error, Message*>> promise;
-  auto onComplete = [&](Error e, Message* m) {
+  Promise<std::pair<ErrorCode<N>, Message*>> promise;
+  auto onComplete = [&](ErrorCode<N> e, Message* m) {
     promise.setValue({e, m});
     return boost::optional<Message*>{};
   };
   sendMessage<N>(socket, &sentMsg, onComplete, SslEnabled{false});
   auto fut = promise.future();
   ASSERT_TRUE(fut.hasValue());
-  ASSERT_EQ(fut.value().first, Error{Error::success});
+  ASSERT_EQ(fut.value().first, ErrorCode<N>{ErrorCode<N>::success});
   ASSERT_EQ(fut.value().second, &sentMsg);
 }
 
@@ -74,32 +77,33 @@ TEST(NetSendMessage, SuccessMultipleMessage)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   std::vector<std::thread> writeThreads;
   auto _ = scopedSetAndRestore(
     N::_async_write_next_layer,
-    [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+    [&](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread([&, h]{
-        h(success<Error>(), 0u);
+        h(success<ErrorCode<N>>(), 0u);
       }));
     }
   );
   IoService<N> io;
-  auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   std::vector<Message> messages(100);
   auto itMsg = messages.begin();
   using I = decltype(itMsg);
   while (itMsg != messages.end())
   {
-    Promise<std::pair<Error, I>> promise;
-    auto onComplete = [&](Error e, I m) {
+    Promise<std::pair<ErrorCode<N>, I>> promise;
+    auto onComplete = [&](ErrorCode<N> e, I m) {
       promise.setValue({e, m});
       return boost::optional<I>{}; // no next message
     };
     sendMessage<N>(socket, itMsg, onComplete, SslEnabled{false});
     auto fut = promise.future();
     ASSERT_TRUE(fut.hasValue());
-    ASSERT_EQ(fut.value().first, success<Error>());
+    ASSERT_EQ(fut.value().first, success<ErrorCode<N>>());
     ASSERT_EQ(fut.value().second, itMsg);
     ++itMsg;
   }
@@ -111,31 +115,40 @@ TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
 {
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   boost::synchronized_value<std::vector<std::thread>> writeThreads;
+  std::atomic_bool finished {false};
   auto _ = scopedSetAndRestore(
     N::_async_write_next_layer,
-    [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
-      writeThreads->push_back(std::thread([&, h]{
-        h(success<Error>(), 0u);
-      }));
+    [&](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
+      if (!finished)
+      {
+        auto syncThreads = writeThreads.synchronize();
+        if (!finished)
+        {
+          syncThreads->push_back(std::thread([&, h]{
+            h(success<ErrorCode<N>>(), 0u);
+          }));
+        }
+      }
     }
   );
   IoService<N> io;
-  auto socket = boost::make_shared<Socket>(io, SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(io, context);
   const int messageCount = 100;
   std::vector<Message> messages(messageCount);
   auto itMsg = messages.begin();
   int sendCount = 0;
   Promise<void> promise;
   using I = decltype(itMsg);
-  auto onComplete = [&](Error e, I m) -> boost::optional<I> {
+  auto onComplete = [&](ErrorCode<N> e, I m) -> boost::optional<I> {
     if (m != itMsg)
     {
       promise.setError("Wrong message.");
       return {};
     }
-    if (e != success<Error>())
+    if (e != success<ErrorCode<N>>())
     {
       promise.setError("Wrong error value.");
       return {};
@@ -157,13 +170,12 @@ TEST(NetSendMessage, SuccessMultipleMessageRafaleMode)
   promise.future().wait();
   ASSERT_EQ(sendCount, messageCount);
   {
+    finished = true;
     auto syncThreads = writeThreads.synchronize();
-    auto b = syncThreads->begin();
-    const auto e = syncThreads->end();
-    while (b != e)
+    for (auto& t : *syncThreads)
     {
-      (*b).join();
-      ++b;
+      if (t.joinable())
+        t.join();
     }
   }
   std::this_thread::sleep_for(defaultPostPauseInMs);
@@ -180,7 +192,7 @@ struct NetSendMessageEnqueue : testing::Test
 
 using sequences = testing::Types<
   // Mock
-  qi::sock::SendMessageEnqueue<mock::N> //, ConnectedSender<mock::N>
+  qi::sock::SendMessageEnqueue<mock::N, qi::sock::SslSocketPtr<mock::N>> //, ConnectedSender<mock::N>
   // Asio
   //, qi::sock::MessageReceiver<qi::sock::NetworkAsio>, qi::sock::Connected<qi::sock::NetworkAsio>
 >;
@@ -192,10 +204,10 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
   using SendMessageEnqueue = TypeParam;
   using namespace qi;
   using namespace qi::sock;
-  using namespace mock;
+  using N = mock::Network;
   auto scopedRead = scopedSetAndRestore(
     N::_async_read_next_layer,
-    defaultAsyncReadNextLayer
+    mock::defaultAsyncReadNextLayer
   );
   const unsigned sendThreadCount = 10u;
   const unsigned perSendThreadMessageCount = 100u;
@@ -205,16 +217,17 @@ TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
   writeThreads.reserve(maxSentCount);
   auto scopedWrite = scopedSetAndRestore(
     N::_async_write_next_layer,
-    [&](Socket::next_layer_type&, const std::vector<N::_const_buffer_sequence>&,
+    [&](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&,
           N::_anyTransferHandler writeCont) mutable {
       // We launch the continuation in another thread to avoid recursive calls.
       std::lock_guard<std::mutex> lock(writeThreadMutex);
       writeThreads.push_back(std::thread([=]() mutable {
-        writeCont(success<Error>(), 0u);
+        writeCont(success<ErrorCode<N>>(), 0u);
       }));
     }
   );
-  auto socket = boost::make_shared<Socket>(N::defaultIoService(), SslContext<N>{});
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   using I = std::list<Message>::const_iterator;
   std::atomic<unsigned> sentCount{0u};
   Promise<void> promiseEnoughSent;
@@ -270,16 +283,16 @@ TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreadsAsio)
   using namespace qi;
   using namespace qi::sock;
   using N = NetworkAsio;
-  SslContext<N> context{Method<SslContext<N>>::sslv23};
 
-  auto socket = boost::make_shared<SslSocket<N>>(N::defaultIoService(), context);
+  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   using I = std::list<Message>::const_iterator;
   const unsigned sendThreadCount = 100u;
   const unsigned perSendThreadMessageCount = 100u;
   const unsigned maxSentCount = sendThreadCount * perSendThreadMessageCount;
   std::atomic<unsigned> sentCount{0u};
   Promise<void> promiseEnoughSent;
-  SendMessageEnqueue<N> send{socket};
+  SendMessageEnqueue<N, SslSocketPtr<N>> send{socket};
   auto onSent = [&](ErrorCode<N>, I) {
     // We wait for all messages to be enqueued before starting processing them.
     ++sentCount;

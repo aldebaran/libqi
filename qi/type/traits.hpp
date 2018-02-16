@@ -31,6 +31,9 @@ namespace qi
     using True  = std::true_type;
     using False = std::false_type;
 
+    template<bool condition>
+    using Bool = std::integral_constant<bool, condition>;
+
     template<typename A, typename B>
     using Equal = typename std::is_same<A, B>::type;
 
@@ -323,6 +326,7 @@ namespace qi
       {
         using type = True;
       };
+
     }
 
     /// True if the underlying memory is contiguous.
@@ -354,6 +358,48 @@ namespace qi
     template<typename T>
     using UnderlyingType = typename std::underlying_type<T>::type;
 
+    /// Useful to avoid a template constructor to swallow copy constructor,
+    /// move constructor, etc.
+    ///
+    /// Note: The "derived" type is decayed as it corresponds to the most common case.
+    ///
+    /// Example: leaving untouched copy constructor and assignment operator
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// // will not swallow the copy constructor
+    /// template<typename U, typename = traits::EnableIfNotBaseOf<MutableStore, U>>
+    /// explicit MutableStore(U&& u)
+    ///     : data(std::forward<U>(u))
+    /// {
+    /// }
+    ///
+    /// template<typename U, typename = traits::EnableIfNotBaseOf<MutableStore, U>>
+    /// MutableStore& operator=(U&& u)
+    /// {
+    ///   data = std::forward<U>(u);
+    ///   return *this;
+    /// }
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    template<typename Base, typename Derived>
+    using EnableIfNotBaseOf = EnableIf<! std::is_base_of<Base, Decay<Derived>>::value>;
+
+    /// Behave exactly as the std::result_of_t of C++14.
+    template<typename T, typename... Args>
+    using ResultOf = typename std::result_of<T& (Args&&...)>::type;
+
+    /// Behave exactly as the std::remove_pointer_t of C++14.
+    template<typename T>
+    using RemovePointer = typename std::remove_pointer<T>::type;
+
+    /// Behave exactly as the std::conditional_t of C++14.
+    template<bool B, typename T, typename F>
+    using Conditional = typename std::conditional<B, T, F>::type;
+
+    /// Behave exactly as the std::conjunction of C++17
+    template<typename...> struct Conjunction : True {};
+    template<typename B1> struct Conjunction<B1> : B1 {};
+    template<typename B1, typename... Bn>
+    struct Conjunction<B1, Bn...>
+        : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
   } // namespace traits
 } // namespace qi
 

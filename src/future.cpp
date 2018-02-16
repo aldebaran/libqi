@@ -200,4 +200,4 @@ namespace qi {
     return "";
   }
 
-}
+} // namespace qi

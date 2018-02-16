@@ -11,6 +11,7 @@
 #include <qi/session.hpp>
 
 #include <testsession/testsessionpair.hpp>
+#include <qi/testutils/testutils.hpp>
 
 qiLogCategory("test");
 
@@ -64,7 +65,7 @@ public:
     , oe2(0)
     , om1(0)
     , om2(0)
-    , p2(p1)
+    , p2(TestSessionPair::ShareServiceDirectory, p1)
   {
     qi::DynamicObjectBuilder obs1, obs2;
     se1 = obs1.advertiseSignal<const int&>("fire1");
@@ -89,10 +90,12 @@ protected:
     EXPECT_EQ(nbLocalServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
     EXPECT_EQ(nbLocalServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
 
-    std::vector<qi::ServiceInfo> services = p1.client()->services();
-    EXPECT_EQ(nbConnectedServices, services.size());
-    services = p2.client()->services();
-    EXPECT_EQ(nbConnectedServices, services.size());
+    EXPECT_TRUE(test::verifyBeforeDuration(
+        [&] { return nbConnectedServices == p1.client()->services().value().size(); },
+        serviceWaitDefaultTimeout));
+    EXPECT_TRUE(test::verifyBeforeDuration(
+        [&] { return nbConnectedServices == p2.client()->services().value().size(); },
+        serviceWaitDefaultTimeout));
 
     qi::Future<qi::AnyObject> fut;
     fut = p2.client()->service("coin1");
@@ -377,7 +380,7 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
 TEST_F(ObjectEventRemoteConnect, serviceDirectoryEvent)
 {
   i = 0;
-  qi::AnyObject sd = p1.client()->service("ServiceDirectory");
+  qi::AnyObject sd = p1.client()->service(qi::Session::serviceDirectoryServiceName());
 
   using SignalMap = std::map<unsigned int, qi::MetaSignal>;
   SignalMap s_map;

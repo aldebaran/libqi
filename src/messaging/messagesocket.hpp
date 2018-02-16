@@ -52,9 +52,16 @@ namespace qi
       Event_Message = 1,
     };
 
-    explicit MessageSocket(qi::EventLoop* eventLoop = qi::getEventLoop())
+    explicit MessageSocket(qi::EventLoop* eventLoop = qi::getNetworkEventLoop())
       : _eventLoop(eventLoop)
       , _status(Status::Disconnected)
+      , _dispatcher{ &_signalsStrand }
+      // connected is the only signal to be synchronous, because it will always be the first signal
+      // emitted (so no other asynchronous signal emission will overlap with it) and it's not
+      // emitted from the network event loop worker
+      , disconnected{ &_signalsStrand }
+      , messageReady{ &_signalsStrand }
+      , socketEvent{ &_signalsStrand }
     {
       connected.setCallType(MetaCallType_Direct);
       disconnected.setCallType(MetaCallType_Direct);
@@ -90,6 +97,7 @@ namespace qi
 
   protected:
     qi::EventLoop* _eventLoop;
+    Strand _signalsStrand; // Must be declared before the MessageDispatcher and the signals.
     qi::MessageDispatcher _dispatcher;
 
     std::atomic<MessageSocket::Status> _status;
@@ -106,7 +114,7 @@ namespace qi
   };
 
   using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
-  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getEventLoop());
+  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getNetworkEventLoop());
 }
 
 #endif  // _SRC_MESSAGESOCKET_HPP_

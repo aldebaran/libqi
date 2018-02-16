@@ -16,7 +16,6 @@
 #include <boost/cstdint.hpp>
 #include <qi/types.hpp>
 #include <qi/buffer.hpp>
-
 #include <qi/binarycodec.hpp>
 
 #include "boundobject.hpp"
@@ -24,11 +23,13 @@
 
 qiLogCategory("qimessaging.message");
 
-namespace qi {
+namespace qi
+{
+  const qi::uint32_t Message::Header::magicCookie = 0x42adde42;
 
-  unsigned int newMessageId()
+  qi::uint32_t Message::Header::newMessageId()
   {
-    static qi::Atomic<int> id(0);
+    static std::atomic<qi::uint32_t> id(0);
     return ++id;
   }
 
@@ -111,65 +112,10 @@ namespace qi {
     }
   }
 
-  MessagePrivate::MessagePrivate()
+  std::ostream& operator<<(std::ostream& os, const qi::Message& msg)
   {
-    header.version = qi::Message::currentVersion();
-    header.id = newMessageId();
-    header.magic = qi::MessagePrivate::magic;
-  }
-
-  MessagePrivate::MessagePrivate(const MessagePrivate& b)
-  : buffer(b.buffer)
-  , signature(b.signature)
-  , header(b.header)
-  {
-  }
-
-  MessagePrivate::~MessagePrivate()
-  {
-  }
-
-  Message::Message()
-    : _p(boost::make_shared<MessagePrivate>())
-  {
-
-  }
-  Message::Message(const Message &msg)
-    : _p(msg._p)
-  {
-  }
-
-  void Message::cow()
-  {
-    if (_p.use_count() > 1)
-      _p = boost::make_shared<MessagePrivate>(*_p.get());
-  }
-
-  Message& Message::operator=(const Message& msg)
-  {
-    if (this == &msg)
-      return *this;
-
-    _p = msg._p;
-    return *this;
-  }
-
-  Message::Message(Type type, const MessageAddress &address)
-    : _p(new qi::MessagePrivate())
-  {
-    setType(type);
-    setAddress(address);
-  }
-
-
-  Message::~Message()
-  {
-  }
-
-
-  std::ostream& operator<<(std::ostream& os, const qi::Message& msg) {
     os << "message {" << std::endl
-       << "  size=" << msg._p->header.size << "," << std::endl
+       << "  size=" << msg.header().size << "," << std::endl
        << "  id  =" << msg.id() << "," << std::endl
        << "  vers=" << msg.version() << "," << std::endl
        << "  type=" << qi::Message::typeToString(msg.type()) << "," << std::endl
@@ -210,91 +156,18 @@ namespace qi {
 
     os << "," << std::endl
        << "  data=" << std::endl;
-    qi::detail::printBuffer(os, msg._p->buffer);
+    qi::detail::printBuffer(os, msg.buffer());
     os << std::endl << "}";
     return os;
   }
 
-  void Message::setId(qi::uint32_t id)
-  {
-    cow();
-    _p->header.id = id;
-  }
-
-  unsigned int Message::id() const
-  {
-    return _p->header.id;
-  }
-
-  void Message::setVersion(qi::uint16_t version)
-  {
-    cow();
-    _p->header.version = version;
-  }
-
-  unsigned int Message::version() const
-  {
-    return _p->header.version;
-  }
-
-  void Message::setType(Message::Type type)
-  {
-    cow();
-    _p->header.type = type;
-  }
-
-  Message::Type Message::type() const
-  {
-    return static_cast<Message::Type>(_p->header.type);
-  }
-
-  void Message::setFlags(qi::uint8_t flags)
-  {
-    cow();
-    _p->header.flags = flags;
-  }
-
-  void Message::addFlags(qi::uint8_t flags)
-  {
-    cow();
-    _p->header.flags |= flags;
-  }
-
-  qi::uint8_t Message::flags() const
-  {
-    return _p->header.flags;
-  }
-
-  void Message::setService(qi::uint32_t service)
-  {
-    cow();
-    _p->header.service = service;
-  }
-
-  unsigned int Message::service() const
-  {
-    return _p->header.service;
-  }
-
-  void Message::setObject(qi::uint32_t object)
-  {
-    cow();
-    _p->header.object = object;
-  }
-
-  unsigned int Message::object() const
-  {
-    return _p->header.object;
-  }
-
   void Message::setFunction(qi::uint32_t function)
   {
-    cow();
     if (type() == Type_Event)
     {
       qiLogDebug() << "called setFunction() on Type_Event message";
     }
-    _p->header.action = function;
+    _header.action = function;
   }
 
   unsigned int Message::function() const
@@ -303,17 +176,16 @@ namespace qi {
     {
       qiLogDebug() << "called function() on Type_Event message";
     }
-    return _p->header.action;
+    return _header.action;
   }
 
   void Message::setEvent(qi::uint32_t event)
   {
-    cow();
     if (type() != Type_Event)
     {
       qiLogDebug() << "called setEvent() on non Type_Event message";
     }
-    _p->header.action = event;
+    _header.action = event;
   }
 
   unsigned int Message::event() const
@@ -322,34 +194,11 @@ namespace qi {
     {
       qiLogDebug() << "called event() on non Type_Event message";
     }
-    return _p->header.action;
+    return _header.action;
   }
 
-  unsigned int Message::action() const
+  namespace
   {
-    return _p->header.action;
-  }
-
-  void Message::setBuffer(const Buffer &buffer)
-  {
-    cow();
-    _p->buffer = buffer;
-  }
-
-  void Message::setError(const std::string &error)
-  {
-    QI_ASSERT(type() == Type_Error && "called setError on a non Type_Error message");
-
-    cow();
-    // Clear the buffer before setting an error.
-    _p->buffer.clear();
-
-    // Error message is of type m (dynamic)
-    AnyValue v(AnyReference::from(error), false, false);
-    setValue(AnyReference::from(v), "m");
-  }
-
-  namespace {
     ObjectSerializationInfo serializeObject(
       AnyObject object,
       boost::weak_ptr<ObjectHost> context,
@@ -360,7 +209,8 @@ namespace qi {
         throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
       unsigned int sid = host->service();
       unsigned int oid = host->nextId();
-      ServiceBoundObject* sbo = new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
+      ServiceBoundObject* sbo =
+          new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);
       host->addObject(bo, strCtxt, oid);
       qiLogDebug() << "Hooking " << oid <<" on " << host.get();
@@ -402,7 +252,8 @@ namespace qi {
     {
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
-      qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId << " on " << context.get();
+      qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
+                   << " on " << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
       AnyObject o = makeDynamicAnyObject(ro, true, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
@@ -411,22 +262,25 @@ namespace qi {
     }
   }
 
-  AnyReference Message::value(const qi::Signature &signature, const qi::MessageSocketPtr &socket) const {
+  AnyReference Message::value(const qi::Signature& signature,
+                              const qi::MessageSocketPtr& socket) const
+  {
     qi::TypeInterface* type = qi::TypeInterface::fromSignature(signature);
     if (!type) {
       qiLogError() <<"fromBuffer: unknown type " << signature.toString();
       throw std::runtime_error("Could not construct type for " + signature.toString());
-    qiLogDebug() << "Serialized message body: " << _p->buffer.size();
     }
-    qi::BufferReader br(_p->buffer);
+    qi::BufferReader br(_buffer);
     //TODO: not exception safe
     AnyReference res(type);
     return decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
   }
 
-  void Message::setValue(const AutoAnyReference &value, const Signature& sig,
-                         boost::weak_ptr<ObjectHost> context, StreamContext* streamContext) {
-    cow();
+  void Message::setValue(const AutoAnyReference& value,
+                         const Signature& sig,
+                         boost::weak_ptr<ObjectHost> context,
+                         StreamContext* streamContext)
+  {
     Signature effective = value.type()->signature();
     if (effective != sig)
     {
@@ -445,23 +299,22 @@ namespace qi {
         setError(ss.str());
       }
       else
-        encodeBinary(&_p->buffer, conv.first, boost::bind(serializeObject, _1, context, streamContext), streamContext);
+        encodeBinary(conv.first, boost::bind(serializeObject, _1, context, streamContext), streamContext);
       if (conv.second)
         conv.first.destroy();
     }
     else if (value.type()->kind() != qi::TypeKind_Void)
     {
-      encodeBinary(&_p->buffer, value, boost::bind(serializeObject, _1, context, streamContext), streamContext);
+      encodeBinary(value, boost::bind(serializeObject, _1, context, streamContext), streamContext);
     }
   }
 
   void Message::setValues(const std::vector<qi::AnyReference>& values,
                           boost::weak_ptr<ObjectHost> context, StreamContext* streamContext)
   {
-    cow();
     SerializeObjectCallback scb = boost::bind(serializeObject, _1, context, streamContext);
     for (unsigned i = 0; i < values.size(); ++i)
-      encodeBinary(&_p->buffer, values[i], scb, streamContext);
+      encodeBinary(values[i], scb, streamContext);
   }
 
   //convert args then call setValues
@@ -488,7 +341,8 @@ namespace qi {
       }
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
-      encodeBinary(&_p->buffer, AnyReference::from(val), boost::bind(serializeObject, _1, context, streamContext), streamContext);
+      encodeBinary(AnyReference::from(val),
+                   boost::bind(serializeObject, _1, context, streamContext), streamContext);
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,
@@ -510,12 +364,14 @@ namespace qi {
       {
         ::qi::TypeInterface* target = ::qi::TypeInterface::fromSignature(*itd);
         if (!target)
-          throw std::runtime_error("remote call: Failed to obtain a type from signature " + (*itd).toString());
+          throw std::runtime_error("remote call: Failed to obtain a type from signature " +
+                                   (*itd).toString());
         std::pair<AnyReference, bool> c = nargs[i].convert(target);
         if (!c.first.type())
         {
           throw std::runtime_error(
-                _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i, (*its).toString(), (*itd).toString()));
+              _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i,
+                             (*its).toString(), (*itd).toString()));
         }
         nargs[i] = c.first;
         allocated[i] = c.second;
@@ -526,57 +382,4 @@ namespace qi {
       if (allocated[i])
         nargs[i].destroy();
   }
-
-  const qi::Buffer& Message::buffer() const
-  {
-    return _p->buffer;
-  }
-
-  qi::Buffer& Message::buffer()
-  {
-    return _p->buffer;
-  }
-
-  bool Message::isValid() const
-  {
-    if (_p->header.magic != qi::MessagePrivate::magic)
-    {
-      qiLogError()  << "Message dropped (magic is incorrect)" << std::endl;
-      return false;
-    }
-
-    if (type() == qi::Message::Type_None)
-    {
-      qiLogError()  << "Message dropped (type is None)" << std::endl;
-      return false;
-    }
-
-    if (object() == qi::Message::GenericObject_None)
-    {
-      qiLogError()  << "Message dropped (object is 0)" << std::endl;
-      QI_ASSERT(object() != qi::Message::GenericObject_None);
-      return false;
-    }
-
-    return true;
-  }
-
-  void Message::setAddress(const MessageAddress &address) {
-    cow();
-    _p->header.id = address.messageId;
-    _p->header.service = address.serviceId;
-    _p->header.object = address.objectId;
-    _p->header.action = address.functionId;
-  }
-
-  MessageAddress Message::address() const {
-    return MessageAddress(_p->header.id, _p->header.service, _p->header.object, _p->header.action);
-  }
-
-
-  std::ostream &operator<<(std::ostream &os, const qi::MessageAddress &address) {
-    os << "{" << address.serviceId << "." << address.objectId << "." << address.functionId << ", id:" << address.messageId << "}";
-    return os;
-  }
-
 }

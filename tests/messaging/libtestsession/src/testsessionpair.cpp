@@ -11,60 +11,69 @@
 #include <testsession/testsession.hpp>
 #include <testsession/testsessionpair.hpp>
 
-TestSessionPair::TestSessionPair(TestMode::Mode mode, const std::string sdUrl)
+qiLogCategory("test.sessionpair");
+
+const TestSessionPair::ShareServiceDirectory_tag TestSessionPair::ShareServiceDirectory{};
+
+TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
+  : _mode(mode)
+  , _sd(qi::makeSession())
+  , _gw(_mode == TestMode::Mode_Gateway ? new qi::Gateway : nullptr)
 {
-  qi::UrlVector endpoints;
-  _sd = qi::makeSession();
-
-  // #1 Get active mode.
-  _mode = mode == TestMode::Mode_Default ? TestMode::getTestMode() : mode;
-
-  // #2 Listen.
-  if (_mode == TestMode::Mode_SSL)
+  const bool gatewayMode = _mode == TestMode::Mode_Gateway;
+  std::string gwUrl;
+  if (gatewayMode)
+  {
+    gwUrl = std::move(sdUrl);
+    sdUrl = "tcp://0.0.0.0:0";
+  }
+  else if (_mode == TestMode::Mode_SSL)
   {
     _sd->setIdentity(qi::path::findData("qi", "server.key"),
                      qi::path::findData("qi", "server.crt"));
-    _sd->listenStandalone("tcps://0.0.0.0:0");
-    endpoints = _sd->endpoints();
+  }
+  gwUrl = test::adaptScheme(gwUrl, mode);
+  sdUrl = test::adaptScheme(sdUrl, mode);
+
+  qi::UrlVector endpoints;
+  _sd->listenStandalone(std::move(sdUrl));
+  qiLogInfo() << "ServiceDirectory listening on endpoint '" << _sd->endpoints()[0].str() << "'";
+  if (gatewayMode)
+  {
+    _gw->attachToServiceDirectory(_sd->url()).wait();
+    _gw->listen(std::move(gwUrl));
+    qiLogInfo() << "Gateway listening on endpoint '" << _gw->endpoints()[0].str() << "'";
+    endpoints = _gw->endpoints();
   }
   else
   {
-    if (_mode == TestMode::Mode_Gateway)
-    {
-      _sd->listenStandalone("tcp://0.0.0.0:0");
-      _gw.reset(new qi::Gateway);
-      _gw->attachToServiceDirectory(_sd->url()).value();
-      _gw->listen(sdUrl);
-      endpoints = _gw->endpoints();
-    }
-    else
-    {
-      _sd->listenStandalone(sdUrl);
-      endpoints = _sd->endpoints();
-    }
+    endpoints = _sd->endpoints();
   }
 
-  // #3 Get client and server sessions.
-  _client.reset(new TestSession(endpoints[0].str(), false, _mode));
+  qiLogInfo() << "Server and client will connect to endpoint '" << endpoints[0].str() << "'";
   _server.reset(new TestSession(endpoints[0].str(), true, _mode));
+  if (_mode != TestMode::Mode_Direct) // no client in direct mode
+  {
+    _client.reset(new TestSession(endpoints[0].str(), false, _mode));
+  }
 }
 
-TestSessionPair::TestSessionPair(TestSessionPair &other)
+TestSessionPair::TestSessionPair(ShareServiceDirectory_tag t,
+                                 const TestSessionPair& other,
+                                 TestMode::Mode mode)
+  : TestSessionPair(mode == TestMode::Mode_Gateway ?
+                        other.gateway().endpoints().front() :
+                        other.sd()->endpoints().front(),
+                    mode)
 {
-  _sd = qi::makeSession();
-
-  // #1 Get active mode.
-  _mode = TestMode::getTestMode();
-
-  // #2 Get client and server sessions using other pair service directory.
-  _client.reset(new TestSession(other._sd->endpoints()[0].str(), false, _mode));
-  _server.reset(new TestSession(other._sd->endpoints()[0].str(), true, _mode));
 }
 
-TestSessionPair::~TestSessionPair()
+TestSessionPair::TestSessionPair(const qi::Url& sdEndpoint, TestMode::Mode mode)
+  : _mode(mode)
+  , _server(new TestSession(sdEndpoint.str(), true, _mode))
+  , _client(_mode == TestMode::Mode_Direct ? nullptr : new TestSession(sdEndpoint.str(), false, _mode))
 {
-  _client.reset();
-  _server.reset();
+  qiLogInfo() << "Server and client connected to endpoint '" << sdEndpoint.str() << "'";
 }
 
 qi::SessionPtr TestSessionPair::client() const
@@ -84,6 +93,13 @@ qi::SessionPtr TestSessionPair::server() const
 qi::SessionPtr TestSessionPair::sd() const
 {
   return _sd;
+}
+
+const qi::Gateway& TestSessionPair::gateway() const
+{
+  if (!_gw)
+    throw std::runtime_error("No gateway instanciated");
+  return *_gw;
 }
 
 std::vector<qi::Url> TestSessionPair::serviceDirectoryEndpoints() const

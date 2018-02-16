@@ -2,6 +2,9 @@
 #ifndef _QI_UTILITY_HPP_
 #define _QI_UTILITY_HPP_
 #include <type_traits>
+#include <memory>
+#include <boost/shared_ptr.hpp>
+#include <qi/type/traits.hpp>
 #include <qi/macro.hpp>
 
 namespace qi
@@ -24,6 +27,66 @@ namespace qi
     static_assert(!std::is_lvalue_reference<T>::value,
       "template argument substituting T is an lvalue reference type");
     return static_cast<T&&>(t);
+  }
+
+  /// Produce a L-value reference in a non-evaluated context.
+  ///
+  /// Note: Because of the non-evaluated context, the function need not be defined.
+  ///
+  /// Note: This follows the same idea as `std::declval()`.
+  ///
+  /// Example: Statically selecting an overload.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // Different overloads of `f` will return different types.
+  /// template<typename T>
+  /// T f(T& t) {
+  ///   // ...
+  /// }
+  ///
+  /// template<typename T>
+  /// T* f(T (&a)[N]) {
+  ///   // ...
+  /// }
+  ///
+  /// template<ytpename T>
+  /// struct X {
+  ///   // Produce a "fake" L-value reference in a `decltype` context.
+  ///   using U = decltype(f(declref<T>()));
+  /// };
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  template<typename T>
+  T& declref();
+
+  /// Creates a weak_ptr<T> with T deduced from a shared_ptr<T>
+  template<typename T>
+  std::weak_ptr<T> weakPtr(const std::shared_ptr<T>& p)
+  {
+    return { p };
+  }
+
+  template<typename T>
+  boost::weak_ptr<T> weakPtr(const boost::shared_ptr<T>& p)
+  {
+    return { p };
+  }
+
+  template<typename T>
+  std::shared_ptr<T> scopelock(std::weak_ptr<T>& p)
+  {
+    return p.lock();
+  }
+
+  template<typename T>
+  boost::shared_ptr<T> scopelock(boost::weak_ptr<T>& p)
+  {
+    return p.lock();
+  }
+
+  /// Constructs a std::shared_ptr<T> with T deduced from the parameter.
+  template <typename T>
+  std::shared_ptr<traits::Decay<T>> sharedPtr(T&& t)
+  {
+    return std::make_shared<traits::Decay<T>>(fwd<T>(t));
   }
 } // namespace qi
 

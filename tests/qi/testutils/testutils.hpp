@@ -1,49 +1,230 @@
+#pragma once
+
+#include <memory>
 #include <string>
-#include <qi/os.hpp>
+#include <vector>
+#include <chrono>
+#include <boost/optional.hpp>
+#include <boost/config.hpp>
+#include <gtest/gtest.h>
+#include <qi/type/traits.hpp>
+#include <qi/clock.hpp>
+#include <qi/future.hpp>
 
-/**
- * Runs a process from construction to destruction.
- * At destruction, the process is killed with SIGKILL.
- */
-class ScopedProcess
+namespace test
 {
-public:
-  ScopedProcess(
-      const std::string& executable,
-      const std::vector<std::string>& arguments = std::vector<std::string>{})
-    : _executable(executable)
+  /// Runs a process from construction to destruction.
+  /// At destruction, the process is killed with SIGKILL.
+  class ScopedProcess
   {
-    char** cArgs = new char*[arguments.size()+2];
-    cArgs[0] = (char*)_executable.c_str();
-    for(size_t i = 0; i < arguments.size(); ++i)
-      cArgs[i+1] = (char*)arguments[i].c_str();
-    cArgs[arguments.size()+1] = NULL;
-    _pid = qi::os::spawnvp(cArgs);
-    delete[] cArgs;
-    if (_pid <= 0)
-      throw std::runtime_error(
-          std::string("Could not start: ") + _executable);
+    static const std::chrono::milliseconds defaultWaitReadyDuration;
+
+    using Strings = std::vector<std::string>;
+  public:
+    explicit ScopedProcess(const std::string& executable,
+                           const Strings& arguments = Strings{},
+                           std::chrono::milliseconds waitReadyDuration = defaultWaitReadyDuration);
+
+    ~ScopedProcess();
+
+    // non-copyable
+    ScopedProcess(const ScopedProcess&) = delete;
+    ScopedProcess& operator=(const ScopedProcess&) = delete;
+
+    int pid() const
+    {
+      return _pid;
+    }
+
+  private:
+    std::string _executable;
+    int _pid;
+  };
+
+  /// Predicate P
+  template <typename P>
+  static testing::AssertionResult verifyBeforeDuration(P pred,
+                                                       qi::NanoSeconds dura,
+                                                       qi::NanoSeconds period = qi::MilliSeconds{10})
+  {
+    while (!pred())
+    {
+      if (dura == qi::NanoSeconds::zero())
+      {
+        return testing::AssertionFailure()
+               << "Predicate was not true before "
+               << boost::chrono::duration_cast<qi::MicroSeconds>(dura).count() << " microseconds";
+      }
+      if (period >= dura) dura = qi::NanoSeconds::zero();
+      else dura -= period;
+      qi::sleepFor(period);
+    }
+    return testing::AssertionSuccess();
   }
 
-  ~ScopedProcess()
+  static const auto defaultFutureWaitDuration = qi::Seconds{ 3 };
+
+  namespace detail
   {
-    qi::os::kill(_pid, SIGKILL);
-    int status = 0;
-    int ret = qi::os::waitpid(_pid, &status);
-    std::cout << "Waiting for " << _executable << " has yielded the status "
-                << status << " and returned " << ret << std::endl;
+    struct DoNothing
+    {
+      template<typename T>
+      void operator()(const qi::Future<T>&) const {}
+    };
+
+    template<typename T>
+    struct AssignValue
+    {
+      T* t;
+      void operator()(const qi::Future<T>& fut) const
+      {
+        *t = fut.value();
+      }
+    };
+
+    struct AssignError
+    {
+      std::string* err;
+      template<typename T>
+      void operator()(const qi::Future<T>& fut) const
+      {
+        *err = fut.error();
+      }
+    };
+
+    template <typename T>
+    testing::Message messageOfUnexpectedState(const qi::Future<T>& fut)
+    {
+      testing::Message msg;
+      switch (fut.wait(0))
+      {
+      case qi::FutureState_None:
+        msg << "the future is invalid as it is not tied to a promise";
+        break;
+      case qi::FutureState_Running:
+        msg << "the future has timed out";
+        break;
+      case qi::FutureState_Canceled:
+        msg << "the future has been canceled";
+        break;
+      case qi::FutureState_FinishedWithError:
+        msg << "the future has an error '" << fut.error() << "'";
+        break;
+      case qi::FutureState_FinishedWithValue:
+        msg << "the future has an value '" << fut.value() << "'";
+        break;
+      }
+      return msg;
+    }
+
+    template <typename T, typename Proc = DoNothing>
+    testing::AssertionResult finishesWithState(qi::Future<T> fut,
+                                               qi::FutureState expected,
+                                               Proc onSuccess = {},
+                                               qi::MilliSeconds delay = defaultFutureWaitDuration)
+    {
+      const auto state = fut.wait(delay);
+      if (state == expected)
+      {
+        onSuccess(fut);
+        return testing::AssertionSuccess();
+      }
+      return testing::AssertionFailure() << messageOfUnexpectedState(fut);
+    }
   }
 
-  // non-copyable
-  ScopedProcess(const ScopedProcess&) = delete;
-  ScopedProcess& operator=(const ScopedProcess&) = delete;
-
-  int pid() const
+  inline detail::DoNothing willDoNothing()
   {
-    return _pid;
+    return {};
   }
 
-private:
-  std::string _executable;
-  int _pid;
-};
+  template<typename T>
+  detail::AssignValue<T> willAssignValue(T& t)
+  {
+    return {&t};
+  }
+
+  inline detail::AssignError willAssignError(std::string& err)
+  {
+    return {&err};
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult finishesWithValue(qi::Future<T> fut,
+                                             Proc onSuccess = {},
+                                             qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_FinishedWithValue, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult finishesWithValue(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return finishesWithValue(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult finishesWithError(qi::Future<T> fut,
+                                             Proc onSuccess = {},
+                                             qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_FinishedWithError, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult finishesWithError(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return finishesWithError(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult finishesAsCanceled(qi::Future<T> fut,
+                                              Proc onSuccess = {},
+                                              qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_Canceled, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult finishesAsCanceled(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return finishesAsCanceled(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  template <typename T, typename Proc = detail::DoNothing>
+  testing::AssertionResult isStillRunning(qi::Future<T> fut,
+                                          Proc onSuccess = {},
+                                          qi::MilliSeconds delay = defaultFutureWaitDuration)
+  {
+    return detail::finishesWithState(fut, qi::FutureState_Running, onSuccess, delay);
+  }
+
+  template <typename T, typename... Args>
+  testing::AssertionResult isStillRunning(qi::FutureSync<T> fut, Args&&... args)
+  {
+    return isStillRunning(fut.async(), qi::fwd<Args>(args)...);
+  }
+
+  static const auto defaultConnectionAttemptTimeout = qi::Seconds{10};
+
+  /// Preconditions: attempts >= 0
+  ///
+  /// With Network N:
+  /// qi::TcpMessageSocket<N> S, qi::Url U
+  template<class S, class U>
+  qi::Future<void> attemptConnect(S& socket, U url, qi::MilliSeconds timeout = defaultConnectionAttemptTimeout)
+  {
+    qi::Future<void> result;
+    qi::FutureState state = qi::FutureState_None;
+    const auto deadline = qi::SteadyClock::now() + timeout;
+    while (qi::SteadyClock::now() < deadline && state != qi::FutureState_FinishedWithValue)
+    {
+      if (state != qi::FutureState_Running)
+        result = socket.connect(url).async();
+
+      state = result.wait(defaultConnectionAttemptTimeout);
+    }
+    return result;
+  }
+
+} // namespace test

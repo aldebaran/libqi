@@ -12,6 +12,7 @@
 # include <string>
 # include <map>
 # include <vector>
+# include <csignal>
 # include <type_traits>
 # include <qi/api.hpp>
 # include <qi/types.hpp>

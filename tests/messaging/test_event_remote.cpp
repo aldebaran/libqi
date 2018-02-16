@@ -41,7 +41,9 @@ protected:
 
     std::vector<qi::ServiceInfo> services = p.client()->services();
     if (TestMode::getTestMode() == TestMode::Mode_Direct)
+    {
       EXPECT_EQ(2U, services.size());
+    }
     oclient = p.client()->service("coin");
     ASSERT_TRUE(oclient != 0);
     payload = &prom;

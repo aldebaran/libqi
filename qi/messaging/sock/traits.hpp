@@ -1,7 +1,6 @@
 #pragma once
 #ifndef _QI_SOCK_TRAITS_HPP
 #define _QI_SOCK_TRAITS_HPP
-#include <boost/shared_ptr.hpp>
 #include <qi/messaging/sock/concept.hpp>
 #include <qi/type/traits.hpp>
 
@@ -69,9 +68,6 @@ namespace qi { namespace sock {
   // Misc traits
   template<typename N>
   using ConstBuffer = typename N::const_buffer_type;
-
-  template<typename N>
-  using SocketPtr = boost::shared_ptr<SslSocket<N>>;
 }} // namespace qi::sock
 
 #endif // _QI_SOCK_TRAITS_HPP

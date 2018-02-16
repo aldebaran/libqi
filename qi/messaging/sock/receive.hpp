@@ -133,12 +133,12 @@ namespace qi { namespace sock {
         return;
       }
       auto& msg = *ptrMsg;
-      auto header = msg._p->header;
-      if (header.magic != MessagePrivate::magic)
+      auto header = msg.header();
+      if (header.magic != Message::Header::magicCookie)
       {
         qiLogWarning(logCategory()) << &(*socket) << ": Incorrect magic from "
           << (*socket).lowest_layer().remote_endpoint().address().to_string()
-          << " (expected " << MessagePrivate::magic
+          << " (expected " << Message::Header::magicCookie
           << ", got " << header.magic << ").";
         receiveErrorAndMaybeReceiveNext(fault<ErrorCode<N>>());
         return;
@@ -158,8 +158,10 @@ namespace qi { namespace sock {
         receiveErrorAndMaybeReceiveNext(messageSize<ErrorCode<N>>());
         return;
       }
-      void* ptr = msg._p->buffer.reserve(payload);
+      auto messageBuffer = msg.extractBuffer();
+      void* ptr = messageBuffer.reserve(payload);
       auto buffer = N::buffer(ptr, payload);
+      msg.setBuffer(std::move(messageBuffer));
       auto readData = lifetimeTransfo([=](ErrorCode<N> error, std::size_t /*len*/) {
         onReadData<N>(error, socket, ptrMsg, ssl, maxPayload, onReceive, lifetimeTransfo, syncTransfo);
       });
@@ -185,19 +187,19 @@ namespace qi { namespace sock {
       const Proc& onReceive, F0 lifetimeTransfo, F1 syncTransfo)
   {
     auto makeHeaderBuffer = [&] {
-      return N::buffer((*ptrMsg)._p->getHeader(), sizeof(MessagePrivate::MessageHeader));
+      return N::buffer(&ptrMsg->header(), sizeof(Message::Header));
     };
-    auto readHeader = lifetimeTransfo([=](ErrorCode<N> erc, std::size_t len) {
+    auto readHeader = syncTransfo(lifetimeTransfo([=](ErrorCode<N> erc, std::size_t len) {
       detail::onReadHeader<N>(erc, len, socket, ptrMsg, ssl, maxPayload, onReceive,
         lifetimeTransfo, syncTransfo);
-    });
+    }));
     if (*ssl)
     {
-      N::async_read(*socket, makeHeaderBuffer(), syncTransfo(readHeader));
+      N::async_read(*socket, makeHeaderBuffer(), readHeader);
     }
     else
     {
-      N::async_read((*socket).next_layer(), makeHeaderBuffer(), syncTransfo(readHeader));
+      N::async_read((*socket).next_layer(), makeHeaderBuffer(), readHeader);
     }
   }
 
@@ -255,7 +257,9 @@ namespace qi { namespace sock {
           if (onReceive(erc, m))
           {
             // Must continue.
-            _msg.buffer().clear();
+            auto dataBuffer = _msg.extractBuffer();
+            dataBuffer.clear();
+            _msg.setBuffer(std::move(dataBuffer));
             return {&_msg};
           }
           return {};
@@ -291,13 +295,13 @@ namespace qi { namespace sock {
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
       Proc onReceive, const F& syncTransfo = {})
     {
-      _receiveMsg(socket, ssl, maxPayload, onReceive,
-        trackWithFallbackTransfo(
-          [=]() mutable {
-            onReceive(operationAborted<ErrorCode<N>>(), nullptr);
-          },
-          this),
-        syncTransfo);
+      auto lifetimeTransfo = trackWithFallbackTransfo(
+        [=]() mutable {
+          onReceive(operationAborted<ErrorCode<N>>(), nullptr);
+        },
+        this);
+
+      _receiveMsg(socket, ssl, maxPayload, onReceive, lifetimeTransfo, syncTransfo);
     }
     ~ReceiveMessageContinuousTrack()
     {

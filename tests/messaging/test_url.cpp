@@ -67,6 +67,24 @@ TEST(TestURL, InvalidUrl)
   EXPECT_EQ("example.com", url.host());
   EXPECT_EQ(0, url.port());
   EXPECT_FALSE(url.isValid());
+
+  url = "tcp://example.com:abcdef";
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(0, url.port());
+  EXPECT_FALSE(url.isValid());
+
+  url = "tcp://example.com:-12";
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(0, url.port());
+  EXPECT_FALSE(url.isValid());
+
+  url = "tcp://example.com:424242";
+  EXPECT_EQ("tcp", url.protocol());
+  EXPECT_EQ("example.com", url.host());
+  EXPECT_EQ(0, url.port());
+  EXPECT_FALSE(url.isValid());
 }
 
 TEST(TestURL, ValidUrl)

@@ -18,6 +18,7 @@ qi_create_gtest(
   "test_traits.cpp"
   "test_type.cpp"
   "test_value.cpp"
+  "test_integersequence.cpp"
 
   DEPENDS
   qi

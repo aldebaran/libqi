@@ -428,6 +428,20 @@ namespace qi {
     _p->trackMap.erase(it);
   }
 
+  ExecutionContext* SignalBase::executionContext() const
+  {
+    QI_ASSERT(_p);
+    boost::recursive_mutex::scoped_lock sl(_p->mutex);
+    return _p->execContext;
+  }
+
+  void SignalBase::clearExecutionContext()
+  {
+    QI_ASSERT(_p);
+    boost::recursive_mutex::scoped_lock sl(_p->mutex);
+    _p->execContext = nullptr;
+  }
+
   bool SignalBase::disconnectAll()
   {
     QI_ASSERT(_p);
@@ -441,6 +455,12 @@ namespace qi {
   }
 
   SignalBase::SignalBase(const qi::Signature& sig, OnSubscribers onSubscribers)
+    : SignalBase(sig, nullptr, std::move(onSubscribers))
+  {
+  }
+
+  SignalBase::SignalBase(const Signature& sig, ExecutionContext* execContext,
+                         SignalBase::OnSubscribers onSubscribers)
     : _p(new SignalBasePrivate)
   {
     //Dynamic mean AnyArguments here.
@@ -448,14 +468,20 @@ namespace qi {
       throw std::runtime_error("Signal signature should be tuple, or AnyArguments");
     _p->onSubscribers = onSubscribers;
     _p->signature = sig;
+    _p->execContext = execContext;
   }
 
   SignalBase::SignalBase(OnSubscribers onSubscribers)
-  : _p(new SignalBasePrivate)
+    : SignalBase(nullptr, std::move(onSubscribers))
   {
-    _p->onSubscribers = onSubscribers;
   }
 
+  SignalBase::SignalBase(ExecutionContext* execContext, OnSubscribers onSubscribers)
+    : _p(new SignalBasePrivate)
+  {
+    _p->onSubscribers = onSubscribers;
+    _p->execContext = execContext;
+  }
 
   qi::Signature SignalBase::signature() const
   {

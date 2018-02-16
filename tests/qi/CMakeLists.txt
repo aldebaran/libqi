@@ -2,8 +2,8 @@
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 qi_create_test_helper(testlaunch         testlaunch.cpp)
-qi_create_test_helper(testlaunchloop     testlaunchloop.cpp     DEPENDS QI)
-qi_create_test_helper(test_launchloop_with_spaces testlaunchloop.cpp   DEPENDS QI)
+qi_create_test_helper(testlaunchloop     testlaunchloop.cpp)
+qi_create_test_helper(test_launchloop_with_spaces testlaunchloop.cpp)
 if(QI_WITH_TESTS)
   set_property(TARGET test_launchloop_with_spaces PROPERTY OUTPUT_NAME "test launchloop with spaces")
 endif()
@@ -12,7 +12,7 @@ qi_create_test_helper(check_env             check_env.cpp             DEPENDS QI
 qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS QI)
 
 
-qi_create_gtest(
+qi_create_gmock(
   test_qi
 
   SRC
@@ -25,18 +25,23 @@ qi_create_gtest(
   "test_eventloop.cpp"
   "test_flags.cpp"
   "test_functional.cpp"
+  "test_functional_common.hpp"
   "test_future.hpp"
   "test_future.cpp"
   "test_futuregroup.cpp"
   "test_locale.cpp"
   "test_macro.cpp"
   "test_macroregular.cpp"
+  "test_moveoncopy.cpp"
+  "test_mutablestore.cpp"
   "test_path_conf.cpp"
   "test_periodictask.cpp"
   "test_qi.cpp" # main
   "test_qiatomic.cpp"
   "test_qiclock.cpp"
   "test_qilaunch.cpp"
+  "test_qilog.hpp"
+  "test_qilog.cpp"
   "test_qilog_async.cpp"
   "test_qilog_sync.cpp"
   "test_qios.cpp"
@@ -51,6 +56,7 @@ qi_create_gtest(
 
   DEPENDS
   qi
+  qitestutils
 
   TIMEOUT 120
 )

@@ -3,61 +3,79 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the COPYING file.
  */
+
+#include "test_qilog.hpp"
 #include <gtest/gtest.h>
-#include <qi/log.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <qi/atomic.hpp>
 #include <qi/future.hpp>
-#include <cstring>
+#include <qi/log.hpp>
+#include <qi/testutils/testutils.hpp>
+#include <atomic>
 
-static const int MAX = 1000;
+namespace
+{
 
-class BlockyHandler {
+static const int iterations = 1000;
+static const auto testCategory = "core.log.test1";
+
+class BlockyHandler
+{
 public:
-  qi::Atomic<int> count {0};
+  std::atomic<int> count{0};
   qi::Promise<void> start;
   qi::Promise<void> finished;
-  void log(const qi::LogLevel,
-           const qi::Clock::time_point,
-           const qi::SystemClock::time_point,
-           const char*,
-           const char*,
-           const char*,
-           const char*,
-           int) {
+  LogHandler handler;
+  const unsigned int& id = handler.id;
+
+  explicit BlockyHandler(const std::string& name)
+    : handler(name, std::ref(*this), qi::LogLevel_Verbose)
+  {
+  }
+
+  void operator()(const qi::LogLevel,
+                  const qi::Clock::time_point,
+                  const qi::SystemClock::time_point,
+                  const std::string category,
+                  const char*,
+                  const char*,
+                  const char*,
+                  int)
+  {
     start.future().wait();
-    if (++count == MAX)
+    if (category == testCategory && ++count == iterations)
       finished.setValue(0);
   }
 };
 
-TEST(log, logasync)
+}
+
+class AsyncLog : public ::testing::Test
 {
-  qiLogCategory("core.log.test1");
+protected:
+  void SetUp() override
+  {
+    qi::log::setSynchronousLog(false);
+  }
 
-  qi::log::init(qi::LogLevel_Info, 0, false);
-  atexit(qi::log::destroy);
+  void TearDown() override
+  {
+    qi::log::flush();
+  }
+};
 
-  BlockyHandler bh;
-  qi::log::addHandler("BlockyHandler",
-      boost::bind(&BlockyHandler::log, boost::ref(bh),
-                  _1, _2, _3, _4, _5, _6, _7, _8));
-
-  for (int i = 0; i < MAX; i++)
-    qiLogFatal() << i;
+TEST_F(AsyncLog, logasync)
+{
+  BlockyHandler bh("BlockyHandler");
+  qiLogCategory(testCategory);
+  for (int i = 0; i < iterations; i++)
+    qiLogVerbose() << "Iteration " << i;
 
   bh.start.setValue(0);
-
-  bh.finished.future().wait();
-
-  qi::log::removeHandler("BlockyHandler");
+  ASSERT_TRUE(test::finishesWithValue(bh.finished.future()));
 }
 
 
-TEST(log, cats)
+TEST_F(AsyncLog, cats)
 {
   qiLogCategory("pan");
   qiLogWarningF("canard %s", 12);
-  qi::os::msleep(100);
 }

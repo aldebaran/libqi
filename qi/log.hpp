@@ -69,7 +69,7 @@
  */
 #if defined(NO_QI_DEBUG) || defined(NDEBUG)
 # define qiLogDebug(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
-# define qiLogDebugF(Msg, ...)
+# define qiLogDebugF(Msg, ...) do {} while(0)
 #else
 # define qiLogDebug(...)   _QI_LOG_MESSAGE_STREAM(LogLevel_Debug,   Debug ,  __VA_ARGS__)
 # define qiLogDebugF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Debug,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
@@ -80,7 +80,7 @@
  */
 #if defined(NO_QI_VERBOSE)
 # define qiLogVerbose(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
-# define qiLogVerboseF(Msg, ...)
+# define qiLogVerboseF(Msg, ...) do {} while(0)
 #else
 # define qiLogVerbose(...) _QI_LOG_MESSAGE_STREAM(LogLevel_Verbose, Verbose, __VA_ARGS__)
 # define qiLogVerboseF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Verbose,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
@@ -91,7 +91,7 @@
  */
 #if defined(NO_QI_INFO)
 # define qiLogInfo(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
-# define qiLogInfoF(Msg, ...)
+# define qiLogInfoF(Msg, ...) do {} while(0)
 #else
 # define qiLogInfo(...)    _QI_LOG_MESSAGE_STREAM(LogLevel_Info,    Info,    __VA_ARGS__)
 # define qiLogInfoF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Info,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
@@ -102,7 +102,7 @@
  */
 #if defined(NO_QI_WARNING)
 # define qiLogWarning(...) ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
-# define qiLogWarningF(Msg, ...)
+# define qiLogWarningF(Msg, ...) do {} while(0)
 #else
 # define qiLogWarning(...) _QI_LOG_MESSAGE_STREAM(LogLevel_Warning, Warning, __VA_ARGS__)
 # define qiLogWarningF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Warning,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
@@ -113,7 +113,7 @@
  */
 #if defined(NO_QI_ERROR)
 # define qiLogError(...)   ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
-# define qiLogErrorF(Msg, ...)
+# define qiLogErrorF(Msg, ...) do {} while(0)
 #else
 # define qiLogError(...)   _QI_LOG_MESSAGE_STREAM(LogLevel_Error,   Error,   __VA_ARGS__)
 # define qiLogErrorF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Error,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))
@@ -124,7 +124,7 @@
  */
 #if defined(NO_QI_FATAL)
 # define qiLogFatal(...)  ::qi::log::detail::qiFalse() && false < qi::log::detail::NullStream().self()
-# define qiLogFatalF(Msg, ...)
+# define qiLogFatalF(Msg, ...) do {} while(0)
 #else
 # define qiLogFatal(...)   _QI_LOG_MESSAGE_STREAM(LogLevel_Fatal,   Fatal,   __VA_ARGS__)
 # define qiLogFatalF(Msg, ...)   _QI_LOG_MESSAGE(LogLevel_Fatal,   _QI_LOG_FORMAT(Msg, __VA_ARGS__))

@@ -317,7 +317,7 @@ namespace detail {
     FutureBaseTyped<T>::~FutureBaseTyped()
     {
       boost::recursive_mutex::scoped_lock lock(mutex());
-      if (_onDestroyed && hasValue(0))
+      if (_onDestroyed && state() == FutureState_FinishedWithValue)
         _onDestroyed(_value);
     }
 
@@ -679,8 +679,7 @@ namespace detail {
     p.setup(boost::bind(&detail::futureCancelAdapter<AnyReference>,
           boost::weak_ptr<detail::FutureBaseTyped<AnyReference> >(f._p)));
     f.connect(boost::function<void(const qi::Future<AnyReference>&)>(
-          boost::bind(&detail::futureAdapter<R>, _1, p)),
-        FutureCallbackType_Sync);
+          boost::bind(&detail::futureAdapter<R>, _1, p)));
   }
 
   template<typename FT, typename PT>
@@ -690,7 +689,7 @@ namespace detail {
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
     const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, _1, p,
-      FutureValueConverter<FT, PT>()), FutureCallbackType_Sync);
+      FutureValueConverter<FT, PT>()));
   }
 
   template<typename FT, typename PT, typename CONV>
@@ -699,8 +698,7 @@ namespace detail {
     if (option == AdaptFutureOption_ForwardCancel)
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
-    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter),
-        FutureCallbackType_Sync);
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter));
   }
 
   template <typename T>

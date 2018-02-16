@@ -5,6 +5,7 @@
  */
 #include <qi/macro.hpp>
 #include <qi/path.hpp>
+#include <qi/atomic.hpp>
 
 #define BOOST_UTF8_BEGIN_NAMESPACE  namespace qi { namespace detail {
 #define BOOST_UTF8_END_NAMESPACE    }}
@@ -20,10 +21,8 @@ namespace qi {
 
   codecvt_type &unicodeFacet()
   {
-    if (!gUtf8CodecvtFacet)
-      gUtf8CodecvtFacet = new detail::utf8_codecvt_facet();
-    codecvt_type *ret = gUtf8CodecvtFacet;
-    return *ret;
+    QI_THREADSAFE_NEW(gUtf8CodecvtFacet);
+    return *gUtf8CodecvtFacet;
   }
 
 }

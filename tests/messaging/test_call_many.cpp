@@ -33,7 +33,7 @@ TEST(Test, Recurse)
 {
   payload = qi::Promise<bool>();
   TestSessionPair       p1;
-  TestSessionPair       p2(p1);
+  TestSessionPair       p2(TestSessionPair::ShareServiceDirectory, p1);
   qi::DynamicObjectBuilder     ob1, ob2;
   ob1.advertiseMethod("onFire1", &onFire1);
   ob2.advertiseMethod("onFire2", &onFire2);
@@ -45,13 +45,14 @@ TEST(Test, Recurse)
   ASSERT_NO_THROW(p2.server()->registerService("coin2", oserver2).hasValue(2000));
   EXPECT_EQ(nbServices, p1.server()->services(qi::Session::ServiceLocality_Local).value().size());
   EXPECT_EQ(nbServices, p2.server()->services(qi::Session::ServiceLocality_Local).value().size());
+
+  ASSERT_EQ(qi::FutureState_FinishedWithValue,
+            p2.client()->waitForService("coin1").wait(serviceWaitDefaultTimeout));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue,
+            p1.client()->waitForService("coin2").wait(serviceWaitDefaultTimeout));
   oclient1 = p2.client()->service("coin1");
   oclient2 = p1.client()->service("coin2");
-#ifdef WIN32
   int niter = 1000;
-#else
-  int niter = 1000;
-#endif
   if (TestMode::getTestMode() == TestMode::Mode_SSL)
   {
     niter /= 100;

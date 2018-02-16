@@ -3,8 +3,6 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <chrono>
-#include <thread>
 #include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
@@ -158,7 +156,7 @@ TEST(SendObject, pass_obj_made_from_module)
   qi::AnyObject remotePlop = p.client()->service("plop");
   qi::Promise<void> receivingObject;
   auto signalLink = remotePlop.connect(
-        "onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+        "onTruc", boost::function<void(qi::AnyObject)>([=](qi::AnyObject o) mutable
   {
     ASSERT_EQ(1, o.call<int>("testMethod", 0)); // this is the real test
     receivingObject.setValue(0);
@@ -193,7 +191,7 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
 
   qi::Promise<void> receivingObject;
-  emitter.connect("onTruc", boost::function<void(qi::AnyObject)>([&](qi::AnyObject o)
+  emitter.connect("onTruc", boost::function<void(qi::AnyObject)>([=](qi::AnyObject o) mutable
   {
     int i = o.call<int>("testMethod", 0);
     ASSERT_EQ(1, i); // this is the real test
@@ -372,8 +370,11 @@ public:
     qiLogInfo() << "Ping !";
     return "human";
   }
+
+  void nameMe(const std::string& newName) {name.set(newName);}
+  qi::Property<std::string> name;
 };
-QI_REGISTER_OBJECT(Human, pingMe, ping)
+QI_REGISTER_OBJECT(Human, pingMe, ping, nameMe, name)
 
 class Actuation
 {
@@ -415,6 +416,33 @@ TEST(SendObject, reuse_object_taken_from_connect)
   actuation.call<void>("emitHumanProperty");
 
   ASSERT_EQ(qi::FutureState_FinishedWithValue, pinged.future().waitFor(qi::MilliSeconds(2000)));
+}
+
+// Check that we can connect to a property exposed on an object retrieved in a property callback
+TEST(SendObject, connect_to_object_taken_from_connect)
+{
+  TestSessionPair p;
+  p.server()->registerService("Actuation", boost::make_shared<Actuation>());
+  qi::AnyObject actuation = p.client()->service("Actuation");
+
+  qi::Promise<bool> pinged;
+  qi::Promise<bool> named;
+  actuation.connect("humanProperty",
+                    boost::function<void(qi::AnyObject)>([=](qi::AnyObject human) mutable
+  {
+    // explicitly capture human in the lambda to keep it alive
+    human.connect("name",
+                  boost::function<void(const std::string&)>([named, human](const std::string&) mutable
+    {
+      named.setValue(true);
+    }));
+    human.call<void>("nameMe", "(´・ω・`)");
+    pinged.setValue(true);
+  }));
+  actuation.call<void>("emitHumanProperty");
+
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, pinged.future().waitFor(qi::MilliSeconds(2000)));
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, named.future().waitFor(qi::MilliSeconds(2000)));
 }
 
 TEST(SendObject, make_frame)
@@ -625,93 +653,6 @@ TEST(SendObject, eat_yourself)
   auto eatYourself = cookie.async<bool>("eatRival", cookie);
   eatYourself.value();
   // ^^^ This timeouts because cookie.eat() is never called inside of eatRival.
-}
-
-struct InterestingObject
-{
-  bool doStuff()
-  {
-    qiLogInfo() << "Done";
-    return true;
-  }
-};
-
-QI_REGISTER_OBJECT(InterestingObject, doStuff)
-
-struct MiddleMan
-{
-  bool callOnArgument(qi::AnyObject o, const std::string &method)
-  {
-    return o.call<bool>(method);
-  }
-};
-
-QI_REGISTER_OBJECT(MiddleMan, callOnArgument)
-
-TEST(SendObject, MultiProcessPingPong_CallArgumentMethod)
-{
-  // Start a service directory in a separate process.
-  const std::string sdPath = qi::path::findBin("simplesd");
-  ScopedProcess sd {sdPath, {"--qi-listen-url=tcp://127.0.0.1:54321",
-                             "--qi-standalone"}};
-
-  auto client = qi::makeSession();
-  for (int i = 0; i < 20; ++i)
-  {
-    qi::os::msleep(50);
-    try
-    {
-      client->connect("tcp://127.0.0.1:54321");
-      break;
-    }
-    catch (const std::exception& e)
-    {
-      std::cout << "Service Directory is not ready yet (" << e.what() << ")" << std::endl;
-    }
-  }
-  ASSERT_TRUE(client->isConnected());
-
-  // Register a service in another process.
-  const std::string remoteServiceOwnerPath =
-      qi::path::findBin("remoteserviceowner");
-  ScopedProcess remoteServiceOwner{
-    remoteServiceOwnerPath, {"--qi-url=tcp://127.0.0.1:54321"}};
-
-  qi::Session session;
-  session.connect("tcp://127.0.0.1:54321");
-  session.waitForService("PingPongService").wait(5000);
-  qi::AnyObject serviceProxy = session.service("PingPongService");
-  serviceProxy.call<void>("give", boost::make_shared<MiddleMan>());
-  qi::AnyObject middleman = serviceProxy.call<qi::AnyObject>("take");
-  qi::AnyObject precious = boost::make_shared<InterestingObject>();
-  for (auto i = 0; i < 5; ++i)
-  {
-    qiLogInfo() << "Attempt #" << i;
-    auto doingStuff = middleman.async<bool>("callOnArgument", precious, "doStuff");
-    ASSERT_TRUE(doingStuff.value(3 * 1000));
-  }
-}
-
-TEST(SendObject, MultiProcessPingPong_ConnectToStandaloneAppInTcpThenTcps)
-{
-  using namespace qi;
-  using std::chrono::milliseconds;
-
-  // Register a service in another process.
-  const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
-
-  ScopedProcess remoteServiceOwner{
-    remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=tcps://127.0.0.1:54321"}};
-
-  std::this_thread::sleep_for(milliseconds{50});
-
-  Session sessionTcp;
-  auto futTcp = sessionTcp.connect("tcp://127.0.0.1:54321");
-  ASSERT_TRUE(futTcp.hasError(1000)); // milliseconds
-
-  Session sessionTcps;
-  auto futTcps = sessionTcps.connect("tcps://127.0.0.1:54321");
-  ASSERT_TRUE(futTcps.hasValue(1000)); // milliseconds
 }
 
 class FocusOwner

@@ -17,6 +17,7 @@ namespace qi
   MessageSocket::~MessageSocket()
   {
     qiLogDebug() << "Destroying transport socket";
+    _signalsStrand.join();
   }
 
   bool MessageSocket::isConnected() const
@@ -26,18 +27,7 @@ namespace qi
 
   MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop)
   {
-    MessageSocketPtr ret;
-
-    if (protocol == "tcp")
-    {
-      return TcpMessageSocketPtr(new TcpMessageSocket<>(*asIoServicePtr(eventLoop), false));
-    }
-    if (protocol == "tcps")
-    {
-      return TcpMessageSocketPtr(new TcpMessageSocket<>(*asIoServicePtr(eventLoop), true));
-    }
-    qiLogError() << "Unrecognized protocol to create the TransportSocket: " << protocol;
-    return ret;
+    return makeTcpMessageSocket(protocol, eventLoop);
   }
 }
 

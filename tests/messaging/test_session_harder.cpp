@@ -111,6 +111,9 @@ void repeatedlyCallServiceMaybeDying(
   const auto endTime = std::chrono::steady_clock::now() + timeout;
   auto server = p.server();
   ScopedThread worker{ [server] { alternateModule(server); } };
+  ASSERT_EQ(qi::FutureState_FinishedWithValue,
+            p.client()->waitForService("TestToto").wait(serviceWaitDefaultTimeout));
+
   while (nofAttempts && (endTime > std::chrono::steady_clock::now()))
   {
     --nofAttempts;
@@ -129,7 +132,7 @@ void repeatedlyCallServiceMaybeDying(
   }
 }
 
-TEST(QiSession, RegisterUnregisterTwoSession)
+TEST(TestSession, RegisterUnregisterTwoSession)
 {
   int a = 1000;
   if (TestMode::getTestMode() == TestMode::Mode_SSL)
@@ -154,7 +157,7 @@ TEST(QiSession, RegisterUnregisterTwoSession)
   });
 }
 
-TEST(QiSession, RegisterUnregisterSameSession)
+TEST(TestSession, RegisterUnregisterSameSession)
 {
   int a = 1000;
   TestSessionPair p;
@@ -175,7 +178,7 @@ TEST(QiSession, RegisterUnregisterSameSession)
   });
 }
 
-TEST(QiSession, RegisterUnregisterTwoSessionStruct)
+TEST(TestSession, RegisterUnregisterTwoSessionStruct)
 {
   int a = 1000;
   if (TestMode::getTestMode() == TestMode::Mode_SSL)
@@ -216,7 +219,7 @@ TEST(QiSession, RegisterUnregisterTwoSessionStruct)
   });
 }
 
-TEST(QiSession, RegisterUnregisterSameSessionStruct)
+TEST(TestSession, RegisterUnregisterSameSessionStruct)
 {
   int a = 1000;
   if (TestMode::getTestMode() == TestMode::Mode_SSL)
@@ -253,7 +256,7 @@ TEST(QiSession, RegisterUnregisterSameSessionStruct)
   });
 }
 
-TEST(QiSession, ConnectToMultipleConstellation)
+TEST(TestSession, ConnectToMultipleConstellation)
 {
   TestSessionPair constellation1;
   TestSessionPair constellation2;

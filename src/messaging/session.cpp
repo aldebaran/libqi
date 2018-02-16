@@ -34,6 +34,7 @@ namespace qi {
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, enforceAuth)
     , _servicesHandler(&_sdClient, &_serverObject)
     , _sd(&_serverObject)
+    , _sdClientClosedByThis{false}
   {
     session->connected.setCallType(qi::MetaCallType_Queued);
     session->disconnected.setCallType(qi::MetaCallType_Queued);
@@ -49,12 +50,28 @@ namespace qi {
     setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr(new NullClientAuthenticatorFactory));
   }
 
-  SessionPrivate::~SessionPrivate() {
+  SessionPrivate::~SessionPrivate()
+  {
     destroy();
-    close();
+    try
+    {
+      close();
+    }
+    catch (const std::exception& ex)
+    {
+      qiLogError() << "Exception caught during session destruction: " << ex.what();
+    }
+    catch (...)
+    {
+      qiLogError() << "Unknown exception caught during session destruction";
+    }
   }
 
-  void SessionPrivate::onServiceDirectoryClientDisconnected(std::string error) {
+  void SessionPrivate::onServiceDirectoryClientDisconnected(std::string /*error*/)
+  {
+    if (_sdClientClosedByThis)
+      return;
+
     /*
      * Remove all proxies to services if the SD is fallen.
      */
@@ -84,7 +101,7 @@ namespace qi {
     if (f.hasError())
     {
       qiLogDebug() << "addSdSocketToCache: connect reported failure";
-      _serviceHandler.removeService("ServiceDirectory");
+      _serviceHandler.removeService(Session::serviceDirectoryServiceName());
       p.setError(f.error());
       return;
     }
@@ -124,24 +141,28 @@ namespace qi {
     _serverObject.open();
     //add the servicedirectory object into the service cache (avoid having
     // two remoteObject registered on the same transportSocket)
-    _serviceHandler.addService("ServiceDirectory", _sdClient.object());
+    _serviceHandler.addService(Session::serviceDirectoryServiceName(), _sdClient.object());
     _socketsCache.init();
 
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     qi::Promise<void> p;
 
     // go through hoops to get shared_ptr on this
-    f.connect(&SessionPrivate::addSdSocketToCache, this, _1, serviceDirectoryURL, p);
+    f.then([=](Future<void> f) {
+      _sdClientClosedByThis = false;
+      addSdSocketToCache(f, serviceDirectoryURL, p);
+    });
     return p.future();
   }
 
 
   qi::FutureSync<void> SessionPrivate::close()
   {
+    _sdClientClosedByThis = true;
     _serviceHandler.close();
     _serverObject.close();
     _socketsCache.close();
-    return _sdClient.close();
+    return _sdClient.close().async();
   }
 
   bool SessionPrivate::isConnected() const {
@@ -162,6 +183,11 @@ namespace qi {
     //so we should not touch it.
   }
 
+  const char* Session::serviceDirectoryServiceName()
+  {
+    static const auto sdServiceName = "ServiceDirectory";
+    return sdServiceName;
+  }
 
   // ###### Client
   qi::FutureSync<void> Session::connect(const char* serviceDirectoryURL)

@@ -43,7 +43,10 @@ namespace qi {
     using OnSubscribers = boost::function<Future<void>(bool)>;
 
     explicit SignalBase(const Signature &signature, OnSubscribers onSubscribers = OnSubscribers());
+    SignalBase(const Signature &signature, ExecutionContext* execContext,
+               OnSubscribers onSubscribers = OnSubscribers());
     SignalBase(OnSubscribers onSubscribers = OnSubscribers());
+    SignalBase(ExecutionContext* execContext, OnSubscribers onSubscribers = OnSubscribers());
 
     /// SignalBase is not copyable, since subscriptions should not be duplicated.
     SignalBase(const SignalBase&) = delete;
@@ -148,6 +151,9 @@ namespace qi {
     void callOnSubscribe(bool v);
     void createNewTrackLink(int& id, SignalLink*& trackLink);
     void disconnectTrackLink(int id);
+    ExecutionContext* executionContext() const;
+    void clearExecutionContext();
+
   protected:
     boost::shared_ptr<SignalBasePrivate> _p;
     friend class SignalBasePrivate;
@@ -165,6 +171,7 @@ namespace qi {
      * Will not be called when destructor is invoked and all subscribers are removed
     */
     SignalF(OnSubscribers onSubscribers = OnSubscribers());
+    SignalF(ExecutionContext* execContext, OnSubscribers onSubscribers);
     using FunctionType = T;
     virtual qi::Signature signature() const;
     using boost::function<T>::operator();
@@ -229,6 +236,8 @@ namespace qi {
     using OnSubscribers = typename ParentType::OnSubscribers;
     Signal(OnSubscribers onSubscribers = OnSubscribers())
       : ParentType(onSubscribers) {}
+    explicit Signal(ExecutionContext* execContext, OnSubscribers onSubscribers = OnSubscribers())
+      : ParentType(execContext, onSubscribers) {}
     using boost::function<FunctionType>::operator();
   };
 

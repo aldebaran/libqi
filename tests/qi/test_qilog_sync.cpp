@@ -7,442 +7,577 @@
 // Disable one to test the disabled macros
 #define NO_QI_INFO
 
-#include <cstring>
-
-#include <gtest/gtest.h>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/thread.hpp>
-
-#include <qi/log.hpp>
-#include <qi/atomic.hpp>
-
+#include "test_qilog.hpp"
 #include "../../src/log_p.hpp"
+#include "qi/testutils/mockutils.hpp"
+#include <boost/function.hpp>
+#include <boost/utility/string_ref.hpp>
+#include <cstring>
+#include <future>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <qi/atomic.hpp>
+#include <qi/log.hpp>
+#include <thread>
 
+using namespace qi;
+using ::testing::_;
+using ::testing::StrictMock;
+using ::testing::Exactly;
+using ::testing::StrEq;
 
-TEST(log, logsync)
+namespace
 {
-  qi::log::init(qi::LogLevel_Info, 0, true);
-  atexit(qi::log::destroy);
+class SyncLog : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    qi::log::setSynchronousLog(true);
+  }
 
-   for (int i = 0; i < 1000; i++)
-     qiLogFatal("core.log.test1", "%d\n", i);
-   // Just a test to check for compilation warning.
-   if (true)
-     qiLogInfo() << "canard";
+  void TearDown() override
+  {
+    qi::log::flush();
+  }
+};
 }
 
-TEST(log, ifCorrectness)
+TEST_F(SyncLog, logsync)
+{
+  StrictMock<MockLogHandler> handler("muffins");
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_)).Times(Exactly(1000));
+    for (int i = 0; i < 1000; i++)
+      qiLogFatal("core.log.test1", "%d\n", i);
+  }
+
+  // Just a test to check for compilation warning.
+  if (true)
+    qiLogInfo() << "canard"; // disabled, will not log
+}
+
+TEST_F(SyncLog, ifCorrectness)
 {
   qiLogCategory("test");
-  bool ok = true;
-  if (true)
-    qiLogError("qi.test") << "coin";
-  else
-    ok = false;
-  EXPECT_TRUE(ok);
-  if (true)
-    qiLogErrorF("qi.test");
-  else
-    ok = false;
-  EXPECT_TRUE(ok);
-  ok = false;
-  if (false)
-    qiLogError("qi.test") << "coin";
-  else
-    ok = true;
-  EXPECT_TRUE(ok);
-  ok = false;
-  if (false)
-    qiLogErrorF("qi.test");
-  else
-    ok = true;
-  EXPECT_TRUE(ok);
+  StrictMock<MockLogHandler> handler("cupcakes");
 
-  ok = true;
-  if (true)
-    qiLogInfo("qi.test") << "coin";
-  else
-    ok = false;
-  EXPECT_TRUE(ok);
-  if (true)
-    qiLogInfoF("qi.test");
-  else
-    ok = false;
-  EXPECT_TRUE(ok);
-  ok = false;
-  if (false)
-    qiLogInfo("qi.test") << "coin";
-  else
-    ok = true;
-  EXPECT_TRUE(ok);
-  ok = false;
-  if (false)
-    qiLogInfoF("qi.test");
-  else
-    ok = true;
-  EXPECT_TRUE(ok);
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    if (true)
+      qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    if (true)
+      qiLogErrorF("qi.test");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    // will not log
+    if (false)
+      qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    // will not log
+    if (false)
+      qiLogErrorF("qi.test");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    // disabled so will not log
+    if (true)
+      qiLogInfo("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    // disabled so will not log
+    if (true)
+      qiLogInfoF("qi.test");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    // will not log
+    if (false)
+      qiLogInfo("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    // will not log
+    if (false)
+      qiLogInfoF("qi.test");
+  }
 }
 
-void copy(std::string& dest, const char* src)
-{
-  dest = src;
-}
-
-TEST(log, formatting)
+TEST_F(SyncLog, formatting)
 {
   qiLogCategory("qi.test");
-  std::string lastMessage;
-  qi::log::removeHandler("consoleloghandler");
-  qi::log::addHandler("copy", boost::bind(&copy, boost::ref(lastMessage), _5));
-  qiLogError("qi.test") << "coin";
-  EXPECT_EQ("coin", lastMessage);
-  qiLogError("qi.test") << "coin " << 42;
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogErrorF("coin");
-  EXPECT_EQ("coin", lastMessage);
-  qiLogErrorF("coin %s", 42);
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogErrorF("coin %s", "42");
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogError() << "coin " << 42;
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogError("qi.test", "coin 42");
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogError("qi.test", "coin %s", "42");
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogError("qi.test", "coin %s %s %s", "42", 42, "42");
-  EXPECT_EQ("coin 42 42 42", lastMessage);
-  qiLogError("qi.test", "coin %s", 42);
-  EXPECT_EQ("coin 42", lastMessage);
+
+  StrictMock<MockLogHandler> handler("brownies");
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin")));
+    qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogError("qi.test") << "coin " << 42;
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin")));
+    qiLogErrorF("coin");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogErrorF("coin %s", 42);
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogErrorF("coin %s", "42");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogError() << "coin " << 42;
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogError("qi.test", "coin 42");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogError("qi.test", "coin %s", "42");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42 42 42")));
+    qiLogError("qi.test", "coin %s %s %s", "42", 42, "42");
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogError("qi.test", "coin %s", 42);
+  }
 
   // Test with invalid formats
-  qiLogErrorF("coin %s", 42, 51);
-  EXPECT_EQ("coin 42", lastMessage);
-  qiLogErrorF("coin %s%s", 42);
-  EXPECT_EQ("coin 42", lastMessage);
-  qi::log::removeHandler("copy");
-}
-
-void set (const char* cat, bool& b)
-{
-  //remove log from the logger itself
-  if (std::string(cat) == "qi.log")
-    return;
-  b = true;
-}
-
-TEST(log, filteringChange)
-{
-  #define YES EXPECT_TRUE(tag); tag = false
-  #define NO  EXPECT_TRUE(!tag); tag = false // yes false
-  bool tag = false;
-  qi::log::SubscriberId id = qi::log::addHandler("set", boost::bind(&set, _4, boost::ref(tag)));
-  qiLogVerbose("init.test2") << "VLoL2";
-  qiLogError("init.test2") << "ELoL2";
-  qiLogWarning("init.test2") << "WLoL2";
-
-  qi::log::addFilter("init.*", qi::LogLevel_Silent, id);
-  qi::log::addFilter("ini*", qi::LogLevel_Verbose, id);
-  qi::log::addFilter("init.*", qi::LogLevel_Warning, id);
-
-  tag = false;
-  qiLogVerbose("init.test") << "VLoL";
-  YES;
-  qiLogError("init.test") << "ELoL";
-  YES;
-  qiLogWarning("init.test") << "WLoL";
-  YES;
-
-  qiLogVerbose("init.test2") << "VLoL2";
-  YES;
-  qiLogError("init.test2") << "ELoL2";
-  YES;
-  qiLogWarning("init.test2") << "WLoL2";
-  YES;
-}
-
-TEST(log, filtering)
-{
-  #define YES EXPECT_TRUE(tag); tag = false
-  #define NO  EXPECT_TRUE(!tag); tag = false // yes false
-  bool tag = false;
-  qi::log::SubscriberId id = qi::log::addHandler("set", boost::bind(&set, _4, boost::ref(tag)));
-  qiLogError("qi.test") << "coin";
-  YES;
-  NO; // ensure reset works
-  // global level
-  qiLogError("init.yes") << "coin";
-  YES;
-  qiLogError("initglob.yes") << "coin";
-  YES;
-  qi::log::addFilter("init.yes", qi::LogLevel_Info, id);
-  qi::log::addFilter("init.no", qi::LogLevel_Info, id);
-  qi::log::addFilter("initglob.*", qi::LogLevel_Info, id);
-  qi::log::setLogLevel(qi::LogLevel_Silent, id);
-  // Test that global level is applied, but is overriden by all setCategory
-  qiLogError("qi.test") << "coin";
-  NO;
-  qiLogError("init.yes") << "coin";
-  YES;
-  qiLogError("init.no") << "coin";
-  YES;
-  qiLogError("initglob.yes") << "coin";
-  YES;
-  qiLogError("initglob.no") << "coin";
-  YES;
   {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogErrorF("coin %s", 42, 51);
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    qiLogErrorF("coin %s%s", 42);
+  }
+}
+
+TEST_F(SyncLog, filteringChange)
+{
+  StrictMock<MockLogHandler> handler("set");
+
+  log::setLogLevel(LogLevel_Info);
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_)).Times(Exactly(2));
+    qiLogVerbose("init.test2") << "VLoL2"; // will not log, verbosity is info
+    qiLogError("init.test2") << "ELoL2";
+    qiLogWarning("init.test2") << "WLoL2";
+  }
+
+  log::addFilter("init.*", LogLevel_Silent, handler.id);
+  log::addFilter("ini*", LogLevel_Verbose, handler.id);
+  log::addFilter("init.*", LogLevel_Warning, handler.id);
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogVerbose("init.test") << "VLoL"; // will log, filter has priority over global level
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.test") << "ELoL";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogWarning("init.test") << "WLoL";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogVerbose("init.test2") << "VLoL2";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.test2") << "ELoL2";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogWarning("init.test2") << "WLoL2";
+  }
+}
+
+TEST_F(SyncLog, filtering)
+{
+  StrictMock<MockLogHandler> handler("set");
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.yes") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("initglob.yes") << "coin";
+  }
+
+  log::addFilter("init.yes", LogLevel_Info, handler.id);
+  log::addFilter("init.no", LogLevel_Info, handler.id);
+  log::addFilter("initglob.*", LogLevel_Info, handler.id);
+
+  // ********************************************************************
+  // Test that global level is applied, but is overriden by all addFilter
+  // ********************************************************************
+  log::setLogLevel(LogLevel_Silent, handler.id);
+  {
+    const auto _u = scopeMockExpectations(handler);
+    qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.yes") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.no") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("initglob.yes") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("initglob.no") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    qiLogCategory("qi.test");
+    qiLogErrorF("coin"); // will not log
+  }
+
+  log::setLogLevel(LogLevel_Error, handler.id);
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.yes") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.no") << "coin";
+  }
+
+  log::disableCategory("qi.test", handler.id);
+  {
+    const auto _u = scopeMockExpectations(handler);
+    qiLogError("qi.test") << "coin"; // will not log
+  }
+
+  log::enableCategory("qi.test", handler.id);
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("qi.test") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
     qiLogCategory("qi.test");
     qiLogErrorF("coin");
-    NO;
   }
-  qi::log::setLogLevel(qi::LogLevel_Error, id);
-  qiLogError("qi.test") << "coin";
-  YES;
-  qiLogError("init.yes") << "coin";
-  YES;
-  qiLogError("init.no") << "coin";
-  YES;
-  qi::log::disableCategory("qi.test", id);
-  qiLogError("qi.test") << "coin";
-  NO;
-  qi::log::enableCategory("qi.test", id);
-  qiLogError("qi.test") << "coin";
-  YES;
+
+  // ********************************************************************
+  // Test that global level is applied, but is overriden by all addFilter
+  // ********************************************************************
+  log::setLogLevel(LogLevel_Silent, handler.id);
   {
-    qiLogCategory("qi.test");
-    qiLogErrorF("coin");
-    YES;
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_)); // enableCategory overrides setLogLevel
+    qiLogError("qi.test") << "coin";
   }
-  qi::log::setLogLevel(qi::LogLevel_Silent, id);
-  // Test that global level is applied, but is overriden by all setCategory
-  qiLogError("qi.test") << "coin";
-  YES; //enableCategory overrides setVerbosity
-  qiLogError("qi.newCat") << "coin";
-  NO;
-  qiLogError("init.yes") << "coin";
-  YES;
-  qiLogError("init.no") << "coin";
-  YES;
-  qiLogError("initglob.yes") << "coin";
-  YES;
-  qiLogError("initglob.no") << "coin";
-  YES;
-  qi::log::removeHandler("set");
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    qiLogError("qi.newCat") << "coin"; // will not log
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.yes") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("init.no") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("initglob.yes") << "coin";
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("initglob.no") << "coin";
+  }
 }
 
-TEST(log, filteringPerHandler)
+TEST_F(SyncLog, filteringPerHandler)
 {
-  #define YES1 EXPECT_TRUE(tag1); tag1 = false
-  #define NO1  EXPECT_TRUE(!tag1); tag1 = false // yes false
-  #define YES2 EXPECT_TRUE(tag2); tag2 = false
-  #define NO2  EXPECT_TRUE(!tag2); tag2 = false // yes false
-  #define YESYES YES1; YES2
-  #define YESNO YES1; NO2
-  #define NOYES NO1; YES2
-  #define NONO NO1; NO2
-  bool tag1 = false;
-  bool tag2 = false;
-  unsigned int id1 = qi::log::addHandler("set1", boost::bind(&set, _4, boost::ref(tag1)));
-  unsigned int id2 = qi::log::addHandler("set2", boost::bind(&set, _4, boost::ref(tag2)));
-  tag1 = tag2 = false;
+  StrictMock<MockLogHandler> handler1("set1");
+  StrictMock<MockLogHandler> handler2("set2");
 
-  NONO;
-  qiLogError("qi.test") << "coin";
-  YESYES;
-  NONO;
-  qi::log::setLogLevel(qi::LogLevel_Silent, id1);
-  qiLogError("qi.test") << "coin";
-  NOYES;
-  qi::log::setLogLevel(qi::LogLevel_Silent, id2);
-  qiLogError("qi.test") << "coin";
-  NONO;
-  qi::log::setLogLevel(qi::LogLevel_Debug, id1);
-  qiLogError("qi.test") << "coin";
-  YESNO;
-  qi::log::addFilter("qi.test", qi::LogLevel_Silent, id1);
-  qiLogError("qi.test") << "coin";
-  NONO;
-  qi::log::setLogLevel(qi::LogLevel_Debug, id2);
-  qiLogError("qi.test") << "coin";
-  NOYES;
-  qi::log::setLogLevel(qi::LogLevel_Debug, id1);
-  qiLogError("qi.test") << "coin";
-  NOYES; // setCategory overrides setVerbosity for id1
-  qi::log::addFilter("qi.test", qi::LogLevel_Debug, id1);
-  qiLogError("qi.test") << "coin";
-  YESYES;
-  qi::log::removeHandler("set1");
-  qi::log::removeHandler("set2");
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    EXPECT_CALL(handler1, log(_));
+    EXPECT_CALL(handler2, log(_)); // both handlers log
+    qiLogError("qi.test") << "coin";
+  }
+
+  log::setLogLevel(LogLevel_Silent, handler1.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    EXPECT_CALL(handler2, log(_)); // only handler 2 will log
+    qiLogError("qi.test") << "coin";
+  }
+
+  log::setLogLevel(LogLevel_Silent, handler2.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    qiLogError("qi.test") << "coin"; // no handler will log
+  }
+
+  log::setLogLevel(LogLevel_Debug, handler1.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    EXPECT_CALL(handler1, log(_)); // only handler 1 will log
+    qiLogError("qi.test") << "coin";
+  }
+
+  log::addFilter("qi.test", LogLevel_Silent, handler1.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    qiLogError("qi.test") << "coin"; // no handler will log
+  }
+
+  log::setLogLevel(LogLevel_Debug, handler2.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    EXPECT_CALL(handler2, log(_)); // only handler 2 will log
+    qiLogError("qi.test") << "coin";
+  }
+
+  log::setLogLevel(LogLevel_Debug, handler1.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    EXPECT_CALL(handler2, log(_)); // only handler 2 will log, addFilter overrides setLogLevel for handler1
+    qiLogError("qi.test") << "coin";
+  }
+
+  log::addFilter("qi.test", LogLevel_Debug, handler1.id);
+  {
+    const auto _u = scopeMockExpectations(handler1);
+    const auto _u2 = scopeMockExpectations(handler2);
+    EXPECT_CALL(handler1, log(_));
+    EXPECT_CALL(handler2, log(_)); // both handlers log
+    qiLogError("qi.test") << "coin";
+  }
 }
 
-TEST(log, globbing)
+TEST_F(SyncLog, globbing)
 {
-  #define YES EXPECT_TRUE(tag); tag = false
-  #define NO  EXPECT_TRUE(!tag); tag = false // yes false
-  bool tag = false;
-  qi::log::SubscriberId id = qi::log::addHandler("set", boost::bind(&set, _4, boost::ref(tag)));
-  qiLogError("qi.test") << "coin";
-  YES;
-  NO; // ensure reset works
-  qi::log::addFilter("qi.*", qi::LogLevel_Silent, id);
-  qiLogError("qi.test") << "coin";
-  NO;
+  StrictMock<MockLogHandler> handler("pudding");
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("qi.test") << "coin";
+  }
+
+  log::addFilter("qi.*", LogLevel_Silent, handler.id);
+  {
+    const auto _u = scopeMockExpectations(handler);
+    qiLogError("qi.test") << "coin"; // will not log
+  }
+
   // No priority or stacking between globbing or exact, they just apply
-  qi::log::addFilter("qi.test", qi::LogLevel_Verbose, id);
-  qiLogError("qi.test") << "coin";
-  YES;
-  // Check globbing applies to new category
-  qiLogError("qi.foo") << "coin";
-  NO;
-  qiLogError("qo.foo") << "coin";
-  YES;
-  qi::log::removeHandler("set");
-}
-
-void nothing()
-{
-}
-
-TEST(log, perf)
-{
-  // Compare perf of (disabled, enabled) x (QI_LOG, qiLog)
-  qi::log::addHandler("nothing", boost::bind(&nothing));
-  qi::log::removeHandler("consoleloghandler");
-  qi::log::setLogLevel(qi::LogLevel_Info);
-  qi::int64_t t;
-  qiLogCategory("qi.test");
-  long count = 1000;
-  if (getenv("COUNT"))
-    count = strtol(getenv("COUNT"), 0, 0);
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogWarning("qi.test") << "foo " << i;
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogWarning(cat) << stream " << t << std::endl;
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogWarningF("foo %s", i);
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogWarningF(format) " << t << std::endl;
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogWarning() << "foo " <<  i;
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogWarning() << stream " << t << std::endl;
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogWarning("qi.test", "foo %s", i) <<"bar " << i;
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogWarning(cat, format) << stream " << t << std::endl;
-
-
-    t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogDebug("qi.test") << "foo " << i;
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogDebug(cat) << stream " << t << std::endl;
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogDebugF("foo %s", i);
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogDebugF(format) " << t << std::endl;
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogDebug() << "foo " <<  i;
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogDebug() << stream " << t << std::endl;
-
-  t = qi::os::ustime();
-  for (long int i = 0; i < count; i++)
-    qiLogDebug("qi.test", "foo %s", i) <<"bar " << i;
-  t = qi::os::ustime() - t;
-  std::cerr << "qiLogDebug(cat, format) << stream " << t << std::endl;
-
-}
-
-// Useful for manual testing
-TEST(log, jukebox_DISABLED)
-{
-  const char* cats[] = {"a", "a.a", "a.b", "b.a", "b.b", 0};
-  for (unsigned i=0; cats[i]; ++i)
+  log::addFilter("qi.test", LogLevel_Verbose, handler.id);
   {
-    const char* c = cats[i];
-    qiLogError(c) << c;
-    qiLogVerbose(c) << c;
-    qiLogDebug(c) << c;
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("qi.test") << "coin";
+  }
+
+  // Check globbing applies to new category
+  {
+    const auto _u = scopeMockExpectations(handler);
+    qiLogError("qi.foo") << "coin"; // will not log
+  }
+
+  {
+    const auto _u = scopeMockExpectations(handler);
+    EXPECT_CALL(handler, log(_));
+    qiLogError("qo.foo") << "coin";
   }
 }
 
-TEST(log, emptyLogWithCat)
+TEST_F(SyncLog, emptyLogWithCat)
 {
-  qi::log::init(qi::LogLevel_Debug, 0, true);
+  StrictMock<MockLogHandler> handler("cookies");
 
-  qiLogDebug("log.test1");
-  qiLogVerbose("log.test1");
-  qiLogInfo("log.test1");
+  EXPECT_CALL(handler, log(_)).Times(Exactly(3));
+  qiLogDebug("log.test1");   // will not log, default log level is info
+  qiLogVerbose("log.test1"); // will not log, default log level is info
+  qiLogInfo("log.test1");    // will not log, info is disabled
   qiLogWarning("log.test1");
   qiLogError("log.test1");
   qiLogFatal("log.test1");
 }
 
-TEST(log, emptyLog)
+TEST_F(SyncLog, emptyLog)
 {
+  StrictMock<MockLogHandler> handler("cookies again");
+
+  EXPECT_CALL(handler, log(_)).Times(Exactly(3));
   qiLogCategory("log.test2");
-  qiLogDebug();
-  qiLogVerbose();
-  qiLogInfo();
+  qiLogDebug();   // will not log, default log level is info
+  qiLogVerbose(); // will not log, default log level is info
+  qiLogInfo();    // will not log, info is disabled
   qiLogWarning();
   qiLogError();
   qiLogFatal();
 }
 
-void nullHandler(const qi::LogLevel,
-                 const qi::Clock::time_point,
-                 const qi::SystemClock::time_point,
-                 const char*,
-                 const char*,
-                 const char*,
-                 const char*,
-                 int) {}
-void makeCats(int uid, unsigned count, qi::Atomic<int>& finished)
+TEST_F(SyncLog, threadSafeness)
 {
-  for (unsigned i=0; i<count; ++i)
+  // add category
   {
-    std::stringstream s;
-    s << "cat_" << uid << "_" << i;
-    qi::log::addCategory(s.str());
+    std::vector<std::future<void>> futures;
+    std::atomic<int> count{0};
+    for (int i = 0; i < 10; ++i)
+    {
+      futures.emplace_back(std::async(std::launch::async, [&count, i] {
+        for (int i = 0; i < 1000; ++i)
+        {
+          std::ostringstream s;
+          s << "cat_" << i << "_" << i;
+          log::addCategory(s.str());
+        }
+        ++count;
+      }));
+    }
+
+    while (count.load() < 10)
+      std::this_thread::sleep_for(std::chrono::milliseconds{50});
+
+    for (auto& fut : futures)
+      fut.wait();
   }
-  ++finished;
-}
 
-void addHandler(qi::Atomic<int>& pos, qi::Atomic<int>& count)
-{
-  int p = ++pos;
-  qi::log::addHandler("foo" + boost::lexical_cast<std::string>(p),
-    nullHandler);
-  ++count;
-}
+  // add handler
+  {
+    std::vector<std::future<void>> futures;
+    std::atomic<int> pos{0};
+    std::atomic<int> count{0};
+    for (int i = 0; i < 10; ++i)
+    {
+      futures.emplace_back(std::async(std::launch::async, [&pos, &count] {
+        int p = ++pos;
+        log::addHandler("foo" + qi::os::to_string(p), &dummyHandler);
+        ++count;
+      }));
+    }
 
-TEST(log, threadSafeness)
-{
-  qi::Atomic<int> count;
-  for (unsigned i=0; i<10; ++i)
-    boost::thread(makeCats, i, 1000, boost::ref(count));
-  while (count.load() < 10)
-    qi::os::msleep(50);
-  qi::Atomic<int> pos;
-  count = 0;
-  for (unsigned i=0; i<10; ++i)
-    boost::thread(addHandler, boost::ref(pos), boost::ref(count));
-  while (count.load() < 10)
-    qi::os::msleep(50);
-  EXPECT_TRUE(true);
+    while (count.load() < 10)
+      std::this_thread::sleep_for(std::chrono::milliseconds{50});
+
+    for (auto& fut : futures)
+      fut.wait();
+  }
 }

@@ -388,57 +388,13 @@ TEST(ScopedSetAndRestore, MoveOnly)
   using MoveOnly = test::MoveOnly<int>;
   const MoveOnly oldValue{1212};
   MoveOnly newValue0{3434};
-  MoveOnly newValue1{newValue0.value};
-  MoveOnly x{oldValue.value};
+  MoveOnly newValue1{*newValue0};
+  MoveOnly x{*oldValue};
   {
     auto _ = scopedSetAndRestore(x, std::move(newValue0));
     EXPECT_EQ(newValue1, x);
   }
   EXPECT_EQ(oldValue, x);
-}
-
-namespace test
-{
-  // Allows to know if an instance has been moved.
-  struct MoveAware
-  {
-    int i;
-    bool moved = false;
-    MoveAware(int i) : i(i)
-    {
-    }
-    MoveAware() = default;
-    MoveAware(const MoveAware& x)
-      : i(x.i)
-    {
-    }
-    MoveAware& operator=(const MoveAware& x)
-    {
-      i = x.i;
-      moved = false;
-      return *this;
-    }
-    MoveAware(MoveAware&& x)
-      : i(x.i)
-    {
-      x.moved = true;
-    }
-    MoveAware& operator=(MoveAware&& x)
-    {
-      i = x.i;
-      moved = false;
-      x.moved = true;
-      return *this;
-    }
-    bool operator==(const MoveAware& x) const
-    {
-      return i == x.i; // ignore the `moved` flag.
-    }
-    friend std::ostream& operator<<(std::ostream& o, const MoveAware& x)
-    {
-      return o << x.i;
-    }
-  };
 }
 
 TEST(ScopedSetAndRestore, NewValueIsUntouched)

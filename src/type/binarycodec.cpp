@@ -47,7 +47,7 @@ namespace qi {
       ~BinaryEncoderPrivate();
 
       BinaryEncoder::Status _status;
-      Buffer _buffer;
+      Buffer* _buffer;
       std::string _signature;
       unsigned int _innerSerialization;
   };
@@ -221,7 +221,7 @@ namespace qi {
       {
         signature() += 's';
       }
-      if (_p->_buffer.write(str, len) == false)
+      if (_p->_buffer->write(str, len) == false)
       {
         setStatus(Status::WriteError);
       }
@@ -239,7 +239,7 @@ namespace qi {
       signature() += 's';
     }
     if (len) {
-      if (_p->_buffer.write(str, len) == false)
+      if (_p->_buffer->write(str, len) == false)
         setStatus(Status::WriteError);
     }
   }
@@ -358,7 +358,7 @@ namespace qi {
 
   Buffer& BinaryEncoder::buffer()
   {
-    return _p->_buffer;
+    return *(_p->_buffer);
   }
 
   std::string& BinaryEncoder::signature()
@@ -368,7 +368,7 @@ namespace qi {
 
   BinaryEncoderPrivate::BinaryEncoderPrivate(qi::Buffer &buffer)
     : _status(BinaryEncoder::Status::Ok)
-    , _buffer(buffer)
+    , _buffer(&buffer)
     , _innerSerialization(0)
   {
   }

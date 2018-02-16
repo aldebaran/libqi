@@ -20,7 +20,8 @@ namespace qi {
   {
   public:
     SignalBasePrivate()
-      : defaultCallType(MetaCallType_Auto)
+      : execContext(nullptr)
+      , defaultCallType(MetaCallType_Auto)
     {}
 
     ~SignalBasePrivate();
@@ -32,6 +33,7 @@ namespace qi {
     Future<bool> disconnectAllStep(bool overallSuccess);
 
     SignalBase::OnSubscribers      onSubscribers;
+    ExecutionContext*              execContext;
     SignalSubscriberMap            subscriberMap;
     TrackMap                       trackMap;
     qi::Atomic<int>                trackId;
