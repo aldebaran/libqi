@@ -129,15 +129,16 @@ Future<void> GatewayPrivate::connect(const Url& sdUrl)
     _sdClient.reset(new Session);
     return _sdClient->connect(sdUrl)
         .async()
-        .andThen(_strand.schedulerFor([=](void*) {
+        .andThen(_strand.unwrappedSchedulerFor([=](void*) {
           connected = true;
           return bindServicesToServiceDirectory(sdUrl);
         }))
+        .unwrap()
         .then(_strand.schedulerFor([=](Future<void> connectFut) {
           // If any error occurred during connection, no need to keep the SD client alive
           if (connectFut.hasError())
             _sdClient.reset();
-        }));
+        })).unwrap();
   }).unwrap();
 }
 
@@ -222,7 +223,7 @@ Future<void> GatewayPrivate::bindServicesToServiceDirectory(const Url& url)
         [=](const std::vector<ServiceInfo>& services) {
           for (const auto& serviceInfo : services)
             mirrorService(serviceInfo.name());
-        }));
+        })).unwrap();
 
   success = true;
   return servicesFut;
@@ -261,7 +262,7 @@ bool GatewayPrivate::removeService(const std::string& service)
 
 Future<void> GatewayPrivate::retryConnect(const Url& sdUrl, Duration lastTimer)
 {
-  return connect(sdUrl).then(_strand.schedulerFor([=](const Future<void>& connectFuture)
+  return connect(sdUrl).then(_strand.unwrappedSchedulerFor([=](const Future<void>& connectFuture)
     {
       if (connectFuture.hasError())
       {
@@ -296,7 +297,7 @@ Future<void> GatewayPrivate::retryConnect(const Url& sdUrl, Duration lastTimer)
           }
         }).unwrap();
       }
-  }));
+  })).unwrap();
 }
 
 std::unique_ptr<Session> GatewayPrivate::recreateServer()
