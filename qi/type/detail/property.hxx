@@ -8,6 +8,7 @@
 #define _QITYPE_DETAIL_PROPERTY_HXX_
 
 #include <boost/thread/locks.hpp>
+#include <qi/property.hpp>
 #include <qi/future.hpp>
 #include <qi/property.hpp>
 #include <ka/errorhandling.hpp>
@@ -20,10 +21,8 @@ namespace qi
     if (!conv->type())
       throw std::runtime_error(std::string("Failed converting ") + v.type()->infoString() + " to " + _type->infoString());
 
-    Property<AnyValue>::set(AnyValue(*conv, false, conv.ownsReference()));
-    conv.release();
-
-    return FutureSync<void>(0);
+    const auto convOwnedRef = conv.ownsReference();
+    return Property<AnyValue>::set(AnyValue(conv.release(), false, convOwnedRef));
   }
 
   template<typename T>
