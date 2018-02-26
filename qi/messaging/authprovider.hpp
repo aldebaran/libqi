@@ -31,7 +31,9 @@ public:
     State_Done,
   };
   static const std::string Error_Reason_Key;
+
   static const std::string UserAuthPrefix;
+  static const std::string QiAuthPrefix;
 
   virtual ~AuthProvider()
   {

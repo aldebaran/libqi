@@ -29,7 +29,6 @@ namespace qi
     virtual std::map<std::string, AnyValue> _processAuth(const std::map<std::string, AnyValue> &authData);
   };
 
-  extern const std::string QiAuthPrefix;
 }
 
 QI_TYPE_ENUM(qi::AuthProvider::State);

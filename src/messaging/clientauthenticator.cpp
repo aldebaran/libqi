@@ -26,7 +26,7 @@ namespace qi
       for (CapabilityMap::const_iterator it = cmap.begin(), end = cmap.end(); it != end; ++it)
       {
         const std::string& key = it->first;
-        if (boost::algorithm::starts_with(key, QiAuthPrefix))
+        if (boost::algorithm::starts_with(key, AuthProvider::QiAuthPrefix))
           authData[key] = it->second;
         else if (boost::algorithm::starts_with(key, AuthProvider::UserAuthPrefix))
           authData[key.substr(AuthProvider::UserAuthPrefix.length(), std::string::npos)] = it->second;
@@ -40,7 +40,7 @@ namespace qi
 
       for (CapabilityMap::const_iterator it = data.begin(), end = data.end(); it != end; ++it)
       {
-        if (boost::algorithm::starts_with(it->first, QiAuthPrefix))
+        if (boost::algorithm::starts_with(it->first, AuthProvider::QiAuthPrefix))
           result[it->first] = it->second;
         else
           result[AuthProvider::UserAuthPrefix + it->first] = it->second;

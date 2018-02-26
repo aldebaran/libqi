@@ -17,10 +17,12 @@ qiLogCategory("qimessaging.authprovider");
 
 namespace qi {
 
-  const std::string QiAuthPrefix = "__qi_auth_";
-  const std::string AuthProvider::UserAuthPrefix = "auth_";
+  /* TODO: The benefit / purpose of the following prefixes is not clear. */
+  /*       Further analysis required */
+  const std::string AuthProvider::QiAuthPrefix     = "__qi_auth_";
+  const std::string AuthProvider::UserAuthPrefix   = "auth_";
   const std::string AuthProvider::Error_Reason_Key = QiAuthPrefix + "err_reason";
-  const std::string AuthProvider::State_Key = QiAuthPrefix + "state";
+  const std::string AuthProvider::State_Key        = QiAuthPrefix + "state";
 
   namespace auth_provider_private
   {
@@ -31,7 +33,7 @@ namespace qi {
       for (CapabilityMap::const_iterator it = cmap.begin(), end = cmap.end(); it != end; ++it)
       {
         const std::string& key = it->first;
-        if (boost::algorithm::starts_with(key, QiAuthPrefix))
+        if (boost::algorithm::starts_with(key, AuthProvider::QiAuthPrefix))
           authData[key] = it->second;
         else if (boost::algorithm::starts_with(key, AuthProvider::UserAuthPrefix))
           authData[key.substr(AuthProvider::UserAuthPrefix.length(), std::string::npos)] = it->second;
@@ -45,7 +47,7 @@ namespace qi {
 
       for (CapabilityMap::const_iterator it = data.begin(), end = data.end(); it != end; ++it)
       {
-        if (boost::algorithm::starts_with(it->first, QiAuthPrefix))
+        if (boost::algorithm::starts_with(it->first, AuthProvider::QiAuthPrefix))
           result[it->first] = it->second;
         else
           result[AuthProvider::UserAuthPrefix + it->first] = it->second;
@@ -72,8 +74,7 @@ namespace qi {
   CapabilityMap NullAuthProvider::_processAuth(const CapabilityMap &authData)
   {
     CapabilityMap reply;
-    const int state = State_Done;
-    reply[State_Key] = AnyValue::from(state);
+    reply[State_Key] = AnyValue::from<unsigned int>(State_Done);
     return reply;
   }
 
