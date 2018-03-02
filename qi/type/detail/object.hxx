@@ -423,8 +423,11 @@ namespace detail
       boost::shared_ptr<T>& other)
   {
     return ManagedObjectPtr(
-          new GenericObject(oit, other.get()),
-          [other](GenericObject*) mutable {other.reset();});
+            new GenericObject(oit, other.get()),
+            [other](GenericObject* object) mutable {
+              other.reset();
+              delete object;
+            });
   }
 
   // Constructing an AnyObject from a registered implementation.
