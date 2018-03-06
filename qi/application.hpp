@@ -65,7 +65,7 @@ namespace qi {
      * \verbatim
      * Wait until one of those conditions becomes true:
      * - stop() is called.
-     * - TERM or QUIT signal is received.
+     * - TERM or INT signal is received.
      * - the Application instance is destroyed, which means main() is exiting.
      *
      * Run can be called by multiple threads simultaneously.
