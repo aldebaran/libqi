@@ -217,6 +217,60 @@ static qi::Future<std::vector<qi::ServiceInfo> > servicesBouncer(qi::Session& se
   return session.services();
 }
 
+namespace qi {
+static qi::AnyReference sessionSetClientAuthenticatorFactory(qi::AnyReferenceVector args)
+{
+  class DynamicClientAuth : public ClientAuthenticator
+  {
+  public:
+    DynamicClientAuth(qi::AnyObject obj)
+      : obj_(obj) {}
+
+    CapabilityMap initialAuthData() override
+    {
+      return obj_.call<CapabilityMap>("initialAuthData");
+    }
+
+    CapabilityMap _processAuth(const CapabilityMap& authData) override
+    {
+      return obj_.call<CapabilityMap>("_processAuth", authData);
+    }
+
+  private:
+    AnyObject obj_;
+  };
+
+  class DynamicClientAuthFactory : public ClientAuthenticatorFactory
+  {
+  public:
+    DynamicClientAuthFactory(qi::AnyObject obj)
+      : obj_(obj) {}
+
+    ClientAuthenticatorPtr newAuthenticator() override
+    {
+      auto authenticator = obj_.call<AnyObject>("newAuthenticator");
+      return boost::make_shared<DynamicClientAuth>(authenticator);
+    }
+
+  private:
+    AnyObject obj_;
+  };
+
+  if (args.size() < 2)
+    throw std::runtime_error("Not enough arguments");
+  qi::Session& session = args[0].as<qi::Session>();
+  auto factory = args[1].toObject();
+  if (!factory)
+  {
+    throw std::runtime_error("Invalid Factory");
+  }
+
+  auto sharedFactory = boost::make_shared<DynamicClientAuthFactory>(factory);
+  session.setClientAuthenticatorFactory(sharedFactory);
+  return qi::AnyReference(qi::typeOf<void>());
+}
+} // qi
+
 static bool _qiregisterSession() {
   ::qi::ObjectTypeBuilder<qi::Session> builder;
   builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
@@ -246,6 +300,11 @@ static bool _qiregisterSession() {
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, serviceUnregistered);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, connected);
   QI_OBJECT_BUILDER_ADVERTISE(builder, qi::Session, disconnected);
+
+  // We don't want to expose the hierarchy of ClientAuthenticator. So we create a function, setClientAuthenticatorFactory
+  // which takes an array of AnyReference, and internally convert them to ClientAuthenticator.
+  builder.advertiseMethod("setClientAuthenticatorFactory", qi::AnyFunction::fromDynamicFunction(&qi::sessionSetClientAuthenticatorFactory));
+
   builder.registerType();
   return true;
 }
