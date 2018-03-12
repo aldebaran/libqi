@@ -16,10 +16,10 @@ version_F = ProtoField.uint16("qim.version","Version")
 type_F = ProtoField.string("qim.type","Type")
 flags_F = ProtoField.uint8("qim.flags","Flags")
 service_F = ProtoField.uint32("qim.service","Service")
-service_desc_F = ProtoField.string("qim.action","Service description")
+service_desc_F = ProtoField.string("qim.service_description","Service description")
 object_F = ProtoField.uint32("qim.object","Object")
 action_F = ProtoField.uint32("qim.action","Action")
-action_desc_F = ProtoField.string("qim.action","Action description")
+action_desc_F = ProtoField.string("qim.action_description","Action description")
 data_F = ProtoField.bytes("qim.data", "Data")
 
 
