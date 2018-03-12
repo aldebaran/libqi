@@ -167,7 +167,7 @@ ApplicationSession::Config::Config()
   : _stateMachine(StateMachineConfig_unset)
   , _opt(Option_None)
   , _url("tcp://127.0.0.1:9559")
-  , _listenUrl("tcp://0.0.0.0:9559")
+  , _listenUrl("tcp://127.0.0.1:9559")
 {
 }
 
