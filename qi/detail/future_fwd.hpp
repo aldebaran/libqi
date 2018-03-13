@@ -1069,6 +1069,25 @@ namespace qi {
     }
   };
 
+  /// Returns a future set with the given value. Passing no value results in a
+  /// Future<void>.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// Future<int> f = futurize(42);
+  /// assert(f.hasValue() && f.value() == 42);
+  /// Future<void> f2 = futurize();
+  /// assert(f2.hasValue());
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// TODO: Remove the trailing return type when get rid of C++11.
+  template<typename... T>
+  auto futurize(T&&... t)
+    -> decltype(UnitFuture{}(fwd<T>(t)...))
+  {
+    return UnitFuture{}(fwd<T>(t)...);
+  }
+
   /// Returns a new function similar to the given one except that it returns a
   /// future.
   ///
