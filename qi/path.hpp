@@ -8,11 +8,11 @@
 #ifndef _QI_PATH_HPP_
 # define _QI_PATH_HPP_
 
+# include <memory>
 # include <string>
 # include <vector>
 # include <locale>
 # include <iosfwd>
-# include <boost/scoped_ptr.hpp>
 # include <qi/api.hpp>
 
 namespace boost { namespace filesystem {
@@ -129,7 +129,7 @@ namespace qi
     }
 
   private:
-    boost::scoped_ptr<PrivatePath> _p;
+    std::unique_ptr<PrivatePath> _p;
   };
 
 

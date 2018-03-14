@@ -8,6 +8,7 @@
 #define _QI_SIGNAL_HPP_
 
 #include <boost/function.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <qi/atomic.hpp>
 
 #include <qi/anyfunction.hpp>
