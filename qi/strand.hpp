@@ -23,6 +23,8 @@
 #  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
 
+#define QI_DETAIL_FEATURE_STRANDED_UNWRAPPED
+
 namespace qi
 {
 
