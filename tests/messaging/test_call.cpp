@@ -337,7 +337,7 @@ TEST(TestCall, TestDoubleToFloatConvertion)
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
   qi::AnyObject proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
+  ASSERT_TRUE(proxy);
 
   std::cout << "Calling FakeRGB" << std::endl;
   qi::Future<int> fut = proxy.async<int>("fakeRGB", "Haha", 42, duration);
@@ -356,7 +356,7 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
   qi::AnyObject proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
+  ASSERT_TRUE(proxy);
 
   std::cout << "Calling FakeRGB" << std::endl;
   qi::Future<int> fut = proxy.async<int>("fakeRGB", "Haha", 42, duration);
@@ -387,7 +387,7 @@ TEST(TestCall, TestGenericConversion) {
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
   qi::AnyObject proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
+  ASSERT_TRUE(proxy);
 
   std::vector<std::string>      svec;
   std::vector<qi::AnyValue> gvec;
@@ -438,7 +438,7 @@ TEST(TestCall, TestGenericConversionComplexList) {
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
   qi::AnyObject proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
+  ASSERT_TRUE(proxy);
 
 
   std::vector<std::vector<std::string> >      sss;
@@ -491,7 +491,7 @@ TEST(TestCall, TestGenericConversionComplexMap) {
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
   qi::AnyObject proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
+  ASSERT_TRUE(proxy);
 
 
   std::vector<std::vector<std::string> >      sss;
@@ -533,7 +533,7 @@ TEST(TestCall, TestGenericConversionTuple) {
   serviceID = p.server()->registerService("serviceConv", obj);
   ASSERT_TRUE(serviceID != 0);
   qi::AnyObject proxy = p.client()->service("serviceConv");
-  ASSERT_TRUE(proxy != 0);
+  ASSERT_TRUE(proxy);
 
   qi::Future<double> f;
   SpecificTuple t;

@@ -55,6 +55,7 @@ if(QI_WITH_TESTS)
     test_messaging_with_sessionpair
 
     SRC
+    "objectio.hpp"
     "test_call.cpp"
     "test_call_many.cpp"
     "test_call_on_close_session.cpp"

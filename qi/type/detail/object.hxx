@@ -267,7 +267,7 @@ public:
   /// Shares ref counter with other, which must handle the destruction of go.
   template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
   template<typename U> Object(boost::shared_ptr<U> other);
-  operator bool() const;
+  explicit operator bool() const;
   operator Object<Empty>() const;
 
   // Generates `>`, `<=`, `>=` in terms of `<`.
