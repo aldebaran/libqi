@@ -80,6 +80,51 @@ namespace qi
     }
   };
 
+  /// Polymorphic function that maps an exception to its message.
+  ///
+  /// Handled exceptions are std::exception and boost::exception. If the exception
+  /// is unknown (in the `catch (...)` case for example), you can call the nullary
+  /// overload.
+  ///
+  /// Note: C-strings (wrapped in `string_ref`) are used instead of
+  ///   `std::string`s because this object will typically be used in `catch`
+  ///   clauses, in the context of `noexcept` code.
+  ///
+  /// Example: Transforming a function throwing exceptions into a total function
+  ///   returning error messages.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // Instead of throwing exceptions, we want the function to return the
+  /// // potential error message.
+  ///
+  /// auto f = []() {my_function(); return boost::optional<std::string>{};};
+  ///
+  /// if (const auto error = invokeCatch(ExceptionMessage{}, f)) {
+  ///   // handle error
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  struct ExceptionMessage
+  {
+    static char const* unknownError()
+    {
+      return "unknown error";
+    }
+  // Regular:
+    QI_GENERATE_FRIEND_REGULAR_OPS_0(ExceptionMessage)
+  // PolymorphicFunction<std::string (std::exception), std::string (boost::exception), std::string ()>:
+    std::string operator()(std::exception const& e) const
+    {
+      return e.what();
+    }
+    std::string operator()(boost::exception const& e) const
+    {
+      return boost::diagnostic_information_what(e);
+    }
+    std::string operator()() const
+    {
+      return unknownError();
+    }
+  };
+
   /// Invokes a procedure in a try-catch clause and delegates exception handling
   /// to a dedicated handler.
   ///

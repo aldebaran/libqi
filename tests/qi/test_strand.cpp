@@ -5,6 +5,7 @@
 #include <qi/future.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/os.hpp>
+#include <qi/errorhandling.hpp>
 #include <qi/strand.hpp>
 #include <qi/periodictask.hpp>
 #include <qi/actor.hpp>
@@ -461,4 +462,69 @@ TEST(TestStrand, CallScheduleFromStrandContextDoesNotExecuteImmediately)
 
   const std::vector<int> expected{0, 1};
   ASSERT_EQ(expected, values);
+}
+
+TEST(TestStrand, JoinNoThrowOk)
+{
+  using namespace qi;
+  Strand strand;
+  ASSERT_EQ(Strand::OptionalErrorMessage{}, strand.join(std::nothrow));
+}
+
+namespace
+{
+  template<typename T>
+  struct TestStrand : qi::Strand
+  {
+    T error;
+
+    TestStrand(const T& t) : error(t)
+    {
+    }
+
+    // This is called in `join()`, so `join()` will throw.
+    bool isInThisContext() const override
+    {
+      throw error;
+    }
+  };
+
+  struct BoostError : boost::exception
+  {
+    std::string msg;
+    BoostError(const std::string& s = std::string{}) : msg(s)
+    {
+    }
+    std::ostream& operator<<(std::ostream& o) const
+    {
+      return o << "BoostError{\"" << msg << "\"}";
+    }
+  };
+} // namespace
+
+TEST(TestStrand, JoinNoThrowStdException)
+{
+  using namespace qi;
+  using E = std::runtime_error;
+  const std::string errorMessage{"aha"};
+  TestStrand<E> strand{E{errorMessage}};
+  ASSERT_EQ(Strand::OptionalErrorMessage{errorMessage}, strand.join(std::nothrow));
+}
+
+TEST(TestStrand, JoinNoThrowBoostException)
+{
+  using namespace qi;
+  using E = BoostError;
+  E error{"oho"};
+  TestStrand<E> strand{error};
+  ASSERT_EQ(Strand::OptionalErrorMessage{boost::diagnostic_information(error)}, strand.join(std::nothrow));
+}
+
+TEST(TestStrand, JoinNoThrowUnknownException)
+{
+  using namespace qi;
+  using E = int;
+  E error{5};
+  TestStrand<E> strand{error};
+  ASSERT_EQ(Strand::OptionalErrorMessage{ExceptionMessage::unknownError()}, strand.join(std::nothrow));
 }

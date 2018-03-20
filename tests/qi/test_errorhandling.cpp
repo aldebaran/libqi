@@ -46,6 +46,10 @@ namespace
     return boostCode;
   }
 
+  static const std::string stdMessage = "youpi";
+  static const std::string boostMessage = "youpa";
+  static const std::string unknownMessage = qi::ExceptionMessage::unknownError();
+
   /// This fixture will ensure that logs in tests of its test case are synchronous which makes
   /// them simpler to implement.
   struct TestErrorHandling : testing::Test
@@ -72,6 +76,23 @@ TEST_F(TestErrorHandling, ExceptionValueRegular)
   // This test is partial but representative.
   ASSERT_TRUE(detail::isRegular(
     {F{0, 0, 0}, F{0, 0, 1}, F{0, 1, 0}, F{1, 0, 0}, F{0, 1, 1}, F{1, 1, 1}}));
+}
+
+TEST_F(TestErrorHandling, ExceptionMessageBasic)
+{
+  using namespace qi;
+  ExceptionMessage f;
+  const BoostError boostError{boostMessage};
+  ASSERT_EQ(stdMessage, f(std::runtime_error{stdMessage}));
+  {
+    ASSERT_EQ(boost::diagnostic_information(boostError), f(boostError));
+  }
+  ASSERT_EQ(unknownMessage, f());
+}
+
+TEST_F(TestErrorHandling, ExceptionMessageRegular)
+{
+  ASSERT_TRUE(qi::detail::isRegular({qi::ExceptionMessage{}}));
 }
 
 TEST_F(TestErrorHandling, ExceptionLogErrorBasic)
@@ -222,4 +243,14 @@ TEST_F(TestErrorHandling, InvokeCatchHandleExceptionAndRethrowLogStdException)
   HandleExceptionAndRethrow<Append> rethrow{Append{log}};
   ASSERT_THROW(invokeCatch(rethrow, f, 3), std::runtime_error);
   ASSERT_EQ(msg, log);
+}
+
+TEST_F(TestErrorHandling, InvokeCatchExceptionMessage)
+{
+  using namespace qi;
+  ExceptionMessage f;
+  const BoostError boostError{boostMessage};
+  ASSERT_EQ(stdMessage, invokeCatch(f, []() -> std::string {throw std::runtime_error{stdMessage};}));
+  ASSERT_EQ(boost::diagnostic_information(boostError), invokeCatch(f, [=]() -> std::string {throw boostError;}));
+  ASSERT_EQ(unknownMessage, invokeCatch(f, []() -> std::string {throw 5;}));
 }

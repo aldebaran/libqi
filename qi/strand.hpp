@@ -112,6 +112,8 @@ inline StrandPrivate::StrandPrivate(qi::ExecutionContext& eventLoop)
 class QI_API Strand : public ExecutionContext, private boost::noncopyable
 {
 public:
+  using OptionalErrorMessage = boost::optional<std::string>;
+
   /// Construct a strand that will schedule work on the default event loop
   Strand();
   /// Construct a strand that will schedule work on executionContext
@@ -119,7 +121,7 @@ public:
   /// Call detroy()
   ~Strand();
 
-  /** Joins the strand
+  /** Joins the strand.
    *
    * This will wait for currently running tasks to finish and will drop all tasks scheduled from the moment of the call
    * on. A strand can't be reused after it has been join()ed.
@@ -127,6 +129,24 @@ public:
    * It is safe to call this method concurrently with other methods. All the returned futures will be set to error.
    */
   void join();
+
+  /** Joins the strand.
+   *
+   * This version catches any exception and returns its message.
+   * This version must be preferred in destructors to prevent abort.
+   *
+   * If there is no exception, an empty error message is returned.
+   *
+   * Example: Preventing a destructor to throw exceptions because of `join`.
+   * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   * ~MyActor() {
+   *   if (const auto error = _strand.join(std::nothrow)) {
+   *     qiLogWarning() << "Error while joining the strand. Detail: " << *error;
+   *   }
+   * }
+   * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   */
+  OptionalErrorMessage join(std::nothrow_t) QI_NOEXCEPT(true);
 
   // DEPRECATED
   QI_API_DEPRECATED_MSG(Use 'asyncAt' instead)
