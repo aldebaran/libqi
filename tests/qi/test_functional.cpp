@@ -749,8 +749,10 @@ namespace
 
 using MutexTypes = testing::Types<std::mutex,
                                   std::recursive_mutex,
+#if !BOOST_OS_ANDROID
                                   std::timed_mutex,
                                   std::recursive_timed_mutex,
+#endif
                                   boost::mutex,
                                   boost::recursive_mutex,
                                   boost::timed_mutex,
