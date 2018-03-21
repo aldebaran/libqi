@@ -274,7 +274,11 @@ Strand::Strand(qi::ExecutionContext& eventloop)
 
 Strand::~Strand()
 {
-  join();
+  if (const auto error = join(std::nothrow))
+  {
+    qiLogWarning() << "Error while joining tasks in Strand destruction. "
+                      "Detail: " << *error;
+  }
 }
 
 void Strand::join()
