@@ -8,6 +8,7 @@
 #ifndef _QI_DETAIL_LOG_HXX_
 #define _QI_DETAIL_LOG_HXX_
 
+#include <boost/format.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/preprocessor/cat.hpp>
 
