@@ -29,8 +29,6 @@ namespace qi
   public:
     /// \brief Callback is a boost::function.
     using Callback = boost::function<void()>;
-    // internal
-    using ScheduleCallback = boost::function<qi::Future<void>(const Callback&, qi::Duration delay)>;
 
     /// \brief Default constructor.
     PeriodicTask();
@@ -99,7 +97,6 @@ namespace qi
      * Trigger a started periodic task to run right now.
      * Does nothing if the periodic task just ran, is running, starting,
      * stopping or stopped.
-     * This function is lockfree.
      */
     void trigger();
 

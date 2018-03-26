@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <qi/periodictask.hpp>
 #include "test_future.hpp"
+#include <qi/testutils/testutils.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
@@ -178,4 +179,16 @@ TEST(TestPeriodicTask, TriggerStartStop)
     qi::os::msleep(10);
     pt.stop();
   }
+}
+
+TEST(TestPeriodicTask, DoesNotDeadlockWhenStartedWithStrandInsideStrandContext)
+{
+  qi::Strand strand;
+  qi::PeriodicTask pt;
+  pt.setStrand(&strand);
+  pt.setCallback([]{ /* dummy callback */ });
+  pt.setUsPeriod(100000);
+  auto futStart = strand.async([&]{ pt.start(); }); // call start from inside the start
+  ASSERT_TRUE(test::finishesWithValue(futStart));
+  strand.join(); // join it before PeriodicTask is destroyed
 }
