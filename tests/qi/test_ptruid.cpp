@@ -93,6 +93,15 @@ TEST(PtrUid, Sequence)
   }
 }
 
+namespace
+{
+  template<typename T>
+  std::uintptr_t to_uintptr(T* t)
+  {
+    return reinterpret_cast<std::uintptr_t>(t);
+  }
+} // namespace
+
 TEST(PtrUid, SequenceUInt32)
 {
   using namespace qi;
@@ -104,14 +113,16 @@ TEST(PtrUid, SequenceUInt32)
   EXPECT_EQ(nbUInt32InPtrUid, endUInt32(id) - beginUInt32(id));
   EXPECT_EQ(nbUInt32InPtrUid, endUInt32(id) - beginUInt32(id));
   {
-    auto begin8 = reinterpret_cast<uintptr_t>(&*begin(id));
-    auto begin32 = reinterpret_cast<uintptr_t>(&*beginUInt32(id));
-    EXPECT_EQ(begin8, begin32);
-  }
-  {
-    auto end8 = reinterpret_cast<uintptr_t>(&*end(id));
-    auto end32 = reinterpret_cast<uintptr_t>(&*endUInt32(id));
-    EXPECT_EQ(end8, end32);
+    const auto begin8 = &*begin(id);
+    const auto begin32 = &*beginUInt32(id);
+    EXPECT_EQ(to_uintptr(begin8), to_uintptr(begin32));
+
+    const auto end8 = begin8 + size(id);
+    const auto end32 = begin32 + (size(id) / sizeof(std::uint32_t));
+    EXPECT_EQ(to_uintptr(end8), to_uintptr(end32));
+
+    EXPECT_EQ(end8 - begin8, end(id) - begin(id));
+    EXPECT_EQ(end32 - begin32, endUInt32(id) - beginUInt32(id));
   }
 }
 

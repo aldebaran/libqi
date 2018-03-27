@@ -32,7 +32,7 @@ namespace qi
       + sizeof(ptr)> // pointer
         buffer;
 
-    const auto uptr = reinterpret_cast<uintptr_t>(ptr);
+    const auto uptr = reinterpret_cast<std::uintptr_t>(ptr);
 
     // Copy machine uuid, then process uuid, then pointer.
     const auto it = std::copy(toUInt8Ptr(&uptr), toUInt8Ptr(&uptr + 1),

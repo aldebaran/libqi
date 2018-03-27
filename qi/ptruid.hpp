@@ -71,7 +71,7 @@ namespace qi
 
     friend uint8_t* end(PtrUid& a) BOOST_NOEXCEPT
     {
-      return toUInt8Ptr(&*endUInt32(a));
+      return begin(a) + size(a);
     }
 
     friend const uint8_t* begin(const PtrUid& a) BOOST_NOEXCEPT
