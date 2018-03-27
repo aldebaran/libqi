@@ -7,7 +7,6 @@
     <depends testtime="true" buildtime="true" names="gtest gmock" />
   </qibuild>
   <project src="dox" />
-  <project src="libqipamauth" />
 
   <project src="compat/cqit"/>
   <project src="compat/cqim"/>

@@ -234,6 +234,7 @@ namespace qi {
 
     AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
     CapabilityMap authData = cmref.to<CapabilityMap>();
+
     CapabilityMap::iterator authStateIt = authData.find(AuthProvider::State_Key);
     cmref.destroy();
 
@@ -302,22 +303,34 @@ namespace qi {
     // We forge a message that just shows we've authenticated successfully.
     if (socket->hasReceivedRemoteCapabilities())
     {
-      Message dummy;
-      CapabilityMap cm;
-      cm[AuthProvider::State_Key] = AnyValue::from(AuthProvider::State_Done);
-      dummy.setType(Message::Type_Reply);
-      dummy.setFunction(qi::Message::ServerFunction_Authenticate);
-      dummy.setValue(AnyValue::from(cm), typeOf<CapabilityMap>()->signature());
-      onAuthentication(MessageSocket::SocketEventData(dummy), requestId, socket, ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
-      mustSetPromise = false;
+      qiLogInfo() << "SessionService Remote Capabilities";
+      try
+      {
+        Message dummy;
+        CapabilityMap cm;
+        cm[AuthProvider::State_Key] = AnyValue::from<unsigned int>(AuthProvider::State_Done);
+        dummy.setType(Message::Type_Reply);
+        dummy.setFunction(qi::Message::ServerFunction_Authenticate);
+        dummy.setValue(AnyValue::from(cm), typeOf<CapabilityMap>()->signature());
+        onAuthentication(MessageSocket::SocketEventData(dummy), requestId, socket,
+                         ClientAuthenticatorPtr(new NullClientAuthenticator), SignalSubscriberPtr());
+        mustSetPromise = false;
+      } catch (const std::exception& e) {
+        qiLogWarning() << "SessionService Remote Exception: " << e.what();
+        throw;
+      } catch (...) {
+        qiLogWarning() << "SessionService Remote Exception: Unknown";
+        throw;
+      }
       return;
     }
     ClientAuthenticatorPtr authenticator = _authFactory->newAuthenticator();
     CapabilityMap authCaps;
     {
       CapabilityMap tmp = authenticator->initialAuthData();
-      for (CapabilityMap::iterator it = tmp.begin(), end = tmp.end(); it != end; ++it)
+      for (auto it = tmp.begin(); it != tmp.end(); ++it) {
         authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
+      }
     }
     SignalSubscriberPtr protSubscriber(new SignalSubscriber);
     *protSubscriber = socket->socketEvent.connect(track(

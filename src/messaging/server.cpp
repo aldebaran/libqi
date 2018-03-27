@@ -17,7 +17,6 @@ qiLogCategory("qimessaging.server");
 
 namespace qi {
 
-  //Server
   Server::Server(bool enforceAuth)
     : _enforceAuth(enforceAuth)
     , _dying(false)
@@ -109,6 +108,7 @@ namespace qi {
 
   void Server::onTransportServerNewConnection(MessageSocketPtr socket, bool startReading)
   {
+    qiLogVerbose() << "Server::TransportServer New Connection";
     boost::recursive_mutex::scoped_lock sl(_socketsMutex);
     if (!socket)
       return;
@@ -157,93 +157,147 @@ namespace qi {
   void Server::onMessageReadyNotAuthenticated(const Message &msg, MessageSocketPtr socket, AuthProviderPtr auth,
                                               boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink)
   {
-    qiLogVerbose() << "Starting auth message" << msg.address();
-    int id = msg.id();
-    int service = msg.service();
-    int function = msg.action();
-    int type = msg.type();
     Message reply;
+    reply.setId(msg.id());
+    reply.setService(msg.service());
 
-    reply.setId(id);
-    reply.setService(service);
-    if (service != Message::Service_Server
-        || type != Message::Type_Call
-        || function != Message::ServerFunction_Authenticate)
+    const bool isAuthMsg = msg.service()  == Message::Service_Server
+                        && msg.type()     == Message::Type_Call
+                        && msg.function() == Message::ServerFunction_Authenticate;
+
+    if (isAuthMsg)
     {
-      socket->messageReady.disconnect(*signalLink);
       if (_enforceAuth)
       {
-        std::stringstream err;
-
-        err << "Expected authentication (service #" << Message::Service_Server <<
-               ", type #" << Message::Type_Call <<
-               ", action #" << Message::ServerFunction_Authenticate <<
-               "), received service #" << service << ", type #" << type << ", action #" << function;
-        reply.setType(Message::Type_Error);
-        reply.setError(err.str());
-        socket->send(reply);
-        socket->disconnect().async();
-        qiLogVerbose() << err.str();
+        handleAuthMsgAuthEnabled(msg, socket, auth, first, signalLink, reply);
       }
       else
       {
-        server_private::sendCapabilities(socket);
-        qiLogVerbose() << "Authentication is not enforced. Skipping...";
-
-        connectMessageReady(socket);
-        onMessageReady(msg, socket);
+        handleAuthMsgAuthDisabled(msg, socket, auth, first, signalLink, reply);
       }
-      return;
     }
-    // the socket now contains the remote capabilities in socket->remoteCapabilities()
-    qiLogVerbose() << "Authenticating client " << socket->remoteEndpoint().value().str() << "...";
+    else
+    {
+      if (_enforceAuth)
+      {
+        handleNotAuthMsgAuthEnabled(msg, socket, auth, first, signalLink, reply);
+      }
+      else
+      {
+        handleNotAuthMsgAuthDisabled(msg, socket, auth, first, signalLink, reply);
+      }
+    }
+  }
 
+  void Server::handleAuthMsgAuthEnabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr auth,
+      boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink,
+      qi::Message& reply)
+  {
+    // the socket now contains the remote capabilities in socket->remoteCapabilities()
     AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
     CapabilityMap authData = cmref.to<CapabilityMap>();
     cmref.destroy();
+
     CapabilityMap authResult = auth->processAuth(authData);
-    unsigned int state = authResult[AuthProvider::State_Key].to<unsigned int>();
-    std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
-    reply.setFunction(function);
+    const unsigned int state = authResult[AuthProvider::State_Key].to<unsigned int>();
+
+    const std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
+    reply.setFunction(msg.action());
     switch (state)
     {
-    case AuthProvider::State_Done:
-      qiLogVerbose() << "Client " << socket->remoteEndpoint().value().str() << " successfully authenticated.";
-      socket->messageReady.disconnectAsync(*signalLink); // yet guarantees immediate disconnection // NDJ: verifier ca
-      connectMessageReady(socket);
-      // no break, we know that authentication is done, send the response to the remote end
-    case AuthProvider::State_Cont:
-      if (*first)
-      {
-        authResult.insert(socket->localCapabilities().begin(), socket->localCapabilities().end());
-        *first = false;
-      }
-      reply.setValue(authResult, cmsig);
-      reply.setType(Message::Type_Reply);
-      socket->send(reply);
-      break;
-    case AuthProvider::State_Error:
-    default:{
-      std::stringstream builder;
-      builder << "Authentication failed";
-      if (authResult.find(AuthProvider::Error_Reason_Key) != authResult.end())
-      {
-        builder << ": " << authResult[AuthProvider::Error_Reason_Key].to<std::string>();
-        builder << " [" << _authProviderFactory->authVersionMajor() << "." << _authProviderFactory->authVersionMinor() << "]";
-      }
-      reply.setType(Message::Type_Error);
-      reply.setError(builder.str());
-      qiLogVerbose() << builder.str();
-      socket->send(reply);
-      socket->disconnect().async();
-      }
+      case AuthProvider::State_Done:
+        qiLogVerbose() << "Client " << socket->remoteEndpoint().value().str() << " successfully authenticated.";
+        socket->messageReady.disconnectAsync(*signalLink); // yet guarantees immediate disconnection
+        connectMessageReady(socket);
+        // no break, we know that authentication is done, send the response to the remote end
+      case AuthProvider::State_Cont:
+        if (*first)
+        {
+          authResult.insert(socket->localCapabilities().begin(), socket->localCapabilities().end());
+          *first = false;
+        }
+        reply.setValue(authResult, cmsig);
+        reply.setType(Message::Type_Reply);
+        socket->send(reply);
+        break;
+      case AuthProvider::State_Error:
+      default:
+        {
+          std::stringstream builder;
+          builder << "Authentication failed";
+          if (authResult.find(AuthProvider::Error_Reason_Key) != authResult.end())
+          {
+            builder << ": " << authResult[AuthProvider::Error_Reason_Key].to<std::string>();
+            builder << " [" << _authProviderFactory->authVersionMajor() << "." << _authProviderFactory->authVersionMinor() << "]";
+          }
+          reply.setType(Message::Type_Error);
+          reply.setError(builder.str());
+          qiLogVerbose() << builder.str();
+          socket->send(reply);
+          socket->disconnect().async();
+        }
     }
-    qiLogVerbose() << "Auth ends";
   }
+
+  /* We handle the case when we receive an authentication message,but the server has disabled authentication.
+   * We just respond by doing as if the authentication had been successful.
+   */
+  void Server::handleAuthMsgAuthDisabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr auth,
+      boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink, qi::Message& reply)
+  {
+    socket->messageReady.disconnectAsync(*signalLink); // yet guarantees immediate disconnection
+    connectMessageReady(socket);
+    CapabilityMap authResult;
+    authResult[AuthProvider::State_Key] = AnyValue::from<unsigned int>(AuthProvider::State_Done);
+    if (*first)
+    {
+      authResult.insert(socket->localCapabilities().begin(), socket->localCapabilities().end());
+      *first = false;
+    }
+    std::string cmsig = typeOf<CapabilityMap>()->signature().toString();
+    reply.setValue(authResult, cmsig);
+    reply.setType(Message::Type_Reply);
+    reply.setFunction(msg.function());
+    socket->send(reply);
+  }
+
+  /* We handle the case when the message we receive is not an authentication message, yet the server enforces authentication.
+   * This is an error
+   */
+  void Server::handleNotAuthMsgAuthEnabled(const Message &msg, MessageSocketPtr socket, AuthProviderPtr auth,
+      boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink, qi::Message &reply)
+  {
+    socket->messageReady.disconnect(*signalLink);
+    std::stringstream err;
+
+    err << "Expected authentication (service #" << Message::Service_Server <<
+      ", type #" << Message::Type_Call <<
+      ", action #" << Message::ServerFunction_Authenticate <<
+      "), received service #" << msg.service() << ", type #" << msg.type() << ", action #" << msg.function();
+    reply.setType(Message::Type_Error);
+    reply.setError(err.str());
+    socket->send(reply);
+    socket->disconnect().async();
+    qiLogWarning() << err.str();
+  }
+
+  /* We handle the case when the message we receive is not an authentication message, and the server does not
+   * enforce authentication.
+   */
+  void Server::handleNotAuthMsgAuthDisabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr auth,
+      boost::shared_ptr<bool> first, boost::shared_ptr<qi::SignalLink> signalLink,
+      qi::Message& reply)
+  {
+    socket->messageReady.disconnect(*signalLink);
+    server_private::sendCapabilities(socket);
+
+    connectMessageReady(socket);
+    onMessageReady(msg, socket);
+  }
+
 
   void Server::onMessageReady(const qi::Message &msg, MessageSocketPtr socket) {
     qi::BoundAnyObject obj;
-    // qiLogDebug() << "Server Recv (" << msg.type() << "):" << msg.address();
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
       BoundAnyObjectMap::iterator it;
@@ -255,10 +309,10 @@ namespace qi {
         // remoteobject host, or to a remoteobject, using the same socket.
         qiLogVerbose() << "No service for " << msg.address();
         if (msg.object() > Message::GenericObject_Main
-          || msg.type() == Message::Type_Reply
-          || msg.type() == Message::Type_Event
-          || msg.type() == Message::Type_Error
-          || msg.type() == Message::Type_Canceled)
+            || msg.type() == Message::Type_Reply
+            || msg.type() == Message::Type_Event
+            || msg.type() == Message::Type_Error
+            || msg.type() == Message::Type_Canceled)
           return;
         // ... but only if the object id is >main
         qi::Message       retval(Message::Type_Error, msg.address());

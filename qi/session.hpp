@@ -195,7 +195,8 @@ QI_GEN(genCall)
 
   using SessionPtr = boost::shared_ptr<Session>;
 
-  inline SessionPtr makeSession() { return boost::make_shared<qi::Session>(); }
+  template <typename... Args>
+  SessionPtr makeSession(Args&&... args) { return boost::make_shared<qi::Session>(std::forward<Args>(args)...); }
 }
 
 QI_TYPE_ENUM(qi::Session::ServiceLocality);

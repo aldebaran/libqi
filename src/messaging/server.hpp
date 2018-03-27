@@ -54,6 +54,18 @@ namespace qi {
     void onMessageReady(const qi::Message &msg, MessageSocketPtr socket);
     void onMessageReadyNotAuthenticated(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
                                         boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink);
+    void handleNotAuthMsgAuthEnabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
+                                     boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink,
+                                     qi::Message& reply);
+    void handleNotAuthMsgAuthDisabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
+                                      boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink,
+                                      qi::Message& reply);
+    void handleAuthMsgAuthEnabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
+                                  boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink,
+                                  qi::Message& reply);
+    void handleAuthMsgAuthDisabled(const qi::Message& msg, MessageSocketPtr socket, AuthProviderPtr authProvider,
+                                   boost::shared_ptr<bool> first, boost::shared_ptr<SignalLink> signalLink,
+                                   qi::Message& reply);
 
   private:
     //bool: true if it's a socketobject

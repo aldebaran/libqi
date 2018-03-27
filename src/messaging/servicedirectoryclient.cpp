@@ -229,7 +229,9 @@ namespace qi {
     {
       CapabilityMap tmp = authenticator->initialAuthData();
       for (CapabilityMap::iterator it = tmp.begin(), end = tmp.end(); it != end; ++it)
+      {
         authCaps[AuthProvider::UserAuthPrefix + it->first] = it->second;
+      }
     }
 
     _sdSocketSocketEventSignalLink = socket->socketEvent.connect(track(
