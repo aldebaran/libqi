@@ -60,8 +60,16 @@ public:
 
   StrandPrivate(qi::ExecutionContext& eventLoop);
 
+  // Schedules the callback for execution. If the trigger date `tp` is in the past, executes the
+  // callback immediately in the calling thread.
   Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+
+  // Schedules the callback for execution. If delay is 0, executes the callback immediately in the
+  // calling thread.
   Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+
+  // Schedules the callback for deferred execution and returns immediately.
+  Future<void> deferImpl(boost::function<void()> cb, qi::Duration delay);
 
   boost::shared_ptr<Callback> createCallback(boost::function<void()> cb);
   void enqueue(boost::shared_ptr<Callback> cbStruct);
@@ -169,6 +177,13 @@ public:
                                                               _p,
                                                               std::move(onFail));
   }
+
+  /**
+   * Defers a function for execution in the strand thus without allowing the strand to call it from
+   * inside this function. It implies that this function always returns immediately.
+   * @returns A future that is set once the function argument is executed
+   */
+  Future<void> defer(const boost::function<void()>& cb);
 
 private:
   boost::shared_ptr<StrandPrivate> _p;

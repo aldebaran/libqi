@@ -448,3 +448,17 @@ TEST(TestStrand, CallStrandAsyncFromStrandContextExecutesImmediately)
   ASSERT_TRUE(test::finishesWithValue(f));
   ASSERT_TRUE(f.value());
 }
+
+TEST(TestStrand, CallScheduleFromStrandContextDoesNotExecuteImmediately)
+{
+  qi::Strand strand;
+  std::vector<int> values;
+  strand.async([&]{
+    auto f = strand.defer([&]{ values.push_back(1); });
+    values.push_back(0);
+    return f;
+  }).unwrap().value();
+
+  const std::vector<int> expected{0, 1};
+  ASSERT_EQ(expected, values);
+}
