@@ -20,7 +20,8 @@ private:
 
 public:
   using IdValidationStatus = ServiceDirectoryProxy::IdValidationStatus;
-  using ListeningStatus = ServiceDirectoryProxy::ListeningStatus;
+  using ListenStatus = ServiceDirectoryProxy::ListenStatus;
+  using Status = ServiceDirectoryProxy::Status;
 
   /**
    * @param enforceAuth If set to true, reject clients that try to skip the authentication step. If
@@ -30,14 +31,17 @@ public:
 
   ~Gateway();
 
+  QI_API_DEPRECATED_MSG("Use `statusChanged` instead.")
   Property<bool>& connected;
+
+  Property<Status>& status;
 
   UrlVector endpoints() const;
 
   QI_API_DEPRECATED_MSG("Use listenAsync() instead.")
   bool listen(const Url& url);
 
-  Future<ListeningStatus> listenAsync(const Url& url);
+  Future<ListenStatus> listenAsync(const Url& url);
 
   QI_API_DEPRECATED_MSG("Use setValidateIdentity() instead.")
   bool setIdentity(const std::string& key, const std::string& crt);

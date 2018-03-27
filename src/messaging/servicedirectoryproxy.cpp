@@ -86,6 +86,11 @@ AuthProviderFactoryPtr placeholderIfNull(AuthProviderFactoryPtr factory)
   return factory;
 }
 
+static const ServiceDirectoryProxy::Status totallyDisconnected{
+  ServiceDirectoryProxy::ConnectionStatus::NotConnected,
+  ServiceDirectoryProxy::ListenStatus::NotListening
+};
+
 }
 
 class ServiceDirectoryProxy::Impl
@@ -98,11 +103,12 @@ public:
   ~Impl();
 
   Property<bool> connected;
-  Property<bool> listening;
+
+  Property<Status> status;
 
   Future<void> close();
   Future<UrlVector> endpoints() const;
-  Future<ListeningStatus> listenAsync(const Url& url);
+  Future<ListenStatus> listenAsync(const Url& url);
   Future<IdValidationStatus> setValidateIdentity(const std::string& key, const std::string& crt);
   Future<void> setAuthProviderFactory(AuthProviderFactoryPtr provider);
   Future<void> attachToServiceDirectory(const Url& sdUrl);
@@ -126,10 +132,46 @@ private:
     std::string crt;
   };
 
+  // Owns the current status value and dispatch the value through the associated property when changed.
+  // This is to help maintenance (makes impossible to change the value without setting the property).
+  // TODO: Will be replaced by direct usage of the property once we can make
+  // the property use the same strand as the one used here
+  // (to avoid some issues with concurrency and thread abuse).
+  class StatusKeeper
+  {
+    Status _currentStatus;
+    Property<Status>& _publisher;
+  public:
+    StatusKeeper(Status initialStatus, Property<Status>& publisher)
+      : _currentStatus(initialStatus)
+      , _publisher(publisher)
+    {}
+
+    void set(const Status& newStatus)
+    {
+      _currentStatus = newStatus;
+      _publisher.set(_currentStatus).async();
+    }
+
+    void set(ConnectionStatus newValue)
+    {
+      set({newValue, _currentStatus.listen});
+    }
+
+    void set(ListenStatus newValue)
+    {
+      set({ _currentStatus.connection, newValue });
+    }
+
+    const Status& current() const { return _currentStatus; }
+
+  } _status{totallyDisconnected, status};
+
   std::unique_ptr<Session> _server; // ptr because we have to recreate it every time we listen
   std::map<std::string, unsigned int> _serviceIndexes;
   std::unique_ptr<Session> _sdClient;
   Url _listenUrl;
+  Url _sdUrl;
   boost::optional<Identity> _identity;
   AuthProviderFactoryPtr _authProviderFactory;
   bool _isEnforcedAuth;
@@ -143,6 +185,7 @@ const Seconds ServiceDirectoryProxy::Impl::initRetryDelay { 1 };
 ServiceDirectoryProxy::ServiceDirectoryProxy(bool enforceAuth)
   : _p(new Impl(enforceAuth))
   , connected(_p->connected)
+  , status(_p->status)
 {
 }
 
@@ -164,7 +207,7 @@ UrlVector ServiceDirectoryProxy::endpoints() const
   return _p->endpoints().value();
 }
 
-Future<ServiceDirectoryProxy::ListeningStatus> ServiceDirectoryProxy::listenAsync(const Url& url)
+Future<ServiceDirectoryProxy::ListenStatus> ServiceDirectoryProxy::listenAsync(const Url& url)
 {
   return _p->listenAsync(url);
 }
@@ -187,26 +230,26 @@ qi::Future<void> ServiceDirectoryProxy::attachToServiceDirectory(const Url& serv
 }
 
 ServiceDirectoryProxy::Impl::Impl(bool enforceAuth)
-  : connected{ false, Property<bool>::Getter{}, Property<bool>::Setter{} }
-  , listening{ false, Property<bool>::Getter{}, Property<bool>::Setter{} }
+  : connected{ false, Property<bool>::Getter{}, util::SetAndNotifyIfChanged{}}
+  , status{ totallyDisconnected, Property<Status>::Getter{}, util::SetAndNotifyIfChanged{}}
   ,_isEnforcedAuth(enforceAuth)
   , _serviceFilter{ PolymorphicConstantFunction<bool>{ false } }
 {
-  const auto mirrorAllIfBoth = [=](bool connected, bool listening){
-    if (connected && listening)
-      mirrorAllServices();
-  };
+  status.connect(_strand.schedulerFor([this](const Status& newStatus) {
+    connected.set(newStatus.isConnected()).async();
 
-  connected.connect(_strand.schedulerFor([=](bool connected) {
-    mirrorAllIfBoth(connected, listening.get().value());
+    if (newStatus.isReady())
+      mirrorAllServices();
 
     // Because we close the server if we get disconnected from the SD, automatically restart
     // the server if _listenUrl is valid when we reconnect
-    if (connected && _listenUrl.isValid())
+    if (newStatus.isConnected()
+      && newStatus.listen == ListenStatus::NotListening
+      && _listenUrl.isValid())
+    {
       listenAsync(_listenUrl);
-  }));
-  listening.connect(_strand.schedulerFor([=](bool listening){
-    mirrorAllIfBoth(connected.get().value(), listening);
+    }
+
   }));
 }
 
@@ -234,6 +277,7 @@ ServiceDirectoryProxy::Impl::~Impl()
   }
 }
 
+
 Seconds ServiceDirectoryProxy::Impl::maxRetryDelay()
 {
   static const Seconds val = boost::chrono::duration_cast<Seconds>(
@@ -248,8 +292,7 @@ void ServiceDirectoryProxy::Impl::closeUnsync()
   {
     auto sdClient = std::move_if_noexcept(_sdClient); // will be destroyed at end of scope
     auto server = std::move_if_noexcept(_server);     // idem
-    connected = false;
-    listening = false;
+    _status.set(totallyDisconnected);
     _serviceIndexes.clear();
   }
   catch (const std::exception& ex)
@@ -281,17 +324,25 @@ Future<UrlVector> ServiceDirectoryProxy::Impl::endpoints() const
   return _strand.async([&] { return _server ? _server->endpoints() : UrlVector{}; });
 }
 
-Future<ServiceDirectoryProxy::ListeningStatus> ServiceDirectoryProxy::Impl::listenAsync(
+Future<ServiceDirectoryProxy::ListenStatus> ServiceDirectoryProxy::Impl::listenAsync(
     const Url& url)
 {
   return _strand.async([=] {
+
+        if (_status.current().listen != ListenStatus::NotListening
+        && _listenUrl == url )
+        {
+          return futurize(_status.current().listen);
+        }
+
         _listenUrl = url;
 
-        if (!connected)
+        if (!_status.current().isConnected())
         {
           qiLogVerbose() << "ServiceDirectoryProxy is not connected to the service directory, it "
                             "will start listening once the connection is established";
-          return futurize(ListeningStatus::PendingOnConnection);
+          _status.set(ListenStatus::PendingConnection);
+          return futurize(_status.current().listen);
         }
 
         static const auto errorMsgPrefix =
@@ -299,19 +350,20 @@ Future<ServiceDirectoryProxy::ListeningStatus> ServiceDirectoryProxy::Impl::list
         try
         {
           qiLogVerbose() << "Instanciating server";
-          listening = false;
+          _status.set(ListenStatus::NotListening);
           _serviceIndexes.clear();
           _server = createServerUnsync();
+          _status.set(ListenStatus::Starting);
         }
         catch (const std::exception& ex)
         {
-          return logThenReturnFutureError<ListeningStatus>(LogLevel_Error, [&](std::ostream& os) {
+          return logThenReturnFutureError<ListenStatus>(LogLevel_Error, [&](std::ostream& os) {
             os << errorMsgPrefix << "standard exception '" << ex.what() << "'";
           });
         }
         catch (const boost::exception& ex)
         {
-          return logThenReturnFutureError<ListeningStatus>(LogLevel_Error, [&](std::ostream& os) {
+          return logThenReturnFutureError<ListenStatus>(LogLevel_Error, [&](std::ostream& os) {
             os << errorMsgPrefix << "boost exception '" << boost::diagnostic_information(ex) << "'";
           });
         }
@@ -321,14 +373,15 @@ Future<ServiceDirectoryProxy::ListeningStatus> ServiceDirectoryProxy::Impl::list
             .then(_strand.unwrappedSchedulerFor([=](Future<void> listenFut) {
               if (listenFut.hasError())
               {
-                return logThenReturnFutureError<ListeningStatus>(
+                _status.set(ListenStatus::NotListening);
+                return logThenReturnFutureError<ListenStatus>(
                     LogLevel_Error, [&](std::ostream& os) {
                       os << "Error while trying to listen at '" << url.str()
                          << "': " << listenFut.error();
                     });
               }
-              listening = true;
-              return futurize(ListeningStatus::Done);
+              _status.set(ListenStatus::Listening);
+              return futurize(_status.current().listen);
             })).unwrap();
       }).unwrap();
 }
@@ -366,20 +419,39 @@ Future<void> ServiceDirectoryProxy::Impl::attachToServiceDirectory(const Url& sd
 {
   if (!sdUrl.isValid()) return makeFutureError<void>("Invalid service directory URL");
   return _strand.async([=] {
-        qiLogDebug() << "Instanciating new service directory client session";
-        connected = false;
-        _sdClient.reset(new Session);
+    if (_status.current().connection != ConnectionStatus::NotConnected
+    && _sdClient && sdUrl == _sdUrl)
+    {
+      return futurize();
+    }
 
-        qiLogInfo() << "Attaching to service directory at URL '" << sdUrl.str() << "'";
-        return _sdClient->connect(sdUrl).async()
-            .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
-              if (connectFut.hasError())
-                return delayRetryAttach(sdUrl); // try again
-              connected = true;
-              bindToServiceDirectoryUnsync(sdUrl);
-              return futurize();
-            })).unwrap();
-      }).unwrap();
+    _sdUrl = sdUrl;
+    _status.set(ConnectionStatus::NotConnected);
+
+    qiLogDebug() << "Instanciating new service directory client session";
+    _sdClient.reset(new Session);
+    _status.set(ConnectionStatus::Starting);
+
+    qiLogInfo() << "Attaching to service directory at URL '" << sdUrl.str() << "'";
+    return _sdClient->connect(sdUrl).async()
+        .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
+          if (connectFut.hasError())
+          {
+            return delayRetryAttach(sdUrl) // try again
+              .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
+                if (connectFut.hasError())
+                  _status.set(ConnectionStatus::NotConnected);
+                return connectFut;
+              })).unwrap();
+          }
+          else
+          {
+            _status.set(ConnectionStatus::Connected);
+            bindToServiceDirectoryUnsync(sdUrl);
+            return futurize();
+          }
+        })).unwrap();
+  }).unwrap();
 }
 
 Future<ServiceDirectoryProxy::ServiceFilter> ServiceDirectoryProxy::Impl::setServiceFilter(
@@ -420,10 +492,13 @@ MirroringResult::Status ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
     return MirroringResult::Status::Skipped;
   }
 
-  if (!listening)
+  if (!_status.current().isListening())
     return MirroringResult::Status::Failed_NotListening;
-  if (!_sdClient)
+  QI_ASSERT_TRUE(_server);
+
+  if (!_status.current().isConnected())
     return MirroringResult::Status::Failed_NoSdConnection;
+  QI_ASSERT_TRUE(_sdClient);
 
   AnyObject service;
   try
@@ -466,8 +541,9 @@ MirroringResult::Status ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
 
 void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
 {
-  if (!_sdClient || !connected)
+  if (!_status.current().isConnected())
     throw std::runtime_error("Not connected to service directory");
+  QI_ASSERT_TRUE(_sdClient);
 
   qiLogInfo() << "Binding to service directory at url '" << url.str() << "'";
 

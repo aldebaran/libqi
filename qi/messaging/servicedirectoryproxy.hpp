@@ -37,14 +37,40 @@ public:
     PendingCheckOnListen, ///< The provided identity is stored and will be validated on next listen.
   };
 
-  enum class ListeningStatus
+  enum class ListenStatus
   {
-    Done,                ///< The proxy successfully started listening
-    PendingOnConnection, ///< The proxy is waiting for a connection to a service directory to
-                         ///  start listening
+    NotListening,        ///< The proxy is not set to listen.
+    Listening,           ///< The proxy is successfully listening.
+    Starting,            ///< The proxy started setup for listening.
+    PendingConnection,   ///< The proxy is waiting for a connection to a service directory to
+                         ///  start listening.
+  };
+
+  enum class ConnectionStatus
+  {
+    NotConnected,       ///< The proxy is not set to connect to the service directory.
+    Connected,          ///< The proxy is connected to the service directory.
+    Starting,           ///< The proxy started connection to the service directory.
   };
 
   using ServiceFilter = std::function<bool(boost::string_ref)>;
+
+  struct Status
+  {
+    bool isReady() const
+    {
+      return connection == ConnectionStatus::Connected
+          && listen == ListenStatus::Listening;
+    }
+
+    bool isConnected() const { return connection == ConnectionStatus::Connected; }
+    bool isListening() const { return listen == ListenStatus::Listening; }
+
+    ConnectionStatus connection;
+    ListenStatus listen;
+    QI_GENERATE_FRIEND_REGULAR_OPS_2(Status, connection, listen);
+  };
+
 
   /**
    * @param enforceAuth If set to true, rejects clients that try to skip the authentication step. If
@@ -53,11 +79,14 @@ public:
   ServiceDirectoryProxy(bool enforceAuth = true);
   ~ServiceDirectoryProxy();
 
+  QI_API_DEPRECATED_MSG("Use `statusChanged` instead.")
   Property<bool>& connected;
+
+  Property<Status>& status;
 
   UrlVector endpoints() const;
 
-  Future<ListeningStatus> listenAsync(const Url& url);
+  Future<ListenStatus> listenAsync(const Url& url);
 
   Future<IdValidationStatus> setValidateIdentity(const std::string& key, const std::string& crt);
 

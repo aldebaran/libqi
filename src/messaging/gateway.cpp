@@ -11,6 +11,7 @@ namespace qi
 Gateway::Gateway(bool enforceAuth)
   : _proxy{ enforceAuth }
   , connected(_proxy.connected)
+  , status(_proxy.status)
 {
 }
 
@@ -24,10 +25,10 @@ UrlVector Gateway::endpoints() const
 bool Gateway::listen(const Url& url)
 {
   auto fut = listenAsync(url);
-  return fut.wait() == FutureState_FinishedWithValue && fut.value() == ListeningStatus::Done;
+  return fut.wait() == FutureState_FinishedWithValue && fut.value() == ListenStatus::Listening;
 }
 
-Future<Gateway::ListeningStatus> Gateway::listenAsync(const Url& url)
+Future<Gateway::ListenStatus> Gateway::listenAsync(const Url& url)
 {
   return _proxy.listenAsync(url);
 }

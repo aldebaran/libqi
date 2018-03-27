@@ -34,6 +34,25 @@ namespace qi
     virtual FutureSync<AnyValue> value() const = 0;
   };
 
+  namespace util
+  {
+    // Used as a qi::Property::Setter to only store and dispatch a value if it was changed.
+    struct SetAndNotifyIfChanged
+    {
+      template<class T>
+      bool operator()(boost::reference_wrapper<T> ref_to_current_value, const T& newValue) const {
+        T& currentValue = ref_to_current_value;
+        if (currentValue != newValue)
+        {
+          currentValue = newValue;
+          return true;
+        }
+        return false;
+      }
+    };
+
+  }
+
   template<typename T>
   class PropertyImpl: public SignalF<void(const T&)>, public PropertyBase
   {
@@ -47,12 +66,12 @@ namespace qi
     using PropertyType = T;
 
     /**
-     * @param getter value getter, default to reading _value
-     * @param setter value setter, what it returns will be written to
-     *        _value. If it returns false, update operation will
-     *        be silently aborted (subscribers will not be called)
+     * @param getter value getter, default to reading _value.
+     * @param setter value setter.
+              If it returns false, update operation will
+     *        be silently aborted (subscribers will not be called).
      * @param onsubscribe callback to call when subscribers connect or
-     *        disconnect from the property
+     *        disconnect from the property.
     */
     PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
