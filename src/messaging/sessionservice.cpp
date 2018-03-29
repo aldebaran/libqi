@@ -303,7 +303,6 @@ namespace qi {
     // We forge a message that just shows we've authenticated successfully.
     if (socket->hasReceivedRemoteCapabilities())
     {
-      qiLogInfo() << "SessionService Remote Capabilities";
       try
       {
         Message dummy;
