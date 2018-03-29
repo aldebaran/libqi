@@ -507,10 +507,7 @@ namespace qi {
     return _p->disconnect(link);
   }
 
-  SignalBase::~SignalBase()
-  {
-    QI_ASSERT_TRUE(_p.unique());
-  }
+  SignalBase::~SignalBase() = default;
 
   std::vector<SignalSubscriber> SignalBase::subscribers()
   {
