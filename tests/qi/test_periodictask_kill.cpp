@@ -54,9 +54,12 @@ int main(int argc, char** argv)
   // the whole application (including the thread-pool) is destroyed.
   // PeriodicTask should never block on destruction even in this situation.
   qi::Object<TestPeriodicTaskKillService> service;
+  qi::Promise<void> promiseReady;
+  auto ftReady = promiseReady.future();
 
-  std::thread killer{ [] {
+  std::thread killer{ [=] {
       // We send a terminate request to this process to see if it's blocking on destruction.
+      ftReady.wait();
       std::this_thread::sleep_for(std::chrono::seconds(3));
       raiseTerminateSignal();
   }};
@@ -68,7 +71,7 @@ int main(int argc, char** argv)
     auto session = app.session();
     service = new TestPeriodicTaskKillService{ session };
     session->registerService("TestPeriodicTaskKillService", service);
-
+    promiseReady.setValue(nullptr);
     app.run();
   }
 
