@@ -8,7 +8,7 @@
 #define _QITYPE_TRACEANALYZER_HPP_
 
 #include <boost/utility.hpp>
-
+#include <memory>
 #include <qi/type/detail/manageable.hpp>
 
 
@@ -40,7 +40,7 @@ namespace qi
     void dumpTraces(std::ostream& o);
     std::string dumpTraces();
   protected:
-    TraceAnalyzerImpl* _p;
+    std::unique_ptr<TraceAnalyzerImpl> _p;
   };
 }
 

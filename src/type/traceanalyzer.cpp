@@ -27,15 +27,15 @@ namespace qi
     qi::int64_t tPost; // time at which call was posted() from parent
     qi::int64_t tStart;
     qi::int64_t tEnd; // 0 means not ended yet
-    CallData* parent;
-    CallData* asyncParent;
-    std::list<CallData*> children; // child sync call sequences
-    std::vector<CallData*> asyncChildren; // unordered
+    std::weak_ptr<CallData> parent;
+    std::weak_ptr<CallData> asyncParent;
+    std::list<std::shared_ptr<CallData>> children; // child sync call sequences
+    std::vector<std::shared_ptr<CallData>> asyncChildren; // unordered
   };
 
-  using CallList = std::list<CallData*>;
-  using PerContext = boost::unordered_map<unsigned int, std::list<CallData*>>;
-  using PerId = boost::unordered_map<unsigned int, CallData*>;
+  using CallList = std::list<std::shared_ptr<CallData>>;
+  using PerContext = boost::unordered_map<unsigned int, std::list<std::shared_ptr<CallData>>>;
+  using PerId = boost::unordered_map<unsigned int, std::shared_ptr<CallData>>;
   using TraceBuffer = boost::unordered_map<unsigned int, qi::EventTrace>;
 
   class TraceAnalyzerImpl
@@ -46,75 +46,47 @@ namespace qi
     TraceBuffer traceBuffer;
   };
 
-  // Helpers for std algorithm on struct fields
-  struct CompUid
+  struct CompareCallTime
   {
-    CompUid() : v(0) {};
-    CompUid(unsigned int v) : v(v) {}
-    bool operator()(CallData* d)
-    {
-      return d->uid == v;
-    }
-    bool operator()(CallData * d, unsigned int uid)
-    {
-      return d->uid < uid;
-    }
-    unsigned int v;
-  };
-  struct CompEndTime
-  {
-    bool operator()(qi::int64_t t, CallData* d)
-    {
-      return t < d->tEnd;
-    }
-  };
-
-  struct CallTime
-  {
-    CallTime(CallData * d) : t(d->tStart) {}
-    CallTime(qi::int64_t t) : t(t) {}
+    CompareCallTime(CallData& d) : t(d.tStart) {}
+    CompareCallTime(qi::int64_t t) : t(t) {}
     qi::int64_t t;
-  };
 
-  inline bool operator <(const CallTime& ct, CallData* cd)
-  {
-    return ct.t < cd->tStart;
-  }
+    friend bool operator<(const CompareCallTime& ct, std::shared_ptr<CallData> cd)
+    {
+      QI_ASSERT_TRUE(cd);
+      return ct.t < cd->tStart;
+    }
+
+    friend bool operator<(std::shared_ptr<CallData> cd, const CompareCallTime& ct)
+    {
+      QI_ASSERT_TRUE(cd);
+      return cd->tStart < ct.t;
+    }
+  };
 
   inline qi::int64_t fromTV(const qi::os::timeval &tv)
   {
     return tv.tv_sec*1000000LL + tv.tv_usec;
   }
 
-  // container helpers
-  // delete container of pointers, swapping them out first
-  template<typename T> void delete_content(T& v)
-  {
-    T copy;
-    std::swap(copy, v);
-    for (typename T::iterator it = copy.begin(), iend = copy.end(); it != iend; ++it)
-      delete *it;
-  }
-
-  // delete range
-  template<typename T> void delete_range(T& v, typename T::iterator start, typename T::iterator end)
-  {
-    T copy;
-    copy.splice(copy.begin(), v, start, end);
-    for (typename T::iterator it = copy.begin(), iend = copy.end(); it != iend; ++it)
-      delete *it;
-  }
-
   CallData::~CallData()
   {
     // unhook from parent
-    if (parent)
-      parent->children.remove(this); // might do nothing if we are in parent dtor
-    // delete sync children
-    delete_content(this->children);
+    if (auto lockedParent = parent.lock())
+    {
+      lockedParent->children.remove_if([=](const std::shared_ptr<CallData>& child){
+        return child.get() == this;
+      }); // might do nothing if we are in parent dtor
+    }
+
+    // clear sync children
+    children.clear();
+
     // disconnect async children
-    for (unsigned i=0; i<asyncChildren.size(); ++i)
-      asyncChildren[i]->asyncParent = 0;
+    for (auto asyncChild : asyncChildren)
+      if (asyncChild)
+        asyncChild->asyncParent.reset();
   }
 
   TraceAnalyzer::TraceAnalyzer()
@@ -134,8 +106,6 @@ namespace qi
     , tPost(fromTV(et.postTimestamp()))
     , tStart(fromTV(et.timestamp()))
     , tEnd(0)
-    , parent(0)
-    , asyncParent(0)
     {}
 
   void CallData::complete(const EventTrace& et)
@@ -156,12 +126,17 @@ namespace qi
   *
   * Assumes end event is reached after start event for same id
   */
-  static void insertTrace(CallList& l, CallData* d, CallData* parent = 0)
+  static void insertTrace(CallList& l,
+                          const std::shared_ptr<CallData>& d,
+                          const std::weak_ptr<CallData>& parent = {})
   {
     qiLogDebug() << "insertTrace " << d->uid;
+
     // Get first entry that started after us.
-    CallList::iterator it = std::upper_bound(l.begin(), l.end(), CallTime(d));
-    qiLogDebug() << "upperBoud " << ((it == l.end())? -1 : (int)(*it)->uid) << ' ' << (it == l.begin());
+    const auto it = std::upper_bound(l.begin(), l.end(), CompareCallTime(*d));
+    qiLogDebug() << "upperBoud " << ((it == l.end()) ? -1 : static_cast<int>((*it)->uid)) << ' '
+                 << (it == l.begin());
+
     if (it == l.begin())
     { // We are first
       l.insert(it, d);
@@ -170,18 +145,18 @@ namespace qi
     else
     {
       // try to steal async children from entry above us
-      CallList::iterator iprev = it;
+      auto iprev = it;
       --iprev;
-      CallData* prev = *iprev;
-      for (unsigned i=0; i<prev->asyncChildren.size(); ++i)
+      const auto prev = *iprev;
+      for (auto& asyncChild : prev->asyncChildren)
       {
-        CallData* child = prev->asyncChildren[i];
-        if (child->tPost > d->tStart)
+        auto asyncChildCpy = asyncChild;
+        if (asyncChildCpy->tPost > d->tStart)
         { // This child was misplaced and is ours
-          d->asyncChildren.push_back(child);
-          prev->asyncChildren[i] = prev->asyncChildren.back();
+          d->asyncChildren.push_back(asyncChildCpy);
+          asyncChild = prev->asyncChildren.back();
           prev->asyncChildren.pop_back();
-          child->asyncParent = d;
+          asyncChildCpy->asyncParent = d;
         }
       }
       // Check if we are child of it
@@ -203,7 +178,7 @@ namespace qi
   }
 
   // Find out our async parent and add to it
-  static bool insertAsyncParentTrace(CallList& l, CallData* d)
+  static bool insertAsyncParentTrace(CallList& l, const std::shared_ptr<CallData>& d)
   {
     if (l.empty())
     {
@@ -212,7 +187,7 @@ namespace qi
     }
     qiLogDebug() << l.front()->tStart;
     // Get first entry that started after our post time.
-    CallList::iterator it = std::upper_bound(l.begin(), l.end(), CallTime(d->tPost));
+    auto it = std::upper_bound(l.begin(), l.end(), CompareCallTime(d->tPost));
     if (it == l.begin())
     { // damm, first element is older than us
       qiLogInfo() << "No async parent can be found";
@@ -234,20 +209,21 @@ namespace qi
   // handle a new EventTrace
   void TraceAnalyzer::addTrace(const qi::EventTrace& trace, unsigned int obj)
   {
-    qiLogDebug() << "addTrace " << trace.id() << " " << trace.callerContext() << ' ' << trace.calleeContext() << ' ' << trace.kind();
+    qiLogDebug() << "addTrace " << trace.id() << " " << trace.callerContext() << ' '
+                 << trace.calleeContext() << ' ' << trace.kind();
     /* a trace-end event without the start available goes in
      * traceBuffer and that's it.
      * trace-end event with start available completes the entry
      * trace-start event gets inserted in the graph, and in the
      * per-uid perId map, so that future trace-end message can find it quickly
     */
-    CallData* d = nullptr;
+    std::shared_ptr<CallData> d;
     CallList& lc = _p->perContext[trace.calleeContext()];
     EventTrace::EventKind k = trace.kind();
     if (k == EventTrace::Event_Call || k == EventTrace::Event_Signal)
     { // New element, insert in toplevel timeline or in trace children
       // Taking care of stealing async children if they were misplaced
-      d = new CallData(obj, trace);
+      d = std::make_shared<CallData>(obj, trace);
       insertTrace(lc, d);
       // check if we have an async parent
       if (d->tPost)
@@ -285,8 +261,14 @@ namespace qi
       _p->perId.erase(trace.id());
     }
     // look for the list that should contain us
-    CallList& container = d->parent?d->parent->children:lc;
-    CallList::iterator it = std::find_if(container.begin(), container.end(), CompUid(trace.id()));
+    CallList& container = [&]() -> CallList& {
+      if (auto parentLock = d->parent.lock())
+        return parentLock->children;
+      return lc;
+    }();
+    const auto it =
+        std::find_if(container.begin(), container.end(),
+                     [&](const std::shared_ptr<CallData>& d) { return d && d->uid == trace.id(); });
     if (it == container.end())
     {
       qiLogInfo() << "Message not where it should be";
@@ -295,22 +277,21 @@ namespace qi
 
     // now that we know when we stopped, eat-up children
     // well, that sentence did not came out as I expected
-    CallList::iterator inext = it;
+    auto inext = it;
     ++inext;
-    CallList::iterator iend = inext;
+    auto iend = inext;
     while (iend != container.end() && (*iend)->tEnd && (*iend)->tEnd < (*it)->tEnd)
       ++iend;
-    //CallList::iterator iend = std::upper_bound(inext, container.end(), (*it)->tEnd, CompEndTime());
     if (iend != inext)
       qiLogDebug() << "Splicing at least " << (*inext)->uid << ' ' << (*it)->tEnd << ' ' << (*inext)->tEnd;
     (*it)->children.splice((*it)->children.begin(), container, inext, iend);
-    for (CallList::iterator ic = (*it)->children.begin(); ic != (*it)->children.end(); ++ic)
-      (*ic)->parent = *it;
+    for (auto& child : (*it)->children)
+      child->parent = *it;
 
     // and also check if we are child of the element above
     if ((*it)->tEnd && it != container.begin())
     {
-      CallList::iterator prev = it;
+      auto prev = it;
       --prev;
       if ((*prev)->tEnd && (*prev)->tEnd > (*it)->tEnd)
       {
@@ -325,9 +306,6 @@ namespace qi
 
   void TraceAnalyzer::clear()
   {
-    for (PerContext::iterator it = _p->perContext.begin(), iend = _p->perContext.end();
-      it != iend; ++it)
-      delete_content(it->second);
     _p->perContext.clear();
     _p->perId.clear();
   }
@@ -338,28 +316,26 @@ namespace qi
   void TraceAnalyzer::clear(const qi::os::timeval& tv)
   {
     qi::int64_t limit = fromTV(tv);
-    for (PerContext::iterator it = _p->perContext.begin(), iend = _p->perContext.end();
-      it != iend; ++it)
+    for (auto& perContextPair : _p->perContext)
     {
-      CallList& l = it->second;
-      CallList::iterator it2 = std::upper_bound(l.begin(), l.end(), CallTime(limit));
-      delete_range(l, l.begin(), it2);
+      CallList& l = perContextPair.second;
+      l.erase(l.begin(), std::upper_bound(l.begin(), l.end(), CompareCallTime(limit)));
     }
   }
 
   // cheap-o-tronic flow detection
 
   using FlowLink = TraceAnalyzer::FlowLink;
-  void trackLink(std::set<FlowLink>& links, const CallData* d)
+  void trackLink(std::set<FlowLink>& links, const std::shared_ptr<const CallData>& d)
   {
-    for (CallList::const_iterator it = d->children.begin(), iend = d->children.end(); it != iend; ++it)
+    for (const auto& child : d->children)
     {
-      links.insert(FlowLink(d->obj, d->fun, (*it)->obj, (*it)->fun, true));
-      trackLink(links, *it);
+      links.insert(FlowLink(d->obj, d->fun, child->obj, child->fun, true));
+      trackLink(links, child);
     }
-    for (std::vector<CallData*>::const_iterator it = d->asyncChildren.begin(), iend = d->asyncChildren.end(); it != iend; ++it)
+    for (const auto& asyncChild : d->asyncChildren)
     {
-      links.insert(FlowLink(d->obj, d->fun, (*it)->obj, (*it)->fun, false));
+      links.insert(FlowLink(d->obj, d->fun, asyncChild->obj, asyncChild->fun, false));
       // no need to recurse on async children
     }
   }
@@ -368,32 +344,32 @@ namespace qi
   {
     qiLogDebug() << "analyze";
     // First update missing async-parent data, due to unlucky event ordering
-    for (PerContext::const_iterator it = _p->perContext.begin(), iend = _p->perContext.end();
-      it != iend; ++it)
+    for (const auto& perContextPair : _p->perContext)
     {
-      for (CallList::const_iterator it2 = it->second.begin(), iend2 = it->second.end(); it2 != iend2; ++it2)
+      const auto& dataList = perContextPair.second;
+      for (const auto& data : dataList)
       {
         // no need to recurse, you can't have both a sync and an async parent
-        if (!(*it2)->asyncParent && (*it2)->tPost)
+        if (data->asyncParent.expired() && data->tPost)
         {
-          qiLogDebug() << "searching async parent " << (*it2)->uid;
-          insertAsyncParentTrace(_p->perContext[(*it2)->callerCtx], *it2);
+          qiLogDebug() << "searching async parent " << data->uid;
+          insertAsyncParentTrace(_p->perContext[data->callerCtx], data);
         }
       }
     }
-    for (PerContext::iterator it = _p->perContext.begin(), iend = _p->perContext.end();
-      it != iend; ++it)
+    for (const auto& perContextPair : _p->perContext)
     {
-      for (CallList::iterator it2= it->second.begin(), it2end = it->second.end(); it2!=it2end; ++it2)
-        trackLink(links, *it2);
+      const auto& dataList = perContextPair.second;
+      for (const auto& data : dataList)
+        trackLink(links, data);
     }
   }
 
   static void dumpTraces(std::ostream& o, const CallList& l, unsigned indent)
   {
-    for (CallList::const_iterator it = l.begin(), iend = l.end(); it!=iend; ++it)
+    for (const auto& call : l)
     {
-      const CallData &cd = **it;
+      const CallData &cd = *call;
       o << ' ' << cd.uid << ':' << cd.obj << '.' << cd.fun;
       if (cd.children.size())
       {
@@ -405,9 +381,9 @@ namespace qi
       {
         o << '{';
         // just ref async children
-        for (unsigned i=0; i<cd.asyncChildren.size(); ++i)
+        for (auto& asyncChild : cd.asyncChildren)
         {
-          o << cd.asyncChildren[i]->uid << ',';
+          o << asyncChild->uid << ',';
         }
         o << '}';
       }
@@ -416,11 +392,10 @@ namespace qi
 
   void TraceAnalyzer::dumpTraces(std::ostream& o)
   {
-    for (PerContext::const_iterator it = _p->perContext.begin(), iend = _p->perContext.end();
-      it != iend; ++it)
+    for (const auto& perContextPair : _p->perContext)
     {
-      o << it->first;
-      qi::dumpTraces(o, it->second, 0);
+      o << perContextPair.first;
+      qi::dumpTraces(o, perContextPair.second, 0);
       o << std::endl;
     }
 
