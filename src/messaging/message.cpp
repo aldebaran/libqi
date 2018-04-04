@@ -207,8 +207,18 @@ namespace qi
       auto host = context.lock();
       if (!host || !strCtxt)
         throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
-      unsigned int sid = host->service();
-      unsigned int oid = host->nextId();
+
+      const unsigned int sid = host->service();
+      if (!object)
+      {
+        ObjectSerializationInfo res;
+        res.serviceId = sid;
+        res.objectId = nullObjectId;
+        res.objectPtrUid = PtrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), nullptr);
+        return res;
+      }
+
+      const unsigned int oid = host->nextId();
       ServiceBoundObject* sbo =
           new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);

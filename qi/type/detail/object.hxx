@@ -29,6 +29,9 @@
 
 namespace qi {
 
+// This id is used to identify a null Object. It is useful for example in Objects serialization.
+static const unsigned int nullObjectId = 0;
+
 class Empty {};
 
 namespace detail {

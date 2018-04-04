@@ -10,6 +10,7 @@
 
 #include <qi/api.hpp>
 #include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>
 #include <qi/buffer.hpp>
 #include <qi/binarycodec.hpp>
 #include <qi/anyfunction.hpp>
@@ -99,7 +100,7 @@ namespace qi {
 
     enum GenericObject
     {
-      GenericObject_None = 0,
+      GenericObject_None = nullObjectId,
       GenericObject_Main = 1
     };
 

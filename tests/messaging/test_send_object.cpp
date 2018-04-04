@@ -819,3 +819,31 @@ TEST(SendObject, sendOnClosedConnection)
 
   ASSERT_TRUE(focus->focusOwner.expired());
 }
+
+struct ObjectWithObjProp
+{
+  qi::Property<qi::Object<Cookie>> prop;
+};
+QI_REGISTER_OBJECT(ObjectWithObjProp, prop);
+
+TEST(SendObject, PropertySetWithNullObjectNotifiesSubscribers)
+{
+  static const auto serviceName = testing::UnitTest::GetInstance()->current_test_info()->test_case_name();
+
+  TestSessionPair p;
+  auto server = p.server();
+
+  auto obj = boost::make_shared<ObjectWithObjProp>();
+  server->registerService(serviceName, obj);
+  qi::AnyObject clientObj = p.client()->service(serviceName);
+
+  qi::Promise<bool> prom;
+  clientObj.connect("prop", [=](qi::Object<Cookie> obj) mutable {
+    prom.setValue(static_cast<bool>(obj));
+  }).value();
+  obj->prop.set(qi::Object<Cookie>{});
+
+  auto fut = prom.future();
+  ASSERT_TRUE(test::finishesWithValue(fut));
+  ASSERT_FALSE(fut.value());
+}

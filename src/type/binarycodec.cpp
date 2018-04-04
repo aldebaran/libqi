@@ -712,7 +712,9 @@ namespace qi {
           osi.metaObject = streamContext->receiveCacheGet(osi.metaObjectCachedId);
         else if (osi.metaObjectCachedId != ObjectSerializationInfo::notCached)
           streamContext->receiveCacheSet(osi.metaObjectCachedId, osi.metaObject);
-        if (context)
+        if (osi.objectId == nullObjectId)
+          o = AnyObject();
+        else if (context)
           o = context(osi);
         // else leave result default-initialized
       }
