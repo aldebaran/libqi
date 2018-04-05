@@ -176,7 +176,7 @@ namespace qi
           }
         }
 
-        void setPromise(const sock::ErrorCode<N>&, const Message*);
+        void setPromise(const sock::ErrorCode<N>&);
 
         SocketPtr<S>& socket()
         {
@@ -256,14 +256,13 @@ namespace qi
     }
 
     template<typename N, typename S>
-    void Connected<N, S>::Impl::setPromise(const sock::ErrorCode<N>& error, const Message* msg)
+    void Connected<N, S>::Impl::setPromise(const sock::ErrorCode<N>& error)
     {
       auto prom = _completePromise.synchronize();
       if (!prom->future().isRunning()) // promise already set
         return;
       const bool stopAsked = _stopRequested.load() && _shuttingdown.load();
-      const bool hasError = error || !msg;
-      if (!stopAsked && hasError)
+      if (!stopAsked && error)
       {
         auto syncRes = _result->synchronize();
         syncRes->hasError = true;
@@ -288,7 +287,7 @@ namespace qi
             const bool mustContinue = !_shuttingdown.load() && onReceive(e, msg);
             if (!mustContinue)
             {
-              self->setPromise(e, msg);
+              self->setPromise(e);
               return false; // We must not continue to receive messages.
             }
             return true; // Otherwise, we continue to receive messages.
@@ -316,12 +315,12 @@ namespace qi
 
       // We preventively strand the first call.
       sync(life([=]() mutable {
-        _sendMsg(std::forward<Msg>(msg), ssl,
+        _sendMsg(std::move(msg), ssl,
           [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
             const bool mustContinue = !_shuttingdown.load() && onSent(e, ptrMsg);
             if (!mustContinue)
             {
-              self->setPromise(e, &msg);
+              self->setPromise(e);
               return false; // We must not continue to send messages.
             }
             return true; // Otherwise, we continue to send messages.
