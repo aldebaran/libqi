@@ -140,7 +140,7 @@ public:
     }
 
     // listen + connect
-    _session->connect(_url);
+    _session->connect(_url).value();
     if (!listenAddresses().empty())
     {
       for (const qi::Url& listenUrl : _listenUrls)
