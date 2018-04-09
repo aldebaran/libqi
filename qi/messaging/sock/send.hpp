@@ -22,6 +22,93 @@
 
 /// @file
 /// Contains functions and types related to message sending on a socket.
+///
+/// # General overview
+///
+/// ## The message send loop
+///
+/// The most fundamental function in this file, `sendMessage`, implements a
+/// message send loop. It is responsible for calling lower layer network
+/// API and for providing upper layer the sent message through a callback.
+/// Its implementation can be pictured by the following diagram (some error
+/// handling is omitted):
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///           start
+///             |
+///             v
+///      async write msg <--------------
+///             |                       |
+///             v                       |
+/// pass msg/error to upper layer*      |
+///             |                       |
+///       must continue? ---------------
+///             | no         yes
+///             v
+///            stop
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// * The upper layer is passed, via a callback, the sent message and the error
+/// if one occurred, so that it can decide if the message sending must continue.
+/// The upper layer does so by returning a "pointer" to the next message to
+/// send, or nothing if sending must stop (this is done by using an optional
+/// pointer).
+///
+/// ## Lifetime and synchronization mechanisms
+///
+/// See the same section in `receive.hpp`.
+///
+///
+/// ## Utility components
+///
+/// The memory for the messages can be for example maintained by an instance of
+/// `SendMessageEnqueue`. As `sendMessage`, it implements a message
+/// send loop, but being an object it can have a state and takes leverage
+/// of this to maintain a message queue. It passes the first message of the queue to
+/// `sendMessage` and removes it from the queue when sending is done. In this
+/// case, `SendMessageEnqueue` effectively constitutes the upper layer of
+/// `sendMessage`.
+///
+/// `SendMessageEnqueue` has itself an upper layer: it passes it the
+/// sent message though a callback. This callback returns a boolean to
+/// signal if message sending must continue.
+///
+/// `SendMessageEnqueue`'s kinematics is pictured in the following diagram
+/// (`_msgQueue` denotes its message queue member):
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///  SendMessageEnqueue start
+///             |
+///             v
+///   sendMessage(_msgQueue.begin()) <--
+///             | message sent          |
+///             v                       |
+/// pass msg/error to upper layer*      |
+///             |                       |
+///             v                       |
+///   remove msg from queue             |
+///             |                       |
+///       must continue? ---------------
+///             | no         yes
+///             v
+///            stop
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+///
+/// ## Data exchange through layers
+///
+/// Finally, this is how data is exchanged through callbacks between the
+/// different layers:
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Layer 2:                ...
+///                         ^ | bool
+///         (Error, IterMsg)| v
+/// Layer 1:         SendMessageEnqueue
+///                         ^ | optional<IterMsg>
+///         (Error, IterMsg)| v
+/// Layer 0:            sendMessage
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 namespace qi { namespace sock {
 
@@ -227,7 +314,7 @@ namespace qi { namespace sock {
       //  can enter this branch (by tryRaiseAtomicFlag.0).
       //  Also, the sending flag is only modified while the queue is locked, so
       //  the scenario where a thread B adds a message to the queue, is suspended
-      //  just before evaluating the condition of this branch, then the sending loop
+      //  just before evaluating the condition of this branch, then the send loop
       //  thread A clears the queue, and then the thread B resumes, is correctly handled.
       //  Moreover, this branch results in exactly one message being removed from
       //  the send queue (by SendMessageEnqueue.2).
@@ -237,6 +324,11 @@ namespace qi { namespace sock {
       // Lemma SendMessageEnqueue.2:
       //  eraseAndReturnNextMessage erases from the send queue the element pointed
       //  by the given iterator, even if an exception is thrown.
+
+      // This callback will be called when a message has been sent, or an error
+      // occurred. It passes an iterator on the sent message to the upper layer,
+      // which in return decides whether sending of the enqueued messaged must
+      // continue. Then, the callback erase the message.
       auto eraseAndReturnNextMessage =
         [&, onSent](ErrorCode<N> erc, I itSent) mutable -> boost::optional<I> {
           // It's ok to allow new sendings once the current one is complete.

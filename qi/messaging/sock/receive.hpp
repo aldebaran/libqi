@@ -16,6 +16,129 @@
 
 /// @file
 /// Contains functions and types related to message reception on a socket.
+///
+/// # General overview
+///
+/// ## The message receive loop
+///
+/// The most fundamental function in this file, `receiveMessage`, implements a
+/// message receive loop. It is responsible for calling lower layer network
+/// API and for providing upper layer the received message through a callback.
+/// Its implementation can be pictured by the following diagram (some error
+/// handling is omitted):
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///           start
+///             |
+///             v
+///    async read msg header <----------
+///             |                       |
+///             v                       |
+///     async read msg data             |
+///             |                       |
+///             v                       |
+/// pass msg/error to upper layer*      |
+///             |                       |
+///       must continue? ---------------
+///             | no         yes
+///             v
+///            stop
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// * The upper layer is passed, via a callback, the received message and the
+/// error if one occurred, so that it can decide if the message reception must
+/// continue. The upper layer does so by returning a pointer to the memory
+/// where the next message is to be received, or nothing if reception must stop
+/// (this is done by using an optional pointer).
+///
+///
+/// ## Lifetime and synchronization mechanisms
+///
+/// `receiveMessage` is not responsible for maintaining the memory in which the
+/// message is to be received, nor it is responsible for synchronization. To
+/// address these issues, it is passed procedure transformations (aka
+/// 'wrappers'), one for lifetime issue and one for synchronization issue. Any
+/// callback `receiveMessage` passes to a lower layer network API is first
+/// wrapped by these two transformations.
+///
+/// For example to read the message header, `receiveMessage` passes the network
+/// API a callback (`onReadHeader`) that is wrapped twice:
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///  -------------------------
+/// | synchronization wrap    |
+/// |  ---------------------  |
+/// | | lifetime wrap       | |
+/// | |   ----------------  | |
+/// | |  | onReadHeader() | | |
+/// | |   ----------------  | |
+/// |  ---------------------  |
+///  -------------------------
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// The synchronization wrap can for example use a strand to perform
+/// synchronization.
+///
+/// The lifetime wrap can for example own a shared pointer to extend a resource
+/// lifetime, or own a weak pointer and first test its validity to prevent using
+/// a dead object.
+///
+///
+/// ## Utility components
+///
+/// The memory for the message can be for example maintained by an instance of
+/// `ReceiveMessageContinuous`. As `receiveMessage`, it implements a message
+/// receive loop, but being an object it can have a state and takes leverage
+/// of this to maintain a message member. It passes this message's address to
+/// `receiveMessage` and reuse it for each new message to receive. In this
+/// case, `ReceiveMessageContinuous` effectively constitutes the upper layer of
+/// `receiveMessage`.
+///
+/// `ReceiveMessageContinuous` has itself an upper layer: it passes it the
+/// received message though a callback. This callback returns a boolean to
+/// signal if message reception must continue.
+///
+/// `ReceiveMessageContinuous`'s kinematics is pictured in the following diagram
+/// (`_msg` denotes its message member):
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// ReceiveMessageContinuous start
+///             |
+///             v
+///    receiveMessage(&_msg) <----------
+///             | message received      |
+///             v                       |
+/// pass msg/error to upper layer*      |
+///             |                       |
+///       must continue? ---------------
+///             | no         yes
+///             v
+///            stop
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// About lifetime and synchronization issues, in the same fashion as
+/// `receiveMessage`, `ReceiveMessageContinuous` is passed procedure
+/// transformations. It then forwards them to `receiveMessage`.
+///
+/// Note: There is a variant of `ReceiveMessageContinuous`, namely
+///  `ReceiveMessageContinuousTrack` that also handles lifetime issue by
+///  implementing the `Trackable` 'interface'.
+///
+///
+/// ## Data exchange through layers
+///
+/// Finally, this is how data is exchanged through callbacks between the
+/// different layers:
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Layer 2:             ...
+///                      ^ | bool
+///         (Error, Msg*)| v
+/// Layer 1:  ReceiverMessageContinuous
+///                      ^ | optional<Msg*>
+///         (Error, Msg*)| v
+/// Layer 0:       receiveMessage
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 namespace qi { namespace sock {
   /// Receive a message through the socket and call the handler when the
@@ -76,9 +199,6 @@ namespace qi { namespace sock {
   void receiveMessage(const S& socket, M ptrMsg, SslEnabled ssl, size_t maxPayload,
     const Proc& onReceive, F0 lifetimeTransfo = F0{}, F1 syncTransfo = F1{});
 
-  //template<typename N, typename S, typename M, typename Proc>
-  //void receiveMessage(const S& socket, M&& ptrMsg, SslEnabled&& ssl, size_t maxPayload, const Proc& onReceive);
-
   namespace detail
   {
     /// Network N,
@@ -91,6 +211,10 @@ namespace qi { namespace sock {
     void onReadData(const ErrorCode<N>& erc, const S& socket, M ptrMsg, SslEnabled ssl,
       size_t maxPayload, Proc onReceive, const F0& lifetimeTransfo, const F1& syncTransfo)
     {
+      // We inform the upper layer that we received a message (or an error
+      // occurred). The upper layer returns an optional containing a pointer to
+      // memory where we can receive the next message, if we must continue
+      // receiving messages.
       if (auto optionalPtrNextMsg = onReceive(erc, ptrMsg))
       {
         receiveMessage<N>(socket, *optionalPtrNextMsg, ssl, maxPayload, onReceive, lifetimeTransfo, syncTransfo);
@@ -166,6 +290,8 @@ namespace qi { namespace sock {
       auto readData = lifetimeTransfo([=](ErrorCode<N> error, std::size_t /*len*/) {
         onReadData<N>(error, socket, ptrMsg, ssl, maxPayload, onReceive, lifetimeTransfo, syncTransfo);
       });
+
+      // We received the header, we now wait to receive the data.
       if (*ssl)
       {
         N::async_read(*socket, buffer, syncTransfo(readData));
@@ -187,6 +313,10 @@ namespace qi { namespace sock {
   void receiveMessage(const S& socket, M ptrMsg, SslEnabled ssl, size_t maxPayload,
       const Proc& onReceive, F0 lifetimeTransfo, F1 syncTransfo)
   {
+    // Receiving a message is done in two parts:
+    // 1) receiving the header
+    // 2) receiving the data (aka payload)
+
     auto makeHeaderBuffer = [&] {
       return N::buffer(&ptrMsg->header(), sizeof(Message::Header));
     };
@@ -194,6 +324,8 @@ namespace qi { namespace sock {
       detail::onReadHeader<N>(erc, len, socket, ptrMsg, ssl, maxPayload, onReceive,
         lifetimeTransfo, syncTransfo);
     }));
+
+    // First, we wait to receive the header.
     if (*ssl)
     {
       N::async_read(*socket, makeHeaderBuffer(), readHeader);
@@ -255,6 +387,14 @@ namespace qi { namespace sock {
         Proc onReceive, const F0& lifetimeTransfo = {}, const F1& syncTransfo = {})
     {
       receiveMessage<N>(socket, &_msg, ssl, maxPayload,
+
+        // This callback will be called when a message has been received.
+        // The pointer is the one we passed, or `nullptr` if an error occurred.
+        // It informs the upper layer that a message has been received and let
+        // it decide if we must continue receiving messages.
+        // If we must continue receiving messages, this callback itself returns
+        // a non-empty optional with a pointer to the memory where a new message
+        // can be received.
         [=](ErrorCode<N> erc, const Message* m) mutable -> boost::optional<Message*> {
           if (onReceive(erc, m))
           {
@@ -262,7 +402,7 @@ namespace qi { namespace sock {
             auto dataBuffer = _msg.extractBuffer();
             dataBuffer.clear();
             _msg.setBuffer(std::move(dataBuffer));
-            return {&_msg};
+            return {&_msg}; // We reuse the message memory to receive the next message.
           }
           return {};
         },

@@ -211,6 +211,7 @@ namespace qi
         qi::int64_t messageHandlingTimeoutInMus = getSocketTimeWarnThresholdFromEnv().value_or(0));
 
       /// If `onSent` returns false, the processing of enqueued messages stops.
+      /// By default, we continue sending messages even if an error occurred.
       ///
       /// Procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>
       template<typename Msg, typename Proc = ka::no_op_procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>>
@@ -281,10 +282,23 @@ namespace qi
       auto life = lifetimeTransfo();
       auto sync = syncTransfo();
 
+      // Start receiving messages.
       // We preventively strand the first call.
       sync(life([=]() mutable {
         _receiveMsg(socket(), ssl, maxPayload,
+
+          // This callback will be called when a message is received, or when an
+          // error occurred. It returns a boolean to decide if message receiving
+          // must continue.
+          //
+          // Warning: The message is only valid if there is no error. Also, it
+          // is valid only until this callback ends. After that, the underlying
+          // memory is typically reused, so the upper layer must not store the
+          // message pointer (it can copy the message though).
           [=](sock::ErrorCode<N> e, const Message* msg) mutable { // onReceived
+            // If we're not shutting down, we inform the upper layer that we
+            // received a message. In return, it decides if we must continue
+            // receiving messages.
             const bool mustContinue = !_shuttingdown.load() && onReceive(e, msg);
             if (!mustContinue)
             {
@@ -317,7 +331,21 @@ namespace qi
       // We preventively strand the first call.
       sync(life([=]() mutable {
         _sendMsg(std::move(msg), ssl,
-          [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable { // onSent
+
+          // This callback will be called when a message has been sent, or
+          // when an error occurred.
+          //
+          // Warning: `ptrMsg` can be dereferenced to read the sent message.
+          // This operation is only defined if no error occurred and only until
+          // this callback ends. After that, the underlying memory is typically
+          // freed, so the upper layer must not store the message pointer (it
+          // can copy the message though).
+
+          [=](const ErrorCode<N>& e, const ReadableMessage& ptrMsg) mutable {
+
+            // If we're not shutting down, we inform the upper layer that we
+            // sent a message. Then, the upper layer decides whether we should
+            // continue sending messages or not by returning a boolean.
             const bool mustContinue = !_shuttingdown.load() && onSent(e, ptrMsg);
             if (!mustContinue)
             {
