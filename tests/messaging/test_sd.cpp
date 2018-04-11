@@ -267,3 +267,11 @@ TEST(ServiceDirectory, NoThreadSpawnOnClientClose)
     ASSERT_TRUE(test::finishesWithValue(future));
   }
 }
+
+TEST(ServiceDirectory, IsNotConnectedAfterClose)
+{
+  qi::Session session;
+  session.listenStandalone("tcp://127.0.0.1:0");
+  session.close();
+  ASSERT_FALSE(session.isConnected());
+}

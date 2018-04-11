@@ -67,7 +67,7 @@ namespace qi {
                            qi::Promise<void> prom);
     qi::FutureSync<void> onSocketFailure(MessageSocketPtr socket,
                                          std::string error,
-                                         bool mustSignalDisconnected = true);
+                                         bool sendSignalDisconnected = true);
 
     //RemoteObject Interface
     void onMetaObjectFetched(MessageSocketPtr socket, qi::Future<void> fut, qi::Promise<void> prom);
@@ -86,12 +86,13 @@ namespace qi {
     void cleanupPreviousSdSocket(const MessageSocketPtr& socket,
                                  qi::Promise<void> connectionPromise) const;
 
+    Future<void> closeImpl(const std::string& reason, bool sendSignalDisconnected);
+
   private:
     qi::MessageSocketPtr _sdSocket; // protected by _mutex
     qi::SignalLink         _sdSocketDisconnectedSignalLink;
     qi::SignalLink         _sdSocketSocketEventSignalLink;
-    // _remoteObject is owned by _object
-    qi::RemoteObject*      _remoteObject;
+    std::unique_ptr<qi::RemoteObject> _remoteObject;
     // _object is a remote object of serviceDirectory
     qi::AnyObject          _object;
     qi::SignalLink         _addSignalLink; // protected by _mutex
