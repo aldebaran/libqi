@@ -219,7 +219,7 @@ struct ToPost
 template <typename F, typename R>
 Future<R> ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp)
 {
-  ToPost<R, typename std::decay<F>::type> topost(std::move(callback));
+  ToPost<R, typename std::decay<F>::type> topost(std::forward<F>(callback));
   auto promise = topost.promise;
   qi::Future<void> f = asyncAtImpl(std::move(topost), tp);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
@@ -231,7 +231,7 @@ Future<R> ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp)
 template <typename F, typename R>
 Future<R> ExecutionContext::asyncDelay(F&& callback, qi::Duration delay)
 {
-  ToPost<R, typename std::decay<F>::type> topost(std::move(callback));
+  ToPost<R, typename std::decay<F>::type> topost(std::forward<F>(callback));
   auto promise = topost.promise;
   qi::Future<void> f = asyncDelayImpl(std::move(topost), delay);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,

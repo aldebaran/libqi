@@ -1,3 +1,5 @@
+#include <chrono>
+#include <future>
 /*
 ** Copyright (C) 2014 Aldebaran
 */
@@ -19,6 +21,7 @@
 qiLogCategory("test");
 
 const qi::MilliSeconds usualTimeout{ 200 };
+const std::chrono::milliseconds stdUsualTimeout{usualTimeout.count()};
 
 void setValueWait(boost::mutex& mutex, int waittime, int& i, int v)
 {
@@ -45,6 +48,68 @@ TEST(TestStrand, StrandSimple)
   qi::sleepFor(usualTimeout);
   EXPECT_EQ(i, 2);
 }
+
+
+TEST(TestStrand, StrandSchedulerForRunsAndEnds)
+{
+  qi::Strand strand;
+  std::promise<void> promise;
+  auto stranded = strand.schedulerFor([&]{ promise.set_value(); });
+  stranded();
+  auto status = promise.get_future().wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+}
+
+
+TEST(TestStrand, StrandSchedulerForWithBoundReference)
+{
+  qi::Strand strand;
+  std::promise<int> promise;
+  int expected = 42;
+  auto function = [&](int& n){ promise.set_value(n); };
+  auto bound = std::bind(std::move(function), std::ref(expected));
+  auto stranded = strand.schedulerFor(std::move(bound));
+  expected = 13;
+  stranded();
+  auto future = promise.get_future();
+  auto status = future.wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+  EXPECT_EQ(expected, future.get());
+}
+
+
+TEST(TestStrand, StrandSchedulerForWithMoveOnlyBoundReference)
+{
+  qi::Strand strand;
+  std::promise<int> promise;
+  std::unique_ptr<int> expected{new int{42}};
+  auto function = [&](std::unique_ptr<int>& n){ promise.set_value(*n); };
+  auto bound = std::bind(std::move(function), std::ref(expected));
+  auto stranded = strand.schedulerFor(std::move(bound));
+  *expected = 13;
+  stranded();
+  auto future = promise.get_future();
+  auto status = future.wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+  EXPECT_EQ(*expected, future.get());
+}
+
+
+TEST(TestStrand, StrandSchedulerForWithMoveOnlyArg)
+{
+  qi::Strand strand;
+  std::promise<int> promise;
+  std::unique_ptr<int> expected{new int{42}};
+  auto function = [&](std::unique_ptr<int>& n){ promise.set_value(*n); };
+  auto stranded = strand.schedulerFor(std::move(function));
+  *expected = 13;
+  stranded(std::ref(expected)); // stranded(expected) must not compile
+  auto future = promise.get_future();
+  auto status = future.wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+  EXPECT_EQ(*expected, future.get());
+}
+
 
 static void fail()
 {
