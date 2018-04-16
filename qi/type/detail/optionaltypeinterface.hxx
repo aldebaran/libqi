@@ -10,14 +10,15 @@
 #include <qi/type/detail/typeimpl.hxx>
 #include <boost/optional.hpp>
 
-// TODO: use feature test __cpp_lib_optional once available on all supported compilers
-#ifdef __has_include
+#if defined(__cpp_lib_optional) && defined(__has_include)
 #  if __has_include(<optional>)
 #    include <optional>
 #    define QI_HAS_STD_OPTIONAL 1
 #  else
 #    define QI_HAS_STD_OPTIONAL 0
 #  endif
+#else
+#  define QI_HAS_STD_OPTIONAL 0
 #endif
 
 namespace qi
