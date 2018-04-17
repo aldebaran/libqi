@@ -80,7 +80,7 @@ public:
   ServiceDirectoryProxy(bool enforceAuth = true);
   ~ServiceDirectoryProxy();
 
-  QI_API_DEPRECATED_MSG("Use `statusChanged` instead.")
+  QI_API_DEPRECATED_MSG("Use `status` instead.")
   Property<bool>& connected;
 
   Property<Status>& status;
@@ -102,6 +102,11 @@ public:
   Future<ServiceFilter> setServiceFilter(ServiceFilter filter
      = ka::poly_constant_function<bool>{ false });
 };
+
+QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::IdValidationStatus);
+QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::ListenStatus);
+QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::ConnectionStatus);
+
 }
 
 #endif // _QIMESSAGING_SERVICEDIRECTORYPROXY_HPP_

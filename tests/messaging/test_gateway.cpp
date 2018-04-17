@@ -18,6 +18,7 @@
 #include <qi/messaging/gateway.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/log.hpp>
+#include <qi/testutils/testutils.hpp>
 
 qiLogCategory("TestGateway");
 
@@ -473,5 +474,20 @@ namespace
     danglingObject.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
+  }
+
+  TEST(TestGatewayLateSD, AttachesToSDWhenAvailable)
+  {
+    qi::Gateway gw;
+    auto futAttach = gw.attachToServiceDirectory("tcp://127.0.0.1:59345");
+    ASSERT_TRUE(test::isStillRunning(futAttach, test::willDoNothing(), qi::Seconds{ 2 }));
+
+    qi::Session sd;
+    sd.listenStandalone("tcp://127.0.0.1:59345");
+
+    // It can take a while for the gateway to reconnect if the service directory has not be found
+    // after a long time, so wait for a while.
+    ASSERT_TRUE(test::finishesWithValue(futAttach, test::willDoNothing(), qi::Minutes{ 5 }));
+    ASSERT_EQ(qi::Gateway::ConnectionStatus::Connected, gw.status.get().value().connection);
   }
 }
