@@ -60,7 +60,7 @@ namespace qi
      * \note It is safe to call this method concurrently.
      * \return true if the current thread is one of the event loop threads.
      */
-    bool isInThisContext() override;
+    bool isInThisContext() const override;
     /**
      * \brief Starts the event loop. Does nothing if already started.
      * \param threadCount Number of threads. See the constructor for more information.

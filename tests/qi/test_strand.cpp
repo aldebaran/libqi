@@ -11,9 +11,13 @@
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
+#include <qi/testutils/testutils.hpp>
 #include <gtest/gtest.h>
+#include <thread>
 
 qiLogCategory("test");
+
+const qi::MilliSeconds usualTimeout{ 200 };
 
 void setValueWait(boost::mutex& mutex, int waittime, int& i, int v)
 {
@@ -37,7 +41,7 @@ TEST(TestStrand, StrandSimple)
   EXPECT_FALSE(f1.isFinished());
   qi::Future<void> f2 = strand.async(boost::bind<void>(&setValueWait,
         boost::ref(mutex), 0, boost::ref(i), 2));
-  qi::os::msleep(200);
+  qi::sleepFor(usualTimeout);
   EXPECT_EQ(i, 2);
 }
 
@@ -333,8 +337,8 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     qi::Promise<void> prom;
     qi::Signal<int> signal;
 
-    static_assert(std::is_same<decltype(prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished))), qi::Future<int>>::value, "andThen future type incorrect");
-    static_assert(std::is_same<decltype(prom.future().then(qi::bind(&MyActor::f, obj.get(), TOTAL, finished))), qi::Future<int>>::value, "then future type incorrect");
+    static_assert(std::is_same<decltype(prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished)).unwrap()), qi::Future<int>>::value, "andThen future type incorrect");
+    static_assert(std::is_same<decltype(prom.future().then(qi::bind(&MyActor::f, obj.get(), TOTAL, finished)).unwrap()), qi::Future<int>>::value, "then future type incorrect");
 
     for (int i = 0; i < 25; ++i)
       prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
@@ -410,7 +414,7 @@ void callLongCallbackWithDestructionHook(qi::Strand& strand, Functor&& toCallOnD
   auto callerOnDestruction =
       std::make_shared<CallerOnDestruction<Functor>>(std::forward<Functor>(toCallOnDestruction));
   // keeps alive the caller for some time, so that we can join and have it die in our hands
-  auto f = [callerOnDestruction]{ qi::os::msleep(200); };
+  auto f = [callerOnDestruction]{ qi::sleepFor(usualTimeout); };
   callerOnDestruction.reset();
   strand.async(std::move(f));
 }
@@ -430,4 +434,31 @@ TEST(TestStrand, CallWrappedInStrandWhileJoiningDoesNotDeadlock)
   qi::Strand strand;
   callLongCallbackWithDestructionHook(strand, strand.schedulerFor([]{}));
   strand.join();
+}
+
+TEST(TestStrand, CallStrandAsyncFromStrandContextExecutesImmediately)
+{
+  qi::Strand strand;
+  auto f = strand.async([&]{
+    const auto parentTid = std::this_thread::get_id();
+    auto f2 = strand.async([=]{ return std::this_thread::get_id() == parentTid; });
+    f2.wait(usualTimeout);
+    return f2.value(0);
+  });
+  ASSERT_TRUE(test::finishesWithValue(f));
+  ASSERT_TRUE(f.value());
+}
+
+TEST(TestStrand, CallScheduleFromStrandContextDoesNotExecuteImmediately)
+{
+  qi::Strand strand;
+  std::vector<int> values;
+  strand.async([&]{
+    auto f = strand.defer([&]{ values.push_back(1); });
+    values.push_back(0);
+    return f;
+  }).unwrap().value();
+
+  const std::vector<int> expected{0, 1};
+  ASSERT_EQ(expected, values);
 }

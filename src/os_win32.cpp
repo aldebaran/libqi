@@ -24,9 +24,13 @@
 # include <shlwapi.h>
 # pragma comment(lib, "shlwapi.lib")
 
+#include <boost/container/flat_map.hpp>
+#include <boost/utility/string_ref.hpp>
+
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+#include <qi/scoped.hpp>
 
 #include "utils.hpp"
 
@@ -348,72 +352,80 @@ namespace qi {
 
     std::map<std::string, std::vector<std::string> > hostIPAddrs(bool ipv6Addr)
     {
-      PIP_ADAPTER_INFO pAdapterInfo;
-      PIP_ADAPTER_INFO pAdapter = NULL;
-      DWORD dwRetVal = 0;
-      std::map<int, std::string> AdapterType;
-      std::string type, addr;
-      std::map<std::string, std::vector<std::string> > ifsMap;
+      // TODO: replace usage of GetAdaptersInfo by a more "modern" Windows API (or Boost)
 
-      AdapterType[MIB_IF_TYPE_OTHER] = "Other";
-      AdapterType[IF_TYPE_IEEE80211] = "802.11wireless";
-      AdapterType[MIB_IF_TYPE_ETHERNET] = "Ethernet";
-      AdapterType[MIB_IF_TYPE_TOKENRING] = "TokenRing";
-      AdapterType[MIB_IF_TYPE_FDDI] = "FDDI";
-      AdapterType[MIB_IF_TYPE_PPP] = "PPP";
-      AdapterType[MIB_IF_TYPE_LOOPBACK] = "Loopback";
-      AdapterType[MIB_IF_TYPE_SLIP] = "Slip";
+      // First call GetAdaptersInfo to get the necessary size for the adapter list.
+      // See: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365917(v=vs.85).aspx
+      auto bufferSize = [&] () -> ULONG {
+        ULONG result = 0;
+        const DWORD dwRetVal = GetAdaptersInfo(nullptr, &result);
+        if (dwRetVal != ERROR_BUFFER_OVERFLOW)
+        {
+          qiLogError() << "GetAdaptersInfo failed with error " << dwRetVal << " (1)";
+          return 0;
+        }
+        return result;
+      }();
 
-      ULONG ulOutBufLen = 0;
-      if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(sizeof(IP_ADAPTER_INFO))) == NULL)
-      {
-        qiLogError() << "Error allocation memory needed to get hostIPAddrs";
-        return std::map<std::string, std::vector<std::string> >();
-      }
+      if(bufferSize == 0)
+        return {};
 
-      /* Make initial call to GetAdaptersInfo to get
-      ** the necessary size into the ulOutBufLen variable (pr)
-      ** http://msdn.microsoft.com/en-us/library/windows/desktop/aa365917(v=vs.85).aspx */
-      if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != ERROR_BUFFER_OVERFLOW)
-      {
-        qiLogError() << "GetAdaptersInfo failed with error " << dwRetVal << " (1)";
-        return std::map<std::string, std::vector<std::string> >();
-      }
+      using AddressMap = std::map<std::string, std::vector<std::string>>;
 
-      free(pAdapterInfo);
-      if ((pAdapterInfo = (IP_ADAPTER_INFO *) malloc(ulOutBufLen)) == NULL)
-      {
-        qiLogError() << "Error allocation memory needed to get hostIPAddrs";
-        return std::map<std::string, std::vector<std::string> >();
-      }
+      auto adaptersIPsMap = [&] () -> AddressMap {
 
-      if ((dwRetVal = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen)) != NO_ERROR)
-      {
-        qiLogError() << "GetAdaptersInfo failed with error " << dwRetVal << " (2)";
-        return std::map<std::string, std::vector<std::string> >();
-      }
+        const auto scopedAdapters = qi::scoped((PIP_ADAPTER_INFO)malloc(bufferSize), &::free);
+        if (scopedAdapters.value == NULL)
+        {
+          qiLogError() << "Error allocation memory needed to get hostIPAddrs";
+          return {};
+        }
 
-      pAdapter = pAdapterInfo;
-      while (pAdapter)
-      {
-        if ((type = AdapterType[pAdapter->Type]).compare("") == 0)
-          type = "Other";
+        const DWORD dwRetVal = GetAdaptersInfo(scopedAdapters.value, &bufferSize);
+        if (dwRetVal != NO_ERROR)
+        {
+          qiLogError() << "GetAdaptersInfo failed with error " << dwRetVal << " (2)";
+          return {};
+        }
 
-        addr = pAdapter->IpAddressList.IpAddress.String;
-        if (addr.compare("0.0.0.0") != 0)
-          ifsMap[type].push_back(pAdapter->IpAddressList.IpAddress.String);
-        pAdapter = pAdapter->Next;
-      }
+        static const
+        boost::container::flat_map<int, const char*> adapterTypes {
+          { IF_TYPE_IEEE80211      , "802.11wireless"},
+          { MIB_IF_TYPE_ETHERNET   , "Ethernet"      },
+          { MIB_IF_TYPE_TOKENRING  , "TokenRing"     },
+          { MIB_IF_TYPE_FDDI       , "FDDI"          },
+          { MIB_IF_TYPE_PPP        , "PPP"           },
+          { MIB_IF_TYPE_LOOPBACK   , "Loopback"      },
+          { MIB_IF_TYPE_SLIP       , "Slip"          }
+        };
 
-      free(pAdapterInfo);
+        PIP_ADAPTER_INFO pAdapter = scopedAdapters.value;
+
+        AddressMap foundIFS;
+
+        while (pAdapter)
+        {
+          const auto typeIt = adapterTypes.find(pAdapter->Type);
+          const char* type = typeIt != end(adapterTypes) ? typeIt->second : "Other";
+
+          const boost::string_ref addr = pAdapter->IpAddressList.IpAddress.String;
+          if (addr != "0.0.0.0")
+          {
+            foundIFS[type].push_back(pAdapter->IpAddressList.IpAddress.String);
+          }
+          pAdapter = pAdapter->Next;
+        }
+
+        return foundIFS;
+      }();
 
       // not given by default
-      if (ifsMap.find("Loopback") == ifsMap.end())
+      if (adaptersIPsMap.find("Loopback") == adaptersIPsMap.end())
       {
-        ifsMap["Loopback"].push_back("127.0.0.1");
+        adaptersIPsMap["Loopback"].push_back("127.0.0.1");
       }
 
-      return ifsMap;
+      return adaptersIPsMap;
     }
 
     void setCurrentThreadName(const std::string &name) {

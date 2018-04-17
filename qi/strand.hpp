@@ -23,16 +23,19 @@
 #  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
 
+#define QI_DETAIL_FEATURE_STRANDED_UNWRAPPED
+
 namespace qi
 {
 
+// C++14 these can be lambdas, but we need perfect forwarding in the capture in scheduleFor below
 namespace detail
 {
-
-  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
   template <typename F>
-  struct WrapInStrand;
+  struct Stranded;
 
+  template <typename F>
+  struct StrandedUnwrapped;
 }
 
 // we use ExecutionContext's helpers in schedulerFor, we don't need to implement all the methods
@@ -57,17 +60,24 @@ public:
 
   StrandPrivate(qi::ExecutionContext& eventLoop);
 
+  // Schedules the callback for execution. If the trigger date `tp` is in the past, executes the
+  // callback immediately in the calling thread.
   Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+
+  // Schedules the callback for execution. If delay is 0, executes the callback immediately in the
+  // calling thread.
   Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+
+  // Schedules the callback for deferred execution and returns immediately.
+  Future<void> deferImpl(boost::function<void()> cb, qi::Duration delay);
 
   boost::shared_ptr<Callback> createCallback(boost::function<void()> cb);
   void enqueue(boost::shared_ptr<Callback> cbStruct);
 
   void process();
   void cancel(boost::shared_ptr<Callback> cbStruct);
+  bool isInThisContext() const override;
 
-  // don't care
-  bool isInThisContext() override { QI_ASSERT(false); throw 0; }
   void postImpl(boost::function<void()> callback) override { QI_ASSERT(false); throw 0; }
   qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
   { QI_ASSERT(false); throw 0; }
@@ -148,16 +158,32 @@ public:
    * \return true if current code is running in this strand, false otherwise. If the strand is dying (destroy() has been
    * called, returns false)
    */
-  bool isInThisContext() override;
+  bool isInThisContext() const override;
 
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})
-      -> detail::WrapInStrand<typename std::decay<F>::type>
+      -> detail::Stranded<typename std::decay<F>::type>
   {
-    return detail::WrapInStrand<typename std::decay<F>::type>(std::forward<F>(func),
+    return detail::Stranded<typename std::decay<F>::type>(std::forward<F>(func),
                                                               _p,
                                                               std::move(onFail));
   }
+
+  template <typename F>
+  auto unwrappedSchedulerFor(F&& func, boost::function<void()> onFail = {})
+      -> detail::StrandedUnwrapped<typename std::decay<F>::type>
+  {
+    return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::forward<F>(func),
+                                                              _p,
+                                                              std::move(onFail));
+  }
+
+  /**
+   * Defers a function for execution in the strand thus without allowing the strand to call it from
+   * inside this function. It implies that this function always returns immediately.
+   * @returns A future that is set once the function argument is executed
+   */
+  Future<void> defer(const boost::function<void()>& cb);
 
 private:
   boost::shared_ptr<StrandPrivate> _p;
@@ -210,12 +236,11 @@ namespace detail
       const boost::function<void()>& onFail,
       boost::weak_ptr<StrandPrivate> weakStrand,
       Args&&... args)
-      -> decltype(tryUnwrap(weakStrand.lock()->async(std::bind(func, std::forward<Args>(args)...)))) // TODO: remove in C++14
+      -> decltype(weakStrand.lock()->async(std::bind(func, std::forward<Args>(args)...))) // TODO: remove in C++14
   {
     if (auto strand = weakStrand.lock())
     {
-      auto ft = strand->async(std::bind(func, std::forward<Args>(args)...));
-      return tryUnwrap(ft);
+      return strand->async(std::bind(func, std::forward<Args>(args)...));
     }
     else
     {
@@ -225,9 +250,11 @@ namespace detail
           typename std::decay<decltype(func(std::forward<Args>(args)...))>::type>("strand is dead");
     }
   }
-  // C++14 this can be a lambda, but we need perfect forwarding in the capture in scheduleFor below
+
+  // C++14 these can be lambdas, but we need perfect forwarding in the capture in scheduleFor
+  // A callable object that, when called defers the call of the given function to the strand.
   template <typename F>
-  struct WrapInStrand
+  struct Stranded
   {
     static const bool is_async = true;
 
@@ -235,7 +262,7 @@ namespace detail
     boost::weak_ptr<StrandPrivate> _strand;
     boost::function<void()> _onFail;
 
-    WrapInStrand(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail)
+    Stranded(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail)
       : _func(std::move(f))
       , _strand(std::move(strand))
       , _onFail(std::move(onFail))
@@ -254,6 +281,36 @@ namespace detail
         -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
     {
       return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
+    }
+  };
+
+  // Like Stranded, but unwraps the result.
+  template <typename F>
+  struct StrandedUnwrapped
+  {
+    QI_API_DEPRECATED_MSG("is_async used")
+    static const bool is_async = true;
+
+  private:
+    Stranded<F> _stranded;
+
+  public:
+    StrandedUnwrapped(F&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
+      : _stranded(std::forward<F>(f), strand, onFail)
+    {}
+
+    template <typename... Args>
+    auto operator()(Args&&... args) const
+        -> decltype(tryUnwrap(_stranded(std::forward<Args>(args)...)))
+    {
+      return tryUnwrap(_stranded(std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    auto operator()(Args&&... args)
+        -> decltype(tryUnwrap(_stranded(std::forward<Args>(args)...)))
+    {
+      return tryUnwrap(_stranded(std::forward<Args>(args)...));
     }
   };
 } // detail

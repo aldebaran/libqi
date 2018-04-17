@@ -16,7 +16,6 @@
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/dynamicobject.hpp>
 #include <qi/type/objecttypebuilder.hpp>
-#include <qi/messaging/gateway.hpp>
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>

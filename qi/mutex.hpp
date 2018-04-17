@@ -27,8 +27,10 @@ namespace traits
     // Common mutexes that might be used in this library.
     template<> struct IsMutex<std::mutex>                   : True {};
     template<> struct IsMutex<std::recursive_mutex>         : True {};
+#if !BOOST_OS_ANDROID
     template<> struct IsMutex<std::timed_mutex>             : True {};
     template<> struct IsMutex<std::recursive_timed_mutex>   : True {};
+#endif
     template<> struct IsMutex<boost::mutex>                 : True {};
     template<> struct IsMutex<boost::recursive_mutex>       : True {};
     template<> struct IsMutex<boost::timed_mutex>           : True {};

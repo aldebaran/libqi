@@ -14,6 +14,21 @@ qiLogCategory("qi.strand");
 
 namespace qi {
 
+namespace
+{
+  // Executes the callback immediately. This function returns a Future for consistency with the
+  // async functions and simplicity of use. The future will be in error if the callback throws
+  // an exception.
+  // Procedure<void()> Proc
+  template<typename Proc>
+  Future<void> execNow(Proc&& proc)
+  {
+    Promise<void> p;
+    detail::setPromiseFromCallWithExceptionSupport(p, std::forward<Proc>(proc));
+    return p.future();
+  }
+}
+
 enum class StrandPrivate::State
 {
   None,
@@ -44,24 +59,25 @@ boost::shared_ptr<StrandPrivate::Callback> StrandPrivate::createCallback(boost::
 
 Future<void> StrandPrivate::asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp)
 {
-  boost::shared_ptr<Callback> cbStruct = createCallback(std::move(cb));
-  cbStruct->promise =
-    qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
-  qiLogDebug() << "Scheduling job id " << cbStruct->id
-    << " at " << qi::to_string(tp);
-  cbStruct->asyncFuture = _eventLoop.asyncAt(boost::bind(
-        &StrandPrivate::enqueue, this, cbStruct),
-      tp);
-  return cbStruct->promise.future();
+  const auto now = SteadyClock::now();
+  if (tp <= now && isInThisContext())
+    return execNow(std::move(cb));
+  return deferImpl(std::move(cb), tp - now);
 }
 
 Future<void> StrandPrivate::asyncDelayImpl(boost::function<void()> cb, qi::Duration delay)
 {
+  if (delay == qi::Duration::zero() && isInThisContext())
+    return execNow(std::move(cb));
+  return deferImpl(std::move(cb), delay);
+}
+
+Future<void> StrandPrivate::deferImpl(boost::function<void()> cb, qi::Duration delay)
+{
   boost::shared_ptr<Callback> cbStruct = createCallback(std::move(cb));
   cbStruct->promise =
     qi::Promise<void>(boost::bind(&StrandPrivate::cancel, this, cbStruct));
-  qiLogDebug() << "Scheduling job id " << cbStruct->id
-    << " in " << qi::to_string(delay);
+  qiLogDebug() << "Deferring job id " << cbStruct->id << " in " << qi::to_string(delay);
   if (delay.count())
     cbStruct->asyncFuture = _eventLoop.asyncDelay(boost::bind(
           &StrandPrivate::enqueue, this, cbStruct),
@@ -239,6 +255,11 @@ void StrandPrivate::cancel(boost::shared_ptr<Callback> cbStruct)
   }
 }
 
+bool StrandPrivate::isInThisContext() const
+{
+  return _processingThread == qi::os::gettid();
+}
+
 Strand::Strand()
   : _p(new StrandPrivate(*qi::getEventLoop()))
 {
@@ -343,11 +364,20 @@ void Strand::postImpl(boost::function<void()> callback)
     prv->enqueue(prv->createCallback(std::move(callback)));
 }
 
-bool Strand::isInThisContext()
+Future<void> Strand::defer(const boost::function<void ()>& cb)
 {
   auto prv = boost::atomic_load(&_p);
   if (prv)
-    return prv->_processingThread == qi::os::gettid();
+    return prv->deferImpl(cb, Duration::zero());
+  else
+    return makeFutureError<void>("the strand is dying");
+}
+
+bool Strand::isInThisContext() const
+{
+  auto prv = boost::atomic_load(&_p);
+  if (prv)
+    return prv->isInThisContext();
   else
     return false;
 }

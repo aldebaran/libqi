@@ -6,14 +6,14 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
-#include <boost/enable_shared_from_this.hpp>
 #include <qi/log.hpp>
 #include <qi/periodictask.hpp>
+#include <qi/trackable.hpp>
 
 
 qiLogCategory("qi.PeriodicTask");
 
-// WARNING: if you add a state, review trigger() so that it stays lockfree
+// WARNING: if you add a state, review trigger()
 enum class TaskState
 {
   Stopped = 0,
@@ -43,25 +43,48 @@ enum class TaskState
 namespace qi
 {
 
-  struct PeriodicTaskPrivate :
-    boost::enable_shared_from_this<PeriodicTaskPrivate>
+  struct PeriodicTaskPrivate: Trackable<PeriodicTaskPrivate>
   {
+    using ScheduleCallback =
+        boost::function<qi::Future<void>(const PeriodicTask::Callback&, qi::Duration)>;
+
     MethodStatistics        _callStats;
     qi::SteadyClockTimePoint _statsDisplayTime;
     PeriodicTask::Callback  _callback;
-    PeriodicTask::ScheduleCallback _scheduleCallback;
+    ScheduleCallback        _scheduleCallback;
     qi::Duration            _period;
     TaskState               _state;
     qi::Future<void>        _task;
     std::string             _name;
     bool                    _compensateCallTime;
     int                     _tid;
-    boost::mutex            _mutex;
-    boost::condition_variable _cond;
+    using Mutex = boost::recursive_mutex;
+    using ScopedLock = Mutex::scoped_lock;
+    Mutex  _mutex;
+    boost::condition_variable_any _cond;
+
+    // This class is used to synchronize the task. By tracking it, we can make sure that the task
+    // execution shares its lifetime and vice versa. We use it as a pointer to allow us to start
+    // and stop the periodic task just by allocating and releasing it.
+    struct TaskSynchronizer : Trackable<TaskSynchronizer>
+    {
+      ~TaskSynchronizer()
+      {
+        Trackable::destroy();
+      }
+    };
+    std::unique_ptr<TaskSynchronizer> _taskSynchro;
+
+    ~PeriodicTaskPrivate();
 
     void _reschedule(qi::Duration delay = qi::Duration(0));
     void _wrap();
     void _onTaskFinished(const qi::Future<void>& fut);
+
+    void joinTasks()
+    {
+      _taskSynchro.reset();
+    }
   };
   static const int invalidThreadId = -1;
   PeriodicTask::PeriodicTask() :
@@ -96,10 +119,11 @@ namespace qi
   void PeriodicTask::setStrand(qi::Strand* strand)
   {
     if (strand)
-      _p->_scheduleCallback = boost::bind(
-          &qi::Strand::asyncDelay<const Callback&>, strand, _1, _2);
+      _p->_scheduleCallback = [=](const boost::function<void()>& cb, qi::Duration delay) {
+        return qi::getEventLoop()->asyncDelay([=] { return strand->defer(cb); }, delay).unwrap();
+      };
     else
-      _p->_scheduleCallback = ScheduleCallback();
+      _p->_scheduleCallback = PeriodicTaskPrivate::ScheduleCallback();
   }
 
   void PeriodicTask::setUsPeriod(qi::int64_t usp)
@@ -118,7 +142,7 @@ namespace qi
 
   void PeriodicTask::start(bool immediate)
   {
-    boost::mutex::scoped_lock l(_p->_mutex);
+    PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
     if (!_p->_callback)
       throw std::runtime_error("Periodic task cannot start without a setCallback() call first");
     if (_p->_period < qi::Duration(0))
@@ -132,12 +156,13 @@ namespace qi
       qiLogDebug() << static_cast<int>(_p->_state) << " task was not stopped";
       return; // Already running or being started.
     }
+    _p->_taskSynchro.reset(new PeriodicTaskPrivate::TaskSynchronizer);
     _p->_reschedule(immediate ? qi::Duration(0) : _p->_period);
   }
 
   void PeriodicTask::asyncStop()
   {
-    boost::mutex::scoped_lock l(_p->_mutex);
+    PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
     // we are allowed to go from Scheduled and Running to Stopping
     // also handle multiple stop() calls
     while (_p->_state != TaskState::Stopping)
@@ -167,24 +192,25 @@ namespace qi
   {
     asyncStop();
 
-    boost::mutex::scoped_lock l(_p->_mutex);
-    if (os::gettid() == _p->_tid)
-      return;
+    {
+      PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
+      if (os::gettid() == _p->_tid)
+        return;
+    }
 
-    while (_p->_state == TaskState::Stopping)
-      _p->_cond.wait(l);
+    _p->joinTasks();
   }
 
   void PeriodicTask::trigger()
   {
     qiLogDebug() << "triggering";
-    boost::mutex::scoped_lock l(_p->_mutex);
+    PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
     if (_p->_state == TaskState::Scheduled)
     {
       _p->_state = TaskState::Triggering;
       _p->_task.cancel();
-      while (_p->_state == TaskState::Triggering)
-        _p->_cond.wait(l);
+      _p->_cond.wait(l, [&]{ return _p->_state != TaskState::Triggering; } );
+
       if (_p->_state != TaskState::TriggerReady)
       {
         qiLogDebug() << "already triggered";
@@ -194,41 +220,69 @@ namespace qi
     }
   }
 
+  PeriodicTaskPrivate::~PeriodicTaskPrivate()
+  {
+    Trackable::destroy();
+  }
+
   void PeriodicTaskPrivate::_onTaskFinished(const qi::Future<void>& fut)
   {
+    // The future should only be canceled if stop or trigger was called while it was scheduled. If
+    // it is the case, react to the action by updating the state to the goal state and notify the
+    // state change to listeners.
     if (fut.isCanceled())
     {
       qiLogDebug() << "run canceled";
-      boost::mutex::scoped_lock l(_mutex);
-      if (_state == TaskState::Stopping)
-        _state = TaskState::Stopped;
-      else if (_state == TaskState::Triggering)
-        _state = TaskState::TriggerReady;
-      else
       {
-        QI_ASSERT(false && "state is not stopping nor triggering");
+        ScopedLock l(_mutex);
+        if (_state == TaskState::Stopping)
+          _state = TaskState::Stopped;
+        else if (_state == TaskState::Triggering)
+          _state = TaskState::TriggerReady;
+        else
+        {
+          QI_ASSERT(false && "state is not stopping nor triggering");
+        }
       }
       _cond.notify_all();
+    }
+
+    // The future can be in error if for instance the task raised an exception, in which case we
+    // at least log it.
+    if (fut.hasError())
+    {
+      qiLogWarning() << "run ended with error: " << fut.error();
     }
   }
 
   void PeriodicTaskPrivate::_reschedule(qi::Duration delay)
   {
     qiLogDebug() << "rescheduling in " << qi::to_string(delay);
+
+    QI_ASSERT_TRUE(_taskSynchro);
+    auto task = qi::track([&]{ _wrap(); }, _taskSynchro.get());
     if (_scheduleCallback)
-      _task = _scheduleCallback(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
+      _task = _scheduleCallback(std::move(task), delay);
     else
-      _task = getEventLoop()->asyncDelay(boost::bind(&PeriodicTaskPrivate::_wrap, shared_from_this()), delay);
+      _task = getEventLoop()->asyncDelay(std::move(task), delay);
     _state = TaskState::Scheduled;
-    _task.connect(boost::bind(
-          &PeriodicTaskPrivate::_onTaskFinished, shared_from_this(), _1));
+
+    // We track this callback with this object instance just to make sure it won't be called
+    // after this object was destroyed. We don't track it with the TaskSynchronizer because it is
+    // just a mean to update the PeriodicTask state and not part of the task execution.
+    //
+    // Why FutureCallbackType_Sync is necessary here:
+    // _onTaskFinished needs to be executed even if the default thread pool is destroyed
+    // to achieve this we want _onTaskFinished to be executed in the thread setting the result.
+    _task.connect(qi::track(boost::bind(
+          &PeriodicTaskPrivate::_onTaskFinished, this, _1), this), qi::FutureCallbackType_Sync);
   }
 
   void PeriodicTaskPrivate::_wrap()
   {
     qiLogDebug() << "callback start";
     {
-      boost::mutex::scoped_lock l(_mutex);
+      ScopedLock l(_mutex);
       QI_ASSERT(_state != TaskState::Stopped);
       /* To avoid being stuck because of unhandled transition, the rule is
        * that any other thread playing with our state can only do so
@@ -254,14 +308,14 @@ namespace qi
       qi::SteadyClockTimePoint start = qi::SteadyClock::now();
       std::pair<qi::int64_t, qi::int64_t> cpu = qi::os::cputime();
       {
-        boost::mutex::scoped_lock l(_mutex);
+        ScopedLock l(_mutex);
         _tid = os::gettid();
       }
 
       _callback();
 
       {
-        boost::mutex::scoped_lock l(_mutex);
+        ScopedLock l(_mutex);
         _tid = invalidThreadId;
       }
 
@@ -284,14 +338,14 @@ namespace qi
     if (shouldAbort)
     {
       qiLogDebug() << "should abort, bye";
-      boost::mutex::scoped_lock l(_mutex);
+      ScopedLock l(_mutex);
       _state = TaskState::Stopped;
       _cond.notify_all();
       return;
     }
     else
     {
-      boost::mutex::scoped_lock l(_mutex);
+      ScopedLock l(_mutex);
       _callStats.push(
           (float)boost::chrono::duration_cast<qi::MicroSeconds>(delta).count() / 1e6f,
           (float)usr / 1e6f,
@@ -329,7 +383,7 @@ namespace qi
 
   void PeriodicTask::compensateCallbackTime(bool enable)
   {
-    boost::mutex::scoped_lock l(_p->_mutex);
+    PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
     _p->_compensateCallTime = enable;
   }
 
@@ -337,7 +391,7 @@ namespace qi
   {
     TaskState s;
     {
-      boost::mutex::scoped_lock l(_p->_mutex);
+      PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
       s = _p->_state;
     }
     return s != TaskState::Stopped && s != TaskState::Stopping;
@@ -347,7 +401,7 @@ namespace qi
   {
     TaskState s;
     {
-      boost::mutex::scoped_lock l(_p->_mutex);
+      PeriodicTaskPrivate::ScopedLock l(_p->_mutex);
       s = _p->_state;
     }
     return s == TaskState::Stopped || s == TaskState::Stopping;

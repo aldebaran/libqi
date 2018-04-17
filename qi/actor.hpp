@@ -12,7 +12,6 @@
 
 namespace qi
 {
-
 /** Class that represents an actor.
  *
  * Inherit from this class if you want your class to be an actor (as in the
@@ -49,6 +48,13 @@ public:
   }
 
   template<class... Args>
+  auto strandedUnwrapped(Args&&... args) const
+    -> decltype(_strand.unwrappedSchedulerFor(std::forward<Args>(args)...)) // TODO C++14: remove this line
+  {
+    return _strand.unwrappedSchedulerFor(std::forward<Args>(args)...);
+  }
+
+  template<class... Args>
   auto async(Args&&... args) const
     -> decltype(_strand.async(std::forward<Args>(args)...)) // TODO C++14: remove this line
   {
@@ -73,7 +79,6 @@ public:
   {
     _strand.join();
   }
-
 };
 
 } // qi

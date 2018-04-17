@@ -9,15 +9,16 @@
 
 # include <stdexcept>
 # include <type_traits>
+# include <vector>
+
 # include <qi/api.hpp>
 # include <qi/assert.hpp>
-# include <vector>
 # include <qi/atomic.hpp>
 # include <qi/config.hpp>
-# include <qi/trackable.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
 # include <qi/functional.hpp>
+# include <qi/log.hpp>
 # include <qi/os.hpp>
 
 # include <boost/shared_ptr.hpp>
@@ -234,6 +235,7 @@ namespace qi {
 
     /** same as value() with an infinite timeout.
      */
+    QI_API_DEPRECATED_MSG("Use either `then`, `andThen`, `value` or `wait` functions instead.")
     inline operator const ValueTypeCast&() const
     { return _p->value(FutureTimeout_Infinite); }
 
@@ -378,24 +380,14 @@ namespace qi {
      */
     template <typename R, typename AF, typename Arg0, typename... Args>
     QI_API_DEPRECATED_MSG(Use 'then' instead)
-    Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args)
-    {
-      return thenRImpl<R>(
-          FutureCallbackType_Auto,
-          qi::bind(std::forward<AF>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...));
-    }
+    Future<R> thenR(AF&& func, Arg0&& arg0, Args&&... args);
 
     /**
      * @deprecated since 2.5 use then()
      */
     template <typename R, typename AF, typename Arg0, typename... Args>
     QI_API_DEPRECATED_MSG(Use 'then' instead)
-    Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
-    {
-      return thenRImpl<R>(
-          type,
-          qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
-    }
+    Future<R> thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args);
 
     /**
      * @brief Execute a callback when the future is finished.
@@ -407,11 +399,11 @@ namespace qi {
      *
      * @return a future that will receive the value returned by the callback or an error if the callback threw.
      */
-    template <typename AF>
-    auto then(FutureCallbackType type, AF&& func)
-        -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
+    template <typename F>
+    auto then(FutureCallbackType type, F&& func)
+        -> Future<typename std::result_of<F(Future<T>)>::type>
     {
-      return thenRImpl<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>(type, std::forward<AF>(func));
+      return thenRImpl<typename std::result_of<F(Future<T>)>::type, F>(type, std::forward<F>(func));
     }
 
     /**
@@ -419,7 +411,7 @@ namespace qi {
      */
     template <typename AF>
     auto then(AF&& func)
-        -> qi::Future<typename detail::DecayAsyncResult<AF, qi::Future<T>>::type>
+        -> Future<typename std::result_of<AF(Future<T>)>::type>
     {
       return this->then(FutureCallbackType_Auto, std::forward<AF>(func));
     }
@@ -460,11 +452,11 @@ namespace qi {
      * If this future finishes with an error or a cancel, the callback will not be called and the returned future will
      * finish in the same state.
      */
-    template <typename AF>
-    auto andThen(FutureCallbackType type, AF&& func)
-        -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
+    template <typename F>
+    auto andThen(FutureCallbackType type, F&& func)
+        -> Future<typename std::decay<typename std::result_of<F(ValueType)>::type>::type>
     {
-      return this->andThenRImpl<typename detail::DecayAsyncResult<AF, ValueType>::type>(type, std::forward<AF>(func));
+      return this->andThenRImpl<typename std::decay<typename std::result_of<F(ValueType)>::type>::type, F>(type, std::forward<F>(func));
     }
 
     /**
@@ -472,7 +464,7 @@ namespace qi {
      */
     template <typename AF>
     auto andThen(AF&& func)
-        -> qi::Future<typename detail::DecayAsyncResult<AF, ValueType>::type>
+        -> Future<typename std::decay<typename std::result_of<AF(ValueType)>::type>::type>
     {
       return this->andThen(FutureCallbackType_Auto, std::forward<AF>(func));
     }
@@ -516,13 +508,10 @@ namespace qi {
     void connect(FUNCTYPE fun, ARG0 tracked, ...,
                  FutureCallbackType type = FutureCallbackType_Auto);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                \
-  template <typename AF, typename ARG0 comma ATYPEDECL>                  \
-  inline void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
-                      FutureCallbackType type = FutureCallbackType_Auto) \
-  {                                                                      \
-    this->then(type, qi::bind(fun, arg0 comma AUSE));                    \
-  }
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)           \
+    template <typename AF, typename ARG0 comma ATYPEDECL>           \
+    void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
+                 FutureCallbackType type = FutureCallbackType_Auto);
     QI_GEN(genCall)
 #undef genCall
 #endif
@@ -722,13 +711,9 @@ namespace qi {
     template<typename FUNCTYPE, typename ARG0>
     void connect(FUNCTYPE fun, ARG0 tracked, ...);
 #else
-#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)               \
-    template<typename AF, typename ARG0 comma ATYPEDECL>                \
-    inline void connect(const AF& fun, const ARG0& arg0 comma ADECL)    \
-    {                                                                   \
-      _sync = false;                                                    \
-      connect(::qi::bind<void(FutureSync<T>)>(fun, arg0 comma AUSE));   \
-    }
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)     \
+    template<typename AF, typename ARG0 comma ATYPEDECL>      \
+    void connect(const AF& fun, const ARG0& arg0 comma ADECL);
     QI_GEN(genCall)
 #undef genCall
 #endif
@@ -1084,6 +1069,25 @@ namespace qi {
     }
   };
 
+  /// Returns a future set with the given value. Passing no value results in a
+  /// Future<void>.
+  ///
+  /// Example:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// Future<int> f = futurize(42);
+  /// assert(f.hasValue() && f.value() == 42);
+  /// Future<void> f2 = futurize();
+  /// assert(f2.hasValue());
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// TODO: Remove the trailing return type when get rid of C++11.
+  template<typename... T>
+  auto futurize(T&&... t)
+    -> decltype(UnitFuture{}(fwd<T>(t)...))
+  {
+    return UnitFuture{}(fwd<T>(t)...);
+  }
+
   /// Returns a new function similar to the given one except that it returns a
   /// future.
   ///
@@ -1107,6 +1111,56 @@ namespace qi {
   {
     return semiLift(std::forward<Proc>(p), UnitFuture{});
   }
+} // namespace qi
+
+// KLUDGE: all definitions related to qi::bind or qi::Trackable are to be defined last,
+// because qi::bind, found in trackable.hxx needs to know Future first!
+// TODO: all functions below appear to be deprecated, they should be removed at some point.
+#include <qi/trackable.hpp>
+
+namespace qi
+{
+  template <typename T>
+  template <typename R, typename AF, typename Arg0, typename... Args>
+  Future<R> Future<T>::thenR(AF&& func, Arg0&& arg0, Args&&... args)
+  {
+    return thenRImpl<R>(
+        FutureCallbackType_Auto,
+        qi::bind(std::forward<AF>(func), std::forward<Arg0>(arg0), std::forward<Args>(args)...));
+  }
+
+  template <typename T>
+  template <typename R, typename AF, typename Arg0, typename... Args>
+  Future<R> Future<T>::thenR(FutureCallbackType type, AF&& func, Arg0&& arg0, Args&&... args)
+  {
+    return thenRImpl<R>(
+        type,
+        qi::bind(std::forward<AF>(func), arg0, std::forward<Args>(args)...));
+  }
+
+#ifndef DOXYGEN // skip those complicated macros in documentation
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                   \
+  template <typename T>                                                     \
+  template <typename AF, typename ARG0 comma ATYPEDECL>                     \
+  void Future<T>::connect(                                                  \
+      const AF& fun, const ARG0& arg0 comma ADECL, FutureCallbackType type) \
+  {                                                                         \
+    this->then(type, qi::bind(fun, arg0 comma AUSE));                       \
+  }
+    QI_GEN(genCall)
+#undef genCall
+
+#define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)                           \
+    template <typename T>                                                           \
+    template <typename AF, typename ARG0 comma ATYPEDECL>                           \
+    void FutureSync<T>::connect(const AF& fun, const ARG0& arg0 comma ADECL)        \
+    {                                                                               \
+      _sync = false;                                                                \
+      connect(::qi::bind<void(FutureSync<T>)>(fun, arg0 comma AUSE));               \
+    }
+    QI_GEN(genCall)
+#undef genCall
+#endif
 }
 
 #ifdef _MSC_VER

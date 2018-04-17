@@ -1,49 +1,59 @@
-#pragma once
 /*
-**  Copyright (C) 2014 Aldebaran Robotics
+**  Copyright (C) 2018 Aldebaran Robotics
 **  See COPYING for the license
 */
 
-#ifndef _QIMESSAGING_GATEWAY_HPP_
-#define _QIMESSAGING_GATEWAY_HPP_
+#ifndef QIMESSAGING_GATEWAY_HPP
+#define QIMESSAGING_GATEWAY_HPP
 
-#include <boost/shared_ptr.hpp>
+#pragma once
 
-#include <qi/api.hpp>
-#include <qi/property.hpp>
-#include <qi/future.hpp>
-#include <qi/url.hpp>
-#include <qi/anyvalue.hpp>
-#include <qi/signal.hpp>
+#include <qi/messaging/servicedirectoryproxy.hpp>
 
 namespace qi
 {
-class AuthProviderFactory;
-using AuthProviderFactoryPtr = boost::shared_ptr<AuthProviderFactory>;
-class ClientAuthenticatorFactory;
-using ClientAuthenticatorFactoryPtr = boost::shared_ptr<ClientAuthenticatorFactory>;
-class GatewayPrivate;
-using GatewayPrivatePtr = std::unique_ptr<GatewayPrivate>;
 
 class QI_API Gateway
 {
-  GatewayPrivatePtr _p;
+private:
+  ServiceDirectoryProxy _proxy; // must be declared before any other member
+
 public:
+  using IdValidationStatus = ServiceDirectoryProxy::IdValidationStatus;
+  using ListenStatus = ServiceDirectoryProxy::ListenStatus;
+  using Status = ServiceDirectoryProxy::Status;
+
   /**
-   * @param enforceAuth If set to true, reject clients that try to skip the authentication step. If false, accept all
-   * incoming connections whether or not they authentify.
+   * @param enforceAuth If set to true, reject clients that try to skip the authentication step. If
+   * false, accept all incoming connections whether or not they authentify.
    */
-  Gateway(bool enforceAuth = false);
+  Gateway(bool enforceAuth = true);
+
   ~Gateway();
 
+  QI_API_DEPRECATED_MSG("Use `statusChanged` instead.")
   Property<bool>& connected;
 
+  Property<Status>& status;
+
   UrlVector endpoints() const;
+
+  QI_API_DEPRECATED_MSG("Use listenAsync() instead.")
   bool listen(const Url& url);
+
+  Future<ListenStatus> listenAsync(const Url& url);
+
+  QI_API_DEPRECATED_MSG("Use setValidateIdentity() instead.")
   bool setIdentity(const std::string& key, const std::string& crt);
+
+  Future<IdValidationStatus> setValidateIdentity(const std::string& key, const std::string& crt);
+
+  void setAuthProviderFactory(AuthProviderFactoryPtr provider);
+
   qi::Future<void> attachToServiceDirectory(const Url& serviceDirectoryUrl);
+
   void close();
 };
 }
 
-#endif // _QIMESSAGING_GATEWAY_HPP_
+#endif // QIMESSAGING_GATEWAY_HPP

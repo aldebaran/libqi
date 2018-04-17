@@ -26,20 +26,17 @@ namespace
 
   using qi::SessionPtr;
 
+  static const auto timeout = qi::MilliSeconds{ 1000 };
+
   class TestGateway : public ::testing::Test
   {
   public:
     void SetUp()
     {
       sd_.listenStandalone("tcp://127.0.0.1:0");
-      qi::Future<void> fut = gw_.attachToServiceDirectory(sd_.url());
-      fut.wait();
-      if (fut.hasError())
-      {
-        qiLogError() << "error: " << fut.error();
-        ASSERT_TRUE(false);
-      }
-      gw_.listen("tcp://127.0.0.1:0");
+      gw_.attachToServiceDirectory(sd_.url()).value(); // throw on error
+      const auto listenStatus = gw_.listenAsync("tcp://127.0.0.1:0").value();
+      ASSERT_EQ(listenStatus, qi::Gateway::ListenStatus::Listening);
     }
 
     qi::SessionPtr connectClientToSd();
@@ -182,7 +179,7 @@ namespace
     {
       qi::Promise<int> sync;
       auto fut = sync.future();
-      ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(qi::MilliSeconds{ 100 }));
+      ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(timeout));
       service = client->service("my_service");
       value = rand();
       service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value)));
@@ -204,7 +201,7 @@ namespace
     ASSERT_ANY_THROW(service = client->service("my_service"));
 
     int id = serviceHost->registerService("my_service", makeBaseService()).value();
-    ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(qi::MilliSeconds{ 100 }));
+    ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(timeout));
     service = client->service("my_service");
     ASSERT_EQ(service.call<int>("echoValue", 44), 44);
     serviceHost->unregisterService(id);
@@ -316,11 +313,6 @@ namespace
     }
   }
 
-  void setPromise(qi::Promise<void> prom)
-  {
-    prom.setValue(nullptr);
-  }
-
   TEST_F(TestGateway, testOnSDDeathGwReconnectsAndStillWorksProperly)
   {
     SessionPtr serviceHost = connectClientToGw();
@@ -343,16 +335,19 @@ namespace
 
     {
       qi::Promise<void> sync;
-      gw_.connected.connect(setPromise, sync);
+      gw_.status.connect([&](const qi::Gateway::Status& status){
+        if(status.isReady())
+          sync.setValue(nullptr);
+      });
       nextSD.listenStandalone(origUrl);
       sync.future().wait();
     }
 
-    // Wait for GW to relisten. This should be removed once the GW has been reimplemented.
-    qi::sleepFor(qi::MilliSeconds{ 100 });
-
-    serviceHost->connect(gw_.endpoints()[0]);
-    client->connect(gw_.endpoints()[0]);
+    const auto gatewayEndpoints = gw_.endpoints();
+    ASSERT_FALSE(gatewayEndpoints.empty());
+    const auto& firstEndpoint = gatewayEndpoints[0];
+    serviceHost->connect(firstEndpoint);
+    client->connect(firstEndpoint);
     serviceHost->registerService("my_service", makeBaseService());
     service = client->service("my_service");
     ASSERT_EQ(service.call<int>("echoValue", value), value);

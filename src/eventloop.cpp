@@ -473,7 +473,7 @@ namespace qi {
       return std::forward<Proc2>(onFail)();
   }
 
-  bool EventLoop::isInThisContext()
+  bool EventLoop::isInThisContext() const
   {
     return safeCall(_p, [](const ImplPtr& impl){
         return impl->isInThisContext();
