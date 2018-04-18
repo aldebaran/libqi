@@ -270,6 +270,7 @@ public:
   /// Shares ref counter with other, which must handle the destruction of go.
   template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
   template<typename U> Object(boost::shared_ptr<U> other);
+  bool isValid() const;
   explicit operator bool() const;
   operator Object<Empty>() const;
 
@@ -572,7 +573,17 @@ bool operator<(const Object<T>& a, const Object<T>& b)
   return a.asGenericObject()->ptrUid < b.asGenericObject()->ptrUid;
 }
 
-template<typename T> Object<T>::operator bool() const   { return _obj && _obj->type;}
+template<typename T>
+bool Object<T>::isValid() const
+{
+  return _obj && _obj->type;
+}
+
+template<typename T>
+Object<T>::operator bool() const
+{
+  return isValid();
+}
 
 template<typename T> Object<T>::operator Object<Empty>() const { return Object<Empty>(_obj);}
 /// Check tha value actually has the T interface

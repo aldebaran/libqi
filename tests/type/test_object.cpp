@@ -1574,3 +1574,33 @@ TEST(TestObject, ObjectSharedLife)
   }
   EXPECT_FALSE(wFoo.lock());
 }
+
+namespace
+{
+  /// Predicate<qi::Object> P
+  template<typename P>
+  void testValidity(P isValid)
+  {
+    using O = qi::Object<Apple>;
+    {
+      O obj = boost::make_shared<Apple>("kjhd");
+      EXPECT_TRUE(isValid(obj));
+      EXPECT_TRUE(isValid(O(obj)));
+    }
+    EXPECT_FALSE(isValid(O()));
+    EXPECT_TRUE(isValid(O(static_cast<Apple*>(nullptr)))); // ...
+    EXPECT_TRUE(isValid(O(boost::shared_ptr<Apple>()))); // ...
+  }
+} // namespace
+
+TEST(TestObject, IsValid)
+{
+  SCOPED_TRACE("IsValid");
+  testValidity([](const qi::Object<Apple>& o) {return o.isValid();});
+}
+
+TEST(TestObject, ConversionToBool)
+{
+  SCOPED_TRACE("ConversionToBool");
+  testValidity([](const qi::Object<Apple>& o) {return static_cast<bool>(o);});
+}
