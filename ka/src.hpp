@@ -82,28 +82,15 @@ namespace ka {
   /// Readable R
   template<typename R>
   BOOST_CONSTEXPR
-  auto src(R const& r) KA_NOEXCEPT_EXPR(*r) -> decltype(*r) {
-    return *r;
-  }
-
-  template<typename R>
-  BOOST_CONSTEXPR
-  auto src(R& r) KA_NOEXCEPT_EXPR(*r) -> decltype(*r) {
-    return *r;
+  auto src(R&& r) KA_NOEXCEPT_EXPR(*fwd<R>(r)) -> decltype(*fwd<R>(r)) {
+    return *fwd<R>(r);
   }
 
   template<typename R, typename =
-    traits::EnableIf<!traits::HasOperatorStar<R>::value>>
+    traits::EnableIf<!traits::HasOperatorStar<traits::Decay<R>>::value>>
   BOOST_CONSTEXPR
-  R const& src(R const& r) KA_NOEXCEPT(true) {
-    return r;
-  }
-
-  template<typename R, typename =
-    traits::EnableIf<!traits::HasOperatorStar<R>::value>>
-  BOOST_CONSTEXPR
-  R& src(R& r) KA_NOEXCEPT(true) {
-    return r;
+  R&& src(R&& r) KA_NOEXCEPT(true) {
+    return fwd<R>(r);
   }
 
   /// Polymorphic function object that returns the source of a Readable.

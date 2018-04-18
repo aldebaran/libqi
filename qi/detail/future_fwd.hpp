@@ -18,8 +18,10 @@
 # include <qi/config.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
+# include <qi/either.hpp>
 # include <qi/log.hpp>
 # include <qi/os.hpp>
+# include <qi/tag.hpp>
 
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
@@ -109,6 +111,19 @@ namespace qi {
     FutureTimeout_Infinite = ((int) 0x7fffffff),
     FutureTimeout_None     = 0,
   };
+
+  namespace detail
+  {
+    struct VisitTimeout : boost::static_visitor<int>
+    {
+      int operator()(MilliSeconds x) const {
+        return x.count();
+      }
+      int operator()(Infinity) const {
+        return int(FutureTimeout_Infinite);
+      }
+    };
+  } // namespace detail
 
   enum AdaptFutureOption {
     AdaptFutureOption_None = 0,
@@ -230,16 +245,41 @@ namespace qi {
      *
      * if an error is set, then value throw a FutureUserException, others errors are FutureException.
      */
-    inline const ValueType &value(int msecs = FutureTimeout_Infinite) const
-    { return _p->value(msecs); }
+    inline const ValueType& value(int msecs = FutureTimeout_Infinite) const
+    {
+      return _p->value(msecs);
+    }
+
+    inline const ValueType& value(Either<MilliSeconds, Infinity> timeout) const
+    {
+      return _p->value(visit(detail::VisitTimeout{}, timeout));
+    }
+
+    /**
+     * @brief Return by copy the value associated to a Future.
+     */
+    ValueType valueCopy(Either<MilliSeconds, Infinity> timeout = Infinity{}) const
+    {
+      // Copy happens because of the return type.
+      return value(visit(detail::VisitTimeout{}, timeout));
+    }
+
+    /**
+     * @brief Return a shared pointer to the value associated to a Future.
+     */
+    boost::shared_ptr<const T> valueSharedPtr(Either<MilliSeconds, Infinity> timeout = Infinity{}) const
+    {
+      // Make the returned pointer increment the shared state reference count.
+      return boost::shared_ptr<const T>(_p, &_p->value(visit(detail::VisitTimeout{}, timeout)));
+    }
 
     /**
      * @brief Return the value associated to a Future.
-     * @note Equivalent to value(FutureTimeout_Infinite)
+     * @note Equivalent to `valueCopy(FutureTimeout_Infinite)`.
      */
-    inline const ValueType& operator*() const
+    inline ValueType operator*() const
     {
-      return value();
+      return valueCopy();
     }
 
     /** same as value() with an infinite timeout.
@@ -698,7 +738,11 @@ namespace qi {
       return _future.uniqueId();
     }
 
-    const ValueType &value(int msecs = FutureTimeout_Infinite) const   { _sync = false; return _future.value(msecs); }
+    const ValueType& value(int msecs = FutureTimeout_Infinite) const   { _sync = false; return _future.value(msecs); }
+    ValueType valueCopy(int msecs = FutureTimeout_Infinite) const      { return value(msecs); }
+    boost::shared_ptr<const T> valueSharedPtr(int msecs = FutureTimeout_Infinite) const {
+      _sync = false; return _future.valueSharedPtr(msecs);
+    }
     operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
     FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
     FutureState wait(qi::Duration duration) const                      { _sync = false; return _future.wait(duration); }
@@ -1073,6 +1117,12 @@ namespace qi {
   struct UnitFuture
   {
   // Regular:
+    // Constructor added because of an error with Clang on Mac.
+    // TODO: Remove this constructor when Clang is upgraded.
+    UnitFuture()
+    {
+    }
+
     KA_GENERATE_FRIEND_REGULAR_OPS_0(UnitFuture)
   // PolymorphicFunction<Future<T> (T), Future<void> ()>:
     /// There is no constraint on T.
