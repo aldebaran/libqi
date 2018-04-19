@@ -386,6 +386,7 @@ set(KA_H
   ka/conceptpredicate.hpp
   ka/errorhandling.hpp
   ka/functional.hpp
+  ka/integersequence.hpp
   ka/macro.hpp
   ka/macroregular.hpp
   ka/memory.hpp
