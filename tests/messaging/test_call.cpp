@@ -6,6 +6,7 @@
  */
 
 #include <list>
+#include <thread>
 
 #include <gtest/gtest.h>
 
@@ -1623,3 +1624,58 @@ TEST(TestCall, TestIsConnected)
   ASSERT_TRUE(p1.server()->isConnected());
   ASSERT_TRUE(p1.client()->isConnected());
 }
+
+
+class DummyAlMemory
+{
+
+  boost::synchronized_value<qi::AnyObject> _subscriber;
+
+public:
+  DummyAlMemory() : _subscriber(boost::make_shared<SimpleClass>()) {}
+
+  qi::AnyObject subscriber() {
+    return _subscriber.get();
+  }
+};
+QI_REGISTER_OBJECT(DummyAlMemory, subscriber);
+
+
+TEST(TestCall, MetaObjectCacheFailureWhenCallsInParallel)
+{
+  TestSessionPair sessions;
+
+  {
+    qi::AnyObject service = boost::make_shared<DummyAlMemory>();
+    auto server = sessions.server();
+    server->registerService("ALMemory", service);
+  }
+
+  auto memory = sessions.client()->service("ALMemory").value();
+
+  static const int PARALLEL_TASKS_TO_RUN = 10;
+
+  std::vector<std::thread> threads;
+  threads.reserve(PARALLEL_TASKS_TO_RUN);
+
+  for (int i = 0; i < PARALLEL_TASKS_TO_RUN; ++i)
+  {
+    threads.emplace_back( [memory]{
+      try
+      {
+        memory.call<qi::AnyObject>("subscriber");
+      }
+      catch (std::exception const &e)
+      {
+        FAIL();
+      }
+
+    });
+  }
+
+  for(auto&& thread : threads)
+    thread.join();
+
+}
+
+
