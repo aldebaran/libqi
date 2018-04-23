@@ -308,7 +308,6 @@ namespace detail
   template <typename F>
   struct StrandedUnwrapped
   {
-    QI_API_DEPRECATED_MSG("is_async used")
     static const bool is_async = true;
 
   private:
