@@ -109,7 +109,7 @@ static void initCapabilities()
   /* MetaObjectCache: Object serialization protocol supports the
   * caching of MetaObjects (binary protocol change).
   */
-  (*_defaultCapabilities)["MetaObjectCache"] = AnyValue::from(true);
+  (*_defaultCapabilities)["MetaObjectCache"] = AnyValue::from(false);
   /* MessageFlags: remote ends support Message flags (flags in 'type' header field)
   */
   (*_defaultCapabilities)["MessageFlags"] = AnyValue::from(true);
