@@ -84,3 +84,25 @@ TEST(UtilityDeclcref, Basic) {
 
   static_assert(Equal<decltype(declcref<const int>()), const int&>::value, "");
 }
+
+TEST(UtilityExchange, Basic) {
+  using namespace ka;
+
+  int a = 42;
+  const auto b = exchange(a, 33);
+  static_assert(Equal<decltype(b), const int>::value, "");
+
+  EXPECT_EQ(33, a);
+  EXPECT_EQ(42, b);
+}
+
+TEST(UtilityExchange, MoveOnly) {
+  using namespace ka;
+
+  move_only_t<int> a{ 42 };
+  const auto b = exchange(a, move_only_t<int>{ 33 });
+  static_assert(Equal<decltype(b), const move_only_t<int>>::value, "");
+
+  EXPECT_EQ(33, *a);
+  EXPECT_EQ(42, *b);
+}
