@@ -517,10 +517,15 @@ namespace qi {
         }
         out.write(osi.serviceId);
         out.write(osi.objectId);
-        // We serialize the PtrUid because, on the receiver side once
-        // deserialized, a new local object will be created.
-        // The PtrUid is the only way to retain the identity of the object.
-        out.write(begin(osi.objectPtrUid), size(osi.objectPtrUid));
+
+        if (streamContext->sharedCapability<bool>(capabilityname::objectPtrUid, false))
+        {
+          // We serialize the PtrUid because, on the receiver side once
+          // deserialized, a new local object will be created.
+          // The PtrUid is the only way to retain the identity of the object.
+          const auto ptruid = *osi.objectPtrUid;
+          out.write(begin(ptruid), size(ptruid));
+        }
       }
 
       void visitTuple(const std::string &name, const AnyReferenceVector& vals, const std::vector<std::string>& annotations)
@@ -707,7 +712,12 @@ namespace qi {
         }
         in.read(osi.serviceId);
         in.read(osi.objectId);
-        in.read(begin(osi.objectPtrUid), size(osi.objectPtrUid));
+        if (streamContext->sharedCapability<bool>(capabilityname::objectPtrUid, false))
+        {
+          PtrUid ptruid;
+          in.read(begin(ptruid), size(ptruid));
+          osi.objectPtrUid = ptruid;
+        }
         if (!osi.transmitMetaObject)
           osi.metaObject = streamContext->receiveCacheGet(osi.metaObjectCachedId);
         else if (osi.metaObjectCachedId != ObjectSerializationInfo::notCached)

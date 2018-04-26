@@ -31,7 +31,7 @@ namespace qi {
     qi::uint32_t metaObjectCachedId;
     qi::uint32_t serviceId;
     qi::uint32_t objectId;
-    PtrUid       objectPtrUid;
+    boost::optional<PtrUid> objectPtrUid;
     static const qi::uint32_t notCached = 0xFFFFFFFF;
   };
 

@@ -265,7 +265,8 @@ namespace qi
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
-                   << " on " << context.get();
+                   << " ptruid = '" << (osi.objectPtrUid ? *osi.objectPtrUid : PtrUid{}) << "' on "
+                   << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
       AnyObject o = makeDynamicAnyObject(ro, true, osi.objectPtrUid, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;

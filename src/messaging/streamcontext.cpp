@@ -9,6 +9,11 @@
 
 namespace qi
 {
+  namespace capabilityname
+  {
+    char const * const objectPtrUid = "ObjectPtrUID";
+  }
+
 
 StreamContext::StreamContext()
 {
@@ -113,8 +118,11 @@ static void initCapabilities()
   /* MessageFlags: remote ends support Message flags (flags in 'type' header field)
   */
   (*_defaultCapabilities)["MessageFlags"] = AnyValue::from(true);
-  /* RemoteCancelableCalls: remote end supports call cancelations.
+  /* Objects have unique identification using Ptruid.
    */
+  (*_defaultCapabilities)[capabilityname::objectPtrUid] = AnyValue::from(true);
+  /* RemoteCancelableCalls: remote end supports call cancelations.
+  */
   (*_defaultCapabilities)["RemoteCancelableCalls"] = AnyValue::from(true);
   // Process override from environment
   std::string capstring = qi::os::getenv("QI_TRANSPORT_CAPABILITIES");

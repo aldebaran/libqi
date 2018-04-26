@@ -17,6 +17,11 @@ namespace qi
 
 using CapabilityMap = std::map<std::string, AnyValue>;
 
+  namespace capabilityname
+  {
+    extern char const * const objectPtrUid;
+  }
+
 /** Store contextual data associated to one point-to-point point transport.
  *
  * Currently handles:
