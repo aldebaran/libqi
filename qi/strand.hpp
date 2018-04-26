@@ -315,8 +315,9 @@ namespace detail
     Stranded<F> _stranded;
 
   public:
-    StrandedUnwrapped(F&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
-      : _stranded(std::forward<F>(f), strand, onFail)
+    template <typename FF>
+    StrandedUnwrapped(FF&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
+      : _stranded(std::forward<FF>(f), strand, onFail)
     {}
 
     template <typename... Args>

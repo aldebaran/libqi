@@ -1,6 +1,7 @@
 #include <atomic>
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
+#include <qi/actor.hpp>
 #include <qi/future.hpp>
 #include <qi/trackable.hpp>
 #include "test_future.hpp"
@@ -109,4 +110,18 @@ TEST(FutureTrack, Trackable)
   EXPECT_GT(time, 160000);
   qi::os::msleep(20); // poor man's memory barrier, v is written from an other thread
   EXPECT_EQ(10, v);
+}
+
+TEST(FutureTrack, track_actor_build)
+{
+  qi::Actor stuff;
+
+  // rvalue
+  auto f1 = qi::track([&stuff](int){}, &stuff);
+  (void) f1;
+
+  // lvalue
+  auto func = [&stuff](int){};
+  auto f2 = qi::track(func, &stuff);
+  (void) f2;
 }

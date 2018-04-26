@@ -528,3 +528,31 @@ TEST(TestStrand, JoinNoThrowUnknownException)
   TestStrand<E> strand{error};
   ASSERT_EQ(Strand::OptionalErrorMessage{ka::exception_message::unknown_error()}, strand.join(std::nothrow));
 }
+
+TEST(TestStrand, build_schedulerFor)
+{
+  qi::Strand strand;
+
+  // rvalue
+  auto f1 = strand.schedulerFor([](int){});
+  (void) f1;
+
+  // lvalue
+  auto func = [](int){};
+  auto f2 = strand.schedulerFor(func);
+  (void) f2;
+}
+
+TEST(TestStrand, build_unwrappedSchedulerFor)
+{
+  qi::Strand strand;
+
+  // rvalue
+  auto f1 = strand.unwrappedSchedulerFor([](int){});
+  (void) f1;
+
+  // lvalue
+  auto func = [](int){};
+  auto f2 = strand.unwrappedSchedulerFor(func);
+  (void) f2;
+}
