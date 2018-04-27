@@ -1242,8 +1242,8 @@ TEST(FunctionalScopeLock, ReturnsProcResultOnLockSuccess) {
   // TODO: pass by value instead of mutable store when source is available
   auto proc = scope_lock_proc([](int i){ return i + 10; }, mutable_store(L{ true }));
   auto res = proc(5);
-  ASSERT_TRUE(res);
-  ASSERT_EQ(15, res.value());
+  ASSERT_FALSE(res.empty());
+  ASSERT_EQ(15, *res);
 }
 
 TEST(FunctionalScopeLock, ReturnsEmptyOptionalOnLockFailure) {
@@ -1253,7 +1253,7 @@ TEST(FunctionalScopeLock, ReturnsEmptyOptionalOnLockFailure) {
   // TODO: pass by value instead of mutable store when source is available
   auto proc = scope_lock_proc([](int i){ return i + 10; }, mutable_store(L{ false }));
   auto res = proc(12);
-  ASSERT_FALSE(res);
+  ASSERT_TRUE(res.empty());
 }
 
 TEST(FunctionalScopeLock, StaysLockedUntilProcIsFinished) {

@@ -20,7 +20,7 @@ namespace ka {
 
   /// Polymorphic function that maps any input to the same output.
   ///
-  /// Copiable Ret
+  /// Copyable Ret
   template<typename Ret>
   struct constant_function_t {
     Ret ret;
@@ -850,31 +850,27 @@ namespace ka {
     return {fwd<Proc>(proc)};
   }
 
-  namespace detail {
-    template<typename Ret>
-    struct scope_lock_proc_t {
-      template<typename Proc, typename L, typename... Args>
-      boost::optional<Ret> operator()(Proc& proc, L& lockable, Args&&... args) const {
-        if (auto lock = scopelock(lockable)) {
-          return proc(fwd<Args>(args)...);
-        }
-        return {};
-      }
-    };
+  // We can't include `opt.hpp` because of the circular dependency with this file. Instead we just
+  // forward declare it and include `opt.hpp` at the end of this file.
+  template<typename>
+  class opt_t;
 
-    template<>
-    struct scope_lock_proc_t<void> {
-      template<typename Proc, typename L, typename... Args>
-      void operator()(Proc& proc, L& lockable, Args&&... args) const {
-        if (auto lock = scopelock(lockable)) {
-          proc(fwd<Args>(args)...);
-        }
+  namespace detail {
+    /// Procedure<T (...)> Proc,
+    /// Mutable<ScopeLockable> M
+    template <typename Proc, typename M, typename... Args>
+    opt_t<ResultOf<Proc&(Args&&...)>> scope_lock_invoke(Proc& proc, M& mut_lockable, Args&&... args) {
+      opt_t<ResultOf<Proc&(Args&&...)>> res;
+      if (auto lock = scopelock(*mut_lockable)) {
+        res.call_set(proc, fwd<Args>(args)...);
       }
-    };
-  } // namespace detail
+      return res;
+    }
+  }
 
   /// Procedure wrapper that calls its underlying procedure only if the associated
-  /// lockable could be locked.
+  /// lockable could be locked and returns an opt_t set with the result of the procedure if it was
+  /// called or empty otherwise.
   ///
   /// Example: weak_ptr as a lockable to perform lifetime protection
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -896,21 +892,20 @@ namespace ka {
     M mut_lockable;
   // Regular (if members are):
     KA_GENERATE_FRIEND_REGULAR_OPS_2(scope_lock_proc_t, proc, mut_lockable)
+
   // Procedure:
     template<typename... Args>
     auto operator()(Args&&... args)
-      -> decltype(detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-                    (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
-      return detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-        (proc, src(mut_lockable), fwd<Args>(args)...);
+      // TODO: Remove this when we can use C++14
+      -> decltype(detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...)) {
+      return detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...);
     }
 
     template<typename... Args>
     auto operator()(Args&&... args) const
-      -> decltype(detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-                    (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
-      return detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-        (proc, src(mut_lockable), fwd<Args>(args)...);
+      // TODO: Remove this when we can use C++14
+      -> decltype(detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...)) {
+      return detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...);
     }
   };
 
@@ -970,5 +965,8 @@ namespace ka {
     }
   } // namespace detail
 } // namespace ka
+
+// For ka::scope_lock_proc_t
+#include "opt.hpp"
 
 #endif // KA_FUNCTIONAL_HPP
