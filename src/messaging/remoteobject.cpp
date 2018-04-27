@@ -382,7 +382,7 @@ namespace qi {
                    << _service << " is disconnected.";
       return;
     }
-    if (!sock->sharedCapability<bool>("RemoteCancelableCalls", false))
+    if (!sock->sharedCapability<bool>(capabilityname::remoteCancelableCalls, false))
     {
       qiLogWarning() << "Remote end does not support cancelable calls.";
       return;

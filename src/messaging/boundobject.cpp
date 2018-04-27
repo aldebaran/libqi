@@ -622,7 +622,7 @@ namespace qi {
       else if (ao->call<bool>("isCanceled"))
       {
         qiLogDebug() << "Call " << replyaddr.messageId << " has been canceled.";
-        if (!socket->sharedCapability("RemoteCancelableCalls", false))
+        if (!socket->sharedCapability(capabilityname::remoteCancelableCalls, false))
         {
           ret.setType(Message::Type_Error);
           ret.setError("Call has been canceled.");

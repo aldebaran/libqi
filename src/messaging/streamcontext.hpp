@@ -19,7 +19,24 @@ using CapabilityMap = std::map<std::string, AnyValue>;
 
   namespace capabilityname
   {
-    extern char const * const objectPtrUid;
+    // Capability: A client socket has the capability to accept and
+    // dispatch Type_Call messages (& friends).
+    // If set, stream used to register a service to the SD can be reused
+    // to communicate with said service, for instance.
+    QI_API extern char const * const clientServerSocket;
+
+    // Capability: Object serialization protocol supports the
+    // caching of MetaObjects (binary protocol change).
+    QI_API extern char const * const metaObjectCache;
+
+    // Capability: remote ends support Message flags (flags in 'type' header field)
+    QI_API extern char const * const messageFlags;
+
+    // Capability: remote end supports call cancelations.
+    QI_API extern char const * const remoteCancelableCalls;
+
+    // Capability: Objects allow unique identification using Ptruid.
+    QI_API extern char const * const objectPtrUid;
   }
 
 /** Store contextual data associated to one point-to-point point transport.

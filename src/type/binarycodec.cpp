@@ -501,7 +501,7 @@ namespace qi {
         if (!serializeObjectCb || !streamContext)
           throw std::runtime_error("Object serialization callback and stream context required but not provided");
         ObjectSerializationInfo osi = serializeObjectCb(ptr);
-        if (streamContext->sharedCapability<bool>("MetaObjectCache", false))
+        if (streamContext->sharedCapability<bool>(capabilityname::metaObjectCache, false))
         {
           std::pair<unsigned int, bool> c = streamContext->sendCacheSet(osi.metaObject);
           osi.metaObjectCachedId = c.first;
@@ -699,7 +699,7 @@ namespace qi {
         if (!streamContext)
           throw std::runtime_error("Stream context required to deserialize object");
         ObjectSerializationInfo osi;
-        if (streamContext->sharedCapability<bool>("MetaObjectCache", false))
+        if (streamContext->sharedCapability<bool>(capabilityname::metaObjectCache, false))
         {
           in.read(osi.transmitMetaObject);
           if (osi.transmitMetaObject)
