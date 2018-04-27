@@ -130,7 +130,7 @@ TEST(FunctionalScopeLockTransfo, Basic)
   std::mutex m;
   int count = 0;
   const auto syncTransfo = scope_lock_transfo(&m);
-  std::vector<Future<void>> futs;
+  std::vector<Future<opt_t<void>>> futs;
   for (int i = 0; i < 10; ++i)
   {
     futs.push_back(async(syncTransfo([&]{
