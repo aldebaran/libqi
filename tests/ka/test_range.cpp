@@ -76,7 +76,7 @@ TEST(Range, BoundedRangeHelperFunctionSequenceIncr) {
   using namespace functional_ops;
   using C = std::array<int, 2>;
   C a{4, 1};
-  incr<C::iterator> incr;
+  incr_t incr;
   auto rng = bounded_range(a, incr *= incr); // skip 'odd' iterators
   EXPECT_FALSE(is_empty(rng));
   EXPECT_EQ(4, front(rng));

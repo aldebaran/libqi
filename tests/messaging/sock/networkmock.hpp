@@ -81,14 +81,14 @@ namespace mock
 
       template<typename Proc>
       auto wrap(Proc&& p) const
-        -> decltype(ka::compose(ka::poly_constant_function<void>{}, _strand.schedulerFor(ka::fwd<Proc>(p))))
+        -> decltype(ka::compose(ka::constant_function(), _strand.schedulerFor(ka::fwd<Proc>(p))))
       {
         // If `Proc`'s return type is `R`, then `_strand.schedulerFor(p)` returns a function object that
         // returns a `qi::Future<R>`. But this `wrap` method must return a function object that returns `void`
         // (see `NetIoService` concept).
         // So we compose the stranded procedure with a procedure that does nothing and returns `void` (namely
         // `PolymorphicConstantFunction<void>{}`).
-        return ka::compose(ka::poly_constant_function<void>{}, _strand.schedulerFor(ka::fwd<Proc>(p)));
+        return ka::compose(ka::constant_function(), _strand.schedulerFor(ka::fwd<Proc>(p)));
       }
     };
     struct ssl_context_type

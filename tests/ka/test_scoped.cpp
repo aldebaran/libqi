@@ -374,7 +374,7 @@ TEST(ScopedApplyAndRetract, Action) {
   const int new_value{old_value + 1};
   atomic_t x{old_value};
   {
-    auto _ = scoped_apply_and_retract(x, incr<atomic_t>{}, decr<atomic_t>{});
+    auto _ = scoped_apply_and_retract(x, incr_mono_t<atomic_t>{}, decr_mono_t<atomic_t>{});
     EXPECT_EQ(new_value, x.load());
   }
   EXPECT_EQ(old_value, x.load());

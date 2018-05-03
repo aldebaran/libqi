@@ -269,8 +269,8 @@ namespace ka {
   /// (Integral || BidirectionalIterator) T
   template<typename T>
   auto scoped_incr_and_decr(T& value)
-      -> decltype(scoped_apply_and_retract(value, incr<T>{})) {
-    return scoped_apply_and_retract(value, incr<T>{});
+      -> decltype(scoped_apply_and_retract(value, incr_mono_t<T>{})) {
+    return scoped_apply_and_retract(value, incr_mono_t<T>{});
   }
 } // namespace ka
 

@@ -80,7 +80,7 @@ namespace qi { namespace sock {
   ///   Transformation<Procedure> F0,
   ///   Transformation<Procedure<void (Args...)>> F1
   template<typename N, typename Proc0, typename Proc1,
-           typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+           typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
   void acceptConnection(Acceptor<N>& acceptor, Proc0 makeSocket,
     Proc1 onAccept, F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
@@ -105,7 +105,7 @@ namespace qi { namespace sock {
   /// With NetSslSocket S:
   ///   S is compatible with N,
   /// Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<SslSocket<N>>>>)> Proc
-  template<typename N, typename S, typename Proc = ka::poly_constant_function<void>>
+  template<typename N, typename S, typename Proc = ka::constant_function_t<void>>
   void listen(Acceptor<N>& acceptor, const Endpoint<Lowest<S>>& endpoint,
     ReuseAddressEnabled reuse, Proc onListen = {})
   {
@@ -257,8 +257,8 @@ namespace qi { namespace sock {
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure> F0,
     ///   Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
-             typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::constant_function_t<void>,
+             typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
     void operator()(Proc0 makeSocket,
         const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
         const Proc1& onAccept, const Proc2& onListen = {}, const F0& lifetimeTransfo = {},
@@ -273,8 +273,8 @@ namespace qi { namespace sock {
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure> F0,
     ///   Transformation<Procedure<void (Args...)>> F1
-    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
-             typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::constant_function_t<void>,
+             typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
     void operator()(Proc0 makeSocket, const Url& url,
         IpV6Enabled ipV6, ReuseAddressEnabled reuse,
         Proc1 onAccept, Proc2 onListen = {},
@@ -317,8 +317,8 @@ namespace qi { namespace sock {
     ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure<void (Args...)>> F
-    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
-             typename F = ka::id_transfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::constant_function_t<void>,
+             typename F = ka::id_transfo_t>
     void operator()(Proc0 makeSocket,
       const Endpoint<Lowest<S>>& endpoint, ReuseAddressEnabled reuse,
       const Proc1& onAccept, const Proc2& onListen = {}, const F& syncTransfo = {})
@@ -332,8 +332,8 @@ namespace qi { namespace sock {
     ///   Procedure<bool (ErrorCode<N>, M)> Proc1,
     ///   Procedure<void (ErrorCode<N>, boost::optional<Endpoint<Lowest<S>>>)> Proc2,
     ///   Transformation<Procedure<void (Args...)>> F
-    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>,
-             typename F = ka::id_transfo>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::constant_function_t<void>,
+             typename F = ka::id_transfo_t>
     void operator()(Proc0 makeSocket,
       const Url& url, IpV6Enabled ipV6, ReuseAddressEnabled reuse,
       const Proc1& onAccept, const Proc2& onListen = {}, const F& syncTransfo = {})

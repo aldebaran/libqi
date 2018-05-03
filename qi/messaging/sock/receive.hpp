@@ -195,7 +195,7 @@ namespace qi { namespace sock {
   /// Procedure<Optional<M> (ErrorCode<N>, M)> Proc,
   /// Transformation<Procedure> F0,
   /// Transformation<Procedure<void (Args...)>> F1
-  template<typename N, typename S, typename M, typename Proc, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+  template<typename N, typename S, typename M, typename Proc, typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
   void receiveMessage(const S& socket, M ptrMsg, SslEnabled ssl, size_t maxPayload,
     const Proc& onReceive, F0 lifetimeTransfo = F0{}, F1 syncTransfo = F1{});
 
@@ -382,7 +382,7 @@ namespace qi { namespace sock {
     /// Procedure<bool (ErrorCode<N>, const Message*)> Proc,
     /// Transformation<Procedure> F0,
     /// Transformation<Procedure<void (Args...)>> F1
-    template<typename S, typename Proc, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+    template<typename S, typename Proc, typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
         Proc onReceive, const F0& lifetimeTransfo = {}, const F1& syncTransfo = {})
     {
@@ -433,7 +433,7 @@ namespace qi { namespace sock {
     /// Mutable<<SslSocket<N>> S,
     /// Procedure<bool (ErrorCode<N>, const Message*)> Proc
     /// Transformation<Procedure<void (Args...)>> F
-    template<typename S, typename Proc, typename F = ka::id_transfo>
+    template<typename S, typename Proc, typename F = ka::id_transfo_t>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,
       Proc onReceive, const F& syncTransfo = {})
     {

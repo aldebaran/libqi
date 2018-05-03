@@ -218,7 +218,7 @@ namespace qi
         {
         }
 
-        template<typename Proc0, typename Proc1 = ka::poly_constant_function<void>>
+        template<typename Proc0, typename Proc1 = ka::constant_function_t<void>>
         void start(const Url& url, SslEnabled ssl, Proc0&& makeSocket,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
           Proc1 setupCancel = Proc1{})
@@ -227,7 +227,7 @@ namespace qi
           _connect(url, ssl, ka::fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout, setupCancel);
         }
 
-        template<typename Proc = ka::poly_constant_function<void>>
+        template<typename Proc = ka::constant_function_t<void>>
         void start(SslEnabled ssl, const SocketPtr<S>& s, Handshake side, Proc setupCancel = Proc{})
         {
           setContinuation();

@@ -44,7 +44,7 @@ namespace qi { namespace sock {
   ///   Procedure<void (ErrorCode<N>, M)> Proc,
   ///   Procedure<void (M)> Proc1
   template<typename N, typename M, typename H,
-           typename Proc, typename Proc1 = ka::poly_constant_function<void>>
+           typename Proc, typename Proc1 = ka::constant_function_t<void>>
   void sslHandshake(M socket, H side, Proc onComplete, Proc1 setupStop = Proc1{})
   {
     (*socket).async_handshake(side,
@@ -73,7 +73,7 @@ namespace qi { namespace sock {
   ///   Procedure<void (ErrorCode<N>, M)> Proc,
   ///   Procedure<void (M)> Proc1
   template<typename N, typename M, typename H,
-           typename Proc, typename Proc1 = ka::poly_constant_function<void>>
+           typename Proc, typename Proc1 = ka::constant_function_t<void>>
   void connect(M socket, const Entry<Resolver<N>>& entry, Proc onComplete, SslEnabled ssl, H side,
                const boost::optional<Seconds>& tcpPingTimeout, Proc1 setupStop = Proc1{})
   {
@@ -166,7 +166,7 @@ namespace qi { namespace sock {
     ///   Procedure<M ()> Proc0,
     ///   Procedure<void (ErrorCode<N>, M)> Proc1,
     ///   Procedure<void (Resolver<N>& || M)> Proc2
-    template<typename Proc0, typename Proc1, typename Proc2 = ka::poly_constant_function<void>>
+    template<typename Proc0, typename Proc1, typename Proc2 = ka::constant_function_t<void>>
     void operator()(const Url& url, SslEnabled ssl, Proc0 makeSocket,
         IpV6Enabled ipV6, Handshake side, Proc1 onComplete,
         const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
@@ -203,7 +203,7 @@ namespace qi { namespace sock {
     /// With Mutable<S> M:
     ///   Procedure<void (ErrorCode<N>, M> Proc1,
     ///   Procedure<void (M)> Proc2
-    template<typename M, typename Proc1, typename Proc2 = ka::poly_constant_function<void>>
+    template<typename M, typename Proc1, typename Proc2 = ka::constant_function_t<void>>
     void operator()(SslEnabled ssl, M socket, Handshake side,
       Proc1 onComplete, Proc2 setupStop = Proc2{})
     {
@@ -283,7 +283,7 @@ namespace qi { namespace sock {
     /// With Mutable<S> M:
     ///   Procedure<M ()> Proc0,
     ///   Procedure<void (Resolver<N>& || M)> Proc1
-    template<typename Proc0, typename Proc1 = ka::poly_constant_function<void>>
+    template<typename Proc0, typename Proc1 = ka::constant_function_t<void>>
     void operator()(const Url& url, SslEnabled ssl, Proc0 makeSocket, IpV6Enabled ipV6,
       Handshake side, const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
       Proc1 setupStop = {})
@@ -300,7 +300,7 @@ namespace qi { namespace sock {
     ///
     /// With Mutable<S> M:
     ///   Procedure<void (M)> Proc
-    template<typename M, typename Proc = ka::poly_constant_function<void>>
+    template<typename M, typename Proc = ka::constant_function_t<void>>
     void operator()(SslEnabled ssl, M s, Handshake side, Proc setupStop = {})
     {
       _connect(ssl, s, side, ConnectHandler<N, S>{_complete}, setupStop);

@@ -1338,9 +1338,9 @@ TEST(FutureSrc, SrcFutureUnitFutureCompose)
   using namespace ka::functional_ops;
   SrcFuture src;
   UnitFuture unit;
-  static_assert(Equal<decltype(src * unit), id_transfo>::value, "");
-  static_assert(Equal<decltype(unit * src), id_transfo>::value, "");
-  id_transfo _1;
+  static_assert(Equal<decltype(src * unit), id_transfo_t>::value, "");
+  static_assert(Equal<decltype(unit * src), id_transfo_t>::value, "");
+  id_transfo_t _1;
   ASSERT_EQ(src * unit, _1);
   ASSERT_EQ(unit * src, _1);
 #endif

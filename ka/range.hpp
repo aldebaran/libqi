@@ -103,12 +103,12 @@ namespace ka {
   /// Example: ranging over a sub-range of a container, skipping on element
   ///   every two elements (dangerous: end iterator could be skipped over)
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// poly_incr incr;
+  /// incr_t incr;
   /// auto memory = find_best(bounded_range(memories, incr *= incr));
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Regular T, Action<T> A
-  template<typename T, typename A = incr<T>>
+  template<typename T, typename A = incr_t>
   struct bounded_range_t {
     using self = bounded_range_t;
     T b, e;
@@ -151,7 +151,7 @@ namespace ka {
   }
 
   /// Precondition: (exists n >= 0) incr(b)^n == e
-  template<typename T, typename A = incr<T>>
+  template<typename T, typename A = incr_t>
   bounded_range_t<T, A> bounded_range(T b, T e, A incr = {}) {
     return {b, e, incr};
   }
@@ -159,17 +159,17 @@ namespace ka {
   /// Integral N
   template<typename N>
   bounded_range_t<N> bounded_range() {
-    return {std::numeric_limits<N>::min(), std::numeric_limits<N>::max(), incr<N>{}};
+    return {std::numeric_limits<N>::min(), std::numeric_limits<N>::max(), incr_t{}};
   }
 
   /// Linearizable<T> L, Action<T> A
-  template<typename L, typename A = poly_incr>
+  template<typename L, typename A = incr_t>
   auto bounded_range(L const& l, A incr = {}) -> decltype(bounded_range(begin(l), end(l), incr)) {
     return bounded_range(begin(l), end(l), incr);
   }
 
   /// Linearizable<T> L, Action<T> A
-  template<typename L, typename A = poly_incr>
+  template<typename L, typename A = incr_t>
   auto bounded_range(L& l, A incr = {}) -> decltype(bounded_range(begin(l), end(l), incr)) {
     return bounded_range(begin(l), end(l), incr);
   }

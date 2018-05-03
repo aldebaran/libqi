@@ -100,7 +100,7 @@ namespace qi { namespace sock {
   ///   S is compatible with N
   /// Transformation<Procedure> F0
   /// Transformation<Procedure> F1
-  template<typename N, typename S, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+  template<typename N, typename S, typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
   class SetupConnectionStop
   {
     Future<void> futStop;
@@ -140,7 +140,7 @@ namespace qi { namespace sock {
   };
 
   /// Helper function to perform type deduction for constructing a SetupConnectionStop.
-  template <typename N, typename S, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+  template <typename N, typename S, typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
   SetupConnectionStop<N, S, F0, F1> makeSetupConnectionStop(const Future<void>& f,
                                                             F0 lifetimeTransfo = {},
                                                             F1 syncTransfo = {})

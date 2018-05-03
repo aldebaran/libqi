@@ -70,7 +70,7 @@ namespace qi { namespace sock {
     /// Network N,
     /// Procedure<void (ErrorCode<N>, Iterator<Resolver<N>>)> Proc,
     /// Procedure<void (Resolver<N>&)> Proc1
-    template<typename Proc, typename Proc1 = ka::poly_constant_function<void>>
+    template<typename Proc, typename Proc1 = ka::constant_function_t<void>>
     void operator()(const Url& url, Proc onComplete, Proc1 setupStop = Proc1{})
     {
       if (!url.isValid())
@@ -163,7 +163,7 @@ namespace qi { namespace sock {
   // Procedure:
     /// Procedure<void (ErrorCode<N>, OptionalEntry)> Proc,
     /// Procedure<void (Resolver<N>&)> Proc1
-    template<typename Proc, typename Proc1 = ka::poly_constant_function<void>>
+    template<typename Proc, typename Proc1 = ka::constant_function_t<void>>
     void operator()(const Url& url, IpV6Enabled ipV6, Proc onComplete, Proc1 setupStop = Proc1{})
     {
       _resolve(url,

@@ -196,7 +196,7 @@ namespace qi { namespace sock {
   /// Procedure<Optional<M> (ErrorCode<N>, M)> Proc,
   /// Transformation<Procedure> F0,
   /// Transformation<Procedure<void (Args...)>> F1
-  template<typename N, typename S, typename M, typename Proc, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+  template<typename N, typename S, typename M, typename Proc, typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
   void sendMessage(const S& socket, M cptrMsg, Proc onSent, SslEnabled ssl,
       F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
@@ -262,8 +262,8 @@ namespace qi { namespace sock {
     /// Transformation<Procedure> F0,
     /// Transformation<Procedure<void (Args...)>> F1
     template<typename Msg,
-             typename Proc = ka::no_op_procedure<bool (ErrorCode<N>, ReadableMessage)>,
-             typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
+             typename Proc = ka::constant_function_t<bool>,
+             typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
     void operator()(Msg&&, SslEnabled, Proc onSent = Proc{true},
       const F0& lifetimeTransfo = F0{}, const F1& syncTransfo = F1{});
   private:
@@ -389,7 +389,7 @@ namespace qi { namespace sock {
     }
   // Procedure:
     /// Message Msg, Procedure<void (ErrorCode<N>, Readable<Message>)> Proc, Transformation<Procedure<void (Args...)>> F
-    template<typename Msg, typename Proc = ka::no_op_procedure<void (ErrorCode<N>, ReadableMessage)>, typename F = ka::id_transfo>
+    template<typename Msg, typename Proc = ka::constant_function_t<void>, typename F = ka::id_transfo_t>
     void operator()(Msg&& m, SslEnabled ssl, Proc onSent = Proc{}, F syncTransfo = F{})
     {
       auto lifetimeTransfo = trackWithFallbackTransfo([=]() mutable {

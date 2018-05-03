@@ -101,7 +101,7 @@ TEST(MutableStoreRegular, Direct) {
   using namespace ka;
   using namespace functional_ops;
   using M = mutable_store_t<int, int*>;
-  ASSERT_TRUE(is_regular(bounded_range(M{0}, M{10}, incr<int&>{} * src_t{})));
+  ASSERT_TRUE(is_regular(bounded_range(M{0}, M{10}, incr_t{} * src_t{})));
 }
 
 TEST(MutableStoreRegular, Indirect) {

@@ -4,6 +4,7 @@
 #include <future>
 #include <limits>
 #include <list>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,7 +25,7 @@
 
 TEST(FunctionalPolymorphicConstantFunction, RegularNonVoid) {
   using namespace ka;
-  using F = poly_constant_function<int>;
+  using F = constant_function_t<int>;
   auto const incr = [](F& f) {
     ++f.ret;
   };
@@ -34,7 +35,7 @@ TEST(FunctionalPolymorphicConstantFunction, RegularNonVoid) {
 
 TEST(FunctionalPolymorphicConstantFunction, RegularVoid) {
   using namespace ka;
-  using F = poly_constant_function<void>;
+  using F = constant_function_t<void>;
   ASSERT_TRUE(is_regular({F{}}));
 }
 
@@ -50,7 +51,7 @@ struct non_regular_t {
 
 TEST(FunctionalPolymorphicConstantFunction, NonRegularNonVoid) {
   using namespace ka;
-  using F = poly_constant_function<non_regular_t>;
+  using F = constant_function_t<non_regular_t>;
   auto incr = [](F& f) {
     ++f.ret.i;
   };
@@ -61,7 +62,7 @@ TEST(FunctionalPolymorphicConstantFunction, NonRegularNonVoid) {
 TEST(FunctionalPolymorphicConstantFunction, BasicNonVoid) {
   using namespace ka;
   char const c = 'z';
-  poly_constant_function<unsigned char> f{c};
+  constant_function_t<unsigned char> f{c};
   ASSERT_EQ(c, f());
   ASSERT_EQ(c, f(1));
   ASSERT_EQ(c, f(2.345));
@@ -73,7 +74,7 @@ TEST(FunctionalPolymorphicConstantFunction, BasicNonVoid) {
 
 TEST(FunctionalPolymorphicConstantFunction, BasicVoid) {
   using namespace ka;
-  poly_constant_function<void> f;
+  constant_function_t<void> f;
   ASSERT_NO_THROW(f());
   ASSERT_NO_THROW(f(1));
   ASSERT_NO_THROW(f(2.345));
@@ -81,6 +82,60 @@ TEST(FunctionalPolymorphicConstantFunction, BasicVoid) {
   ASSERT_NO_THROW(f(true));
   ASSERT_NO_THROW(f(std::vector<int>{5, 7, 2, 1}));
   ASSERT_NO_THROW(f(1, 2.345, "abcd", true));
+}
+
+namespace {
+  template<typename F>
+  void testIdTransfo() {
+    F id{};
+    ASSERT_EQ(id(1), 1);
+    ASSERT_EQ(id(true), true);
+    ASSERT_EQ(id('a'), 'a');
+    ASSERT_EQ(id(nullptr), nullptr);
+    ASSERT_EQ(id(std::vector<int>(10, 'z')), std::vector<int>(10, 'z'));
+  }
+} // namespace
+
+TEST(FunctionalIdTransfo, Basic) {
+  testIdTransfo<ka::id_transfo_t>();
+  testIdTransfo<ka::id_transfo_t const>();
+}
+
+namespace {
+  template<typename F>
+  void testIdAction() {
+    F id{};
+    {
+      auto x = 1;
+      id(x);
+      ASSERT_EQ(x, 1);
+    }
+    {
+      auto x = true;
+      id(x);
+      ASSERT_EQ(x, true);
+    }
+    {
+      auto x = 'a';
+      id(x);
+      ASSERT_EQ(x, 'a');
+    }
+    {
+      auto x = nullptr;
+      id(x);
+      ASSERT_EQ(x, nullptr);
+    }
+    {
+      auto x = std::vector<int>(10, 'z');
+      id(x);
+      ASSERT_EQ(x, std::vector<int>(10, 'z'));
+    }
+  }
+} // namespace
+
+TEST(FunctionalIdAction, Basic) {
+  testIdAction<ka::id_action_t>();
+  testIdAction<ka::id_action_t const>();
 }
 
 namespace {
@@ -94,16 +149,25 @@ namespace {
   std::string strbool1(bool x) {
     return x ? "mic mic" : "Vous etes chauds ce soir?!";
   }
-}
+} // namespace
 
 TEST(FunctionalCompose, Regular) {
   using namespace ka;
   using namespace std;
-  using C = composition<string (*)(bool), bool (*)(float)>;
+  using C = composition_t<string (*)(bool), bool (*)(float)>;
   ASSERT_TRUE(is_regular({
     C{strbool0, isnan}, C{strbool0, isfinite}, C{strbool1, isinf}
   }));
 }
+
+namespace {
+  template<typename F>
+  void testComposeNonVoid(F& half_greater_1) {
+    static_assert(ka::traits::Equal<bool, decltype(half_greater_1(3))>::value, "");
+    ASSERT_TRUE(half_greater_1(3));
+    ASSERT_FALSE(half_greater_1(1));
+  }
+} // namespace
 
 TEST(FunctionalCompose, NonVoid) {
   using namespace ka;
@@ -114,35 +178,70 @@ TEST(FunctionalCompose, NonVoid) {
   auto greater_1 = [](float x) {
     return x > 1.f;
   };
-  auto half_greater_1 = compose(greater_1, half);
-  static_assert(traits::Equal<bool, decltype(half_greater_1(3))>::value, "");
-
-  ASSERT_TRUE(half_greater_1(3));
-  ASSERT_FALSE(half_greater_1(1));
+  {
+    auto half_greater_1 = compose(greater_1, half);
+    testComposeNonVoid(half_greater_1);
+  }
+  {
+    auto const half_greater_1 = compose(greater_1, half);
+    testComposeNonVoid(half_greater_1);
+  }
 }
+
+namespace {
+  template<typename F>
+  void testComposeVoid(F& k, int uninitialized, int& fOrder, int& gOrder) {
+    static_assert(ka::traits::Equal<void, decltype(k(3))>::value, "");
+
+    ASSERT_EQ(uninitialized, fOrder);
+    ASSERT_EQ(uninitialized, gOrder);
+    k(3);
+    ASSERT_EQ(0, fOrder);
+    ASSERT_EQ(1, gOrder);
+  }
+} // namespace
 
 TEST(FunctionalCompose, Void) {
   using namespace ka;
   using namespace ka::traits;
   int const uninitialized = std::numeric_limits<int>::max();
-  int order = 0;
-  int fOrder = uninitialized;
-  int gOrder = uninitialized;
-  auto f = [&](int) {
-    fOrder = order++;
-  };
-  auto g = [&] {
-    gOrder = order++;
-  };
-  auto k = compose(g, f);
-  static_assert(Equal<void, decltype(k(3))>::value, "");
-
-  ASSERT_EQ(uninitialized, fOrder);
-  ASSERT_EQ(uninitialized, gOrder);
-  k(3);
-  ASSERT_EQ(0, fOrder);
-  ASSERT_EQ(1, gOrder);
+  {
+    int order = 0;
+    int fOrder = uninitialized;
+    int gOrder = uninitialized;
+    auto f = [&](int) {
+      fOrder = order++;
+    };
+    auto g = [&] {
+      gOrder = order++;
+    };
+    auto k = compose(g, f);
+    testComposeVoid(k, uninitialized, fOrder, gOrder);
+  }
+  {
+    int order = 0;
+    int fOrder = uninitialized;
+    int gOrder = uninitialized;
+    auto f = [&](int) {
+      fOrder = order++;
+    };
+    auto g = [&] {
+      gOrder = order++;
+    };
+    auto const k = compose(g, f);
+    testComposeVoid(k, uninitialized, fOrder, gOrder);
+  }
 }
+
+namespace {
+  template<typename F>
+  void testComposeMulti(F& f) {
+    static_assert(ka::traits::Equal<std::string, decltype(f(3))>::value, "");
+
+    ASSERT_EQ("true", f(3));
+    ASSERT_EQ("false", f(1));
+  }
+} // namespace
 
 TEST(FunctionalCompose, Multi) {
   using namespace ka;
@@ -159,11 +258,14 @@ TEST(FunctionalCompose, Multi) {
     return x ? "true" : "false";
   };
 
-  auto f = compose(str, compose(greater_1, half));
-  static_assert(Equal<string, decltype(f(3))>::value, "");
-
-  ASSERT_EQ("true", f(3));
-  ASSERT_EQ("false", f(1));
+  {
+    auto f = compose(str, compose(greater_1, half));
+    testComposeMulti(f);
+  }
+  {
+    auto const f = compose(str, compose(greater_1, half));
+    testComposeMulti(f);
+  }
 }
 
 TEST(FunctionalCompose, Retraction) {
@@ -180,7 +282,7 @@ TEST(FunctionalCompose, Retraction) {
 
 // TODO: Remove this define (but keep the content) when get rid of VS2013.
 #if !KA_COMPILER_VS2013_OR_BELOW
-  static_assert(Equal<decltype(gf), id_transfo>::value, "");
+  static_assert(Equal<decltype(gf), id_transfo_t>::value, "");
 #endif
 }
 
@@ -195,7 +297,7 @@ TEST(FunctionalCompose, SeemsRetractionButNotQuite) {
   auto ginv_f = compose(g_inv_t{}, f_t{});
   ASSERT_EQ(e0_t::b, ginv_f(e0_t::a));
   ASSERT_EQ(e0_t::a, ginv_f(e0_t::b));
-  static_assert(!Equal<decltype(ginv_f), id_transfo>::value, "");
+  static_assert(!Equal<decltype(ginv_f), id_transfo_t>::value, "");
 }
 
 TEST(FunctionalCompose, Identity) {
@@ -204,7 +306,7 @@ TEST(FunctionalCompose, Identity) {
   using namespace ka::functional_ops;
   using namespace test;
   f_t f;
-  id_transfo _1;
+  id_transfo_t _1;
   static_assert(Equal<Decay<decltype(_1 * _1)>, decltype(_1)>::value, "");
   static_assert(Equal<Decay<decltype(f * _1)>, decltype(f)>::value, "");
   static_assert(Equal<Decay<decltype(f * _1 * _1)>, decltype(f)>::value, "");
@@ -231,7 +333,7 @@ TEST(FunctionalCompose, Simplification) {
   f_t f;
   auto g = retract(f);
   auto z = g * f * g * f * g * f * g * f;
-  static_assert(Equal<decltype(z), id_transfo>::value, "");
+  static_assert(Equal<decltype(z), id_transfo_t>::value, "");
   static_assert(Equal<Decay<decltype(z * g)>, decltype(g)>::value, "");
 #endif
 }
@@ -281,7 +383,7 @@ TEST(FunctionalCompose, Id) {
   auto g = [](float x) {
     return x > 1.f;
   };
-  id_transfo _1;
+  id_transfo_t _1;
 
   auto f0 = f * _1;
   auto f1 = _1 * f;
@@ -312,11 +414,26 @@ namespace {
 TEST(FunctionalComposeAccu, Regular) {
   using namespace ka;
   using A = void (*)(std::string&, char, int);
-  using C = composition_accu<A, A>;
+  using C = composition_accu_t<A, A>;
   ASSERT_TRUE(is_regular({
     C{remove_n, concat}, C{concat, remove_n}, C{remove_n, remove_n}, C{concat, noop}
   }));
 }
+
+namespace {
+  template<typename F>
+  void testComposeAccuMulti(F& f) {
+    {
+      float i = -3.f;
+      f(i);
+      ASSERT_EQ(1.f, i);
+    } {
+      float i = 1.f;
+      f(i);
+      ASSERT_EQ(0.5f, i);
+    }
+  }
+} // namespace
 
 TEST(FunctionalComposeAccu, Multi) {
   using namespace ka;
@@ -332,16 +449,13 @@ TEST(FunctionalComposeAccu, Multi) {
     if (x < 0.f) x = -x;
   };
 
-  auto f = compose_accu(abs, compose_accu(clamp, half));
-
   {
-    float i = -3.f;
-    f(i);
-    ASSERT_EQ(1.f, i);
-  } {
-    float i = 1.f;
-    f(i);
-    ASSERT_EQ(0.5f, i);
+    auto f = compose_accu(abs, compose_accu(clamp, half));
+    testComposeAccuMulti(f);
+  }
+  {
+    auto const f = compose_accu(abs, compose_accu(clamp, half));
+    testComposeAccuMulti(f);
   }
 }
 
@@ -363,7 +477,7 @@ TEST(FunctionalComposeAccu, Retraction) {
     gf(e);
     ASSERT_EQ(e0_t::b, e);
   }
-  static_assert(Equal<decltype(gf), id_action>::value, "");
+  static_assert(Equal<decltype(gf), id_action_t>::value, "");
 }
 
 TEST(FunctionalComposeAccu, ComposeAccu) {
@@ -374,7 +488,7 @@ TEST(FunctionalComposeAccu, ComposeAccu) {
     a(s, ' ', 2);
     ASSERT_EQ(std::string{"youpilesamis  "}, s);
   } {
-    auto a = compose_accu(concat, remove_n);
+    auto const a = compose_accu(concat, remove_n);
     std::string s{"youpi les amis"};
     a(s, ' ', 4);
     ASSERT_EQ(std::string{"youpilesamis    "}, s);
@@ -404,7 +518,7 @@ TEST(FunctionalComposeAccu, ComposeAction) {
     a(s);
     ASSERT_EQ(std::string{"piyoupi"}, s);
   } {
-    auto a = compose_accu(twice, drop3);
+    auto const a = compose_accu(twice, drop3);
     std::string s{"youpi"};
     a(s);
     ASSERT_EQ(std::string{"pipi"}, s);
@@ -417,7 +531,7 @@ TEST(FunctionalComposeAccu, Identity) {
   using namespace ka::functional_ops;
   using namespace test;
   a_t f;
-  id_action _1;
+  id_action_t _1;
   static_assert(Equal<Decay<decltype(_1 *= _1)>, decltype(_1)>::value, "");
   static_assert(Equal<Decay<decltype(f *= _1)>, decltype(f)>::value, "");
   static_assert(Equal<Decay<decltype(f *= _1 *= _1)>, decltype(f)>::value, "");
@@ -442,7 +556,7 @@ TEST(FunctionalComposeAccu, Simplification) {
   a_t f;
   auto g = retract(f);
   auto z = g *= f *= g *= f *= g *= f *= g *= f;
-  static_assert(Equal<decltype(z), id_action>::value, "");
+  static_assert(Equal<decltype(z), id_action_t>::value, "");
   static_assert(Equal<Decay<decltype(z *= g)>, decltype(g)>::value, "");
 }
 
@@ -531,7 +645,7 @@ TEST(FunctionalComposeAccu, Id) {
   auto g = [](float& x) {
     x = -x;
   };
-  id_action _1;
+  id_action_t _1;
 
   auto f0 = (f *= _1);
   auto f1 = (_1 *= f);
@@ -650,6 +764,127 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain) {
   ASSERT_TRUE(equal(unit(), f()));
 }
 
+template<typename T>
+struct FunctionalDataBoundProc : testing::Test {
+};
+
+namespace {
+  // The two following types (`bound_proc_t` and `bound_transfo_t`) are
+  // semantically equivalent: they are polymorphic functions that bind a data to
+  // a procedure. The returned procedure behaves in the same way as the input
+  // one.
+
+  // Implemented with `data_bound_proc`.
+  struct bound_proc_t {
+    template<typename Proc, typename T>
+    auto operator()(Proc const& proc, T const& data) const -> decltype(ka::data_bound_proc(proc, data)) {
+      return ka::data_bound_proc(proc, data);
+    }
+  };
+
+  // Implemented with `data_bound_transfo`.
+  struct bound_transfo_t {
+    template<typename Proc, typename T>
+    auto operator()(Proc const& proc, T const& data) const -> decltype(ka::data_bound_transfo(data)(proc)) {
+      return ka::data_bound_transfo(data)(proc);
+    }
+  };
+} // namespace
+
+using bound_proc_types = testing::Types<
+  bound_proc_t,
+  bound_proc_t const,
+  bound_transfo_t,
+  bound_transfo_t const>;
+
+// We perform all tests with `ka::data_bound_proc` and `ka::data_bound_transfo`.
+TYPED_TEST_CASE(FunctionalDataBoundProc, bound_proc_types);
+
+namespace {
+  // Returns the next element.
+  struct succ_t {
+    template<typename T>
+    T operator()(T t) const {
+      ++t;
+      return t;
+    }
+  };
+}
+
+// Tests that a data-bound procedure acts in the same way as the original
+// procedure.
+TYPED_TEST(FunctionalDataBoundProc, Basic) {
+  TypeParam data_bound{};
+  succ_t f0;
+  auto f1 = data_bound(f0, 'a');
+  for (int i = 0; i != 100; ++i) {
+    ASSERT_EQ(f0(i), f1(i));
+  }
+}
+
+namespace {
+  // Has a lifetime dependency on another data.
+  struct add_t {
+    int const* i; //< here
+
+    template<typename T>
+    auto operator()(T const& t) const -> decltype(t + (*i)) {
+      return t + (*i);
+    }
+  };
+
+  // Produces a task that has a lifetime dependency on the worker.
+  template<typename F>
+  struct worker_t : std::enable_shared_from_this<worker_t<F>> {
+    int i;
+    F data_bound;
+
+    explicit worker_t(int i, F f) : i(i), data_bound(f) {
+    }
+
+    ~worker_t() {
+      i = 0xDEADBEEF;
+    }
+
+    auto make_task() const -> decltype(data_bound(add_t{&i}, std::shared_ptr<worker_t const>{})) {
+      return data_bound(add_t{&i}, this->shared_from_this()); //< here
+
+      // We bind a shared pointer to the returned task to extend the worker's
+      // lifetime, and ensure task correctness.
+      // This can also be done by capturing the shared pointer in a lambda, but
+      // only if the task is not polymorphic (this is a C++11 limitation).
+      // We use a `data_bound_proc` to overcome this issue.
+    }
+  };
+} // namespace
+
+// Uses a data-bound procedure to extend the lifetime of an object.
+TYPED_TEST(FunctionalDataBoundProc, ExtendLifetime) {
+  using namespace ka;
+  using F = TypeParam;
+  F data_bound{};
+  int const i = 5;
+  data_bound_proc_t<add_t, std::shared_ptr<worker_t<F> const>> add0;
+  {
+    auto w = std::make_shared<worker_t<F>>(i, data_bound);
+    add0 = w->make_task();
+  }
+  // Here, the worker is out of scoped but we nonetheless want to use the
+  // produced task.
+
+  add_t add1{&i};
+  {
+    int const j = 3;
+    ASSERT_EQ(add0(j), i + j);
+    ASSERT_EQ(add1(j), i + j);
+  }
+  {
+    double const j = 3.12;
+    ASSERT_EQ(add0(j), i + j);
+    ASSERT_EQ(add1(j), i + j);
+  }
+}
+
 TEST(FunctionalMoveAssign, Basic) {
   using namespace ka;
   using M = move_only_t<int>;
@@ -663,19 +898,19 @@ TEST(FunctionalMoveAssign, Basic) {
 
 TEST(FunctionalIncr, Regular) {
   using namespace ka;
-  incr<int> incr;
+  incr_t incr;
   ASSERT_TRUE(is_regular({incr})); // only one possible value because no state
 }
 
 TEST(FunctionalIncr, Arithmetic) {
   using namespace ka;
   {
-    incr<int> incr;
+    incr_t incr;
     int x = 0;
     incr(x);
     ASSERT_EQ(1, x);
   } {
-    incr<double> incr;
+    incr_t incr;
     double x = 0.0;
     incr(x);
     ASSERT_EQ(1.0, x);
@@ -688,7 +923,7 @@ TEST(FunctionalIncr, InputIterator) {
   stringstream ss{"youpi les amis"};
   using I = istream_iterator<string>;
   I b(ss);
-  incr<I> incr;
+  incr_t incr;
   ASSERT_EQ("youpi", *b);
   incr(b);
   ASSERT_EQ("les", *b);
@@ -698,19 +933,19 @@ TEST(FunctionalIncr, InputIterator) {
 
 TEST(FunctionalDecr, Regular) {
   using namespace ka;
-  decr<int> decr;
+  decr_t decr;
   ASSERT_TRUE(is_regular({decr})); // only one possible value because no state
 }
 
 TEST(FunctionalDecr, Arithmetic) {
   using namespace ka;
   {
-    decr<int> decr;
+    decr_t decr;
     int x = 1;
     decr(x);
     ASSERT_EQ(0, x);
   } {
-    decr<double> decr;
+    decr_t decr;
     double x = 1.0;
     decr(x);
     ASSERT_EQ(0.0, x);
@@ -720,7 +955,7 @@ TEST(FunctionalDecr, Arithmetic) {
 TEST(FunctionalDecr, BidirectionalIterator) {
   using namespace ka;
   using namespace std;
-  decr<list<string>::iterator> decr;
+  decr_t decr;
   list<string> l{"youpi", "les", "amis"};
   auto b = end(l);
   decr(b);
@@ -734,14 +969,14 @@ TEST(FunctionalDecr, BidirectionalIterator) {
 TEST(FunctionalIncr, IsomorphicIntegral) {
   using namespace ka;
   {
-    incr<int> incr;
+    incr_t incr;
     auto inv = retract(incr);
     int i = 0;
     incr(i);
     inv(i);
     ASSERT_EQ(0, i);
   } {
-    incr<int> incr;
+    incr_t incr;
     auto inv = retract(incr);
     int i = 0;
     inv(i);
@@ -753,7 +988,7 @@ TEST(FunctionalIncr, IsomorphicIntegral) {
 TEST(FunctionalIncr, IsomorphicBidirectionalIterator) {
   using namespace ka;
   using namespace std;
-  incr<list<string>::iterator> incr;
+  incr_t incr;
   auto inv = retract(incr);
   list<string> l{"youpi", "les", "amis"};
   auto b = begin(l);
@@ -769,14 +1004,14 @@ TEST(FunctionalIncr, IsomorphicBidirectionalIterator) {
 TEST(FunctionalDecr, IsomorphicIntegral) {
   using namespace ka;
   {
-    decr<int> decr;
+    decr_t decr;
     auto inv = retract(decr);
     int i = 0;
     decr(i);
     inv(i);
     ASSERT_EQ(0, i);
   } {
-    decr<int> decr;
+    decr_t decr;
     auto inv = retract(decr);
     int i = 0;
     inv(i);
@@ -788,7 +1023,7 @@ TEST(FunctionalDecr, IsomorphicIntegral) {
 TEST(FunctionalDecr, IsomorphicBidirectionalIterator) {
   using namespace ka;
   using namespace std;
-  decr<list<string>::iterator> decr;
+  decr_t decr;
   auto inv = retract(decr);
   list<string> l{"youpi", "les", "amis"};
   auto b = begin(l);
@@ -809,6 +1044,8 @@ TEST(FunctionalApply, Tuple) {
   auto const args = std::make_tuple(5, 'a', 3.14f);
   ASSERT_EQ(args, apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
+  auto const h = apply(g);
+  ASSERT_EQ(args, h(args));
 }
 
 TEST(FunctionalApply, Pair) {
@@ -819,6 +1056,8 @@ TEST(FunctionalApply, Pair) {
   auto const args = std::make_pair(5, 'a');
   ASSERT_EQ(args, apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
+  auto const h = apply(g);
+  ASSERT_EQ(args, h(args));
 }
 
 TEST(FunctionalApply, Array) {
@@ -829,6 +1068,8 @@ TEST(FunctionalApply, Array) {
   std::array<int, 4> const args = {0, 1, 2, 3};
   ASSERT_EQ(args, apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
+  auto const h = apply(g);
+  ASSERT_EQ(args, h(args));
 }
 
 TEST(FunctionalApply, Custom) {
@@ -840,6 +1081,8 @@ TEST(FunctionalApply, Custom) {
   X const args{5, 'a', 3.14f};
   ASSERT_EQ(args, apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
+  auto const h = apply(g);
+  ASSERT_EQ(args, h(args));
 }
 
 TEST(FunctionalApply, MoveOnly) {
@@ -854,17 +1097,21 @@ TEST(FunctionalApply, MoveOnly) {
   } {
     auto args = std::make_tuple(move_only_t<int>{5}, move_only_t<char>{'a'}, move_only_t<float>{3.14f});
     ASSERT_EQ(res, apply(g)(std::move(args)));
+  } {
+    auto args = std::make_tuple(move_only_t<int>{5}, move_only_t<char>{'a'}, move_only_t<float>{3.14f});
+    auto const h = apply(g);
+    ASSERT_EQ(res, h(std::move(args)));
   }
 }
 
 TEST(FunctionalPolyIncr, Regular) {
   using namespace ka;
-  ASSERT_TRUE(is_regular({poly_incr{}})); // only one possible value because no state
+  ASSERT_TRUE(is_regular({incr_t{}})); // only one possible value because no state
 }
 
 TEST(FunctionalPolyIncr, Basic) {
   using namespace ka;
-  poly_incr incr;
+  incr_t incr;
   {
     int i = 0;
     incr(i);
@@ -879,12 +1126,12 @@ TEST(FunctionalPolyIncr, Basic) {
 
 TEST(FunctionalPolyDecr, Regular) {
   using namespace ka;
-  ASSERT_TRUE(is_regular({poly_decr{}})); // only one possible value because no state
+  ASSERT_TRUE(is_regular({decr_t{}})); // only one possible value because no state
 }
 
 TEST(FunctionalPolyDecr, Basic) {
   using namespace ka;
-  poly_decr decr;
+  decr_t decr;
   {
     int i = 1;
     decr(i);
@@ -900,14 +1147,14 @@ TEST(FunctionalPolyDecr, Basic) {
 TEST(FunctionalPolyIncr, Isomorphic) {
   using namespace ka;
   {
-    poly_incr incr;
+    incr_t incr;
     auto decr = retract(incr);
     int i = 0;
     incr(i);
     decr(i);
     ASSERT_EQ(0, i);
   } {
-    poly_decr decr;
+    decr_t decr;
     auto incr = retract(decr);
     int i = 0;
     decr(i);
@@ -920,16 +1167,16 @@ TEST(FunctionalPolyIncr, Composition) {
   using namespace ka;
   using namespace ka::functional_ops;
   {
-    poly_incr incr;
+    incr_t incr;
     auto incr_twice = (incr *= incr);
     int i = 0;
     incr_twice(i);
     ASSERT_EQ(2, i);
   } {
-    poly_incr incr;
+    incr_t incr;
     auto decr = retract(incr);
     auto id = (incr *= decr *= decr *= incr);
-    static_assert(traits::Equal<decltype(id), id_action>::value, "");
+    static_assert(traits::Equal<decltype(id), id_action_t>::value, "");
     int i = 0;
     id(i);
     ASSERT_EQ(0, i);
@@ -965,22 +1212,36 @@ TEST(FunctionalScopeLock, ReturnsVoidSuccess) {
   using namespace ka;
   using L = trivial_scope_lockable_t;
 
-  bool called = false;
   // TODO: pass by value instead of mutable store when source is available
-  auto proc = scope_lock_proc([&]{ called = true; }, mutable_store(L{ true }));
-  proc();
-  ASSERT_TRUE(called);
+  {
+    bool called = false;
+    auto proc = scope_lock_proc([&]{ called = true; }, mutable_store(L{ true }));
+    proc();
+    ASSERT_TRUE(called);
+  } {
+    bool called = false;
+    auto const proc = scope_lock_proc([&]{ called = true; }, mutable_store(L{ true }));
+    proc();
+    ASSERT_TRUE(called);
+  }
 }
 
 TEST(FunctionalScopeLock, ReturnsVoidFailure) {
   using namespace ka;
   using L = trivial_scope_lockable_t;
 
-  bool called = false;
   // TODO: pass by value instead of mutable store when source is available
-  auto proc = scope_lock_proc([&]{ called = true; }, mutable_store(L{ false }));
-  proc();
-  ASSERT_FALSE(called);
+  {
+    bool called = false;
+    auto proc = scope_lock_proc([&]{ called = true; }, mutable_store(L{ false }));
+    proc();
+    ASSERT_FALSE(called);
+  } {
+    bool called = false;
+    auto const proc = scope_lock_proc([&]{ called = true; }, mutable_store(L{ false }));
+    proc();
+    ASSERT_FALSE(called);
+  }
 }
 
 TEST(FunctionalScopeLock, ReturnsProcResultOnLockSuccess) {

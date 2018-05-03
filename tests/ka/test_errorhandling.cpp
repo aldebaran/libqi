@@ -60,7 +60,7 @@ TEST(TestErrorHandling, ExceptionValueRegular) {
 
 TEST(TestErrorHandling, ExceptionHandleExceptionRegular) {
   using namespace ka;
-  handle_exception_rethrow<poly_constant_function<void>> h;
+  handle_exception_rethrow<constant_function_t<void>> h;
   ASSERT_TRUE(is_regular({h}));
 }
 
@@ -74,7 +74,7 @@ TYPED_TEST_CASE(TestErrorHandlingExceptionParam, exceptions);
 TYPED_TEST(TestErrorHandlingExceptionParam, ExceptionHandleExceptionRethrow) {
   using Exception = TypeParam;
   using namespace ka;
-  handle_exception_rethrow<poly_constant_function<void>> rethrow;
+  handle_exception_rethrow<constant_function_t<void>> rethrow;
   auto f = [=] {
     try {
       throw Exception{""};
@@ -140,7 +140,7 @@ TYPED_TEST(TestErrorHandlingExceptionParam, InvokeCatchHandleExceptionAndRethrow
   auto const f = [](int) {
     throw Exception{""};
   };
-  handle_exception_rethrow<poly_constant_function<void>> rethrow;
+  handle_exception_rethrow<constant_function_t<void>> rethrow;
   EXPECT_THROW(invoke_catch(rethrow, f, 3), Exception);
 }
 

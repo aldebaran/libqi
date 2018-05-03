@@ -214,7 +214,7 @@ namespace qi
       /// By default, we continue sending messages even if an error occurred.
       ///
       /// Procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>
-      template<typename Msg, typename Proc = ka::no_op_procedure<bool (ErrorCode<N>, std::list<Message>::const_iterator)>>
+      template<typename Msg, typename Proc = ka::constant_function_t<bool>>
       void send(Msg&& msg, SslEnabled ssl, const Proc& onSent = {true})
       {
         return _impl->send(std::forward<Msg>(msg), ssl, onSent);
