@@ -8,6 +8,7 @@ qi_create_gmock(
     "test_functional.cpp"
     "test_functional_common.hpp"
     "test_integersequence.cpp"
+    "test_macro.cpp"
     "test_macroregular.cpp"
     "test_moveoncopy.cpp"
     "test_mutablestore.cpp"
