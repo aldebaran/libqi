@@ -208,12 +208,10 @@ namespace test
 
   static const auto defaultConnectionAttemptTimeout = qi::Seconds{10};
 
-  /// Preconditions: attempts >= 0
-  ///
-  /// With Network N:
-  /// qi::TcpMessageSocket<N> S, qi::Url U
-  template<class S, class U>
-  qi::Future<void> attemptConnect(S& socket, U url, qi::MilliSeconds timeout = defaultConnectionAttemptTimeout)
+  /// With C c, Args... args the following is valid:
+  ///   Future<void> fut = c.connect(args...).async();
+  template<typename C, typename... Args>
+  qi::Future<void> attemptConnect(qi::MilliSeconds timeout, C& c, Args&&... args)
   {
     qi::Future<void> result;
     qi::FutureState state = qi::FutureState_None;
@@ -221,11 +219,19 @@ namespace test
     while (qi::SteadyClock::now() < deadline && state != qi::FutureState_FinishedWithValue)
     {
       if (state != qi::FutureState_Running)
-        result = socket.connect(url).async();
+        result = c.connect(args...).async();
 
-      state = result.wait(defaultConnectionAttemptTimeout);
+      state = result.wait(timeout);
     }
     return result;
+  }
+
+  /// Overload with defaulted timeout
+  template <typename C, typename... Args>
+  auto attemptConnect(C& c, Args&&... args)
+    -> ka::EnableIf<!std::is_convertible<ka::Decay<C>, qi::MilliSeconds>::value, qi::Future<void>>
+  {
+    return attemptConnect(defaultConnectionAttemptTimeout, c, ka::fwd<Args>(args)...);
   }
 
 } // namespace test
