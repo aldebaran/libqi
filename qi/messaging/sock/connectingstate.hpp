@@ -5,13 +5,14 @@
 #include <memory>
 #include <string>
 #include <boost/optional.hpp>
-#include <qi/functional.hpp>
+#include <boost/thread/synchronized_value.hpp>
+#include <ka/memory.hpp>
+#include <ka/functional.hpp>
+#include <ka/utility.hpp>
 #include <qi/future.hpp>
 #include <qi/messaging/sock/connect.hpp>
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/traits.hpp>
-#include <qi/utility.hpp>
-#include <boost/thread/synchronized_value.hpp>
 
 namespace qi
 {
@@ -217,16 +218,16 @@ namespace qi
         {
         }
 
-        template<typename Proc0, typename Proc1 = PolymorphicConstantFunction<void>>
+        template<typename Proc0, typename Proc1 = ka::poly_constant_function<void>>
         void start(const Url& url, SslEnabled ssl, Proc0&& makeSocket,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
           Proc1 setupCancel = Proc1{})
         {
           setContinuation();
-          _connect(url, ssl, fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout, setupCancel);
+          _connect(url, ssl, ka::fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout, setupCancel);
         }
 
-        template<typename Proc = PolymorphicConstantFunction<void>>
+        template<typename Proc = ka::poly_constant_function<void>>
         void start(SslEnabled ssl, const SocketPtr<S>& s, Handshake side, Proc setupCancel = Proc{})
         {
           setContinuation();
@@ -239,24 +240,26 @@ namespace qi
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
         : _impl(std::make_shared<Impl>(io))
       {
-        const auto implWeakPtr = weakPtr(_impl);
+        using namespace ka;
+        const auto implWeakPtr = weak_ptr(_impl);
         _impl->start(url, ssl, fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout,
-                     scopeLockProc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
-                                                                 scopeLockTransfo(
-                                                                   makeMutableStore(implWeakPtr)),
+                     scope_lock_proc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
+                                                                 scope_lock_transfo(
+                                                                 mutable_store(implWeakPtr)),
                                                                  StrandTransfo<N>{ &io }),
-                                   makeMutableStore(implWeakPtr)));
+                                                                 mutable_store(implWeakPtr)));
       }
       Connecting(IoService<N>& io, SslEnabled ssl, const SocketPtr<S>& s, Handshake side)
         : _impl(std::make_shared<Impl>(io))
       {
-        const auto implWeakPtr = weakPtr(_impl);
+        using namespace ka;
+        const auto implWeakPtr = weak_ptr(_impl);
         _impl->start(ssl, s, side,
-                     scopeLockProc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
-                                                                 scopeLockTransfo(
-                                                                   makeMutableStore(implWeakPtr)),
+                     scope_lock_proc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
+                                                                 scope_lock_transfo(
+                                                                 mutable_store(implWeakPtr)),
                                                                  StrandTransfo<N>{ &io }),
-                                   makeMutableStore(implWeakPtr)));
+                                                                 mutable_store(implWeakPtr)));
       }
       Future<SyncConnectingResultPtr<N, S>> complete() const
       {

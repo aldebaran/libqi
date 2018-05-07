@@ -3,14 +3,15 @@
 #define _QI_SOCK_RESOLVE_HPP
 #include <string>
 #include <qi/messaging/sock/concept.hpp>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/messaging/sock/error.hpp>
 #include <qi/messaging/sock/option.hpp>
+#include <ka/src.hpp>
 #include <qi/url.hpp>
 #include <qi/os.hpp>
-#include <qi/functional.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/functional.hpp>
+#include <ka/macroregular.hpp>
 
 /// @file
 /// Contains functions and types related to URL resolve.
@@ -55,7 +56,7 @@ namespace qi { namespace sock {
     Resolver<N> _resolver;
   public:
   // QuasiRegular (if Resolver<N> is QuasiRegular):
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(ResolveUrlList, _resolver)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(ResolveUrlList, _resolver)
   // Custom:
     explicit ResolveUrlList(IoService<N>& io)
       : _resolver{io}
@@ -69,7 +70,7 @@ namespace qi { namespace sock {
     /// Network N,
     /// Procedure<void (ErrorCode<N>, Iterator<Resolver<N>>)> Proc,
     /// Procedure<void (Resolver<N>&)> Proc1
-    template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+    template<typename Proc, typename Proc1 = ka::poly_constant_function<void>>
     void operator()(const Url& url, Proc onComplete, Proc1 setupStop = Proc1{})
     {
       if (!url.isValid())
@@ -95,9 +96,9 @@ namespace qi { namespace sock {
     /// Iterator<Entry<Resolver<N>>> I
     template<typename I>
     auto findFirstValidIfAny(I b, const I& e, IpV6Enabled ipV6)
-        -> boost::optional<traits::Decay<decltype(*b)>>
+        -> boost::optional<ka::traits::Decay<decltype(*b)>>
     {
-      using Entry = traits::Decay<decltype(*b)>;
+      using Entry = ka::traits::Decay<decltype(*b)>;
       if (!(*ipV6))
       {
         b = std::find_if(b, e, [](const Entry& entry) {
@@ -149,7 +150,7 @@ namespace qi { namespace sock {
     ResolveUrlList<N> _resolve;
   public:
   // QuasiRegular (if ResolveUrlList<N> is QuasiRegular):
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(ResolveUrl, _resolve)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(ResolveUrl, _resolve)
   // Custom:
     explicit ResolveUrl(IoService<N>& io)
       : _resolve{io}
@@ -162,7 +163,7 @@ namespace qi { namespace sock {
   // Procedure:
     /// Procedure<void (ErrorCode<N>, OptionalEntry)> Proc,
     /// Procedure<void (Resolver<N>&)> Proc1
-    template<typename Proc, typename Proc1 = PolymorphicConstantFunction<void>>
+    template<typename Proc, typename Proc1 = ka::poly_constant_function<void>>
     void operator()(const Url& url, IpV6Enabled ipV6, Proc onComplete, Proc1 setupStop = Proc1{})
     {
       _resolve(url,

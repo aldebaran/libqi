@@ -11,6 +11,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility/string_ref.hpp>
 
+#include <ka/functional.hpp>
 #include <qi/anyobject.hpp> // for circular dependency with signal.hpp
 #include <qi/anyvalue.hpp>
 #include <qi/api.hpp>
@@ -68,7 +69,7 @@ public:
 
     ConnectionStatus connection;
     ListenStatus listen;
-    QI_GENERATE_FRIEND_REGULAR_OPS_2(Status, connection, listen);
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(Status, connection, listen);
   };
 
 
@@ -99,7 +100,7 @@ public:
   /// will be set to a function that always return false, thus filtering nothing.
   /// @returns The previous filter
   Future<ServiceFilter> setServiceFilter(ServiceFilter filter
-                                         = PolymorphicConstantFunction<bool>{ false });
+     = ka::poly_constant_function<bool>{ false });
 };
 }
 

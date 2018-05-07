@@ -70,6 +70,10 @@ namespace qi {
 
     //read raw data
     size_t readRaw(void *data, size_t len);
+
+    /// Provided to be symmetric with BinaryEncoder::write(const uint8_t*, size_t)
+    size_t read(uint8_t* data, size_t len);
+
     void* readRaw(size_t len);
     Status status() const;
     void setStatus(Status status);
@@ -106,6 +110,8 @@ namespace qi {
 
     //write raw data without any formatting
     int write(const char *str, size_t len);
+
+    int write(const uint8_t* data, size_t size);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
     void write(bool      b);

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <boost/atomic.hpp>
 
+#include <ka/errorhandling.hpp>
 #include <qi/strand.hpp>
 #include <qi/log.hpp>
 #include <qi/future.hpp>
@@ -273,7 +274,11 @@ Strand::Strand(qi::ExecutionContext& eventloop)
 
 Strand::~Strand()
 {
-  join();
+  if (const auto error = join(std::nothrow))
+  {
+    qiLogWarning() << "Error while joining tasks in Strand destruction. "
+                      "Detail: " << *error;
+  }
 }
 
 void Strand::join()
@@ -317,6 +322,19 @@ void Strand::join()
 
     qiLogVerbose() << this << " joined, remaining tasks: " << prv->_aliveCount;
   }
+}
+
+/// Join all tasks, returning an error message if necessary instead of throwing
+/// an exception.
+///
+/// Note: under extreme circumstances such as system memory exhaustion, this
+///   method could still throw a `std::bad_alloc` exception, thus causing a call
+///   to `std::terminate` because of the `noexcept` specifier. This behavior is
+///   considered acceptable.
+Strand::OptionalErrorMessage Strand::join(std::nothrow_t) QI_NOEXCEPT(true)
+{
+  // Catch any exception and return its message.
+  return ka::invoke_catch(ka::exception_message{}, [this]() {join(); return OptionalErrorMessage{};});
 }
 
 Future<void> Strand::async(const boost::function<void()>& cb,

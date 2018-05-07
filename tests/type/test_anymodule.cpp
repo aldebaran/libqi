@@ -18,7 +18,7 @@
 TEST(TestPackage, TestFreeFunctions)
 {
     qi::AnyModule pkg = ::qi::import("qi_test_anymodule");
-    ASSERT_TRUE(pkg != 0);
+    ASSERT_TRUE(pkg);
 
     int r;
 
@@ -36,7 +36,7 @@ TEST(TestPackage, FactoryCreatesFunctionalObject)
 {
     qi::AnyModule pkg = ::qi::import("qi_test_anymodule");
 
-    ASSERT_TRUE(pkg != 0);
+    ASSERT_TRUE(pkg);
 
     qi::AnyObject obj = pkg.call<qi::AnyObject>("Cat");
     obj.setProperty("meowVolume", ::qi::AnyValue::from(42));

@@ -2,7 +2,8 @@
 #ifndef _QI_SOCK_SOCKETWITHCONTEXT_HPP
 #define _QI_SOCK_SOCKETWITHCONTEXT_HPP
 #include <qi/messaging/sock/traits.hpp>
-#include <qi/mutablestore.hpp>
+#include <ka/src.hpp>
+#include <ka/mutablestore.hpp>
 #include <qi/messaging/sock/sslcontextptr.hpp>
 
 namespace qi { namespace sock {

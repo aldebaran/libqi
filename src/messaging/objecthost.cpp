@@ -7,7 +7,7 @@
 #include "objecthost.hpp"
 
 #include "boundobject.hpp"
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 
 qiLogCategory("qimessaging.objecthost");
 
@@ -113,13 +113,13 @@ namespace
   template <typename Ptr>
   struct PointerDeferredResetHack
   {
-    template <typename ...Args, typename Enable = qi::traits::EnableIf<std::is_constructible<Ptr, Args...>::value>>
+    template <typename ...Args, typename Enable = ka::traits::EnableIf<std::is_constructible<Ptr, Args...>::value>>
     PointerDeferredResetHack(Args&&... args)
       : wrap(boost::make_shared<Ptr>(std::forward<Args>(args)...))
     {
     }
 
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(PointerDeferredResetHack, wrap)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(PointerDeferredResetHack, wrap)
 
     /// Tries to destroy the wrapped pointer pointee object if possible
     void operator()() const

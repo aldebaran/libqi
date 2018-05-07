@@ -15,10 +15,8 @@ qi_create_gtest(
   "test_proxysignal.cpp"
   "test_signal.cpp"
   "test_signature.cpp"
-  "test_traits.cpp"
   "test_type.cpp"
   "test_value.cpp"
-  "test_integersequence.cpp"
 
   DEPENDS
   qi

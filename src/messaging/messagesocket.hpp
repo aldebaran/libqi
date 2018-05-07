@@ -54,7 +54,6 @@ namespace qi
 
     explicit MessageSocket(qi::EventLoop* eventLoop = qi::getNetworkEventLoop())
       : _eventLoop(eventLoop)
-      , _status(Status::Disconnected)
       , _dispatcher{ &_signalsStrand }
       // connected is the only signal to be synchronous, because it will always be the first signal
       // emitted (so no other asynchronous signal emission will overlap with it) and it's not
@@ -83,7 +82,7 @@ namespace qi
 
     virtual qi::Url url() const = 0;
 
-    virtual bool isConnected() const;
+    bool isConnected() const;
 
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;
 
@@ -100,7 +99,6 @@ namespace qi
     Strand _signalsStrand; // Must be declared before the MessageDispatcher and the signals.
     qi::MessageDispatcher _dispatcher;
 
-    std::atomic<MessageSocket::Status> _status;
   public:
     // C4251
     qi::Signal<>                   connected;

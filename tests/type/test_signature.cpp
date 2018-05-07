@@ -654,6 +654,30 @@ TEST(TestSignature, AnnotationStruct)
   EXPECT_EQ("(dds)<Point,x,y,name>", qi::typeOf<Point>()->signature().toString());
 }
 
+TEST(TestSignature, AnnotatedStructCompatibleWithStringStringMap)
+{
+  qi::Signature s("(s)<Phrase,text>");
+  EXPECT_EQ(0., s.isConvertibleTo("{ss}"));
+}
+
+TEST(TestSignature, AnnotatedStructCompatibleWithStringIntMap)
+{
+  qi::Signature s("(ii)<Locale,language,region>");
+  EXPECT_EQ(0., s.isConvertibleTo("{si}"));
+}
+
+TEST(TestSignature, SeveralAnnotatedStructsCompatibleWithSeveralMaps)
+{
+  qi::Signature s("((s)<Phrase,text>(ii)<Locale,language,region>)");
+  EXPECT_EQ(0., s.isConvertibleTo("({ss}{si})"));
+}
+
+TEST(TestSignature, ObjectAndSeveralAnnotatedStructsCompatibleWithObjectAndSeveralMaps)
+{
+  qi::Signature s("(o(s)<Phrase,text>(ii)<Locale,language,region>)");
+  EXPECT_EQ(0., s.isConvertibleTo("(o{ss}{si})"));
+}
+
 std::string trimall(const std::string& s)
 {
   std::string res;

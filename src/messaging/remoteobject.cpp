@@ -382,7 +382,7 @@ namespace qi {
                    << _service << " is disconnected.";
       return;
     }
-    if (!sock->sharedCapability<bool>("RemoteCancelableCalls", false))
+    if (!sock->sharedCapability<bool>(capabilityname::remoteCancelableCalls, false))
     {
       qiLogWarning() << "Remote end does not support cancelable calls.";
       return;
@@ -451,7 +451,7 @@ namespace qi {
     qi::Promise<SignalLink> prom(qi::FutureCallbackType_Sync);
 
     // Bind the subscriber locally.
-    SignalLink uid = DynamicObject::metaConnect(event, sub);
+    SignalLink uid = DynamicObject::metaConnect(event, sub).value();
 
     boost::recursive_mutex::scoped_lock _lock(_localToRemoteSignalLinkMutex);
     // maintain a map of localsignal -> remotesignal

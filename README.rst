@@ -102,6 +102,7 @@ IRC Channel:
 
 Maintainers:
 
-- Herve Cuche <hcuche@aldebaran.com>
-- Joel Lamotte <jlamotte@aldebaran.com>
+- Joël Lamotte <jlamotte@aldebaran.com>
 - Jérémy Monnon <jmonnon@aldebaran.com>
+- Matthieu Paindavoine <matthieu.paindavoine@softbankrobotics.com>
+- Vincent Palancher <vincent.palancher@external.softbankrobotics.com>

@@ -9,7 +9,7 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include "sessionservice.hpp"
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
@@ -187,7 +187,7 @@ namespace qi {
     // Ensure the promise is always set.
     boost::optional<Promise<AnyObject>> promise = sr->promise;
     bool mustSetPromise = true;
-    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+    auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
     if (data.which() == MessageSocket::Event_Error)
     {
@@ -277,7 +277,7 @@ namespace qi {
 
     bool mustSetPromise = true;
     boost::optional<Promise<AnyObject>> promise;
-    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+    auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
     {
       boost::recursive_mutex::scoped_lock sl(_requestsMutex);
@@ -367,7 +367,7 @@ namespace qi {
 
     bool mustSetPromise = true;
     boost::optional<Promise<AnyObject>> promise = sr->promise;
-    auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+    auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
     if (future.hasError())
     {
@@ -473,7 +473,7 @@ namespace qi {
       // Ensure that the promise is always set, even in case of exception.
       bool mustSetPromise = true;
       boost::optional<Promise<AnyObject>> promise;
-      auto _ = scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+      auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
 
       {
         boost::recursive_mutex::scoped_lock sl(_requestsMutex);
@@ -500,14 +500,14 @@ namespace qi {
           // on which service was registered, whose lifetime is bound
           // to the service
           // TODO 40203: Could this block forever?
-          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId);
+          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId).value();
 
           if (!s) // weird
             qiLogVerbose() << "_socketOfService returned 0";
           else
           {
             // check if the socket support that capability
-            if (s->remoteCapability("ClientServerSocket", false))
+            if (s->remoteCapability(capabilityname::clientServerSocket, false))
             {
               qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
               onTransportSocketResult(qi::Future<MessageSocketPtr>(s), requestId);

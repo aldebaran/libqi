@@ -29,7 +29,7 @@
 # include <stdexcept>
 # include <boost/exception/exception.hpp>
 # include <boost/exception/diagnostic_information.hpp>
-# include <qi/macroregular.hpp>
+# include <ka/macroregular.hpp>
 
 
 /**
@@ -568,7 +568,7 @@ namespace qi
     S category;
     O prefix;
   // Regular (if S and O are):
-    QI_GENERATE_FRIEND_REGULAR_OPS_2(ExceptionLogError, category, prefix)
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(ExceptionLogError, category, prefix)
   // Custom:
     void operator()(const std::exception& e) const
     {

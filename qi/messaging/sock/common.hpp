@@ -4,15 +4,15 @@
 #include <mutex>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
-#include <qi/functional.hpp>
+#include <ka/functional.hpp>
 #include <qi/trackable.hpp>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 #include <qi/messaging/sock/concept.hpp>
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/socketptr.hpp>
 #include <qi/future.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/macroregular.hpp>
 #include <qi/url.hpp>
 
 /// @file
@@ -41,7 +41,7 @@ namespace qi { namespace sock {
   {
     IoService<N>* _io;
   // Regular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(StrandTransfo, _io)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(StrandTransfo, _io)
   // PolymorphicTransformation:
     /// Procedure<void (Args...)> Proc
     template<typename Proc>
@@ -100,7 +100,7 @@ namespace qi { namespace sock {
   ///   S is compatible with N
   /// Transformation<Procedure> F0
   /// Transformation<Procedure> F1
-  template<typename N, typename S, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  template<typename N, typename S, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
   class SetupConnectionStop
   {
     Future<void> futStop;
@@ -140,7 +140,7 @@ namespace qi { namespace sock {
   };
 
   /// Helper function to perform type deduction for constructing a SetupConnectionStop.
-  template <typename N, typename S, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  template <typename N, typename S, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
   SetupConnectionStop<N, S, F0, F1> makeSetupConnectionStop(const Future<void>& f,
                                                             F0 lifetimeTransfo = {},
                                                             F1 syncTransfo = {})

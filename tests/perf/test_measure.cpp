@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include <qi/os.hpp>
 #include <qi/perf/measure.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 
 #ifdef __linux__
 TEST(TestMeasure, TestNumFD)
@@ -21,7 +21,7 @@ TEST(TestMeasure, DISABLED_TestNumFD)
   ASSERT_NE(numFD, -1);
 
   const std::string tmp = qi::os::mktmpdir() + std::string("test");
-  auto _ = qi::scoped(qi::os::fopen(tmp.c_str(), "w"), [](FILE* f) {
+  auto _ = ka::scoped(qi::os::fopen(tmp.c_str(), "w"), [](FILE* f) {
     if (f)
       fclose(f);
   });

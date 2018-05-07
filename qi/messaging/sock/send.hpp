@@ -13,9 +13,10 @@
 #include <qi/messaging/sock/option.hpp>
 #include <qi/messaging/sock/error.hpp>
 #include <qi/messaging/sock/common.hpp>
+#include <ka/src.hpp>
 #include <qi/trackable.hpp>
 #include <qi/future.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include <qi/atomic.hpp>
 #include "src/messaging/message.hpp"
 
@@ -108,7 +109,7 @@ namespace qi { namespace sock {
   /// Procedure<Optional<M> (ErrorCode<N>, M)> Proc,
   /// Transformation<Procedure> F0,
   /// Transformation<Procedure<void (Args...)>> F1
-  template<typename N, typename S, typename M, typename Proc, typename F0 = IdTransfo, typename F1 = IdTransfo>
+  template<typename N, typename S, typename M, typename Proc, typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
   void sendMessage(const S& socket, M cptrMsg, Proc onSent, SslEnabled ssl,
       F0 lifetimeTransfo = {}, F1 syncTransfo = {})
   {
@@ -174,8 +175,8 @@ namespace qi { namespace sock {
     /// Transformation<Procedure> F0,
     /// Transformation<Procedure<void (Args...)>> F1
     template<typename Msg,
-             typename Proc = NoOpProcedure<bool (ErrorCode<N>, ReadableMessage)>,
-             typename F0 = IdTransfo, typename F1 = IdTransfo>
+             typename Proc = ka::no_op_procedure<bool (ErrorCode<N>, ReadableMessage)>,
+             typename F0 = ka::id_transfo, typename F1 = ka::id_transfo>
     void operator()(Msg&&, SslEnabled, Proc onSent = Proc{true},
       const F0& lifetimeTransfo = F0{}, const F1& syncTransfo = F1{});
   private:
@@ -244,7 +245,7 @@ namespace qi { namespace sock {
           try
           {
             // A scoped is used to cope with potential exception thrown by onSent.
-            auto scopedErase = scoped([&] {
+            auto scopedErase = ka::scoped([&] {
               std::lock_guard<std::mutex> lock{_sendMutex};
               _sendQueue.erase(itSent);
               if (!mustContinue || _sendQueue.empty())
@@ -296,7 +297,7 @@ namespace qi { namespace sock {
     }
   // Procedure:
     /// Message Msg, Procedure<void (ErrorCode<N>, Readable<Message>)> Proc, Transformation<Procedure<void (Args...)>> F
-    template<typename Msg, typename Proc = NoOpProcedure<void (ErrorCode<N>, ReadableMessage)>, typename F = IdTransfo>
+    template<typename Msg, typename Proc = ka::no_op_procedure<void (ErrorCode<N>, ReadableMessage)>, typename F = ka::id_transfo>
     void operator()(Msg&& m, SslEnabled ssl, Proc onSent = Proc{}, F syncTransfo = F{})
     {
       auto lifetimeTransfo = trackWithFallbackTransfo([=]() mutable {

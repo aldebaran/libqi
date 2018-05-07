@@ -13,7 +13,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/assert.hpp>
-#include <qi/algorithm.hpp>
+#include <ka/algorithm.hpp>
 
 #include "signal_p.hpp"
 
@@ -80,7 +80,7 @@ namespace qi {
     return barrier.future().andThen([](const std::vector<Future<bool>>& successes)
     {
       for (const auto& success: successes)
-        if (!success) return false;
+        if (!success.value()) return false;
       return true;
     });
   }
@@ -202,14 +202,14 @@ namespace qi {
 
       copy = _p->subscriberMap;
     }
-    qiLogDebug() << (void*)this << " Invoking signal subscribers: " << copy.size();
+    qiLogDebug() << this << " Invoking signal subscribers: " << copy.size();
     for (auto& i: copy)
     {
-      qiLogDebug() << (void*)this << " Invoking signal subscriber";
+      qiLogDebug() << this << " Invoking signal subscriber";
       SignalSubscriber s = i.second; // holds the subscription alive
       s.call(params, mct);
     }
-    qiLogDebug() << (void*)this << " done invoking signal subscribers";
+    qiLogDebug() << this << " done invoking signal subscribers";
   }
 
   void SignalSubscriber::callImpl(const GenericFunctionParameters& args)
@@ -365,7 +365,7 @@ namespace qi {
 
   Future<SignalSubscriber> SignalBase::connectAsync(const SignalSubscriber& src)
   {
-    qiLogDebug() << (void*)this << " connecting new subscriber";
+    qiLogDebug() << this << " connecting new subscriber";
     QI_ASSERT(_p);
     // Check arity. Does not require to acquire weakLock.
     int signalArity = signature().children().size();
@@ -399,13 +399,27 @@ namespace qi {
     subscriberInMap = src;
     subscriberInMap._p->linkId = res;
     subscriberInMap._p->source = this->_p;
-    Future<void> callingOnSubscribers{0};
+    Future<void> callingOnSubscribers{nullptr};
     if (first && _p->onSubscribers)
-      callingOnSubscribers = _p->onSubscribers(true);
+    {
+      qiLogDebug() << this << " calling onSubscribers";
+      callingOnSubscribers = _p->onSubscribers(true).andThen([&](void*)
+      {
+        qiLogDebug() << this << " onSubscribers called";
+      });
+    }
+    else
+    {
+      qiLogDebug() << this << " not calling onSubscribers";
+    }
 
     // Return a copy asynchronously. Too bad it makes few allocations.
     SignalSubscriber subscriberToReturn = subscriberInMap;
-    return callingOnSubscribers.andThen([subscriberToReturn](void*) mutable { return subscriberToReturn; });
+    return callingOnSubscribers.andThen([=](void*)
+    {
+      qiLogDebug() << this << " connected";
+      return subscriberToReturn;
+    });
   }
 
   void SignalBase::createNewTrackLink(int& id, SignalLink*& pLink)

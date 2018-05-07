@@ -6,6 +6,7 @@
 */
 
 #include <map>
+#include <unordered_map>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/assign/list_of.hpp>
@@ -19,6 +20,9 @@
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/anymodule.hpp>
+#include <random>
+#include <boost/container/flat_map.hpp>
+#include <boost/container/stable_vector.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 // vs2008 32 bits does not have std::abs() on int64
@@ -1374,4 +1378,229 @@ TEST(TestObject, WeakObject)
   qi::AnyWeakObject wobj = obj;
   obj = qi::AnyObject();
   ASSERT_FALSE(wobj.lock());
+}
+
+class MyFoo
+{
+  int _i = 0;
+public:
+  explicit MyFoo(int i)
+    : _i(i)
+  {}
+
+  int getI() const { return _i; }
+};
+
+TEST(TestObject, ObjectShared)
+{
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(1, 25000);
+  auto const i = dis(gen);
+  auto foo = boost::make_shared<MyFoo>(i);
+  qi::DynamicObjectBuilder b;
+  b.advertiseMethod("getI", foo.get(), &MyFoo::getI);
+  auto obj = b.object(foo);
+  EXPECT_EQ(i, obj.call<int>("getI"));
+}
+
+TEST(TestObject, EqualityDynamicObjectBuilder)
+{
+  Foo foo;
+  qi::DynamicObjectBuilder builder;
+
+  builder.advertiseMethod("test", &fun);
+  builder.advertiseMethod("objtest", &foo, &Foo::fun);
+  builder.advertiseMethod("testBind", (boost::function<int(const int&)>)boost::bind(&fun, 21, _1));
+  qi::AnyObject o0(builder.object());
+  qi::AnyObject o1(builder.object());
+
+  EXPECT_EQ(o0, o1);
+}
+
+TEST(TestObject, EqualityObjectTypeBuilder)
+{
+  qi::ObjectTypeBuilder<Adder> builder;
+  // otherwise some arguments are copied
+  builder.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
+  builder.advertiseMethod("add", &Adder::add);
+  builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
+  Adder a{0}, b{1};
+  qi::AnyObject oa0 = builder.object(&a, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::AnyObject oa1 = builder.object(&a, &qi::AnyObject::deleteGenericObjectOnly);
+  EXPECT_EQ(oa0, oa1);
+  qi::AnyObject oa2 = builder.object(&a, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::AnyObject ob0 = builder.object(&b, &qi::AnyObject::deleteGenericObjectOnly);
+  EXPECT_NE(oa2, ob0);
+  EXPECT_EQ(oa0, oa2);
+  EXPECT_EQ(oa1, oa2);
+  EXPECT_NE(oa0, ob0);
+  EXPECT_NE(oa1, ob0);
+}
+
+TEST(TestObject, EqualityObjectTypeBuilderAsync)
+{
+  // We test both async calls, and calling methods with inherited argument type
+  qi::ObjectTypeBuilder<MAdder> builder;
+  builder.inherits<Adder>();
+  builder.advertiseMethod("add", &Adder::add, qi::MetaCallType_Queued);
+  builder.advertiseMethod("addTwo", boost::function<int(Adder*, int, int)>(boost::bind(&Adder::addTwo, _2, _3)));
+  MAdder a{0}, b{1};
+  qi::AnyObject oa0 = builder.object(&a, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::AnyObject oa1 = builder.object(&a, &qi::AnyObject::deleteGenericObjectOnly);
+  EXPECT_EQ(oa0, oa1);
+  qi::AnyObject ob0 = builder.object(&b, &qi::AnyObject::deleteGenericObjectOnly);
+  qi::AnyObject ob1 = builder.object(&b, &qi::AnyObject::deleteGenericObjectOnly);
+  EXPECT_EQ(ob0, ob1);
+  EXPECT_NE(oa0, ob0);
+  EXPECT_NE(oa1, ob1);
+}
+
+TEST(TestObject, EqualityAnyArguments)
+{
+  boost::shared_ptr<ArgPack> ap(new ArgPack);
+  qi::AnyObject o0 = qi::AnyValue::from(ap).to<qi::AnyObject>();
+  qi::AnyObject o1 = qi::AnyValue::from(ap).to<qi::AnyObject>();
+  EXPECT_EQ(o0, o1);
+  qi::AnyObject o2 = ap;
+  EXPECT_EQ(o0, o2);
+  EXPECT_EQ(o1, o2);
+}
+
+TEST(TestObject, DifferenceFactory)
+{
+  qi::AnyModule p = qi::import("testpkg");
+  EXPECT_NE(p.call<qi::AnyObject>("Apple", "red"), p.call<qi::AnyObject>("Apple", "red"));
+  {
+    qi::AnyObject o0 = p.call<qi::AnyObject>("Apple", "red");
+    qi::AnyObject o1 = o0;
+    EXPECT_EQ(o0, o1);
+  }
+}
+
+TEST(TestObject, Hash)
+{
+  Foo foo0, foo1;
+  qi::DynamicObjectBuilder builder0, builder1;
+
+  builder0.advertiseMethod("test", &fun);
+  builder1.advertiseMethod("test", &fun);
+  qi::AnyObject o0(builder0.object()), o1(builder1.object());
+
+  std::hash<qi::AnyObject> h;
+  EXPECT_EQ(h(o0), h(o0));
+  EXPECT_EQ(h(o1), h(o1));
+  EXPECT_NE(h(o0), h(o1));
+
+  qi::AnyObject o2(o1);
+  EXPECT_EQ(h(o1), h(o2));
+}
+
+TEST(TestObject, UnorderedMap)
+{
+  Foo foo0, foo1;
+  qi::DynamicObjectBuilder builder0, builder1;
+
+  builder0.advertiseMethod("test", &fun);
+  builder1.advertiseMethod("test", &fun);
+  qi::AnyObject o0(builder0.object()), o1(builder1.object());
+
+  std::unordered_map<qi::AnyObject, std::string> map{
+    {o0, "o0"},
+    {o1, "o1"}
+  };
+  EXPECT_EQ(map[o0], "o0");
+  EXPECT_EQ(map[o1], "o1");
+}
+
+TEST(TestObject, FlatMap)
+{
+  qi::DynamicObjectBuilder builder0, builder1;
+
+  builder0.advertiseMethod("test", &fun);
+  builder1.advertiseMethod("test", &fun);
+  qi::AnyObject o0(builder0.object()), o1(builder1.object());
+
+  boost::container::flat_map<qi::AnyObject, std::string> map{
+    {o0, "o0"},
+    {o1, "o1"}
+  };
+  EXPECT_EQ(map[o0], "o0");
+  EXPECT_EQ(map[o1], "o1");
+}
+
+TEST(TestObject, StableVector)
+{
+  const size_t objCount = 4;
+  qi::DynamicObjectBuilder builders[objCount] = {};
+  for (auto& b: builders)
+  {
+    b.advertiseMethod("test", &fun);
+  }
+  qi::AnyObject objects[objCount];
+  int i = 0;
+  for (auto& b: builders)
+  {
+    objects[i++] = b.object();
+  }
+  boost::container::stable_vector<qi::AnyObject> vec;
+  for (auto& b: builders)
+  {
+    vec.push_back(b.object());
+  }
+  i = 0;
+  for (const auto& o: vec)
+  {
+    EXPECT_EQ(o, objects[i++]);
+  }
+  std::sort(vec.begin(), vec.end());
+}
+
+TEST(TestObject, ObjectSharedLife)
+{
+  boost::weak_ptr<Foo> wFoo;
+  Foo *fooPtr;
+  {
+    qi::AnyObject obj;
+    {
+      auto foo = boost::make_shared<Foo>();
+      fooPtr = foo.get();
+      wFoo = foo;
+      qi::DynamicObjectBuilder b;
+      b.advertiseMethod("sum", foo.get(), &Foo::fun);
+      obj = b.object(foo);
+    }
+    EXPECT_EQ(fooPtr, wFoo.lock().get());
+  }
+  EXPECT_FALSE(wFoo.lock());
+}
+
+namespace
+{
+  /// Predicate<qi::Object> P
+  template<typename P>
+  void testValidity(P isValid)
+  {
+    using O = qi::Object<Apple>;
+    {
+      O obj = boost::make_shared<Apple>("kjhd");
+      EXPECT_TRUE(isValid(obj));
+      EXPECT_TRUE(isValid(O(obj)));
+    }
+    EXPECT_FALSE(isValid(O()));
+    EXPECT_TRUE(isValid(O(static_cast<Apple*>(nullptr)))); // ...
+    EXPECT_TRUE(isValid(O(boost::shared_ptr<Apple>()))); // ...
+  }
+} // namespace
+
+TEST(TestObject, IsValid)
+{
+  SCOPED_TRACE("IsValid");
+  testValidity([](const qi::Object<Apple>& o) {return o.isValid();});
+}
+
+TEST(TestObject, ConversionToBool)
+{
+  SCOPED_TRACE("ConversionToBool");
+  testValidity([](const qi::Object<Apple>& o) {return static_cast<bool>(o);});
 }

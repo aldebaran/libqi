@@ -7,6 +7,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/dynamic_bitset.hpp>
 
+#include <ka/scoped.hpp>
 #include <qi/assert.hpp>
 #include <qi/anyvalue.hpp>
 #include "message.hpp"
@@ -207,8 +208,18 @@ namespace qi
       auto host = context.lock();
       if (!host || !strCtxt)
         throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
-      unsigned int sid = host->service();
-      unsigned int oid = host->nextId();
+
+      const unsigned int sid = host->service();
+      if (!object)
+      {
+        ObjectSerializationInfo res;
+        res.serviceId = sid;
+        res.objectId = nullObjectId;
+        res.objectPtrUid = PtrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), nullptr);
+        return res;
+      }
+
+      const unsigned int oid = host->nextId();
       ServiceBoundObject* sbo =
           new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
       boost::shared_ptr<BoundObject> bo(sbo);
@@ -220,6 +231,7 @@ namespace qi
       res.metaObject = sbo->metaObject(oid);
       res.serviceId = sid;
       res.objectId = oid;
+      res.objectPtrUid = object.ptrUid();
       return res;
     }
 
@@ -253,9 +265,10 @@ namespace qi
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
-                   << " on " << context.get();
+                   << " ptruid = '" << (osi.objectPtrUid ? *osi.objectPtrUid : PtrUid{}) << "' on "
+                   << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
-      AnyObject o = makeDynamicAnyObject(ro, true, &onProxyLost);
+      AnyObject o = makeDynamicAnyObject(ro, true, osi.objectPtrUid, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
       QI_ASSERT(o);
       return o;

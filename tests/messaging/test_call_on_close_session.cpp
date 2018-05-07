@@ -16,6 +16,7 @@
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/testutils/testutils.hpp>
+#include "objectio.hpp"
 
 qiLogCategory("qi.test_call_on_close_session");
 

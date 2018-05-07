@@ -10,32 +10,28 @@ endif()
 
 qi_create_test_helper(check_env             check_env.cpp             DEPENDS QI)
 qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS QI)
-
+qi_create_test_helper(print_process_uuid    print_process_uuid.cpp    DEPENDS QI)
 
 qi_create_gmock(
   test_qi
 
   SRC
-  "test_algorithm.cpp"
   "test_bind.cpp"
   "test_buffer.cpp"
   "test_bufferreader.cpp"
-  "test_conceptpredicate.cpp"
   "test_errorhandling.cpp"
   "test_eventloop.cpp"
   "test_flags.cpp"
   "test_functional.cpp"
-  "test_functional_common.hpp"
   "test_future.hpp"
   "test_future.cpp"
   "test_futuregroup.cpp"
   "test_locale.cpp"
   "test_macro.cpp"
-  "test_macroregular.cpp"
-  "test_moveoncopy.cpp"
   "test_mutablestore.cpp"
   "test_path_conf.cpp"
   "test_periodictask.cpp"
+  "test_ptruid.cpp"
   "test_qi.cpp" # main
   "test_qiatomic.cpp"
   "test_qiclock.cpp"
@@ -45,14 +41,10 @@ qi_create_gmock(
   "test_qilog_async.cpp"
   "test_qilog_sync.cpp"
   "test_qios.cpp"
-  "test_range.cpp"
-  "test_relationpredicate.cpp"
-  "test_scoped.cpp"
+  "test_src.cpp"
   "test_strand.cpp"
   "test_trackable.cpp"
-  "test_utility.cpp"
   "test_version.cpp"
-  "tools.hpp"
 
   DEPENDS
   qi

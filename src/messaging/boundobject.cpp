@@ -492,7 +492,7 @@ namespace qi {
     {
       for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
       {
-        _object.disconnect(jt->second.localSignalLinkId).async()
+        _object.disconnect(jt->second.localSignalLinkId.value()).async()
             .then([](Future<void> f) { if (f.hasError()) qiLogError() << f.error(); });
       }
       _links.erase(it);
@@ -622,7 +622,7 @@ namespace qi {
       else if (ao->call<bool>("isCanceled"))
       {
         qiLogDebug() << "Call " << replyaddr.messageId << " has been canceled.";
-        if (!socket->sharedCapability("RemoteCancelableCalls", false))
+        if (!socket->sharedCapability(capabilityname::remoteCancelableCalls, false))
         {
           ret.setType(Message::Type_Error);
           ret.setError("Call has been canceled.");

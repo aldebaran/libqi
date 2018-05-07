@@ -13,10 +13,11 @@
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/core/ignore_unused.hpp>
 
+#include <ka/memory.hpp>
+#include <ka/scoped.hpp>
 #include <qi/preproc.hpp>
 #include <qi/log.hpp>
 #include <qi/application.hpp>
-#include <qi/scoped.hpp>
 
 #include <qi/eventloop.hpp>
 #include <qi/future.hpp>
@@ -310,7 +311,7 @@ namespace qi {
     boost::ignore_unused(id, countTask);
     if (!erc)
     {
-      auto _ = scopedIncrAndDecr(_activeTask);
+      auto _ = ka::scoped_incr_and_decr(_activeTask);
       tracepoint(qi_qi, eventloop_task_start, id);
 
       try
@@ -359,7 +360,7 @@ namespace qi {
       const auto id = ++gTaskId;
       tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
 
-      auto countTotalTask = sharedPtr(scopedIncrAndDecr(_totalTask));
+      auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
       _io.post([=] { invoke_maybe(cb, id, Promise<void>{}, erc, countTotalTask); });
     }
     else
@@ -384,7 +385,7 @@ namespace qi {
 
     const auto id = ++gTaskId;
 
-    auto countTotalTask = sharedPtr(scopedIncrAndDecr(_totalTask));
+    auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
 
     tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
     if (delay > Duration::zero())
@@ -420,7 +421,7 @@ namespace qi {
 
     const auto id = ++gTaskId;
 
-    auto countTotalTask = sharedPtr(scopedIncrAndDecr(_totalTask));
+    auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
 
     //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
     boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(boost::ref(_io));
@@ -463,7 +464,7 @@ namespace qi {
   // boost::synchronized_value<P> PP
   // Procedure<U (P)> Proc1
   // Procedure<U ()> Proc2
-  template<typename PP, typename Proc1, typename Proc2 = qi::NoOpProcedure<void()>>
+  template<typename PP, typename Proc1, typename Proc2 = ka::no_op_procedure<void()>>
     auto safeCall(PP& syncPtr, Proc1&& proc, Proc2&& onFail = Proc2{})
       -> decltype(std::forward<Proc1>(proc)(syncPtr.get()))
   {

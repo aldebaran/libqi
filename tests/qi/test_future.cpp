@@ -12,7 +12,7 @@
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <qi/log.hpp>
-#include <qi/detail/conceptpredicate.hpp>
+#include <ka/conceptpredicate.hpp>
 #include "test_future.hpp"
 
 qiLogCategory("test");
@@ -76,7 +76,7 @@ int block(int i, qi::Future<void> f)
 int get42() { return 42; }
 
 
-class TestFuture : public ::testing::Test
+class FutureFixture : public ::testing::Test
 {
 public:
   static int         gGlobalI;
@@ -94,14 +94,14 @@ protected:
   }
 };
 
-int         TestFuture::gGlobalI;
-std::string TestFuture::gGlobalS;
-std::string TestFuture::gGlobalE;
-qi::Atomic<int> TestFuture::gSuccess;
+int         FutureFixture::gGlobalI;
+std::string FutureFixture::gGlobalS;
+std::string FutureFixture::gGlobalE;
+qi::Atomic<int> FutureFixture::gSuccess;
 
-class TestFutureI {
+class FutureFixtureI {
 public:
-  TestFutureI(int &gGlobalI, std::string &gGlobalE)
+  FutureFixtureI(int &gGlobalI, std::string &gGlobalE)
     : gGlobalI(gGlobalI),
       gGlobalE(gGlobalE)
   {}
@@ -117,9 +117,9 @@ public:
   std::string &gGlobalE;
 };
 
-class TestFutureS {
+class FutureFixtureS {
 public:
-  TestFutureS(std::string &gGlobalS, std::string &gGlobalE)
+  FutureFixtureS(std::string &gGlobalS, std::string &gGlobalE)
     : gGlobalS(gGlobalS),
       gGlobalE(gGlobalE)
   {}
@@ -135,7 +135,7 @@ public:
   std::string &gGlobalE;
 };
 
-TEST_F(TestFuture, Validity) {
+TEST_F(FutureFixture, Validity) {
   qi::Future<void> a;
   EXPECT_FALSE(a.isValid());
 
@@ -155,7 +155,7 @@ TEST_F(TestFuture, Validity) {
 static void donothingcb()
 {}
 
-TEST_F(TestFuture, Invalid) {
+TEST_F(FutureFixture, Invalid) {
   qi::Future<void> a;
   EXPECT_EQ(a.wait(), qi::FutureState_None);
   EXPECT_THROW(a.connect(boost::bind(donothingcb)), qi::FutureException);
@@ -169,14 +169,14 @@ TEST_F(TestFuture, Invalid) {
   EXPECT_FALSE(a.isRunning());
 }
 
-TEST_F(TestFuture, SimpleType) {
-  TestFutureI tf(gGlobalI, gGlobalE);
+TEST_F(FutureFixture, SimpleType) {
+  FutureFixtureI tf(gGlobalI, gGlobalE);
 
   qi::Promise<int> pro(qi::FutureCallbackType_Sync);
 
   qi::Future<int>  fut = pro.future();
 
-  fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1));
+  fut.connect(boost::bind(&FutureFixtureI::onFutureFinished, tf, _1));
 
   EXPECT_EQ(0, gGlobalI);
   EXPECT_FALSE(fut.isFinished());
@@ -189,14 +189,14 @@ TEST_F(TestFuture, SimpleType) {
   EXPECT_EQ(42, gGlobalI);
 }
 
-TEST_F(TestFuture, ComplexType) {
-  TestFutureS tf(gGlobalS, gGlobalE);
+TEST_F(FutureFixture, ComplexType) {
+  FutureFixtureS tf(gGlobalS, gGlobalE);
 
   qi::Promise<std::string> pro(qi::FutureCallbackType_Sync);
 
   qi::Future<std::string>  fut = pro.future();
 
-  fut.connect(boost::bind(&TestFutureS::onFutureFinished, tf, _1));
+  fut.connect(boost::bind(&FutureFixtureS::onFutureFinished, tf, _1));
 
   EXPECT_STREQ("", gGlobalS.c_str());
   EXPECT_FALSE(fut.isFinished());
@@ -206,7 +206,7 @@ TEST_F(TestFuture, ComplexType) {
   EXPECT_STREQ("42", gGlobalS.c_str());
 }
 
-TEST_F(TestFuture, PromiseSetWhileWaitingOnFuture)
+TEST_F(FutureFixture, PromiseSetWhileWaitingOnFuture)
 {
   qi::Promise<void> p;
   auto f = p.future();
@@ -226,7 +226,7 @@ void consumer(qi::Atomic<int> &gSuccess, qi::Future<int> fut) {
   ++gSuccess;
 }
 
-TEST_F(TestFuture, Threaded) {
+TEST_F(FutureFixture, Threaded) {
   qi::Promise<int> pro;
   EXPECT_EQ(0, gSuccess.load());
   boost::thread_group tg;
@@ -239,7 +239,7 @@ TEST_F(TestFuture, Threaded) {
   EXPECT_EQ(3, gSuccess.load());
 }
 
-TEST_F(TestFuture, TestTimeout) {
+TEST_F(FutureFixture, TestTimeout) {
   qi::Promise<int> pro;
   qi::Future<int>  fut = pro.future();
 
@@ -264,17 +264,17 @@ TEST_F(TestFuture, TestTimeout) {
   auto end = qi::SteadyClock::now();
   EXPECT_TRUE(fut.isFinished());
   EXPECT_GT(end, start + qi::MilliSeconds(20));
-  EXPECT_LT(end, start + qi::MilliSeconds(40))
+  EXPECT_LT(end, start + qi::MilliSeconds(50))
       << "Timeout took " << boost::chrono::duration_cast<qi::MilliSeconds>(end - start).count() << "ms, which is too much!";
 }
 
-TEST_F(TestFuture, TestError) {
-  TestFutureI tf(gGlobalI, gGlobalE);
+TEST_F(FutureFixture, TestError) {
+  FutureFixtureI tf(gGlobalI, gGlobalE);
 
   qi::Promise<int> pro(qi::FutureCallbackType_Sync);
 
   qi::Future<int>  fut = pro.future();
-  fut.connect(boost::bind(&TestFutureI::onFutureFinished, tf, _1));
+  fut.connect(boost::bind(&FutureFixtureI::onFutureFinished, tf, _1));
 
   EXPECT_STREQ("", gGlobalE.c_str());
   EXPECT_FALSE(fut.isFinished());
@@ -293,7 +293,7 @@ TEST_F(TestFuture, TestError) {
   EXPECT_EQ(err, fut.error());
 }
 
-TEST_F(TestFuture, TestStateNone)
+TEST_F(FutureFixture, TestStateNone)
 {
   qi::Future<int> f;
   ASSERT_FALSE(f.isRunning());
@@ -309,7 +309,7 @@ TEST_F(TestFuture, TestStateNone)
   ASSERT_TRUE(f.wait(qi::FutureTimeout_None) == qi::FutureState_Running);
 }
 
-TEST(TestFuture2, TestBroken)
+TEST(Future, TestBroken)
 {
   qi::Future<int> f;
   {
@@ -326,7 +326,7 @@ struct DelCheck {
   void foo() {}
 };
 
-TEST_F(TestFuture, TestPromiseAdapter)
+TEST_F(FutureFixture, TestPromiseAdapter)
 {
   boost::weak_ptr<DelCheck> wdc;
   {
@@ -357,7 +357,7 @@ void justThrow()
   throw std::runtime_error("Expected error.");
 }
 
-TEST(AsyncAndFuture, errorOnTaskThrow)
+TEST(Future, AsyncErrorOnTaskThrow)
 {
   qi::Future<void> f = qi::async(&justThrow);
   EXPECT_TRUE(f.hasError());
@@ -369,7 +369,7 @@ void unlock(qi::Promise<int> prom, std::atomic<bool>& tag)
   prom.setValue(1);
 }
 
-TEST(TestFutureSync, Basic)
+TEST(Future, SyncBasic)
 {
   qi::EventLoop* eventLoop = qi::getEventLoop();
   ASSERT_FALSE(eventLoop->isInThisContext());
@@ -446,7 +446,7 @@ qi::FutureSync<int> getGetSync2(std::atomic<bool>& tag)
   return getSync2(tag);
 }
 
-TEST(TestFutureSync, InSitu)
+TEST(FutureTestSync, InSitu)
 {
   /* Check that whatever we do, a function returning a FutureSync is not
   * stuck if we take the sync, and blocks if we ignore it
@@ -491,7 +491,7 @@ TEST(TestFutureSync, InSitu)
   tag = false;
 }
 
-TEST(TestFutureSync, ThrowOnDestroy) {
+TEST(FutureTestSync, ThrowOnDestroy) {
   qi::Promise<int> prom;
 
   prom.setError("touctouc");
@@ -500,7 +500,7 @@ TEST(TestFutureSync, ThrowOnDestroy) {
   EXPECT_THROW(qi::FutureSync<int>(prom.future()).value(), std::runtime_error); //value should fail.
 }
 
-TEST(TestFutureSync, NoThrow) {
+TEST(FutureTestSync, NoThrow) {
   qi::Promise<int> prom;
 
   prom.setError("touctouc");
@@ -514,9 +514,9 @@ TEST(TestFutureSync, NoThrow) {
   EXPECT_NO_THROW(qi::FutureSync<int>(prom.future()).cancel());
 }
 
-void do_nothing(TestFutureI*) {}
+void do_nothing(FutureFixtureI*) {}
 
-TEST(TestFutureError, MultipleSetValue)
+TEST(FutureTestError, MultipleSetValue)
 {
   qi::Promise<int> p;
   qi::Future<int> f = p.future();
@@ -528,7 +528,7 @@ TEST(TestFutureError, MultipleSetValue)
   EXPECT_ANY_THROW({ p.setValue(0);});
 }
 
-TEST(TestFutureError, ValueOnError)
+TEST(FutureTestError, ValueOnError)
 {
   qi::Promise<int> p;
   qi::Future<int> f = p.future();
@@ -537,7 +537,7 @@ TEST(TestFutureError, ValueOnError)
 }
 
 
-TEST(TestFutureCancel, AsyncCallCanceleable)
+TEST(FutureTestCancel, AsyncCallCanceleable)
 {
   static const auto EXECUTION_DELAY = qi::MilliSeconds{ 100 };
 
@@ -558,7 +558,7 @@ static void doError(qi::Promise<int> promise)   { promise.setError("paf");}
 static void doValue(qi::Promise<int> promise)   { promise.setValue(42); }
 static void doNothing(qi::Promise<int> promise) { ; }
 
-TEST(TestFutureCancel, CancelRequest)
+TEST(FutureTestCancel, CancelRequest)
 {
   qi::Promise<int> promise;
 
@@ -577,7 +577,7 @@ TEST(TestFutureCancel, CancelRequest)
   ASSERT_TRUE(future.isCanceled());
 }
 
-TEST(TestFutureCancel, Canceleable)
+TEST(FutureTestCancel, Canceleable)
 {
   qi::Promise<int> p(&doCancel);
   qi::Future<int> f = p.future();
@@ -648,7 +648,7 @@ int assinc(const qi::Future<int>& f, int exp)
   return val+1;
 }
 
-TEST(TestFutureThen, ThenR)
+TEST(FutureTestThen, ThenR)
 {
   qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.thenR<int>(&assinc, _1, 42);
@@ -657,7 +657,7 @@ TEST(TestFutureThen, ThenR)
   ASSERT_EQ(44, fff.value());
 }
 
-TEST(TestFutureThen, Then)
+TEST(FutureTestThen, Then)
 {
   qi::Future<int> f = qi::async(&get42);
   qi::Future<int> ff = f.then(qi::bind(&assinc, _1, 42));
@@ -666,7 +666,7 @@ TEST(TestFutureThen, Then)
   ASSERT_EQ(44, fff.value());
 }
 
-TEST(TestFutureThen, ThenCancel)
+TEST(FutureTestThen, ThenCancel)
 {
   qi::Promise<int> p;
   qi::Future<void> f = p.future().then(qi::FutureCallbackType_Sync, [](qi::Future<int> f) {
@@ -690,7 +690,7 @@ int call(bool& b)
   return 42;
 }
 
-TEST(TestFutureThen, AndThenR)
+TEST(FutureTestThen, AndThenR)
 {
   bool called = false;
   qi::Future<int> f = qi::async(&get42);
@@ -704,7 +704,7 @@ TEST(TestFutureThen, AndThenR)
   EXPECT_EQ(fff.error(), "fail");
 }
 
-TEST(TestFutureThen, AndThen)
+TEST(FutureTestThen, AndThen)
 {
   bool called = false;
   qi::Future<int> f = qi::async(&get42);
@@ -718,7 +718,7 @@ TEST(TestFutureThen, AndThen)
   EXPECT_EQ(fff.error(), "fail");
 }
 
-TEST(TestFutureThen, AndThenRVoid)
+TEST(FutureTestThen, AndThenRVoid)
 {
   bool called = false;
   qi::Promise<void> p;
@@ -731,7 +731,7 @@ TEST(TestFutureThen, AndThenRVoid)
   ASSERT_TRUE(ff.hasValue());
 }
 
-TEST(TestFutureThen, AndThenRCancel)
+TEST(FutureTestThen, AndThenRCancel)
 {
   qi::Promise<void> blockProm;
 
@@ -748,7 +748,7 @@ TEST(TestFutureThen, AndThenRCancel)
   EXPECT_TRUE(fff.isCanceled());
 }
 
-TEST(TestFutureThen, ErrorForwardingAndThenThen)
+TEST(FutureTestThen, ErrorForwardingAndThenThen)
 {
   qi::Promise<void> p;
   std::atomic<bool> ok;
@@ -767,7 +767,7 @@ TEST(TestFutureThen, ErrorForwardingAndThenThen)
   ASSERT_TRUE(ok.load());
 }
 
-TEST(TestFutureUnwrap, Unwrap)
+TEST(FutureTestUnwrap, Unwrap)
 {
   qi::Promise<qi::Future<int> > prom;
   qi::Promise<int> prom2;
@@ -788,7 +788,7 @@ TEST(TestFutureUnwrap, Unwrap)
   ASSERT_EQ(42, future.value());
 }
 
-TEST(TestFutureUnwrap, UnwrapError)
+TEST(FutureTestUnwrap, UnwrapError)
 {
   qi::Promise<qi::Future<int> > prom;
   qi::Promise<int> prom2;
@@ -805,7 +805,7 @@ TEST(TestFutureUnwrap, UnwrapError)
   ASSERT_EQ("fail", future.error());
 }
 
-TEST(TestFutureUnwrap, UnwrapError2)
+TEST(FutureTestUnwrap, UnwrapError2)
 {
   qi::Promise<qi::Future<int> > prom;
   qi::Promise<int> prom2;
@@ -835,7 +835,7 @@ void setTrue(qi::Promise<T>& p, bool& b)
   p.setCanceled();
 }
 
-TEST(TestFutureUnwrap, UnwrapCancel)
+TEST(FutureTestUnwrap, UnwrapCancel)
 {
   bool canceled = false;
 
@@ -856,7 +856,7 @@ TEST(TestFutureUnwrap, UnwrapCancel)
   EXPECT_TRUE(canceled);
 }
 
-TEST(TestFutureUnwrap, UnwrapCancel2)
+TEST(FutureTestUnwrap, UnwrapCancel2)
 {
   bool canceled = false;
   bool canceled2 = false;
@@ -886,7 +886,7 @@ TEST(TestFutureUnwrap, UnwrapCancel2)
   EXPECT_TRUE(canceled2);
 }
 
-TEST(TestFutureUnwrap, TryUnwrapOnSimpleFuture)
+TEST(FutureTestUnwrap, TryUnwrapOnSimpleFuture)
 {
   qi::Future<void> truc;
   auto machin = qi::detail::tryUnwrap(truc);
@@ -895,7 +895,7 @@ TEST(TestFutureUnwrap, TryUnwrapOnSimpleFuture)
         "Try unwrap messes up a simple future!");
 }
 
-TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureDirect)
+TEST(FutureTestUnwrap, TryUnwrapOnFutureOfFutureDirect)
 {
   auto machin = qi::detail::tryUnwrap(
         qi::Future<qi::Future<void>>{qi::Future<void>{nullptr}});
@@ -904,7 +904,7 @@ TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureDirect)
         "Try unwrap does not unwrap future of futures!");
 }
 
-TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureIntermediateVariable)
+TEST(FutureTestUnwrap, TryUnwrapOnFutureOfFutureIntermediateVariable)
 {
   auto truc = qi::Future<qi::Future<void>>{qi::Future<void>{nullptr}};
   auto machin = qi::detail::tryUnwrap(truc);
@@ -913,7 +913,7 @@ TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureIntermediateVariable)
         "Try unwrap does not unwrap future of futures!");
 }
 
-TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureDeprecatedSignature)
+TEST(FutureTestUnwrap, TryUnwrapOnFutureOfFutureDeprecatedSignature)
 {
   auto machin = qi::detail::tryUnwrap(
         qi::Future<qi::Future<void>>{qi::Future<void>{nullptr}}, 0);
@@ -922,19 +922,19 @@ TEST(TestFutureUnwrap, TryUnwrapOnFutureOfFutureDeprecatedSignature)
         "Try unwrap does not unwrap future of futures!");
 }
 
-TEST(TestFutureUnwrap, TryUnwrapOnValue)
+TEST(FutureTestUnwrap, TryUnwrapOnValue)
 {
   ASSERT_EQ(42, qi::detail::tryUnwrap(42));
 }
 
-TEST(TestFutureWeakCanceler, Cancel)
+TEST(FutureTestWeakCanceler, Cancel)
 {
   qi::Promise<void> prom;
   prom.future().makeCanceler()();
   ASSERT_TRUE(prom.isCancelRequested());
 }
 
-TEST(TestFutureWeakCanceler, IsWeak)
+TEST(FutureTestWeakCanceler, IsWeak)
 {
   boost::weak_ptr<int> wptr;
   boost::function<void()> canceler;
@@ -1081,7 +1081,7 @@ qi::Future<int> emulateSet(int it, bool error = false) {
   return prom.future();
 }
 
-TEST(TestWaitForAll, SimpleTest) {
+TEST(FutureTestWaitForAll, SimpleTest) {
   std::vector< qi::Future<int> > vect;
 
   for (int it = 0; it < BARRIER_N; ++it) {
@@ -1094,7 +1094,7 @@ TEST(TestWaitForAll, SimpleTest) {
   }
 }
 
-TEST(TestWaitForFirst, SuccessfulTest) {
+TEST(FutureTestWaitForFirst, SuccessfulTest) {
   std::vector< qi::Future<int> > vect;
 
   for (int it = 0; it < BARRIER_N; ++it) {
@@ -1105,7 +1105,7 @@ TEST(TestWaitForFirst, SuccessfulTest) {
   ASSERT_EQ(a.value(), 3);
 }
 
-TEST(TestWaitForFirst, FailingTest) {
+TEST(FutureTestWaitForFirst, FailingTest) {
   std::vector< qi::Future<int> > vect;
 
   for (int it = 0; it < BARRIER_N; ++it) {
@@ -1167,7 +1167,7 @@ TEST(TestCancelOnTimeout, TimeoutCauseCancelAsync)
   ASSERT_EQ(FutureState_Running, fut.wait(defaultWaitTimeout));
 }
 
-TEST(TestAdaptFuture, WithVoid) {
+TEST(FutureTestAdaptFuture, WithVoid) {
   qi::Promise<void> prom1;
   qi::Promise<void> prom2;
   prom1.setError("foo");
@@ -1180,7 +1180,7 @@ TEST(TestAdaptFuture, WithVoid) {
   ASSERT_STREQ("foo", prom2.future().error().c_str());
 }
 
-TEST(TestAdaptFuture, WithInt) {
+TEST(FutureTestAdaptFuture, WithInt) {
   qi::Promise<int> prom1;
   qi::Promise<int> prom2;
   prom1.setValue(1);
@@ -1193,7 +1193,7 @@ TEST(TestAdaptFuture, WithInt) {
   ASSERT_EQ(1, prom2.future().value());
 }
 
-TEST(TestAdaptFuture, WithIntVoid) {
+TEST(FutureTestAdaptFuture, WithIntVoid) {
   qi::Promise<int> prom1;
   qi::Promise<void> prom2;
   prom1.setValue(1);
@@ -1206,7 +1206,7 @@ TEST(TestAdaptFuture, WithIntVoid) {
   ASSERT_EQ(NULL, prom2.future().value());
 }
 
-TEST(TestAdaptFuture, PromiseCanceled) {
+TEST(FutureTestAdaptFuture, PromiseCanceled) {
   qi::Promise<void> prom1;
   qi::Promise<void> prom2;
   prom1.setCanceled();
@@ -1224,7 +1224,7 @@ void handleCancel(qi::Promise<void> p)
   p.setCanceled();
 }
 
-TEST(TestAdaptFuture, PromiseCancel) {
+TEST(FutureTestAdaptFuture, PromiseCancel) {
   qi::Promise<void> prom1(handleCancel);
   qi::Promise<void> prom2;
 
@@ -1237,14 +1237,14 @@ TEST(TestAdaptFuture, PromiseCancel) {
   ASSERT_FALSE(prom2.future().hasError());
 }
 
-TEST(TestUnitFuture, Regular)
+TEST(FutureTestUnitFuture, Regular)
 {
   using namespace qi;
   UnitFuture unit; // There is only one value.
-  ASSERT_TRUE(detail::isRegular({unit}));
+  ASSERT_TRUE(ka::is_regular({unit}));
 }
 
-TEST(TestUnitFuture, BasicNonVoid)
+TEST(FutureTestUnitFuture, BasicNonVoid)
 {
   using namespace qi;
   UnitFuture unit; // There is only one value.
@@ -1253,7 +1253,7 @@ TEST(TestUnitFuture, BasicNonVoid)
   ASSERT_EQ(i, fut.value());
 }
 
-TEST(TestUnitFuture, BasicVoid)
+TEST(FutureTestUnitFuture, BasicVoid)
 {
   using namespace qi;
   UnitFuture unit; // There is only one value.
@@ -1261,7 +1261,7 @@ TEST(TestUnitFuture, BasicVoid)
   ASSERT_EQ(nullptr, fut.value());
 }
 
-TEST(TestFuturized, returnVoidNoArgument)
+TEST(FutureTestFuturized, returnVoidNoArgument)
 {
   using namespace qi;
   bool wasCalled = false;
@@ -1272,7 +1272,7 @@ TEST(TestFuturized, returnVoidNoArgument)
   ASSERT_TRUE(wasCalled);
 }
 
-TEST(TestFuturized, returnValueNoArgument)
+TEST(FutureTestFuturized, returnValueNoArgument)
 {
   using namespace qi;
   bool wasCalled = false;
@@ -1284,7 +1284,7 @@ TEST(TestFuturized, returnValueNoArgument)
   ASSERT_EQ(42, x);
 }
 
-TEST(TestFuturized, returnVoidWithArgument)
+TEST(FutureTestFuturized, returnVoidWithArgument)
 {
   using namespace qi;
   bool wasCalled = false;
@@ -1307,4 +1307,41 @@ TEST(TestFuturized, returnValueWithArgument)
   int x = k(a, b);
   ASSERT_TRUE(wasCalled);
   ASSERT_EQ(a+b, x);
+}
+
+TEST(FutureSrc, SrcFuture)
+{
+  using namespace qi;
+  SrcFuture src;
+  const int i = 5;
+  ASSERT_EQ(i, src(Future<int>{i}));
+}
+
+TEST(FutureSrc, SrcFutureUnitFuture)
+{
+  using namespace qi;
+  SrcFuture src;
+  UnitFuture unit;
+  const int i = 5;
+  ASSERT_EQ(i, src(unit(i)));
+  Future<int> f{i};
+  ASSERT_EQ(f.value(), unit(src(f)).value());
+}
+
+TEST(FutureSrc, SrcFutureUnitFutureCompose)
+{
+// VS2013 does not allow to do composition simplifications.
+#if !KA_COMPILER_VS2013_OR_BELOW
+  using namespace qi;
+  using namespace ka;
+  using namespace ka::traits;
+  using namespace ka::functional_ops;
+  SrcFuture src;
+  UnitFuture unit;
+  static_assert(Equal<decltype(src * unit), id_transfo>::value, "");
+  static_assert(Equal<decltype(unit * src), id_transfo>::value, "");
+  id_transfo _1;
+  ASSERT_EQ(src * unit, _1);
+  ASSERT_EQ(unit * src, _1);
+#endif
 }

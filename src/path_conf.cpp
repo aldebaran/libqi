@@ -55,11 +55,11 @@ static void recParseQiPathConf(const std::string &prefix, std::vector<std::strin
   }
 }
 
-std::vector<std::string> parseQiPathConf(const std::string &pathConf)
+std::vector<std::string> parseQiPathConf(const std::string &prefix)
 {
   std::vector<std::string> res;
   std::set<std::string> filesSeen;
-  recParseQiPathConf(pathConf, res, filesSeen);
+  recParseQiPathConf(prefix, res, filesSeen);
   return res;
 }
 

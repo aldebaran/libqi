@@ -10,13 +10,14 @@
 
 #include <qi/api.hpp>
 #include <qi/anyvalue.hpp>
+#include <qi/anyobject.hpp>
 #include <qi/buffer.hpp>
 #include <qi/binarycodec.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/types.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/macroregular.hpp>
 #include <qi/assert.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include <boost/weak_ptr.hpp>
 
 namespace qi {
@@ -44,7 +45,7 @@ namespace qi {
     unsigned int serviceId;
     unsigned int objectId;
     unsigned int functionId;
-    QI_GENERATE_FRIEND_REGULAR_OPS_4(MessageAddress, messageId, serviceId, objectId, functionId)
+    KA_GENERATE_FRIEND_REGULAR_OPS_4(MessageAddress, messageId, serviceId, objectId, functionId)
   };
 
 
@@ -99,7 +100,7 @@ namespace qi {
 
     enum GenericObject
     {
-      GenericObject_None = 0,
+      GenericObject_None = nullObjectId,
       GenericObject_Main = 1
     };
 
@@ -342,7 +343,7 @@ namespace qi {
                       SerializeObjectCallback onObject,
                       StreamContext* sctx)
     {
-      auto updateHeaderSize = qi::scoped([&] { _header.size = _buffer.totalSize(); });
+      auto updateHeaderSize = ka::scoped([&] { _header.size = _buffer.totalSize(); });
       qi::encodeBinary(&_buffer, ref, onObject, sctx);
     }
   };

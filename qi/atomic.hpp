@@ -299,6 +299,12 @@ inline AtomicFlagLock scopelock(std::atomic_flag& f)
   return AtomicFlagLock{ f };
 }
 
+template<typename T>
+T src(const std::atomic<T>& x)
+{
+  return x.load();
+}
+
 } // namespace qi
 
 #define _QI_INSTANCIATE(_, a, elem) ::qi::detail::newAndAssign(&elem);

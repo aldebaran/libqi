@@ -6,9 +6,9 @@
 #include <qi/messaging/sock/concept.hpp>
 #include <qi/messaging/sock/traits.hpp>
 #include <qi/messaging/sock/socketptr.hpp>
-#include <qi/type/traits.hpp>
+#include <ka/typetraits.hpp>
 #include <qi/log.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/macroregular.hpp>
 
 /// @file
 /// Contains option types (ssl, ipV6) and functions to set options on a socket.
@@ -27,7 +27,7 @@ namespace qi { namespace sock {
   public:
   // Regular:
     SslEnabled(bool v = true) : value(v) {}
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(SslEnabled, value)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(SslEnabled, value)
   // Readable:
     bool operator*() const
     {
@@ -42,7 +42,7 @@ namespace qi { namespace sock {
   public:
   // Regular:
     IpV6Enabled(bool v = true) : value(v) {}
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(IpV6Enabled, value)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(IpV6Enabled, value)
   // Readable:
     bool operator*() const
     {
@@ -58,7 +58,7 @@ namespace qi { namespace sock {
   public:
   // Regular:
     ReuseAddressEnabled(bool v = true) : value(v) {}
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(ReuseAddressEnabled, value)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(ReuseAddressEnabled, value)
   // Readable:
     bool operator*() const
     {
@@ -90,7 +90,7 @@ namespace qi { namespace sock {
 
     // Enable TCP keepalive for faster timeout detection.
     // We cannot properly honor a timeout less than 10 seconds.
-    using I = traits::Decay<decltype(timeout.value().count())>;
+    using I = ka::traits::Decay<decltype(timeout.value().count())>;
     auto ajustedTimeout = std::max(timeout.value().count(), I(10));
     auto handle = (*socket).lowest_layer().native_handle();
     static const auto intMax = std::numeric_limits<int>::max();

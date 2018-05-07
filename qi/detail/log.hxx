@@ -8,6 +8,7 @@
 #ifndef _QI_DETAIL_LOG_HXX_
 #define _QI_DETAIL_LOG_HXX_
 
+#include <boost/format.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/preprocessor/cat.hpp>
 
@@ -183,7 +184,7 @@ namespace qi {
 
       // Hack required to silence spurious warning in compile-time disabled macros
       // We need an operator with priority below << and above &&
-      inline bool operator<(bool b, const NullStream& ns)
+      inline bool operator<(bool /*b*/, const NullStream& /*ns*/)
       {
         return false;
       }

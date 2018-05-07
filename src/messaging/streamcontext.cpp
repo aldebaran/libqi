@@ -9,6 +9,15 @@
 
 namespace qi
 {
+  namespace capabilityname
+  {
+    char const * const clientServerSocket    = "ClientServerSocket";
+    char const * const metaObjectCache       = "MetaObjectCache";
+    char const * const messageFlags          = "MessageFlags";
+    char const * const remoteCancelableCalls = "RemoteCancelableCalls";
+    char const * const objectPtrUid          = "ObjectPtrUID";
+  }
+
 
 StreamContext::StreamContext()
 {
@@ -99,23 +108,16 @@ std::pair<unsigned int, bool> StreamContext::sendCacheSet(const MetaObject& mo)
 static CapabilityMap* _defaultCapabilities = nullptr;
 static void initCapabilities()
 {
-  _defaultCapabilities  = new CapabilityMap();
-  /* ClientServerSocket : A client socket has the capability to accept and
-   * dispatch Type_Call messages (& friends).
-   * If set, stream used to register a service to the SD can be reused
-   * to communicate with said service, for instance.
-   */
-  (*_defaultCapabilities)["ClientServerSocket"] = AnyValue::from(true);
-  /* MetaObjectCache: Object serialization protocol supports the
-  * caching of MetaObjects (binary protocol change).
-  */
-  (*_defaultCapabilities)["MetaObjectCache"] = AnyValue::from(false);
-  /* MessageFlags: remote ends support Message flags (flags in 'type' header field)
-  */
-  (*_defaultCapabilities)["MessageFlags"] = AnyValue::from(true);
-  /* RemoteCancelableCalls: remote end supports call cancelations.
-   */
-  (*_defaultCapabilities)["RemoteCancelableCalls"] = AnyValue::from(true);
+  static const CapabilityMap defaultCaps =
+  { { capabilityname::clientServerSocket   , AnyValue::from(true)  }
+  , { capabilityname::messageFlags         , AnyValue::from(true)  }
+  , { capabilityname::metaObjectCache      , AnyValue::from(false) }
+  , { capabilityname::remoteCancelableCalls, AnyValue::from(true)  }
+  , { capabilityname::objectPtrUid         , AnyValue::from(true)  }
+  };
+
+  _defaultCapabilities = new CapabilityMap(defaultCaps);
+
   // Process override from environment
   std::string capstring = qi::os::getenv("QI_TRANSPORT_CAPABILITIES");
   std::vector<std::string> caps;

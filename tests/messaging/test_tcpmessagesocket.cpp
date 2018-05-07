@@ -10,7 +10,7 @@
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
 #include "tests/qi/testutils/testutils.hpp"
-#include "qi/scoped.hpp"
+#include "ka/scoped.hpp"
 
 static const qi::MilliSeconds defaultTimeout{ 2000 };
 
@@ -125,7 +125,7 @@ struct SignalPromises
 struct SignalConnection
 {
   SignalPromises promises;
-  std::function<void()> disconnect = qi::NoOpProcedure<void()>{};
+  std::function<void()> disconnect = ka::no_op_procedure<void()>{};
 
   ~SignalConnection()
   {
@@ -149,7 +149,7 @@ SignalConnectionPtr connectSignals(const SocketPtr& socket)
       [=](const std::string& msg) { cptr->promises._disconnectedReceived.setValue(msg); });
   DisconnectSignal<std::string> disconnectDisconnected{ linkDisconnected, &socket->disconnected };
 
-  const auto lifetimeTransfo = qi::dataBoundTransfo(socket);
+  const auto lifetimeTransfo = ka::data_bound_transfo(socket);
   c->disconnect = lifetimeTransfo([=]() mutable {
     disconnectConnected();
     disconnectDisconnected();
@@ -241,7 +241,7 @@ TYPED_TEST(NetMessageSocket, DestroyNotConnectedAsio)
   SignalConnectionPtr signalConnection;
   {
     auto clientSideSocket = makeMessageSocket(this->scheme());
-    const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+    const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
     signalConnection = connectSignals(clientSideSocket);
 
     // Check that signal were not emitted.
@@ -265,7 +265,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDisconnectAsio)
 
   // We also want to check that signals are emitted.
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   auto signalConnection = connectSignals(clientSideSocket);
 
   Future<void> fut0 = clientSideSocket->connect(url);
@@ -293,7 +293,7 @@ TYPED_TEST(NetMessageSocket, ConnectAndDestroyAsio)
     TransportServer server;
     const auto url = this->listen(server).url;
     auto clientSideSocket = makeMessageSocket(this->scheme());
-    const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+    const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
     signalConnection = connectSignals(clientSideSocket);
 
     Future<void> fut0 = clientSideSocket->connect(url);
@@ -314,7 +314,7 @@ TYPED_TEST(NetMessageSocket, SendWhileNotConnectedAsio)
   using namespace qi::sock;
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   auto signalConnection = connectSignals(clientSideSocket);
 
   MessageAddress address{1234, 5, 9876, 107};
@@ -335,7 +335,7 @@ TYPED_TEST(NetMessageSocket, SendAfterDisconnectedAsio)
   const auto url = this->listen(server).url;
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   Future<void> fut0 = clientSideSocket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut0.wait(defaultTimeout));
 
@@ -352,7 +352,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileNotConnectedAsio)
   using namespace qi::sock;
 
   auto socket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ socket->disconnect().wait(defaultTimeout); });
   ASSERT_FALSE(socket->disconnect().hasError());
 }
 
@@ -372,7 +372,7 @@ TYPED_TEST(NetMessageSocket, ReceiveOneMessageAsio)
 
   Promise<void> promiseReceivedMessage;
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   clientSideSocket->messageReady.connect([&](const Message& msgReceived) mutable {
     if (!messageEqual(msgReceived, msgSent)) throw std::runtime_error("messages are not equal.");
     promiseReceivedMessage.setValue(0);
@@ -403,7 +403,7 @@ TYPED_TEST(NetMessageSocketAsio, ReceiveManyMessages)
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
 
   const int messageCount = 100;
   MessageAddress address{1234, 5, 9876, 107};
@@ -455,7 +455,7 @@ TYPED_TEST(NetMessageSocket, PrematureDestroy)
   auto msgSent = makeMessage(MessageAddress{1234, 5, 9876, 107});
 
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   clientSideSocket->connect(url);
 }
 
@@ -466,7 +466,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
   using N = mock::Network;
 
   std::thread threadResolve;
-  auto scopedResolve = scopedSetAndRestore(
+  auto scopedResolve = ka::scoped_set_and_restore(
     Resolver<N>::async_resolve,
     [&](Resolver<N>::query q, Resolver<N>::_anyResolveHandler h) {
         threadResolve = std::thread{[=] {
@@ -474,7 +474,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
         }};
     }
   );
-  auto r = scoped([&] {
+  auto r = ka::scoped([&] {
     threadResolve.join();
   });
 
@@ -483,7 +483,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
 
   // The async connect waits for a promise to be set before finishing.
   std::thread threadConnect;
-  auto scopedConnect = scopedSetAndRestore(
+  auto scopedConnect = ka::scoped_set_and_restore(
     Lowest<SslSocket<N>>::async_connect,
     [&](N::_resolver_entry, N::_anyHandler h) mutable {
       threadConnect = std::thread{[=]() mutable {
@@ -493,12 +493,12 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileConnecting)
       }};
     }
   );
-  auto c = scoped([&] {
+  auto c = ka::scoped([&] {
     threadConnect.join();
   });
 
   using LowestLayer = Lowest<SslSocket<N>>;
-  auto scopedShutdown = scopedSetAndRestore(
+  auto scopedShutdown = ka::scoped_set_and_restore(
     LowestLayer::_shutdown,
     [=](LowestLayer::shutdown_type, ErrorCode<N>) mutable {
       auto err = operationAborted<ErrorCode<N>>();
@@ -532,7 +532,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   std::vector<std::thread> readThreads, writeThreads;
 
   // Make sure async read and async write block until shutdown happens.
-  auto scopedRead = scopedSetAndRestore(
+  auto scopedRead = ka::scoped_set_and_restore(
     N::_async_read_next_layer,
     [=, &readThreads](SslSocket<N>::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
       readThreads.push_back(std::thread{[=] {
@@ -540,7 +540,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
       }});
     }
   );
-  auto scopedWrite = scopedSetAndRestore(
+  auto scopedWrite = ka::scoped_set_and_restore(
     N::_async_write_next_layer,
     [=, &writeThreads](SslSocket<N>::next_layer_type&, const std::vector<N::_const_buffer_sequence>&, N::_anyTransferHandler h) {
       writeThreads.push_back(std::thread{[=] {
@@ -550,7 +550,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
   );
 
   using LowestLayer = Lowest<SslSocket<N>>;
-  auto scopedShutdown = scopedSetAndRestore(
+  auto scopedShutdown = ka::scoped_set_and_restore(
     LowestLayer::_shutdown,
     [=](LowestLayer::shutdown_type, ErrorCode<N>&) mutable {
       if (promiseAsyncReadWrite.future().isRunning())
@@ -562,7 +562,7 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 
   Promise<void> promiseCloseStarted;
   Promise<void> promiseCanFinishClose;
-  auto scopedClose = scopedSetAndRestore(
+  auto scopedClose = ka::scoped_set_and_restore(
     LowestLayer::close,
     [=](ErrorCode<N>&) mutable {
       promiseCloseStarted.setValue(0);
@@ -614,7 +614,7 @@ TYPED_TEST(NetMessageSocketAsio, DisconnectBurst)
 
   // Connect the client.
   auto socket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ socket->disconnect().wait(defaultTimeout); });
   Future<void> fut = socket->connect(url);
   ASSERT_EQ(FutureState_FinishedWithValue, fut.wait(defaultTimeout));
 
@@ -648,7 +648,7 @@ TYPED_TEST(NetMessageSocketAsio, SendReceiveManyMessages)
   // Connect the client.
   Promise<void> promiseAllMessageReceived;
   auto clientSideSocket = makeMessageSocket(this->scheme());
-  const auto _ = scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ clientSideSocket->disconnect().wait(defaultTimeout); });
   const unsigned sendThreadCount = 100u;
   const unsigned perSendThreadMessageCount = 200u;
   const unsigned messageCount = sendThreadCount * perSendThreadMessageCount;
@@ -707,7 +707,7 @@ TEST(NetMessageSocketAsio, DisconnectToDistantWhileConnected)
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}
   };
   auto socket = makeMessageSocket(scheme);
-  const auto _2 = scoped([=]{ socket->disconnect().wait(defaultTimeout); });
+  const auto _2 = ka::scoped([=]{ socket->disconnect().wait(defaultTimeout); });
   Future<void> futCo = test::attemptConnect(*socket, url);
   ASSERT_EQ(FutureState_FinishedWithValue, futCo.wait(defaultTimeout));
   Future<void> futDisco = socket->disconnect().async();
@@ -725,7 +725,7 @@ TEST(NetMessageSocketAsio, DistantCrashWhileConnected)
   const std::string protocol{"tcp"};
   const Url url{protocol + "://127.0.0.1:54321"};
   MessageSocketPtr socket;
-  const auto _ = scoped([=]{ if (socket) socket->disconnect().wait(defaultTimeout); });
+  const auto _ = ka::scoped([=]{ if (socket) socket->disconnect().wait(defaultTimeout); });
   {
     test::ScopedProcess _{
       remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=" + url.str()}

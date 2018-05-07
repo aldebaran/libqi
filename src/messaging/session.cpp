@@ -12,7 +12,7 @@
 #include <atomic>
 #include <sstream>
 #include <qi/session.hpp>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include "message.hpp"
 #include "messagesocket.hpp"
 #include <qi/anyobject.hpp>
@@ -116,7 +116,7 @@ namespace qi {
      std::string mid;
      try
      {
-       mid = _sdClient.machineId();
+       mid = _sdClient.machineId().value();
      }
      catch (const std::exception& e)
      { // Provide a nice message for backward compatibility

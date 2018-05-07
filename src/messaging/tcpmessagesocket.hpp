@@ -14,8 +14,8 @@
 #include <boost/thread/synchronized_value.hpp>
 #include "message.hpp"
 #include <qi/url.hpp>
-#include <qi/type/traits.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/typetraits.hpp>
+#include <ka/macroregular.hpp>
 #include "messagedispatcher.hpp"
 #include "messagesocket.hpp"
 #include <qi/messaging/sock/disconnectedstate.hpp>
@@ -238,11 +238,6 @@ namespace qi {
       }
       return {};
     }
-    bool isConnected() const override
-    {
-      boost::recursive_mutex::scoped_lock lock(_stateMutex);
-      return getStatus() == Status::Connected;
-    }
     bool ensureReading() override;
   private:
     /// Handler called when we transition outside the connected state.
@@ -253,7 +248,7 @@ namespace qi {
       boost::shared_ptr<TcpMessageSocket> _socket;
       Future<void> _futureConnected;
     // Regular:
-      QI_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
+      KA_GENERATE_FRIEND_REGULAR_OPS_1(OnConnectedComplete, _socket)
     // Procedure:
       void operator()(Future<sock::SyncConnectedResultPtr<N, S>> f)
       {
@@ -596,7 +591,7 @@ namespace qi {
     boost::recursive_mutex::scoped_lock lock(_stateMutex);
     if (getStatus() != Status::Connected)
     {
-      QI_LOG_WARNING_SOCKET(this) << "Socket must be connected to send().";
+      QI_LOG_DEBUG_SOCKET(this) << "Socket must be connected to send().";
       return false;
     }
     asConnected(_state).send(msg, _ssl);

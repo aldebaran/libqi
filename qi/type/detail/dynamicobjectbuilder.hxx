@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAIL_GENERICOBJECTBUILDER_HXX_
 #define _QITYPE_DETAIL_GENERICOBJECTBUILDER_HXX_
 
+#include <qi/type/dynamicobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/type/metamethod.hpp>
 
@@ -88,7 +89,7 @@ namespace qi {
   template<typename T> qi::AnyObject DynamicObjectBuilder::object(boost::shared_ptr<T> other)
   {
     DynamicObject* dobj = bareObject();
-    qi::AnyObject ao = makeDynamicAnyObject(dobj, other);
+    qi::AnyObject ao = makeDynamicSharedAnyObject(dobj, other);
     setManageable(dobj, ao.asGenericObject());
     return ao;
   }

@@ -188,7 +188,7 @@ TEST(TestCall, IPV6Accepted)
 
 
   auto socket = qi::makeMessageSocket("tcp");
-  const auto _ = qi::scoped([=]{ socket->disconnect(); });
+  const auto _ = ka::scoped([=]{ socket->disconnect(); });
   fut = socket->connect(ipv6Url);
 
   ASSERT_FALSE(fut.hasError());
@@ -208,7 +208,7 @@ TEST(TestCall, IPV6Rejected)
   ASSERT_TRUE(ipv6Url.isValid());
 
   auto socket = qi::makeMessageSocket("tcp");
-  const auto _ = qi::scoped([=]{ socket->disconnect(); });
+  const auto _ = ka::scoped([=]{ socket->disconnect(); });
   qi::Future<void> fut = socket->connect(ipv6Url);
 
   ASSERT_TRUE(fut.hasError());

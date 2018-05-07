@@ -117,7 +117,8 @@ namespace qi
   template<typename T>
   FutureSync<void> Property<T>::setValue(AutoAnyReference value)
   {
-    return _strand.async([=]{ this->setImpl(value.to<T>()); });
+    const auto v = value.to<T>();
+    return _strand.async([=]{ this->setImpl(v); });
   }
 }
 

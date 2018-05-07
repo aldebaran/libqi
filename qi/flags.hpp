@@ -6,8 +6,8 @@
 #ifndef QI_FLAGS_HPP
 #define QI_FLAGS_HPP
 
-#include <qi/type/traits.hpp>
-#include <qi/macroregular.hpp>
+#include <ka/typetraits.hpp>
+#include <ka/macroregular.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/numeric.hpp>
 #include <algorithm>
@@ -18,10 +18,10 @@ namespace qi
   ///
   /// This overload is only available for enum types through SFINAE because
   /// std::underlying_type has undefined behavior for non-enum types.
-  template <typename E, typename = traits::EnableIf<std::is_enum<E>::value>>
-  auto underlying(const E& e) -> traits::UnderlyingType<E>
+  template <typename E, typename = ka::traits::EnableIf<std::is_enum<E>::value>>
+  auto underlying(const E& e) -> ka::traits::UnderlyingType<E>
   {
-    return static_cast<traits::UnderlyingType<E>>(e);
+    return static_cast<ka::traits::UnderlyingType<E>>(e);
   }
 
   /// Class providing type-safe flags semantics for bitwise combinable types.
@@ -61,7 +61,7 @@ namespace qi
   {
   public:
     using type = Type;
-    using underlying_type = traits::Decay<decltype(underlying(std::declval<Type>()))>;
+    using underlying_type = ka::traits::Decay<decltype(underlying(std::declval<Type>()))>;
 
   private:
     explicit Flags(underlying_type value)
@@ -74,7 +74,7 @@ namespace qi
       : _value{}
     {}
 
-    QI_GENERATE_FRIEND_REGULAR_OPS_1(Flags, _value)
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(Flags, _value)
 
   // HasUnderlying:
     friend const underlying_type& underlying(const Flags& f)

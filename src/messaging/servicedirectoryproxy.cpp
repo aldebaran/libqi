@@ -5,11 +5,12 @@
 
 #include "clientauthenticator_p.hpp"
 #include "server.hpp"
-#include <qi/errorhandling.hpp>
+#include <ka/errorhandling.hpp>
+#include <ka/functional.hpp>
+#include <ka/scoped.hpp>
 #include <qi/log.hpp>
 #include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/messaging/servicedirectoryproxy.hpp>
-#include <qi/scoped.hpp>
 #include <qi/url.hpp>
 
 #include <boost/range/adaptors.hpp>
@@ -233,7 +234,7 @@ ServiceDirectoryProxy::Impl::Impl(bool enforceAuth)
   : connected{ false, Property<bool>::Getter{}, util::SetAndNotifyIfChanged{}}
   , status{ totallyDisconnected, Property<Status>::Getter{}, util::SetAndNotifyIfChanged{}}
   ,_isEnforcedAuth(enforceAuth)
-  , _serviceFilter{ PolymorphicConstantFunction<bool>{ false } }
+  , _serviceFilter{ ka::poly_constant_function<bool>{ false } }
 {
   status.connect(_strand.schedulerFor([this](const Status& newStatus) {
     connected.set(newStatus.isConnected()).async();
@@ -541,6 +542,7 @@ MirroringResult::Status ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
 
 void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
 {
+  using ka::scoped;
   if (!_status.current().isConnected())
     throw std::runtime_error("Not connected to service directory");
   QI_ASSERT_TRUE(_sdClient);

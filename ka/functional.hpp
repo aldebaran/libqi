@@ -1,0 +1,946 @@
+#ifndef KA_FUNCTIONAL_HPP
+#define KA_FUNCTIONAL_HPP
+#pragma once
+#include <boost/config.hpp>
+#include <boost/optional.hpp>
+#include "integersequence.hpp"
+#include "macroregular.hpp"
+#include "memory.hpp"
+#include "src.hpp"
+#include "typetraits.hpp"
+#include "utility.hpp"
+
+/// @file
+/// Contains functional tools: no-op procedure, etc.
+
+namespace ka {
+  /// A procedure that does nothing.
+  template<typename F>
+  struct no_op_procedure;
+
+  /// You can specify the value to return.
+  template<typename Ret, typename... Args>
+  struct no_op_procedure<Ret (Args...)> {
+    Ret ret;
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(no_op_procedure, ret)
+  // Procedure:
+    Ret operator()(Args const&...) const {
+      return ret;
+    }
+  };
+
+  template<typename... Args>
+  struct no_op_procedure<void (Args...)> {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(no_op_procedure)
+  // Procedure:
+    void operator()(Args const&...) const {
+    }
+  };
+
+  /// Polymorphic function that maps any input to the same output.
+  ///
+  /// There is no constraint on Ret.
+  template<typename Ret>
+  struct poly_constant_function {
+    Ret ret;
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(poly_constant_function, ret)
+  // PolymorphicFunction<Ret (Args...)>:
+    template<typename... Args>
+    Ret operator()(Args const&...) const {
+      return ret;
+    }
+  };
+
+  template<>
+  struct poly_constant_function<void> {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(poly_constant_function)
+  // PolymorphicFunction<void (Args...)>:
+    template<typename... Args>
+    void operator()(Args const&...) const {
+    }
+  };
+
+  /// A polymorphic transformation that takes a value and returns it as-is.
+  ///
+  /// A transformation is a unary function from a type to itself.
+  struct id_transfo {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(id_transfo)
+  // PolymorphicTransformation:
+    template<typename T>
+    inline T operator()(T const& t) const {
+      return t;
+    }
+  // Isomorphism:
+    friend id_transfo retract(id_transfo x) {
+      return x;
+    }
+  };
+
+  /// A polymorphic action that does not modify its argument.
+  ///
+  /// See concept `Action`.
+  struct id_action {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(id_action)
+  // PolymorphicAction:
+    template<typename T>
+    inline void operator()(T&) {
+    }
+  };
+
+// Mainly useful because of the redundancy of trailing return types.
+//
+// TODO: Remove this when get rid of C++11.
+#define KA_FWD_ARGS fwd<Args>(args)...
+
+  namespace detail {
+    template<typename Ret>
+    struct composition {
+      /// TODO: Remove the trailing return type when get rid of C++11.
+      template<typename G, typename F, typename... Args>
+      auto operator()(G& g, F& f, Args&&... args) -> decltype(g(f(KA_FWD_ARGS))) {
+        return g(f(KA_FWD_ARGS));
+      }
+    };
+
+    template<>
+    struct composition<void> {
+      /// TODO: Remove the trailing return type when get rid of C++11.
+      template<typename G, typename F, typename... Args>
+      auto operator()(G& g, F& f, Args&&... args) -> decltype(g()) {
+        return f(KA_FWD_ARGS), g();
+      }
+    };
+  } // namespace detail
+
+  /// Composes two procedures, handling the void case.
+  ///
+  /// In C++, `g(f(x))` is not possible if `f` returns `void` and `g` takes `void`
+  /// (no argument). This case is handled as `f(x), g()`.
+  ///
+  /// Procedure<C (B)> G, Procedure<B (A...)> F
+  template<typename G, typename F>
+  struct composition {
+    G g;
+    F f;
+  // Regular (if G and F are):
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(composition, g, f)
+  // Procedure<C (A...)>:
+    /// TODO: Remove the trailing return type when get rid of C++11.
+    template<typename... Args>
+    auto operator()(Args&&... args)
+        -> decltype(detail::composition<decltype(f(KA_FWD_ARGS))>{}(g, f, KA_FWD_ARGS)) {
+      return detail::composition<decltype(f(KA_FWD_ARGS))>{}(g, f, KA_FWD_ARGS);
+    }
+  // RetractableFunction if `F` and `G` are:
+    // TODO: Add it when switching to C++14.
+    // implementation is: x -> compose(retract(x.f), retract(x.g))
+  };
+
+#undef KA_FWD_ARGS
+
+  namespace detail {
+    template<typename G, typename F>
+    using IsCompositionIdentity = traits::Conjunction<
+      std::is_empty<G>,
+      traits::IsRetract<G, F>>;
+  } // namespace detail
+
+  /// Performs a mathematical function composition.
+  ///
+  /// The composition is smart enough so that if you compose a function and its
+  /// retraction, it will return the identity function.
+  ///
+  /// Example: Composing with a non-void function
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `motor` takes a `string` and returns the properties of a motor.
+  /// // `heat` takes the properties of a motor and returns an `int`.
+  /// // `motor_names` is a container of string.
+  /// auto heat_of_motor = compose(heat, motor);
+  /// auto max_heat = std::max_element(motor_names.begin(), motor_names.end(), heat_of_motor);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: Composing with a void function
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `log_name` and `log_heat` take no input (void) and returns no ouput (void).
+  /// auto log_name_then_heat = compose(log_heat, log_name);
+  /// auto fut = strand.async(log_name_then_heat);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Remark: In the future, add a SFINAE guard if there is a name clash.
+  ///   Alternatively, rename this function in `fun_compose`.
+  ///
+  /// Remark: Operator `*` is proposed as an opt-in alternative to `compose` in
+  ///   the `functional_ops` namespace.
+  ///
+  /// Procedure<C (B)> G,
+  /// Procedure<B (Args...)> F
+
+// TODO: Remove this when get rid of VS2013.
+#if KA_COMPILER_VS2013_OR_BELOW
+  // Poor-man version that does not perform  simplifications.
+  template<typename G, typename F>
+  composition<traits::Decay<G>, traits::Decay<F>> compose(G&& g, F&& f) {
+    return {fwd<G>(g), fwd<F>(f)};
+  }
+#else
+  template<typename G, typename F, typename =
+    traits::EnableIf<!detail::IsCompositionIdentity<traits::Decay<G>, traits::Decay<F>>::value>>
+  composition<traits::Decay<G>, traits::Decay<F>> compose(G&& g, F&& f) {
+    return {fwd<G>(g), fwd<F>(f)};
+  }
+
+  template<typename F, typename = traits::EnableIf<std::is_empty<F>::value>>
+  id_transfo compose(traits::Retract<traits::Decay<F>> const&, F const&) {
+    return {};
+  }
+#endif
+
+  template<typename F>
+  F&& compose(id_transfo, F&& f) {
+    return fwd<F>(f);
+  }
+
+  template<typename F>
+  F&& compose(F&& f, id_transfo) {
+    return fwd<F>(f);
+  }
+
+  // This one could be theoretically handled by the simplifying overload
+  // (because `id_transfo` is its own retraction/inverse). But removing this
+  // overload causes overload resolution to fail because of ambiguities.
+  inline id_transfo compose(id_transfo, id_transfo) {
+    return {};
+  }
+
+  /// Composes two accumulations.
+  ///
+  /// An `Accumulation` has the signature `void (T&, Args...)`, meaning it modifies
+  /// its argument in-place. There is always a semantically identical `Function`
+  /// of the form `T (T)`.
+  ///
+  /// Composing two accumulations `g` and `f` is equivalent to perform
+  /// ```
+  /// f(args...);
+  /// g(args...);
+  /// ```
+  /// This implies that both accumulations must have the same signature to be
+  /// composable.
+  ///
+  /// Example: Arithmetic actions
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// using M = matrix<int, 10000, 10000>;
+  ///
+  /// // We use actions to avoid the expensive copies that would happen with the
+  /// // equivalent transformations (at least without compiler optimizations).
+  /// incr<M> incr;   // signature: void (M&)
+  /// twice<M> twice; // signature: void (M&)
+  ///
+  /// // Using `compose` wouldn't work here because we don't pass the output of
+  /// // `incr` to the input of `twice`.
+  ///
+  /// auto twice_of_incr = compose_accu(twice, incr); // signature: void (M&)
+  ///
+  /// M m = computeMatrix();
+  /// twice_of_incr(m); // Apply `incr`, then `twice`.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Remark: Operator `*=` is proposed as an opt-in alternative to
+  ///   `compose_accu` in the `functional_ops` namespace.
+  ///
+  /// Accumulation<T, Args...> G, Accumulation<T, Args...> F
+  template<typename G, typename F>
+  struct composition_accu {
+    G g;
+    F f;
+  // Regular (if G and F are):
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(composition_accu, g, f)
+  // Accumulation<T, Args...>:
+    template<typename T, typename... Args>
+    void operator()(T& t, Args const&... args) {
+      f(t, args...);
+      g(t, args...);
+    }
+  // IsomorphismAccu if `F` and `G` are:
+    // TODO: Add it when switching to C++14.
+    // implementation is: x -> compose_accu(retract(x.f), retract(x.g)0
+  };
+
+  /// Helper-function to deduce types for `composition_accu`.
+  ///
+  /// This function will detect retractions and optimise the composition. This
+  /// means that if you compose an action with its retraction (i.e. an action
+  /// that undoes it), the identity action will be returned.
+  ///
+  /// Accumulation<T...> G, Accumulation<T...> F
+  template<typename G, typename F, typename = traits::EnableIf<
+    !detail::IsCompositionIdentity<traits::Decay<G>, traits::Decay<F>>::value>>
+  composition_accu<traits::Decay<G>, traits::Decay<F>> compose_accu(G&& g, F&& f) {
+    return {fwd<G>(g), fwd<F>(f)};
+  }
+
+  template<typename F, typename = traits::EnableIf<std::is_empty<F>::value>>
+  id_action compose_accu(traits::Retract<F> const&, F const&) {
+    return {};
+  }
+
+  template<typename F>
+  F&& compose_accu(id_action, F&& f) {
+    return fwd<F>(f);
+  }
+
+  template<typename F>
+  F&& compose_accu(F&& f, id_action) {
+    return fwd<F>(f);
+  }
+
+  // This one could be theoretically handled by the simplifying overload
+  // (because `id_action` is its own inverse). But removing this overload causes
+  // overload resolution to fail because of ambiguities.
+  inline id_action compose_accu(id_action, id_action) {
+    return {};
+  }
+
+  namespace functional_ops {
+    /// Performs a mathematical function composition.
+    ///
+    /// See `compose()`.
+    ///
+    /// `*` is used because in mathematics multiplication denotes an
+    /// associative operation (not required to be commutative).
+    /// Function composition being associative, the composition of `g` with `f`
+    /// is often abbreviated as `gf`, reusing the product notation.
+    ///
+    /// Furthermore `id_transfo` being polymorphic, it denotes the identity
+    /// functions for all types, so the function composition together with
+    /// `id_transfo` forms a category.
+    ///
+    /// Therefore, the following invariants hold:
+    ///
+    /// ```
+    /// // `f` is an arbitrary function.
+    /// id_transfo _1;
+    ///
+    /// assert(f * _1 == f);
+    /// assert(_1 * f == f);
+    /// assert(_1 * _1 == _1);
+    /// ```
+    template<typename G, typename F>
+    auto operator*(G&& g, F&& f) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
+      return compose(fwd<G>(g), fwd<F>(f));
+    }
+
+    /// Performs a composition of accumulation procedures.
+    ///
+    /// See `compose_accu()`.
+    ///
+    /// `*=` is used as a variant of `*` (the function composition operator).
+    /// The `=` sign is used to emphasize the notion of accumulation.
+    ///
+    /// This naming follows the fact that in the language, binary operations
+    /// typically have a semantically equivalent accumulation counterpart.
+    /// For example for a type `T`, `+: T x T -> T` is a binary operation and
+    /// has for counterpart the semantically equivalent accumulation
+    /// `+=: T& x T -> void`.
+    ///
+    /// So composing functions (i.e. regular procedures with signature
+    /// `A0 x A1 x ... -> B`) is done with `*` and composing accumulations (i.e.
+    /// procedures with signature `A0& x A1 x ... -> void)` is done with `*=`.
+    ///
+    /// Note: Symmetrically to `compose` with `id_transfo`, `compose_accu` with
+    ///   `id_action` forms a category. Therefore, the same kind of invariants
+    ///   hold:
+    ///
+    /// ```
+    /// // `a` is an arbitrary accumulation.
+    /// id_action _1;
+    ///
+    /// assert((a *= _1) == a);
+    /// assert((_1 *= a) == a);
+    /// assert((_1 *= _1) == _1);
+    /// ```
+    template<typename G, typename F>
+    auto operator*=(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
+      return compose_accu(fwd<G>(g), fwd<F>(f));
+    }
+  }
+
+  /// Function that transforms the codomain (return type) of the given procedure
+  /// into an "enriched" type.
+  ///
+  /// This is related to monad theory (see below).
+  ///
+  /// Example: Transforming a procedure of type (A -> B) in a procedure of type (A -> Future<B>):
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // `proc` takes an `int` and returns a `bool`
+  /// auto f = semilift(proc, UnitFuture{});
+  /// Future<bool> fut = f(i);
+  /// // ...
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// # Background on monads
+  ///
+  /// A monad can be viewed as an "enriched" type together with functions to go
+  /// from and to the corresponding "base" type.
+  /// In the above example, `int` is the base type and `Future<int>` is the
+  /// enriched, monadic, type.
+  ///
+  /// To lift is to map a function on base types to a function on the
+  /// corresponding enriched types:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// enriched "level":  X<int> ---> X<bool>
+  ///                            ^
+  ///                            | lift
+  ///                            |
+  /// base "level":      int    ---> bool
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// In the above case `X` is `Future`.
+  ///
+  /// Other examples for X are: std::optional, std::vector, etc.
+  ///
+  /// Generally speaking, the enriched type (e.g. X<int>) gives access to a value
+  /// of an underlying type (e.g. int). Thus, it can be viewed as a "container".
+  ///
+  /// In our case, we have:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// enriched "level":       X<bool>
+  ///                         ^    ^
+  ///   semilift(proc, unit) /     | unit
+  ///                       /      |
+  /// base "level":      int ---> bool
+  ///                        proc
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// This diagram commutes: all paths are equivalent.
+  ///
+  /// That is, we have for all x:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// semilift(proc, unit)(x) == compose(unit, proc)(x)
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// where `compose` denotes the function composition.
+  ///
+  /// `unit` is a function that sends a "base" value to an "enriched", monadic value.
+  /// Its name comes from the fact that it is a "unit" or "neutral element" for
+  /// monadic composition.
+  ///
+  /// This function is named `semilift` because it partially "lifts" the procedure:
+  /// only the codomain is enriched.
+  ///
+  /// Procedure Proc
+  template<typename Proc, typename F>
+  auto semilift(Proc&& p, F&& unit) -> decltype(compose(fwd<F>(unit), fwd<Proc>(p))) {
+    return compose(fwd<F>(unit), fwd<Proc>(p));
+  }
+
+  /// Bind a data to a procedure without changing its semantics.
+  /// One use is to bind a shared pointer to extend the lifetime of some data
+  /// related to the procedure.
+  ///
+  /// This type is useful equivalent to a variadic generic lambda in C++14:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// T data;
+  /// auto data_bound_proc = [data](auto&&... args) {
+  ///   // ...
+  /// };
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Warning: This type is not strictly equivalent to a lambda (C++14 or even C++17),
+  ///   as it is regular and lambdas are not.
+  ///
+  /// Procedure Proc
+  template<typename Proc, typename T>
+  struct data_bound_proc {
+    Proc proc;
+    T data;
+  // Regular (if T is regular):
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(data_bound_proc, proc, data)
+  // Procedure:
+    template<typename... Args>
+    auto operator()(Args&&... args) -> decltype(proc(fwd<Args>(args)...)) {
+      return proc(fwd<Args>(args)...);
+    }
+  };
+
+  /// A polymorphic transformation that takes a procedure and returns
+  /// an equivalent one that is bound to an arbitrary data.
+  /// The bound data can be a shared pointer to extend the lifetime of an object
+  /// the procedure is dependent on.
+  ///
+  /// Example: extending instance lifetime by binding a shared pointer
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // Network N
+  /// template<typename N>
+  /// struct X : std::enable_shared_from_this<X> {
+  ///   SendMessageEnqueue<N, SocketPtr<N>> sendMsg;
+  ///
+  ///   void doStuff() {
+  ///     // ...
+  ///     auto onSent = [](...) {
+  ///        // use X's members here
+  ///     };
+  ///     // sendMsg will wrap any asynchronous task by binding it with a
+  ///     // shared pointer on this instance.
+  ///     sendMsg(msg, ssl, onSent,
+  ///       data_bound_transfo(shared_from_this()) // lifetimeTransfo
+  ///     );
+  ///   }
+  /// };
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Regular T
+  template<typename T>
+  struct data_bound_transfo_t {
+    T data;
+  // Regular (if T is regular):
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(data_bound_transfo_t, data)
+  // PolymorphicTransformation:
+    template<typename Proc>
+    data_bound_proc<traits::Decay<Proc>, T> operator()(Proc&& p) const {
+      return {fwd<Proc>(p), data};
+    }
+  };
+
+  /// Helper function to deduce types for DataBoundTransfo.
+  template<typename T>
+  data_bound_transfo_t<T> data_bound_transfo(T const& maintain_alive) {
+    return {maintain_alive};
+  }
+
+  /// Action that move-assigns a stored value on call.
+  ///
+  /// Warning: Can be called only once because the value assigned from is moved.
+  ///
+  /// With Src s, Dest d, the following is valid:
+  ///   d = std::move(s);
+  template<typename Dest, typename Src>
+  struct move_assign_t {
+    Src s;
+  // Action<T>:
+    /// Precondition: it is the first time this operator is called on this instance
+    void operator()(Dest& d) {
+      d = std::move(s);
+    }
+
+    // TODO: Remove this when get rid of VS2013.
+    move_assign_t(Src&& s)
+      : s(std::move(s)) {
+    }
+
+    // TODO: Remove this when get rid of VS2013.
+    move_assign_t(Src const& s)
+      : s(s) {
+    }
+
+    // TODO: Remove this when get rid of VS2013.
+    move_assign_t(move_assign_t const& other) = default;
+
+    // TODO: Remove this when get rid of VS2013.
+    move_assign_t(move_assign_t&& x)
+      : s(std::move(x.s)) {
+    }
+  };
+
+  /// Helper function that performs type deduction for `MoveAssign`.
+  template<typename Dest, typename Src>
+  move_assign_t<Dest, traits::Decay<Src>> move_assign(Src&& s) {
+    return std::move(move_assign_t<Dest, traits::Decay<Src>>(fwd<Src>(s)));
+  }
+
+  template<typename T>
+  struct incr;
+
+  /// Isomorphic action that decrements its parameter.
+  ///
+  /// See incr for a use example.
+  ///
+  /// The inverse action is `incr<T>`
+  ///
+  /// (Arithmetic || BidirectionalIterator) T
+  template<typename T>
+  struct decr {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(decr)
+  // Action<Arithmetic || BidirectionalIterator>:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = incr<T>;
+
+    void operator()(T& x) const {
+      --x;
+    }
+  // IsomorphicAction<Integral || BidirectionalIterator>:
+    template<typename U>
+    friend incr<U> retract(decr<U>);
+  };
+
+  /// Isomorphic action that increments its parameter.
+  ///
+  /// Example: with scoped tools
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// void pretty_print(doc_t const& doc, std::ostream& o) {
+  ///   // `depth` is an `int` with a wider scope.
+  ///   auto _ = scoped_apply_and_retract(depth, incr<int>{});
+  ///   // here, the depth has been incremented
+  ///   ...
+  /// }
+  /// // here, the depth has been decremented
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// The inverse action is `decr<T>`.
+  ///
+  /// (Arithmetic || InputIterator) T
+  template<typename T>
+  struct incr {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(incr)
+  // Action<Arithmetic || InputIterator>:
+    void operator()(T& x) const {
+      ++x;
+    }
+  // IsomorphicAction<Integral || BidirectionalIterator>:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = decr<T>;
+
+    friend decr<T> retract(incr) {
+      return {};
+    }
+  };
+
+  template<typename T>
+  incr<T> retract(decr<T>) {
+    return {};
+  }
+
+  struct poly_incr;
+
+  struct poly_decr {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(poly_decr)
+  // Action<Arithmetic || BidirectionalIterator>:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = poly_incr;
+
+    template<typename T>
+    inline void operator()(T& x) const {
+      --x;
+    }
+  // IsomorphicAction<Integral || BidirectionalIterator>:
+    inline friend poly_incr retract(poly_decr);
+  };
+
+  struct poly_incr {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(poly_incr)
+  // Action<Arithmetic || InputIterator>:
+    template<typename T>
+    inline void operator()(T& x) const {
+      ++x;
+    }
+  // IsomorphicAction<Integral || BidirectionalIterator>:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = poly_decr;
+
+    inline friend poly_decr retract(poly_incr) {
+      return {};
+    }
+  };
+
+  inline poly_incr retract(poly_decr) {
+    return {};
+  }
+
+  namespace detail {
+    template<typename Proc, typename Args, std::size_t... I>
+    BOOST_CONSTEXPR auto apply_impl(Proc&& proc, Args&& args, index_sequence<I...>)
+      // TODO: Guess what, remove this when c++14 is available.
+        -> decltype(proc(std::get<I>(fwd<Args>(args))...)) {
+      return proc(std::get<I>(fwd<Args>(args))...);
+    }
+  }
+
+  /// Applies the procedure after unpacking the arguments.
+  ///
+  /// Besides std::tuple, arguments can be stored as std::pair, std::array, or
+  /// any type modeling the `Tuple` concept (see concept.hpp).
+  ///
+  /// Note: This is roughly equivalent to C++17's `std::apply`. The main difference
+  /// is that this version use function call syntax instead of C++17's `std::invoke`.
+  ///
+  /// TODO: Replace this by `std::apply` when C++17 is available.
+  ///
+  /// Example: using a `std::tuple` as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, char c, float f) {
+  ///   ...
+  /// }
+  ///
+  /// // ...
+  /// auto args = std::make_tuple(5, 'a', 3.14f);
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: using a `std::pair` as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, char c) {
+  ///   ...
+  /// }
+  ///
+  /// // ...
+  /// auto args = std::make_pair(5, 'a');
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: using a `std::array` as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, int j, int k, int l) {
+  ///   ...
+  /// }
+  ///
+  /// // ...
+  /// std::array<int, 4> args = {13, 2, 9874, 42};
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: using a custom type as a container for arguments
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// namespace test {
+  ///   template<std::size_t N>
+  ///   using index = std::integral_constant<std::size_t, N>;
+  ///
+  ///   template<typename A, typename B, typename C>
+  ///   struct X {
+  ///     A a;
+  ///     B b;
+  ///     C c;
+  ///
+  ///     bool operator==(X const& y) const {
+  ///       return a == y.a && b == y.b && c == y.c;
+  ///     }
+  ///
+  ///     A& get(index<0>) {return a;}
+  ///     B& get(index<1>) {return b;}
+  ///     C& get(index<2>) {return c;}
+  ///     A const& get(index<0>) const {return a;}
+  ///     B const& get(index<1>) const {return b;}
+  ///     C const& get(index<2>) const {return c;}
+  ///   };
+  /// } // namespace test
+  ///
+  /// namespace std {
+  ///   template<typename A, typename B, typename C>
+  ///   struct tuple_size<test::X<A, B, C>> : integral_constant<size_t, 3> {
+  ///   };
+  ///
+  ///   template<size_t I, typename A, typename B, typename C>
+  ///   BOOST_CONSTEXPR auto get(test::X<A, B, C>& x)
+  ///     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+  ///       -> decltype(x.get(integral_constant<size_t, I>{})) {
+  ///     return x.get(integral_constant<size_t, I>{});
+  ///   }
+  ///
+  ///   template<size_t I, typename A, typename B, typename C>
+  ///   BOOST_CONSTEXPR auto get(test::X<A, B, C> const& x)
+  ///     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+  ///       -> decltype(x.get(integral_constant<size_t, I>{})) {
+  ///     return x.get(integral_constant<size_t, I>{});
+  ///   }
+  /// } // namespace std
+  ///
+  /// int f(int i, char c, float f) {
+  ///   ...
+  /// }
+  /// // ...
+  ///
+  /// X const args{5, 'a', 3.14f};
+  /// int res = apply(f, args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// See `apply_t` to transform a function into an equivalent tuple-accepting function.
+  ///
+  /// Procedure Proc, Tuple Args
+  template<typename Proc, typename Args>
+  BOOST_CONSTEXPR auto apply(Proc&& proc, Args&& args)
+    // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+      -> decltype(detail::apply_impl(fwd<Proc>(proc), fwd<Args>(args),
+        make_index_sequence<std::tuple_size<traits::Decay<Args>>::value>{})) {
+    return detail::apply_impl(fwd<Proc>(proc), fwd<Args>(args),
+      make_index_sequence<std::tuple_size<traits::Decay<Args>>::value>{});
+  }
+
+  /// Procedure accepting a tuple of arguments and unpacking them for the underlying
+  /// procedure.
+  ///
+  /// Example: transforming a "n-argument function" into a "tuple function"
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, int j) {
+  ///   ...
+  /// };
+  ///
+  /// // ...
+  /// auto f2 = apply(f); // helper function that returns a `apply_t<Decay<decltype(f)>>`
+  /// int res0 = f2(std::make_tuple(4454, 7));
+  /// int res1 = f2(std::make_pair(5, 12));
+  /// int res2 = f2(std::array<int, 2>{98, 99});
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Note: See `apply` for an example on how to use a custom type.
+  ///
+  /// See `apply` for more examples.
+  ///
+  /// Procedure Proc
+  template<typename Proc>
+  struct apply_t {
+    Proc proc;
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(apply_t, proc)
+  // Procedure:
+    template<typename Args>
+    auto operator()(Args&& args) KA_NOEXCEPT_EXPR(apply(proc, fwd<Args>(args)))
+        // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
+        -> decltype(apply(proc, fwd<Args>(args))) {
+      return apply(proc, fwd<Args>(args));
+    }
+  };
+
+  /// Helper function to enable type deduction for `apply_t`.
+  ///
+  /// Note: An overload taking the procedure _and_ the arguments also exists.
+  /// This allows for currying.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int f(int i, int j) {
+  ///   ...
+  /// };
+  ///
+  /// // ...
+  /// auto args = std::make_pair(34, 45);
+  ///
+  /// // immediate call version
+  /// auto res0 = apply(f, args);
+  ///
+  /// // currified version (this version)
+  /// auto f2 = apply(f);
+  /// auto res1 = f2(args);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Procedure Proc
+  template<typename Proc>
+  apply_t<traits::Decay<Proc>> apply(Proc&& proc) {
+    return {fwd<Proc>(proc)};
+  }
+
+  namespace detail {
+    template<typename Ret>
+    struct scope_lock_proc_t {
+      template<typename Proc, typename L, typename... Args>
+      boost::optional<Ret> operator()(Proc& proc, L& lockable, Args&&... args) const {
+        if (auto lock = scopelock(lockable)) {
+          return proc(fwd<Args>(args)...);
+        }
+        return {};
+      }
+    };
+
+    template<>
+    struct scope_lock_proc_t<void> {
+      template<typename Proc, typename L, typename... Args>
+      void operator()(Proc& proc, L& lockable, Args&&... args) const {
+        if (auto lock = scopelock(lockable)) {
+          proc(fwd<Args>(args)...);
+        }
+      }
+    };
+  } // namespace detail
+
+  /// Procedure wrapper that calls its underlying procedure only if the associated
+  /// lockable could be locked.
+  ///
+  /// Example: weak_ptr as a lockable to perform lifetime protection
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // std::shared_ptr<T> p;
+  /// async(scope_lock_proc(
+  ///   [](int i) mutable { // procedure to be called
+  ///     return p->do_stuff(i);
+  ///   },
+  ///   mutable_store(std::weak_ptr<T>{p}) // lockable: will create a non-null shared_ptr on success
+  ///   )
+  /// );
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Procedure<T (...)> Proc,
+  /// Mutable<ScopeLockable> M
+  template<typename Proc, typename M>
+  struct scope_lock_proc_t {
+    Proc proc;
+    M mut_lockable;
+  // Regular (if members aremutex.hpp>
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(scope_lock_proc_t, proc, mut_lockable)
+  // Procedure:
+    template<typename... Args>
+    auto operator()(Args&&... args)
+      -> decltype(detail::scope_lock_proc_t<traits::Decay<decltype(proc(fwd<Args>(args)...))>>{}
+                    (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
+      return detail::scope_lock_proc_t<traits::Decay<decltype(proc(fwd<Args>(args)...))>>{}
+        (proc, src(mut_lockable), fwd<Args>(args)...);
+    }
+  };
+
+  /// Helper function to deduce types for ScopeLockProc.
+  ///
+  /// Procedure<T (...)> Proc,
+  /// Mutable<ScopeLockable> M
+  template<typename Proc, typename M>
+  scope_lock_proc_t<traits::Decay<Proc>, traits::Decay<M>> scope_lock_proc(Proc&& proc, M&& mutLockable) {
+    return { fwd<Proc>(proc), fwd<M>(mutLockable) };
+  }
+
+  /// A polymorphic transformation constructed from a ScopeLockable l that takes
+  /// a procedure and returns an equivalent one that calls that procedure only
+  /// if l was successfully locked and keeps the lock alive until the procedure
+  /// returns.
+  ///
+  /// Example: mutex as a lockable to protect a asynchronous function call
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// int global_count = 0;
+  /// void increment_global_count() {
+  ///   ++global_count;
+  /// }
+  ///
+  /// template<typename P>
+  /// void async_increment_ten_times(P sync_transfo) {
+  ///   for (int i = 0; i < 10; ++i)
+  ///     my::async(sync_transfo(increment_global_count));
+  /// }
+  ///
+  /// void do_stuff() {
+  ///   static std::mutex m;
+  ///   async_increment_ten_times(scope_lock_transfo(&m));
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Mutable<ScopeLockable> M
+  template<typename M>
+  struct scope_lock_transfo_t {
+    M mut_lockable;
+  // Regular (if members are regular):
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(scope_lock_transfo_t, mut_lockable)
+  // PolymorphicTransformation:
+    /// Procedure<T (...)> Proc0
+    template<typename Proc>
+    scope_lock_proc_t<traits::Decay<Proc>, M> operator()(Proc&& p) const {
+      return { fwd<Proc>(p), mut_lockable };
+    }
+  };
+
+  /// Helper function to deduce types for ScopeLockTransfo.
+  ///
+  /// Mutable<ScopeLockable> M
+  template<typename M>
+  scope_lock_transfo_t<traits::Decay<M>> scope_lock_transfo(M&& mut_lockable) {
+    return { fwd<M>(mut_lockable) };
+  }
+} // namespace ka
+
+#endif // KA_FUNCTIONAL_HPP

@@ -11,13 +11,13 @@
 # include <type_traits>
 # include <vector>
 
+# include <ka/functional.hpp>
 # include <qi/api.hpp>
 # include <qi/assert.hpp>
 # include <qi/atomic.hpp>
 # include <qi/config.hpp>
 # include <qi/clock.hpp>
 # include <qi/detail/mpl.hpp>
-# include <qi/functional.hpp>
 # include <qi/log.hpp>
 # include <qi/os.hpp>
 
@@ -232,6 +232,15 @@ namespace qi {
      */
     inline const ValueType &value(int msecs = FutureTimeout_Infinite) const
     { return _p->value(msecs); }
+
+    /**
+     * @brief Return the value associated to a Future.
+     * @note Equivalent to value(FutureTimeout_Infinite)
+     */
+    inline const ValueType& operator*() const
+    {
+      return value();
+    }
 
     /** same as value() with an infinite timeout.
      */
@@ -510,13 +519,14 @@ namespace qi {
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)           \
     template <typename AF, typename ARG0 comma ATYPEDECL>           \
+    QI_API_DEPRECATED_MSG(please use overload taking only a function and not argument instead)\
     void connect(const AF& fun, const ARG0& arg0 comma ADECL,       \
                  FutureCallbackType type = FutureCallbackType_Auto);
     QI_GEN(genCall)
 #undef genCall
 #endif
 
-    // @deprecated since 2.5 use the overload with Strand&
+    /// @deprecated since 2.5 use the overload with Strand&
     QI_API_DEPRECATED_MSG(Use overload with 'Strand&' instead)
     void connectWithStrand(qi::Strand* strand,
         const boost::function<void(const Future<T>&)>& cb);
@@ -529,14 +539,20 @@ namespace qi {
       connect(boost::bind(s));
     }
 
+    // KLUDGE: ExecutionContext uses the shared state of the future for gloomy reasons!
+    friend class ExecutionContext;
+
+  protected:
+    /// An accessor to the shared state. TODO: remove it, it should not exist.
     boost::shared_ptr<detail::FutureBaseTyped<T> > impl() { return _p;}
+
+    /// The constructor from the shared state.
     Future(boost::shared_ptr<detail::FutureBaseTyped<T> > p) :
       _p(p)
     {
       QI_ASSERT(_p);
     }
 
-  protected:
     // C4251 needs to have dll-interface to be used by clients of class 'qi::Future<T>'
     boost::shared_ptr< detail::FutureBaseTyped<T> > _p;
     friend class Promise<T>;
@@ -713,6 +729,7 @@ namespace qi {
 #else
 #define genCall(n, ATYPEDECL, ATYPES, ADECL, AUSE, comma)     \
     template<typename AF, typename ARG0 comma ATYPEDECL>      \
+  QI_API_DEPRECATED_MSG(please use overload taking only a function and not argument instead)\
     void connect(const AF& fun, const ARG0& arg0 comma ADECL);
     QI_GEN(genCall)
 #undef genCall
@@ -964,7 +981,7 @@ namespace qi {
       ValueType                _value;
       CancelCallback           _onCancel;
       boost::function<void (ValueType)> _onDestroyed;
-      FutureCallbackType       _async;
+      std::atomic<FutureCallbackType> _async;
       qi::Atomic<unsigned int> _promiseCount;
 
       template <typename F> // FunctionObject<R()> F (R unconstrained)
@@ -1036,6 +1053,8 @@ namespace qi {
   template <typename T>
   Future<AnyValue> toAnyValueFuture(Future<T> future);
 
+  struct SrcFuture;
+
   /// Polymorphic function object that creates a Future from a value, if provided.
   ///
   /// "unit" is traditionally the name of a transformation that sends a value into
@@ -1054,20 +1073,64 @@ namespace qi {
   struct UnitFuture
   {
   // Regular:
-    QI_GENERATE_FRIEND_REGULAR_OPS_0(UnitFuture)
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(UnitFuture)
   // PolymorphicFunction<Future<T> (T), Future<void> ()>:
     /// There is no constraint on T.
     template<typename T>
-    Future<traits::Decay<T>> operator()(T&& t) const
+    Future<ka::traits::Decay<T>> operator()(T&& t) const
     {
-      return Future<traits::Decay<T>>{std::forward<T>(t)};
+      return Future<ka::traits::Decay<T>>{std::forward<T>(t)};
     }
 
     Future<void> operator()() const
     {
       return Future<void>{nullptr};
     }
+
+  // Isomorphism:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = SrcFuture;
   };
+
+  /// Polymorphic function that gets (sources) the value of a `Future`.
+  ///
+  /// This function has an inverse: `UnitFuture` (i.e. composing with it in any
+  /// order will produce a function doing nothing).
+  ///
+  /// See the concept `Isomorphism` in `concept.hpp` for a more formal explanation.
+  struct SrcFuture
+  {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(SrcFuture)
+
+  // PolymorphicFunction<T (Future<T>)>:
+    /// Note: The return type will be `void*` if `T` is `void`...
+    /// There is no constraint on T.
+    template<typename T>
+    auto operator()(const Future<T>& x) const QI_NOEXCEPT_EXPR(*x) -> decltype(*x)
+    {
+      return *x;
+    }
+
+  // Isomorphism:
+    // TODO: Remove this when get rid of VS2013.
+    using retract_type = UnitFuture;
+
+    /// Returns the retraction function, i.e. a function that undoes `SrcFuture`.
+    /// As we model here the concept `Isomorphism`, it is also true that `SrcFuture`
+    /// undoes `UnitFuture`.
+    ///
+    /// See the `Isomorphism` concept definition for more information.
+    inline friend UnitFuture retract(SrcFuture)
+    {
+      return {};
+    }
+  };
+
+  inline SrcFuture retract(UnitFuture)
+  {
+    return {};
+  }
 
   /// Returns a future set with the given value. Passing no value results in a
   /// Future<void>.
@@ -1083,9 +1146,9 @@ namespace qi {
   /// TODO: Remove the trailing return type when get rid of C++11.
   template<typename... T>
   auto futurize(T&&... t)
-    -> decltype(UnitFuture{}(fwd<T>(t)...))
+    -> decltype(UnitFuture{}(ka::fwd<T>(t)...))
   {
-    return UnitFuture{}(fwd<T>(t)...);
+    return UnitFuture{}(ka::fwd<T>(t)...);
   }
 
   /// Returns a new function similar to the given one except that it returns a
@@ -1107,9 +1170,9 @@ namespace qi {
   /// Procedure Proc
   template<typename Proc>
   auto futurizeOutput(Proc&& p)
-    -> decltype(semiLift(std::forward<Proc>(p), UnitFuture{}))
+    -> decltype(ka::semilift(std::forward<Proc>(p), UnitFuture{}))
   {
-    return semiLift(std::forward<Proc>(p), UnitFuture{});
+    return ka::semilift(std::forward<Proc>(p), UnitFuture{});
   }
 } // namespace qi
 

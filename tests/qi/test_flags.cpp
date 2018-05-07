@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 #include <qi/flags.hpp>
-#include <qi/detail/conceptpredicate.hpp>
+#include <ka/conceptpredicate.hpp>
 #include <set>
 #include <type_traits>
 
@@ -67,7 +67,7 @@ public:
     return a._value;
   }
 
-  QI_GENERATE_FRIEND_REGULAR_OPS_1(OptionClass, _value)
+  KA_GENERATE_FRIEND_REGULAR_OPS_1(OptionClass, _value)
 
 private:
   unsigned int _value;
@@ -163,7 +163,7 @@ TYPED_TEST_CASE(TestFlags, FlagsTypes);
 
 TYPED_TEST(TestFlags, Regular)
 {
-  EXPECT_TRUE(qi::detail::isRegular(boundedRange(setOf<typename TestFixture::Flags>())));
+  EXPECT_TRUE(ka::is_regular(ka::bounded_range(setOf<typename TestFixture::Flags>())));
 }
 
 TYPED_TEST(TestFlags, DefaultConstructNoFlags)

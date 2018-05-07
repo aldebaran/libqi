@@ -13,6 +13,7 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <ka/memory.hpp>
 #include "transportserver.hpp"
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"

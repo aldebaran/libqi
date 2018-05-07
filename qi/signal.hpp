@@ -141,13 +141,17 @@ namespace qi {
 
     std::vector<SignalSubscriber> subscribers();
     bool hasSubscribers();
+
+    /// Set a function to call when the number of subscribers go between 1 and 0.
+    /// You can use this to avoid computing if no one has subscribed to the signal.
+    void setOnSubscribers(OnSubscribers onSubscribers);
+
     static const SignalLink invalidSignalLink;
     void _setSignature(const Signature &s);
   protected:
     using Trigger = boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)>;
     void callSubscribers(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
     void setTriggerOverride(Trigger trigger);
-    void setOnSubscribers(OnSubscribers onSubscribers);
     void callOnSubscribe(bool v);
     void createNewTrackLink(int& id, SignalLink*& trackLink);
     void disconnectTrackLink(int id);

@@ -21,6 +21,7 @@
 #include <qi/testutils/testutils.hpp>
 
 #include <testsession/testsessionpair.hpp>
+#include "objectio.hpp"
 
 using namespace qi;
 using namespace test;
@@ -174,7 +175,7 @@ namespace
 {
   Future<void> synchronizedClose(Future<void> closeStartFut, const SessionPtr& s)
   {
-    const auto weakSession = weakPtr(s);
+    const auto weakSession = ka::weak_ptr(s);
     return closeStartFut.andThen([=](void*){
       if (auto sharedSession = weakSession.lock())
         return sharedSession->close().async();

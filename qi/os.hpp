@@ -18,6 +18,7 @@
 # include <qi/types.hpp>
 # include <qi/path.hpp>
 # include <qi/clock.hpp>
+# include <qi/uuid.hpp>
 
 # include <boost/lexical_cast.hpp>
 
@@ -220,7 +221,9 @@ namespace qi {
      * .. versionadded:: 1.12
      * \endverbatim
      */
+    QI_API_DEPRECATED_MSG(please use std::this_thread::sleep_for instead)
     QI_API void sleep(unsigned int seconds);
+
     /**
      * \brief Sleep for the specified number of milliseconds.
      * \param milliseconds Number of milliseconds to sleep.
@@ -235,7 +238,9 @@ namespace qi {
      * .. versionadded:: 1.12
      * \endverbatim
      */
+    QI_API_DEPRECATED_MSG(please use std::this_thread::sleep_for instead)
     QI_API void msleep(unsigned int milliseconds);
+
     /**
      * \brief struct similar to POSIX timeval
      */
@@ -583,6 +588,15 @@ namespace qi {
      * returned. An empty string is returned on failure.
      */
     QI_API std::string getMachineId();
+    /**
+     * \brief Same as getMachineId but return a uuid and not its string representation.
+     */
+    QI_API const Uuid& getMachineIdAsUuid();
+    /**
+     * \brief Returns an unique uuid for the process.
+     * \return The uuid of the process.
+     */
+    QI_API const Uuid& getProcessUuid();
     /**
      * \brief Generate a universally unique identifier.
      * \return The uuid.

@@ -9,17 +9,17 @@
 #pragma once
 
 #include <gmock/gmock.h>
-#include <qi/scoped.hpp>
+#include <ka/scoped.hpp>
 #include <functional>
 
-using ScopedVoidFunction = decltype(qi::scoped(std::function<void()>{}));
+using ScopedVoidFunction = decltype(ka::scoped(std::function<void()>{}));
 
 template <typename Mock>
 ScopedVoidFunction scopeMockExpectations(Mock& mock) // TODO C++14: just return auto
 {
    // TODO C++14: pass the lambda directly to scoped
   std::function<void()> fun = [&]{ EXPECT_TRUE(testing::Mock::VerifyAndClearExpectations(&mock)); };
-  return qi::scoped(std::move(fun));
+  return ka::scoped(std::move(fun));
 }
 
 #endif

@@ -65,7 +65,7 @@ TEST(TestPeriodicTask, Basic)
       qi::sleepFor(sleepDuration);
     pt.stop();
   }
-  EXPECT_TRUE(boost::algorithm::all_of(assertions, qi::IdTransfo{}))
+  EXPECT_TRUE(boost::algorithm::all_of(assertions, ka::id_transfo{}))
       << boost::join(assertions | boost::adaptors::transformed(
                                    [](bool v) -> std::string { return v ? "true" : "false"; }),
                      ", ");
