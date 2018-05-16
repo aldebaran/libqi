@@ -50,9 +50,9 @@ namespace boost {
     return std::unique_lock<M>{ m };
   }
 
-  /// model ScopeLockable boost::synchronized_value<T>:
+  /// model ScopeLockable boost::synchronized_value<T> const:
   template<typename T>
-  auto scopelock(synchronized_value<T>& sync_val)
+  auto scopelock(synchronized_value<T> const& sync_val)
       -> decltype(sync_val.synchronize()) { // TODO: Remove this when we can use C++14
     return sync_val.synchronize();
   }
