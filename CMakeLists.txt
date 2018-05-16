@@ -403,6 +403,7 @@ set(KA_H
   ka/moveoncopy.hpp
   ka/mutablestore.hpp
   ka/mutex.hpp
+  ka/opt.hpp
   ka/range.hpp
   ka/relationpredicate.hpp
   ka/scoped.hpp
