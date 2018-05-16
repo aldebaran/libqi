@@ -583,6 +583,46 @@ namespace qi
       qiLogError(category) << prefix << ": unknown exception";
     }
   };
+
+  /// Helper-function to deduce types for `ExceptionLogError`.
+  ///
+  /// Example: Using catch-clauses.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// const auto logError = qi::exceptionLogError("myapp", "The function that could throw threw");
+  /// try
+  /// {
+  ///   functionThatMightThrow();
+  /// }
+  /// catch (const std::exception& ex)
+  /// {
+  ///   logError(ex);
+  /// }
+  /// catch (const boost::exception& ex)
+  /// {
+  ///   logError(ex);
+  /// }
+  /// catch (...)
+  /// {
+  ///   logError();
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: Using ka::invoke_catch.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// ka::invoke_catch(
+  ///   qi::exceptionLogError("myapp", "The function that could throw threw"),
+  ///   functionThatMightThrow
+  /// );
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// OStreamable O, ConvertibleTo<const char*> S
+  template<typename O, typename S>
+  ExceptionLogError<ka::Decay<O>, ka::Decay<S>> exceptionLogError(S&& category, O&& prefix)
+  {
+    return ExceptionLogError<ka::Decay<O>, ka::Decay<S>>{ ka::fwd<S>(category),
+                                                          ka::fwd<O>(prefix) };
+  }
+
 } // namespace qi
 
 #endif  // _QI_LOG_HPP_
