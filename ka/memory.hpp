@@ -27,13 +27,15 @@ namespace ka {
     return {p};
   }
 
+  // model Scopelockable std::weak_ptr<T> const:
   template<typename T>
-  std::shared_ptr<T> scopelock(std::weak_ptr<T>& p) {
+  std::shared_ptr<T> scopelock(std::weak_ptr<T> const& p) {
     return p.lock();
   }
 
+  // model Scopelockable boost::weak_ptr<T> const:
   template<typename T>
-  boost::shared_ptr<T> scopelock(boost::weak_ptr<T>& p) {
+  boost::shared_ptr<T> scopelock(boost::weak_ptr<T> const& p) {
     return p.lock();
   }
 } // namespace ka
