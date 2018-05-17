@@ -232,9 +232,13 @@ public:
   /**
    * Defers a function for execution in the strand thus without allowing the strand to call it from
    * inside this function. It implies that this function always returns immediately.
+   * @param cb: The function to execute.
+   * @param delay: Duration that defer will wait (without blocking the caller) before queuing the
+                   function for execution. If zero (the default value), the function will be queued
+                   immediately.
    * @returns A future that is set once the function argument is executed
    */
-  Future<void> defer(const boost::function<void()>& cb);
+  Future<void> defer(const boost::function<void()>& cb, MicroSeconds delay = MicroSeconds::zero());
 
 private:
   boost::shared_ptr<StrandPrivate> _p;

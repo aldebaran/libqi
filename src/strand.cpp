@@ -382,11 +382,11 @@ void Strand::postImpl(boost::function<void()> callback)
     prv->enqueue(prv->createCallback(std::move(callback)));
 }
 
-Future<void> Strand::defer(const boost::function<void ()>& cb)
+Future<void> Strand::defer(const boost::function<void ()>& cb, MicroSeconds delay)
 {
   auto prv = boost::atomic_load(&_p);
   if (prv)
-    return prv->deferImpl(cb, Duration::zero());
+    return prv->deferImpl(cb, delay);
   else
     return makeFutureError<void>("the strand is dying");
 }
