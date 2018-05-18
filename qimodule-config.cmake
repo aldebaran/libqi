@@ -41,5 +41,12 @@ function(qi_create_module name)
 
   set(_modfilename "${name}.mod")
   file(WRITE "${QI_SDK_DIR}/${QI_SDK_SHARE}/qi/module/${_modfilename}" "cpp\n")
-  qi_install_data("${QI_SDK_DIR}/${QI_SDK_SHARE}/qi/module/${_modfilename}" SUBFOLDER "qi/module")
+  cmake_parse_arguments(ARG
+    "NO_INSTALL"
+    ""
+    ""
+    ${ARGN})
+  if (NOT ARG_NO_INSTALL)
+    qi_install_data("${QI_SDK_DIR}/${QI_SDK_SHARE}/qi/module/${_modfilename}" SUBFOLDER "qi/module")
+  endif()
 endfunction()
