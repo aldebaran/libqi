@@ -14,11 +14,12 @@ namespace qi
 {
   inline FutureSync<void> GenericProperty::set(const AnyValue& v)
   {
-    std::pair<AnyReference, bool> conv = v.convert(_type);
-    if (!conv.first.type())
+    auto conv = v.convert(_type);
+    if (!conv->type())
       throw std::runtime_error(std::string("Failed converting ") + v.type()->infoString() + " to " + _type->infoString());
 
-    Property<AnyValue>::set(AnyValue(conv.first, false, conv.second));
+    Property<AnyValue>::set(AnyValue(*conv, false, conv.ownsReference()));
+    conv.release();
 
     return FutureSync<void>(0);
   }

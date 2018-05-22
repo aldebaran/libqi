@@ -836,11 +836,9 @@ namespace qi {
 
         const auto optType = static_cast<OptionalTypeInterface*>(value.type());
         const auto valueType = optType->valueType();
-        AnyReference v = deserialize(valueType, in, context, streamContext);
-        detail::setOptionalValueReference(result, [&](AnyReference optValueRef){
-          optValueRef.update(v);
-        });
-        v.destroy();
+        auto val = detail::UniqueAnyReference{ deserialize(valueType, in, context, streamContext) };
+        auto convVal = val->convert(optType);
+        result.setOptional(*convVal);
       }
 
       AnyReference result;

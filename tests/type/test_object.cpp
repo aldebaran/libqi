@@ -1173,8 +1173,8 @@ TEST(TestObject, NullAnyValueConvertToRegisteredStaticTypeFails)
   qi::AnyValue v;
   qi::AnyObject o{boost::make_shared<ArgPack>()};
   auto result = v.convert(o.asGenericObject()->type);
-  ASSERT_EQ(qi::AnyReference{}, result.first);
-  ASSERT_FALSE(result.second);
+  ASSERT_EQ(qi::AnyReference{}, *result);
+  ASSERT_FALSE(result.ownsReference());
 }
 
 TEST(TestObject, NullObjectHasNullGenericObject)
@@ -1187,8 +1187,8 @@ TEST(TestObject, NullAnyValueConvertToObjectType)
 {
   qi::AnyValue v;
   auto result = v.convert(qi::typeOf<qi::AnyObject>());
-  EXPECT_FALSE(result.first.isValid());
-  ASSERT_FALSE(result.second);
+  EXPECT_FALSE(result->isValid());
+  ASSERT_FALSE(result.ownsReference());
 }
 
 TEST(TestObject, NullAnyValueAsReferenceConvertToObjectType)
@@ -1196,8 +1196,8 @@ TEST(TestObject, NullAnyValueAsReferenceConvertToObjectType)
   qi::AnyValue v;
   auto r = v.asReference();
   auto result = r.convert(qi::typeOf<qi::AnyObject>());
-  EXPECT_FALSE(result.first.isValid());
-  ASSERT_FALSE(result.second);
+  EXPECT_FALSE(result->isValid());
+  ASSERT_FALSE(result.ownsReference());
 }
 
 TEST(TestObject, NullAnyReferenceFromAnyValueConvertToObjectType)
@@ -1205,8 +1205,8 @@ TEST(TestObject, NullAnyReferenceFromAnyValueConvertToObjectType)
   qi::AnyValue v;
   auto r = qi::AnyReference::from(v);
   auto result = r.convert(qi::typeOf(qi::AnyObject{}));
-  EXPECT_FALSE(result.first.isValid());
-  ASSERT_FALSE(result.second);
+  EXPECT_FALSE(result->isValid());
+  ASSERT_FALSE(result.ownsReference());
 }
 
 TEST(TestObject, CallingWithNullArgInsteadOfObjectThrows)

@@ -578,16 +578,15 @@ namespace qi {
 
     if (forcedSignature.isValid() && socket->remoteCapability("MessageFlags", false))
     {
-      std::pair<AnyReference, bool> conv = val.convert(TypeInterface::fromSignature(forcedSignature));
-      qiLogDebug("qimessaging.serverresult") << "Converting to forced signature " << forcedSignature.toString()
-        << ", data=" << val.type()->infoString() <<", advertised=" <<targetSignature.toString() << ", success="
-        << conv.second;
-      if (conv.first.type())
+      auto conv = val.convert(TypeInterface::fromSignature(forcedSignature));
+      qiLogDebug("qimessaging.serverresult")
+          << "Converting to forced signature " << forcedSignature.toString()
+          << ", data=" << val.type()->infoString() << ", advertised=" << targetSignature.toString()
+          << ", success=" << conv->isValid();
+      if (conv->type())
       {
-        ret.setValue(conv.first, "m", host, socket);
+        ret.setValue(*conv, "m", host, socket);
         ret.addFlags(Message::TypeFlag_DynamicPayload);
-        if (conv.second)
-          conv.first.destroy();
         return;
       }
     }
