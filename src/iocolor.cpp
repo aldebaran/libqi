@@ -6,6 +6,7 @@
 */
 
 #include <qi/iocolor.hpp>
+#include <iostream>
 #include <sstream>
 #include <qi/os.hpp>
 

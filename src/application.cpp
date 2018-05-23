@@ -5,6 +5,8 @@
  */
 
 #include <cstdlib>
+#include <iostream>
+#include <numeric>
 
 #include <qi/application.hpp>
 #include <qi/os.hpp>
@@ -13,7 +15,6 @@
 #include <qi/path.hpp>
 #include <qi/path_conf.hpp>
 #include <src/sdklayout.hpp>
-#include <numeric>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
