@@ -6,6 +6,7 @@
 */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/signalspy.hpp>
@@ -13,12 +14,14 @@
 #include <qi/application.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
+#include <future>
 
 qiLogCategory("test");
 
 namespace
 {
-const qi::MilliSeconds usualTimeout{300};
+const auto usualTimeoutMs = 300;
+const qi::MilliSeconds usualTimeout{usualTimeoutMs};
 
 class Foo
 {
@@ -279,20 +282,38 @@ void lol(int v, int& target)
 {
   target = v;
 }
+
+struct MockCallback
+{
+  void operator()(int val) { call(val); }
+  MOCK_METHOD1(call, void(int));
+};
+
 TEST(TestSignal, SignalSignal)
 {
-  qi::SignalF<void (int)> sig1;
-  qi::SignalF<void (int)> *sig2 = new  qi::SignalF<void (int)>();
-  sig1.connect(*sig2);
-  qi::SignalSpy spy(*sig2);
-  sig1(10);
-  ASSERT_TRUE(spy.waitUntil(1, qi::MilliSeconds(300)));
-  ASSERT_EQ(10, spy.record(0).arg<int>(0));
+  // The signal to spy is explicitly destroyed in order to verify that it disconnects itself from
+  // the first signal on destruction and therefore is not called after that. To check that the
+  // callback connected to that signal is called before destruction but not after, we cannot use
+  // SignalSpy because its precondition is that the signal outlives it.
 
-  // Test autodisconnect
-  delete sig2;
+  // Create the mock first so that it is destroyed and checked after the signals.
+  testing::StrictMock<MockCallback> callback;
+
+  // Call chain: sig1 -> sig2 -> callback
+  qi::SignalF<void (int)> sig1;
+  {
+    qi::SignalF<void (int)> sig2;
+
+    // Connect synchronously, there is no need for concurrency in this test.
+    sig1.connect(sig2).setCallType(qi::MetaCallType_Direct);
+    sig2.connect(std::ref(callback)).setCallType(qi::MetaCallType_Direct);
+
+    EXPECT_CALL(callback, call(10));
+    sig1(10);
+  }
+
+  // No call of the callback shall occur, StrictMock will generate a failure if it does.
   sig1(20);
-  ASSERT_FALSE(spy.waitUntil(2, qi::MilliSeconds(300)));
 }
 
 class SignalTest {
