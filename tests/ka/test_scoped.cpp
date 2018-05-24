@@ -80,16 +80,12 @@ struct move_only_fun_t {
   }
 };
 
-/// Tests that a non-void scoped_t is moveable (construction and assignment).
+/// Tests that a non-void scoped_t is moveable (construction only).
 TEST(Scoped, Moveable) {
   using namespace ka;
   int i = 5;
   {
     auto s0 = scoped(move_only_t<int*>{&i}, move_only_fun_t{}); // move ctor
-    int j = i + 1;
-    auto s1 = scoped(move_only_t<int*>{&j}, move_only_fun_t{}); // move ctor
-    s1 = std::move(s0); // move assign
-    EXPECT_EQ(i, **(s1.value));
   }
   std::cerr << "i = " << i << '\n';
   EXPECT_EQ(6, i);
@@ -110,16 +106,12 @@ struct move_only_fun_void_t {
   }
 };
 
-/// Tests that a void scoped_t is moveable (construction and assignment).
+/// Tests that a void scoped_t is moveable (construction only).
 TEST(Scoped, MoveableVoid) {
   using namespace ka;
   move_only_fun_void_call_count = 0;
   {
     auto s0 = scoped(move_only_fun_void_t{}); // move ctor
-    ASSERT_EQ(0, move_only_fun_void_call_count);
-    auto s1 = scoped(move_only_fun_void_t{}); // move ctor
-    ASSERT_EQ(0, move_only_fun_void_call_count);
-    s1 = std::move(s0); // move assign
     ASSERT_EQ(0, move_only_fun_void_call_count);
   }
   ASSERT_EQ(1, move_only_fun_void_call_count);
