@@ -3,7 +3,6 @@
 **  See COPYING for the license
 */
 
-#include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -358,6 +357,12 @@ namespace qi {
       visitUnknown(v);
     }
 
+    void visitOptional(AnyReference v)
+    {
+      const auto vsig = static_cast<OptionalTypeInterface*>(v.type())->valueType()->signature();
+      result = qi::makeOptionalSignature(vsig);
+    }
+
     qi::Signature  result;
     AnyReference  _value;
     bool          _resolveDynamic;
@@ -425,6 +430,12 @@ namespace qi {
           qiLogVerbose() << "Pointer to unknown type " << type->pointedType()->infoString() << ", signature is X";
           v.visitPointer(AnyReference());
         }
+        break;
+      }
+      case TypeKind_Optional:
+      {
+        const auto valueType = static_cast<OptionalTypeInterface*>(this)->valueType();
+        v.result = qi::makeOptionalSignature(valueType->signature());
         break;
       }
       case TypeKind_Tuple: {
@@ -702,6 +713,16 @@ namespace qi {
       return tbuffer;
     case Signature::Type_Object:
       return tobjectptr;
+    case Signature::Type_Optional:
+      {
+        const auto el = fromSignature(sig.children().at(0));
+        if (!el)
+        {
+          qiLogError() << "Cannot get type from optional of unknown type.";
+          return nullptr;
+        }
+        return makeOptionalType(el);
+      }
     default:
       qiLogWarning() << "Cannot get type from signature " << sig.toString();
       return 0;
@@ -729,9 +750,12 @@ namespace qi {
       // We need an unique name, but elementType->nifo().aString() is not
       // guaranteed unique. So use our address. The factory system ensures
       // non-duplication.
-      _name = "DefaultListIteratorType<"
-        + _elementType->info().asString()
-        + ">(" + boost::lexical_cast<std::string>(this);
+      _name = [&]{
+        std::ostringstream oss;
+        oss << "DefaultListIteratorType<" << _elementType->info().asString()
+            << ">(" << static_cast<void*>(this) << ")";
+        return oss.str();
+      }();
       _info = TypeInfo(_name);
     }
     friend TypeInterface* makeListIteratorType(TypeInterface*);
@@ -780,9 +804,12 @@ namespace qi {
     DefaultListTypeBase(const std::string& name, TypeInterface* elementType)
     : _elementType(elementType)
     {
-       _name = name + "<"
-        + _elementType->info().asString()
-        + ">(" + boost::lexical_cast<std::string>(this);
+        _name = [&]{
+          std::ostringstream oss;
+          oss << name << "<" << _elementType->info().asString()
+              << ">(" << static_cast<void*>(this) << ")";
+          return oss.str();
+        }();
         _info = TypeInfo(_name);
     }
   public:
@@ -915,8 +942,6 @@ namespace qi {
     return result;
   }
 
-
-
   class DefaultTupleType: public StructTypeInterface
   {
   private:
@@ -925,10 +950,14 @@ namespace qi {
     , _types(types)
     , _elementName(elementsName)
     {
-      _name = "DefaultTupleType<";
-      for (unsigned i=0; i<types.size(); ++i)
-        _name += types[i]->info().asString() + ",";
-      _name += ">(" + boost::lexical_cast<std::string>(this) + ")";
+      _name = [&]{
+        std::ostringstream oss;
+        oss << "DefaultTupleType<";
+        for (unsigned i=0; i<types.size(); ++i)
+          oss << types[i]->info().asString() + ",";
+        oss << ">(" << static_cast<void*>(this) << ")";
+        return oss.str();
+      }();
       qiLogDebug() << "Instanciating tuple " << _name;
       _info = TypeInfo(_name);
     }
@@ -1061,9 +1090,13 @@ namespace qi {
     DefaultMapIteratorType(TypeInterface* elementType)
     : _elementType(elementType)
     {
-      _name = "DefaultMapIteratorType<"
-      + elementType->info().asString()
-      + "(" + boost::lexical_cast<std::string>(this) + ")";
+      _name = [&]{
+        std::ostringstream oss;
+        oss << "DefaultMapIteratorType<"
+            << elementType->info().asString()
+            << ">(" << static_cast<void*>(this) << ")";
+        return oss.str();
+      }();
       _info = TypeInfo(_name);
     }
     friend TypeInterface* makeMapIteratorType(TypeInterface* kt);
@@ -1140,10 +1173,13 @@ namespace qi {
     : _keyType(keyType)
     , _elementType(elementType)
     {
-      _name = "DefaultMapType<"
-      + keyType->info().asString() + ", "
-      + elementType->info().asString()
-      + "(" + boost::lexical_cast<std::string>(this) + ")";
+      _name = [&]{
+        std::ostringstream oss;
+        oss << "DefaultMapType<"
+            << keyType->info().asString() + ", " << elementType->info().asString()
+            << ">(" << static_cast<void*>(this) << ")";
+        return oss.str();
+      }();
       _info = TypeInfo(_name);
       std::vector<TypeInterface*> kvtype;
       kvtype.push_back(_keyType);
@@ -1307,6 +1343,119 @@ namespace qi {
     return result;
   }
 
+  class DefaultOptionalType : public OptionalTypeInterface
+  {
+  protected:
+    using OptionalType = boost::optional<void*>;
+
+    explicit DefaultOptionalType(TypeInterface* valueType)
+      : _valueType(valueType)
+    {
+      _name = [&]{
+        std::ostringstream oss;
+        oss << "DefaultOptionalType<" << _valueType->info().asString()
+            << ">(" << static_cast<void*>(this) << ")";
+        return oss.str();
+      }();
+      _info = TypeInfo(_name);
+    }
+    friend TypeInterface* makeOptionalType(TypeInterface*);
+
+  public:
+    TypeInterface* valueType() override
+    {
+      return _valueType;
+    }
+
+    bool hasValue(void* storage) override
+    {
+      auto& src = *reinterpret_cast<OptionalType*>(ptrFromStorage(&storage));
+      return static_cast<bool>(src);
+    }
+
+    AnyReference value(void* storage) override
+    {
+      auto& src = *reinterpret_cast<OptionalType*>(ptrFromStorage(&storage));
+      return src ? AnyReference(_valueType, src.value()) : AnyReference(typeOf<void>());
+    }
+
+    void set(void** storage, void* valueStorage) override
+    {
+      auto& src = *reinterpret_cast<OptionalType*>(ptrFromStorage(storage));
+      src = _valueType->clone(valueStorage);
+    }
+
+    void reset(void** storage) override
+    {
+      auto& src = *reinterpret_cast<OptionalType*>(ptrFromStorage(storage));
+      src = OptionalType{};
+    }
+
+    void* clone(void* storage) override
+    {
+      auto& src = *reinterpret_cast<OptionalType*>(ptrFromStorage(&storage));
+      void* result = initializeStorage();
+      auto& dst = *reinterpret_cast<OptionalType*>(ptrFromStorage(&result));
+      if (src) {
+        dst = _valueType->clone(*src);
+      }
+      return result;
+    }
+
+    void destroy(void* storage) override
+    {
+      auto& src = *reinterpret_cast<OptionalType*>(ptrFromStorage(&storage));
+      if (src) {
+        _valueType->destroy(*src);
+      }
+      Methods::destroy(storage);
+    }
+
+    const TypeInfo& info() override
+    {
+      return _info;
+    }
+
+    using Methods = DefaultTypeImplMethods<OptionalType, TypeByPointerPOD<OptionalType>>;
+    void* initializeStorage(void* ptr = nullptr) override
+    {
+      return Methods::initializeStorage(ptr);
+    }
+
+    void* ptrFromStorage(void** s) override
+    {
+      return Methods::ptrFromStorage(s);
+    }
+
+    bool less(void* a, void* b) override
+    {
+      return Methods::less(a, b);
+    }
+
+    TypeInterface* _valueType;
+    std::string    _name;
+    TypeInfo       _info;
+  };
+
+  TypeInterface* makeOptionalType(TypeInterface* value)
+  {
+    static boost::mutex mutex;
+    boost::mutex::scoped_lock lock(mutex);
+    static std::map<TypeInfo, TypeInterface*> map;
+
+    const auto typeInfo = value->info();
+    auto it = map.find(typeInfo);
+    if (it == map.end())
+    {
+      auto type = new DefaultOptionalType(value);
+      bool inserted = false;
+      std::tie(it, inserted) = map.emplace(typeInfo, type);
+      if (!inserted)
+        return nullptr;
+    }
+    return it->second;
+  }
+
   struct InfosKey
   {
   public:
@@ -1464,7 +1613,7 @@ namespace qi {
     if (it == map.end())
       return 0;
     qiLogDebug() << "Found registered struct for " << s.toString() << ": " << it->second->infoString();
-      return it->second;
+    return it->second;
   }
 
 }

@@ -35,6 +35,7 @@ namespace qi {
   //   void visitRaw(qi::AnyReference value);
   //   void visitIterator(qi::AnyReference value);
   //   void visitAnyObject(qi::AnyObject& ptr);
+  //   void visitOptional(qi::AnyReference value);
   // };
 
 }

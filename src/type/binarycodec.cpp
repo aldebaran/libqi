@@ -15,6 +15,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/typedispatcher.hpp>
 #include <qi/types.hpp>
+#include <ka/scoped.hpp>
 #include <vector>
 #include <cstring>
 
@@ -313,6 +314,19 @@ namespace qi {
     --_p->_innerSerialization;
   }
 
+  void BinaryEncoder::beginOptional(bool isSet)
+  {
+    if (!_p->_innerSerialization)
+      signature() += static_cast<char>(Signature::Type_Optional);
+    ++_p->_innerSerialization;
+    write(isSet);
+  }
+
+  void BinaryEncoder::endOptional()
+  {
+    --_p->_innerSerialization;
+  }
+
   void BinaryEncoder::beginList(uint32_t size, const qi::Signature &elementSignature)
   {
     if (!_p->_innerSerialization)
@@ -553,6 +567,17 @@ namespace qi {
         std::stringstream ss;
         ss << "Type " << value.type()->infoString() <<" not serializable";
         throw std::runtime_error(ss.str());
+      }
+
+      void visitOptional(AnyReference opt)
+      {
+        const auto hasValue = opt.optionalHasValue();
+        out.beginOptional(hasValue);
+        auto scopeEndOpt = ka::scoped([&]{ out.endOptional(); });
+        if (hasValue)
+        {
+          serialize(opt.content(), out, serializeObjectCb, streamContext);
+        }
       }
 
       BinaryEncoder& out;
@@ -798,6 +823,26 @@ namespace qi {
         in.read(b);
         result.setRaw((char*)b.data(), b.size());
       }
+
+      void visitOptional(AnyReference value)
+      {
+        bool hasValue = false;
+        in.read(hasValue);
+        if (!hasValue)
+        {
+          result.resetOptional();
+          return;
+        }
+
+        const auto optType = static_cast<OptionalTypeInterface*>(value.type());
+        const auto valueType = optType->valueType();
+        AnyReference v = deserialize(valueType, in, context, streamContext);
+        detail::setOptionalValueReference(result, [&](AnyReference optValueRef){
+          optValueRef.update(v);
+        });
+        v.destroy();
+      }
+
       AnyReference result;
       BinaryDecoder& in;
       DeserializeObjectCallback context;

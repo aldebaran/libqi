@@ -34,17 +34,20 @@ namespace qi {
 
   void SignatureConvertor::visit(const qi::Signature& sig) {
     switch(sig.type()) {
-      case '[':
+      case Signature::Type_List:
         visitList(sig);
         break;
-      case '{':
+      case Signature::Type_Map:
         visitMap(sig);
         break;
-      case '(':
+      case Signature::Type_Tuple:
         visitTuple(sig);
         break;
-      case '#':
+      case Signature::Type_VarArgs:
         visitVarArgs(sig);
+        break;
+      case Signature::Type_Optional:
+        visitOptional(sig);
         break;
       default:
         visitSimple(sig);
@@ -54,55 +57,55 @@ namespace qi {
 
   void SignatureConvertor::visitSimple(const Signature& sig) {
     switch(sig.type()) {
-      case 'b':
+      case Signature::Type_Bool:
         _result += "Bool";
         break;
-      case 'c':
+      case Signature::Type_Int8:
         _result += "Int8";
         break;
-      case 'C':
+      case Signature::Type_UInt8:
         _result += "UInt8";
         break;
-      case 'w':
+      case Signature::Type_Int16:
         _result += "Int16";
         break;
-      case 'W':
+      case Signature::Type_UInt16:
         _result += "UInt16";
         break;
-      case 'i':
+      case Signature::Type_Int32:
         _result += "Int32";
         break;
-      case 'I':
+      case Signature::Type_UInt32:
         _result += "UInt32";
         break;
-      case 'l':
+      case Signature::Type_Int64:
         _result += "Int64";
         break;
-      case 'L':
+      case Signature::Type_UInt64:
         _result += "UInt64";
       break;
-      case 'f':
+      case Signature::Type_Float:
         _result += "Float";
         break;
-      case 'd':
+      case Signature::Type_Double:
         _result += "Double";
         break;
-      case 'v':
+      case Signature::Type_Void:
         _result += "Void";
         break;
-      case 's':
+      case Signature::Type_String:
         _result += "String";
         break;
-      case 'm':
+      case Signature::Type_Dynamic:
         _result += "Value";
         break;
-      case 'o':
+      case Signature::Type_Object:
         _result += "Object";
         break;
-      case 'X':
+      case Signature::Type_Unknown:
         _result += "Unknown";
         break;
-      case 'r':
+      case Signature::Type_Raw:
         _result += "RawBuffer";
         break;
       default:
@@ -157,5 +160,11 @@ namespace qi {
     _result += ")";
   }
 
+  void SignatureConvertor::visitOptional(const Signature& sig)
+  {
+    _result += "Optional<";
+    visit(sig.children().at(0));
+    _result += ">";
+  }
 
 };

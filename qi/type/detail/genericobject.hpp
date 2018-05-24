@@ -296,6 +296,10 @@ public:
         qiLogInfo() << "Object will *not* track original shared pointer";
       set(storage, *source);
     }
+    else if (source.kind() == TypeKind_Optional)
+    {
+      set(storage, source.content());
+    }
     else
       throw std::runtime_error((std::string)"Cannot assign non-object " + source.type()->infoString() + " to Object");
   }

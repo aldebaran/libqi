@@ -120,6 +120,7 @@ inline void call(qi::Promise<AnyReference>& out,
         case TypeKind_Map:
         case TypeKind_Tuple:
         case TypeKind_Dynamic:
+        case TypeKind_Optional:
           args[i] = params[i+1];
           break;
         default:

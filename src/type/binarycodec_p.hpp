@@ -148,6 +148,8 @@ namespace qi {
     void endTuple();
     void beginDynamic(const qi::Signature &elementSignature);
     void endDynamic();
+    void beginOptional(bool isSet);
+    void endOptional();
 
     Status status() const;
     void setStatus(Status status);

@@ -130,6 +130,14 @@ TEST(EncodeJSON, NamedStruct) {
   EXPECT_EQ("{\"x\":41,\"y\":42}", qi::encodeJSON(gvr));
 }
 
+TEST(EncodeJSON, OptionalValue)
+{
+  EXPECT_EQ("null", qi::encodeJSON(boost::optional<std::string>()));
+  EXPECT_EQ("null", qi::encodeJSON(boost::optional<int>()));
+  EXPECT_EQ("\"foo\"", qi::encodeJSON(boost::optional<std::string>("foo")));
+  EXPECT_EQ("642", qi::encodeJSON(boost::optional<int>(642)));
+}
+
 template<class T>
 std::string itoa(T n)
 {

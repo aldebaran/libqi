@@ -19,6 +19,7 @@
 #include <qi/os.hpp>
 #include <qi/application.hpp>
 #include <testsession/testsessionpair.hpp>
+#include <boost/optional/optional_io.hpp>
 
 qiLogCategory("test");
 
@@ -507,4 +508,167 @@ TEST(QiService, BlockingPropertySetterDoesNotBlockOtherCalls)
   auto callingState = calling.waitFor(usualTimeout);
   EXPECT_EQ(qi::FutureState_FinishedWithValue, callingState);
   promise.set_value();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Optionals
+////////////////////////////////////////////////////////////////////////////////
+using boost::make_optional;
+
+class OptPropService
+{
+public:
+  struct Position
+  {
+    int x;
+    int y;
+
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(Position, x, y)
+
+    friend std::ostream& operator<<(std::ostream& os, const Position& pos)
+    {
+      return os << "Position(" << pos.x << ", " << pos.y << ")";
+    }
+  };
+
+  qi::Property<boost::optional<std::string>> info;
+  qi::Property<boost::optional<Position>> pos;
+};
+QI_TYPE_STRUCT(OptPropService::Position, x, y)
+QI_REGISTER_OBJECT(OptPropService, info, pos)
+
+namespace
+{
+  class QiServiceOptionalProperty : public ::testing::Test
+  {
+  protected:
+    struct ObjectAssertingProxy
+    {
+      explicit ObjectAssertingProxy(qi::AnyObject& obj)
+        : obj(obj)
+      {}
+
+      template <typename V>
+      ::testing::AssertionResult set(const char* propName, V&& value)
+      {
+        const auto fut = obj.setProperty(propName, std::forward<V>(value));
+        if (fut.hasError())
+          return ::testing::AssertionFailure() << fut.error();
+        return ::testing::AssertionSuccess();
+      }
+
+      template <typename T>
+      ::testing::AssertionResult isSet(const char* propName, bool expected)
+      {
+        const auto fut = obj.property<boost::optional<T>>(propName);
+        if (fut.hasError())
+          return ::testing::AssertionFailure() << fut.error();
+        const auto actual = static_cast<bool>(fut.value());
+        if (actual != expected)
+          return ::testing::AssertionFailure() << "value set state '" << std::boolalpha << actual
+                                               << "' is not equal to '" << expected << "'";
+        return ::testing::AssertionSuccess();
+      }
+
+      template <typename T>
+      ::testing::AssertionResult valueEquals(const char* propName, T&& value = T())
+      {
+        const auto fut = obj.property<boost::optional<T>>(propName);
+        if (fut.hasError())
+          return ::testing::AssertionFailure() << fut.error();
+        const auto futValue = fut.value();
+        if (!futValue)
+          return ::testing::AssertionFailure() << "optional is not set";
+        if (*futValue != value)
+          return ::testing::AssertionFailure() << "'" << futValue << "' is not equal to '" << value << "'";
+        return ::testing::AssertionSuccess();
+      }
+
+      qi::AnyObject& obj;
+    };
+
+    QiServiceOptionalProperty()
+      : serviceObject([=] {
+        qi::ObjectTypeBuilder<OptPropService> builder;
+        builder.advertiseProperty("info", &OptPropService::info);
+        builder.advertiseProperty("pos", &OptPropService::pos);
+        auto obj = builder.object(&optPropService, &qi::AnyObject::deleteGenericObjectOnly);
+        session.server()->registerService("optpropservice", obj);
+        return obj;
+      }())
+      , client(session.client()->service("optpropservice"))
+      , object(client)
+    {
+    }
+
+    void setValues()
+    {
+      EXPECT_TRUE(object.set("info", make_optional<std::string>("pineapples")));
+      EXPECT_TRUE(object.set("pos", make_optional(OptPropService::Position{-3242, 024})));
+      ASSERT_TRUE(object.isSet<std::string>("info", true));
+      ASSERT_TRUE(object.isSet<OptPropService::Position>("pos", true));
+    }
+
+    OptPropService optPropService;
+    TestSessionPair session;
+    qi::AnyObject serviceObject;
+    qi::AnyObject client;
+    ObjectAssertingProxy object;
+  };
+}
+
+TEST_F(QiServiceOptionalProperty, IsUnsetByDefault)
+{
+  EXPECT_TRUE(object.isSet<std::string>("info", false));
+  EXPECT_TRUE(object.isSet<OptPropService::Position>("pos", false));
+}
+
+TEST_F(QiServiceOptionalProperty, IsSetAfterSetting)
+{
+  ASSERT_TRUE(object.set("info", make_optional<std::string>("cookies")));
+  ASSERT_TRUE(object.set("pos", make_optional(OptPropService::Position{37, 74})));
+
+  EXPECT_TRUE(object.isSet<std::string>("info", true));
+  EXPECT_TRUE(object.isSet<OptPropService::Position>("pos", true));
+
+  EXPECT_TRUE(object.valueEquals<std::string>("info", "cookies"));
+  EXPECT_TRUE(object.valueEquals<OptPropService::Position>("pos", OptPropService::Position{37, 74}));
+}
+
+TEST_F(QiServiceOptionalProperty, CanBeSetFromUnderlyingType)
+{
+  ASSERT_TRUE(object.set("info", std::string{"muffins"}));
+  ASSERT_TRUE(object.set("pos", OptPropService::Position{42, 1337}));
+
+  EXPECT_TRUE(object.isSet<std::string>("info", true));
+  EXPECT_TRUE(object.isSet<OptPropService::Position>("pos", true));
+
+  EXPECT_TRUE(object.valueEquals<std::string>("info", "muffins"));
+  EXPECT_TRUE(object.valueEquals<OptPropService::Position>("pos", OptPropService::Position{42, 1337}));
+}
+
+TEST_F(QiServiceOptionalProperty, IsNotSetAfterSettingToNone)
+{
+  setValues();
+
+  EXPECT_TRUE(object.set("info", boost::none));
+  EXPECT_TRUE(object.set("pos", boost::none));
+  EXPECT_TRUE(object.isSet<std::string>("info", false));
+  EXPECT_TRUE(object.isSet<OptPropService::Position>("pos", false));
+}
+
+TEST_F(QiServiceOptionalProperty, IsNotSetAfterSettingVoidAnyValue)
+{
+  setValues();
+
+  EXPECT_TRUE(object.set("info", qi::AnyValue::makeVoid()));
+  EXPECT_TRUE(object.set("pos", qi::AnyValue::makeVoid()));
+  EXPECT_TRUE(object.isSet<std::string>("info", false));
+  EXPECT_TRUE(object.isSet<OptPropService::Position>("pos", false));
+}
+
+TEST_F(QiServiceOptionalProperty, CannotBeSetFromUnrelatedTypes)
+{
+  EXPECT_FALSE(object.set("info", 42));
+  EXPECT_FALSE(object.set("pos", "abc"));
 }
