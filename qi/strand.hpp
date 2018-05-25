@@ -221,10 +221,10 @@ public:
   /// function to the strand, but with the return value unwrapped if possible.
   /// @see schedulerFor for details.
   template <typename F>
-  auto unwrappedSchedulerFor(F func, boost::function<void()> onFail = {})
+  auto unwrappedSchedulerFor(F&& func, boost::function<void()> onFail = {})
       -> detail::StrandedUnwrapped<typename std::decay<F>::type>
   {
-    return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::move(func),
+    return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::forward<F>(func),
                                                               _p,
                                                               std::move(onFail));
   }

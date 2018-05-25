@@ -620,4 +620,13 @@ TEST(TestStrand, build_unwrappedSchedulerFor)
   auto func = [](int){};
   auto f2 = strand.unwrappedSchedulerFor(func);
   (void) f2;
+
+  // rvalue not convertible to function pointer
+  auto f3 = strand.unwrappedSchedulerFor([this](int) {});
+  (void)f3;
+
+  // lvalue not convertible to function pointer
+  auto bigfunc = [this](int) {};
+  auto f4 = strand.unwrappedSchedulerFor(bigfunc);
+  (void)f4;
 }
