@@ -85,6 +85,7 @@ set(QI_H qi/detail/async.hxx
          qi/atomic.hpp
          qi/buffer.hpp
          qi/clock.hpp
+         qi/either.hpp
          qi/flags.hpp
          qi/future.hpp
          qi/futuregroup.hpp
