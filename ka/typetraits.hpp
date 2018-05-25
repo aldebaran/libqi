@@ -352,8 +352,8 @@ namespace ka {
   using EnableIfNotBaseOf = EnableIf<! std::is_base_of<Base, Decay<Derived>>::value>;
 
   /// Behave exactly as the std::result_of_t of C++14.
-  template<typename T, typename... Args>
-  using ResultOf = typename std::result_of<T& (Args&&...)>::type;
+  template<typename T>
+  using ResultOf = typename std::result_of<T>::type;
 
   /// Behave exactly as the std::remove_pointer_t of C++14.
   template<typename T>
