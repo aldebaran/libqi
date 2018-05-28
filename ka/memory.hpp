@@ -12,8 +12,8 @@
 namespace ka {
   /// Constructs a std::shared_ptr<T> with T deduced from the parameter.
   template<typename T>
-  std::shared_ptr<traits::Decay<T>> shared_ptr(T&& t) {
-    return std::make_shared<traits::Decay<T>>(fwd<T>(t));
+  std::shared_ptr<Decay<T>> shared_ptr(T&& t) {
+    return std::make_shared<Decay<T>>(fwd<T>(t));
   }
 
   /// Creates a weak_ptr<T> with T deduced from a shared_ptr<T>

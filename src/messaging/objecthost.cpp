@@ -113,7 +113,7 @@ namespace
   template <typename Ptr>
   struct PointerDeferredResetHack
   {
-    template <typename ...Args, typename Enable = ka::traits::EnableIf<std::is_constructible<Ptr, Args...>::value>>
+    template <typename ...Args, typename Enable = ka::EnableIf<std::is_constructible<Ptr, Args...>::value>>
     PointerDeferredResetHack(Args&&... args)
       : wrap(boost::make_shared<Ptr>(std::forward<Args>(args)...))
     {

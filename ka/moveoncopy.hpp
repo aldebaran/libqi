@@ -90,7 +90,7 @@ namespace ka {
   public:
     move_on_copy_t() = default;
 
-    template<typename U, typename = traits::EnableIfNotBaseOf<move_on_copy_t, U>>
+    template<typename U, typename = EnableIfNotBaseOf<move_on_copy_t, U>>
     explicit move_on_copy_t(U&& u)
       : values(fwd<U>(u)) {
     }
@@ -141,8 +141,8 @@ namespace ka {
 
   /// Helper function to perform type deduction for constructing a move_on_copy_t.
   template<typename... T>
-  move_on_copy_t<traits::Decay<T>...> move_on_copy(T&&... t) {
-    return move_on_copy_t<traits::Decay<T>...>{fwd<T>(t)...};
+  move_on_copy_t<Decay<T>...> move_on_copy(T&&... t) {
+    return move_on_copy_t<Decay<T>...>{fwd<T>(t)...};
   }
 } // namespace ka
 

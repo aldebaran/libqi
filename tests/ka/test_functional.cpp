@@ -163,7 +163,7 @@ TEST(FunctionalCompose, Regular) {
 namespace {
   template<typename F>
   void testComposeNonVoid(F& half_greater_1) {
-    static_assert(ka::traits::Equal<bool, decltype(half_greater_1(3))>::value, "");
+    static_assert(ka::Equal<bool, decltype(half_greater_1(3))>::value, "");
     ASSERT_TRUE(half_greater_1(3));
     ASSERT_FALSE(half_greater_1(1));
   }
@@ -191,7 +191,7 @@ TEST(FunctionalCompose, NonVoid) {
 namespace {
   template<typename F>
   void testComposeVoid(F& k, int uninitialized, int& fOrder, int& gOrder) {
-    static_assert(ka::traits::Equal<void, decltype(k(3))>::value, "");
+    static_assert(ka::Equal<void, decltype(k(3))>::value, "");
 
     ASSERT_EQ(uninitialized, fOrder);
     ASSERT_EQ(uninitialized, gOrder);
@@ -203,7 +203,6 @@ namespace {
 
 TEST(FunctionalCompose, Void) {
   using namespace ka;
-  using namespace ka::traits;
   int const uninitialized = std::numeric_limits<int>::max();
   {
     int order = 0;
@@ -236,7 +235,7 @@ TEST(FunctionalCompose, Void) {
 namespace {
   template<typename F>
   void testComposeMulti(F& f) {
-    static_assert(ka::traits::Equal<std::string, decltype(f(3))>::value, "");
+    static_assert(ka::Equal<std::string, decltype(f(3))>::value, "");
 
     ASSERT_EQ("true", f(3));
     ASSERT_EQ("false", f(1));
@@ -245,7 +244,6 @@ namespace {
 
 TEST(FunctionalCompose, Multi) {
   using namespace ka;
-  using namespace ka::traits;
   using std::string;
 
   auto half = [](int x) {
@@ -270,7 +268,6 @@ TEST(FunctionalCompose, Multi) {
 
 TEST(FunctionalCompose, Retraction) {
   using namespace ka;
-  using namespace ka::traits;
   using namespace test;
   // We compose a function and its retraction and expect to get the identity
   // function.
@@ -288,7 +285,6 @@ TEST(FunctionalCompose, Retraction) {
 
 TEST(FunctionalCompose, SeemsRetractionButNotQuite) {
   using namespace ka;
-  using namespace ka::traits;
   using namespace test;
   // Even if the two functions have retractions (even, are isomorphisms), and
   // can be composed (right domain and codomain), `g_inv_t` is _not_ a retraction
@@ -302,7 +298,6 @@ TEST(FunctionalCompose, SeemsRetractionButNotQuite) {
 
 TEST(FunctionalCompose, Identity) {
   using namespace ka;
-  using namespace ka::traits;
   using namespace ka::functional_ops;
   using namespace test;
   f_t f;
@@ -326,7 +321,6 @@ TEST(FunctionalCompose, Simplification) {
 // VS2013 compiler does not allow to do composition simplifications.
 #if !KA_COMPILER_VS2013_OR_BELOW
   using namespace ka;
-  using namespace ka::traits;
   using namespace ka::functional_ops;
   using namespace test;
   // We expect chains of composition to be simplified in the right way.
@@ -461,7 +455,6 @@ TEST(FunctionalComposeAccu, Multi) {
 
 TEST(FunctionalComposeAccu, Retraction) {
   using namespace ka;
-  using namespace ka::traits;
   using namespace test;
   // We compose an action and its retraction and expect to get the identity
   // action.
@@ -527,7 +520,6 @@ TEST(FunctionalComposeAccu, ComposeAction) {
 
 TEST(FunctionalComposeAccu, Identity) {
   using namespace ka;
-  using namespace ka::traits;
   using namespace ka::functional_ops;
   using namespace test;
   a_t f;
@@ -549,7 +541,6 @@ TEST(FunctionalComposeAccu, Identity) {
 
 TEST(FunctionalComposeAccu, Simplification) {
   using namespace ka;
-  using namespace ka::traits;
   using namespace ka::functional_ops;
   using namespace test;
   // We expect chains of composition to be simplified in the right way.
@@ -721,7 +712,7 @@ TYPED_TEST(FunctionalSemiLift0, NonVoidCodomain) {
   };
   auto f = semilift(positive, unit);
 
-  static_assert(traits::Equal<T, decltype(f(0))>::value, "");
+  static_assert(Equal<T, decltype(f(0))>::value, "");
   ASSERT_TRUE(equal(T{true}, f(1)));
   ASSERT_TRUE(equal(T{false}, f(-1)));
 }
@@ -738,7 +729,6 @@ TYPED_TEST_CASE(FunctionalSemiLift1, void_types);
 
 TYPED_TEST(FunctionalSemiLift1, VoidCodomain) {
   using namespace ka;
-  using namespace ka::traits;
   using T = TypeParam;
 
   auto noop = [](int) {
@@ -752,7 +742,6 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomain) {
 
 TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain) {
   using namespace ka;
-  using namespace ka::traits;
   using T = TypeParam;
 
   auto noop = [] {
@@ -1176,7 +1165,7 @@ TEST(FunctionalPolyIncr, Composition) {
     incr_t incr;
     auto decr = retract(incr);
     auto id = (incr *= decr *= decr *= incr);
-    static_assert(traits::Equal<decltype(id), id_action_t>::value, "");
+    static_assert(Equal<decltype(id), id_action_t>::value, "");
     int i = 0;
     id(i);
     ASSERT_EQ(0, i);

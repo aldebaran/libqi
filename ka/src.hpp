@@ -87,7 +87,7 @@ namespace ka {
   }
 
   template<typename R, typename =
-    traits::EnableIf<!traits::HasOperatorStar<traits::Decay<R>>::value>>
+    EnableIf<!HasOperatorStar<Decay<R>>::value>>
   BOOST_CONSTEXPR
   R&& src(R&& r) KA_NOEXCEPT(true) {
     return fwd<R>(r);

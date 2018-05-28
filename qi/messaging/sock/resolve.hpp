@@ -96,9 +96,9 @@ namespace qi { namespace sock {
     /// Iterator<Entry<Resolver<N>>> I
     template<typename I>
     auto findFirstValidIfAny(I b, const I& e, IpV6Enabled ipV6)
-        -> boost::optional<ka::traits::Decay<decltype(*b)>>
+        -> boost::optional<ka::Decay<decltype(*b)>>
     {
-      using Entry = ka::traits::Decay<decltype(*b)>;
+      using Entry = ka::Decay<decltype(*b)>;
       if (!(*ipV6))
       {
         b = std::find_if(b, e, [](const Entry& entry) {

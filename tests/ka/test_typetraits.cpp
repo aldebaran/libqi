@@ -23,7 +23,7 @@
 struct a_t {};
 
 TEST(TypeTraits, RemoveRef) {
-  using namespace ka::traits;
+  using namespace ka;
 
   static_assert(Equal<RemoveRef<int>, int>::value, "");
   static_assert(Equal<RemoveRef<int&>, int>::value, "");
@@ -56,7 +56,7 @@ TEST(TypeTraits, RemoveRef) {
 }
 
 TEST(TypeTraits, RemoveCv) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // simple types
   static_assert(Equal<RemoveCv<int>, int>::value, "");
@@ -96,7 +96,7 @@ TEST(TypeTraits, RemoveCv) {
 }
 
 TEST(TypeTraits, RemoveCvRef) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // simple types
   static_assert(Equal<RemoveCvRef<int>, int>::value, "");
@@ -143,7 +143,7 @@ TEST(TypeTraits, RemoveCvRef) {
 }
 
 TEST(TypeTraits, HasMemberOperatorCallLambda) {
-  using namespace ka::traits;
+  using namespace ka;
   { // without return nor parameter
     auto f = []() {};
     static_assert(HasMemberOperatorCall<decltype(f)>::value, "");
@@ -221,7 +221,7 @@ struct int_const_ptr_float_const_t {
 };
 
 TEST(TypeTraits, HasMemberOperatorCallClass) {
-  using namespace ka::traits;
+  using namespace ka;
   static_assert(!HasMemberOperatorCall<no_op_call_t>::value, "");
   static_assert( HasMemberOperatorCall<void_void_t>::value, "");
   static_assert( HasMemberOperatorCall<int_void_t>::value, "");
@@ -238,7 +238,7 @@ TEST(TypeTraits, HasMemberOperatorCallClass) {
 }
 
 TEST(TypeTraits, HasMemberOperatorCallBuiltin) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // functions
   static_assert(!HasMemberOperatorCall<void (void)>::value, "");
@@ -260,7 +260,7 @@ TEST(TypeTraits, HasMemberOperatorCallBuiltin) {
 }
 
 TEST(TypeTraits, IsFunctionObjectLambda) {
-  using namespace ka::traits;
+  using namespace ka;
   { // without return nor parameter
     auto f = []() {};
     static_assert(IsFunctionObject<decltype(f)>::value, "");
@@ -295,7 +295,7 @@ TEST(TypeTraits, IsFunctionObjectLambda) {
 }
 
 TEST(TypeTraits, IsFunctionObjectClass) {
-  using namespace ka::traits;
+  using namespace ka;
   static_assert(!IsFunctionObject<no_op_call_t>::value, "");
   static_assert( IsFunctionObject<void_void_t>::value, "");
   static_assert( IsFunctionObject<int_void_t>::value, "");
@@ -312,7 +312,7 @@ TEST(TypeTraits, IsFunctionObjectClass) {
 }
 
 TEST(TypeTraits, IsFunctionObjectBuiltin) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // functions
   static_assert(!IsFunctionObject<void (void)>::value, "");
@@ -334,7 +334,7 @@ TEST(TypeTraits, IsFunctionObjectBuiltin) {
 }
 
 TEST(TypeTraits, FunctionLambda) {
-  using namespace ka::traits;
+  using namespace ka;
   {
     auto f = []() {};
     static_assert(Equal<Function<decltype(f)>, void (void)>::value, "");
@@ -363,7 +363,7 @@ TEST(TypeTraits, FunctionLambda) {
 }
 
 TEST(TypeTraits, FunctionClass) {
-  using namespace ka::traits;
+  using namespace ka;
   using boost::function;
   static_assert( Equal<Function<void_void_t>, void (void)>::value, "");
   static_assert( Equal<Function<int_void_t>, int (void)>::value, "");
@@ -379,7 +379,7 @@ TEST(TypeTraits, FunctionClass) {
 }
 
 TEST(TypeTraits, FunctionBuiltin) {
-  using namespace ka::traits;
+  using namespace ka;
   using boost::function;
 
   // functions
@@ -398,15 +398,15 @@ TEST(TypeTraits, FunctionBuiltin) {
 struct my_contiguous_container_t {
 };
 
-namespace ka{ namespace traits{ namespace detail{
+namespace ka{ namespace detail{
   template<>
   struct IsContiguous<my_contiguous_container_t> {
-    using type = True;
+    using type = true_t;
   };
-}}}
+}}
 
 TEST(TypeTraits, IsContiguous) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // non containers
   static_assert(!IsContiguous<void>::value, "");
@@ -443,7 +443,7 @@ TEST(TypeTraits, IsContiguous) {
 }
 
 TEST(TypeTraits, IsContiguousLike) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // non containers
   static_assert(!IsContiguousLike<void>::value, "");
@@ -482,15 +482,15 @@ TEST(TypeTraits, IsContiguousLike) {
 struct my_list_t {
 };
 
-namespace ka{ namespace traits{ namespace detail{
+namespace ka{ namespace detail{
   template<>
   struct IsList<my_list_t> {
-    using type = True;
+    using type = true_t;
   };
-}}}
+}}
 
 TEST(TypeTraits, IsList) {
-  using namespace ka::traits;
+  using namespace ka;
 
   // Non "containers"
   static_assert(!IsList<void>::value, "");
@@ -549,7 +549,7 @@ namespace test {
     base_t(const base_t&) : ctor(ctor_t::copy) {
     }
     template<typename T>
-    base_t(T&&, ka::traits::EnableIfNotBaseOf<base_t, T>* = {}) : ctor(ctor_t::custom) {
+    base_t(T&&, ka::EnableIfNotBaseOf<base_t, T>* = {}) : ctor(ctor_t::custom) {
     }
   };
 
@@ -561,7 +561,7 @@ namespace test {
 } // namespace test
 
 TEST(TypeTraits, EnableIfNotBaseOf) {
-  using namespace ka::traits;
+  using namespace ka;
   using namespace test;
   {
     int x;
@@ -584,7 +584,7 @@ TEST(TypeTraits, EnableIfNotBaseOf) {
 }
 
 TEST(TypeTraits, Conditional) {
-  using namespace ka::traits;
+  using namespace ka;
   static_assert(Equal<Conditional<true, int, float>, int>::value, "");
   static_assert(Equal<Conditional<false, int, float>, float>::value, "");
 }
@@ -600,20 +600,20 @@ struct custom_false_t { static const bool value = false; };
 
 TEST(TypeTraits, Conjunction)
 {
-  using namespace ka::traits;
-  assertConjunction<Conjunction<>, true,  True>();
-  assertConjunction<Conjunction<True>, true,  True>();
-  assertConjunction<Conjunction<False>, false, False>();
-  assertConjunction<Conjunction<True, False>, false, False>();
-  assertConjunction<Conjunction<False, True>, false, False>();
-  assertConjunction<Conjunction<True, True>, true,  True>();
+  using namespace ka;
+  assertConjunction<Conjunction<>, true,  true_t>();
+  assertConjunction<Conjunction<true_t>, true,  true_t>();
+  assertConjunction<Conjunction<false_t>, false, false_t>();
+  assertConjunction<Conjunction<true_t, false_t>, false, false_t>();
+  assertConjunction<Conjunction<false_t, true_t>, false, false_t>();
+  assertConjunction<Conjunction<true_t, true_t>, true,  true_t>();
   assertConjunction<Conjunction<custom_true_t>, true,  custom_true_t>();
   assertConjunction<Conjunction<custom_false_t>, false, custom_false_t>();
   assertConjunction<Conjunction<custom_true_t, custom_false_t>, false, custom_false_t>();
   assertConjunction<Conjunction<custom_false_t, custom_true_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_false_t, False>, false, custom_false_t>();
+  assertConjunction<Conjunction<custom_false_t, false_t>, false, custom_false_t>();
   assertConjunction<Conjunction<custom_true_t, custom_true_t>, true,  custom_true_t>();
-  assertConjunction<Conjunction<True, custom_true_t>, true,  custom_true_t>();
+  assertConjunction<Conjunction<true_t, custom_true_t>, true,  custom_true_t>();
 }
 
 namespace {
@@ -633,7 +633,7 @@ namespace {
 
 TEST(TypeTraits, HasOperatorStar) {
   using namespace ka;
-  using ka::traits::HasOperatorStar;
+  using ka::HasOperatorStar;
   static_assert( HasOperatorStar<int*>::value, "");
   static_assert( HasOperatorStar<std::vector<int>::iterator>::value, "");
   static_assert( HasOperatorStar<std::list<int>::const_iterator>::value, "");
@@ -689,7 +689,7 @@ TEST(TypeTraits, HasTransfoF) {
 }
 
 TEST(TypeTraits, IsRetract) {
-  using namespace ka::traits;
+  using namespace ka;
   using namespace test;
   static_assert( IsRetract<one_, true_>::value, "");
   static_assert(!IsRetract<true_, one_>::value, "");

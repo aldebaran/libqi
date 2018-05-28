@@ -608,12 +608,12 @@ namespace qi
     {
     private:
       template<typename U>
-      static AnyFunction dispatch(U&& func, ka::traits::True is_function_object)
+      static AnyFunction dispatch(U&& func, ka::true_t is_function_object)
       {
-        return AnyFunctionMaker<boost::function<ka::traits::Function<T>>>::make(std::forward<U>(func));
+        return AnyFunctionMaker<boost::function<ka::Function<T>>>::make(std::forward<U>(func));
       }
       template<typename U>
-      static AnyFunction dispatch(U&& func, ka::traits::False is_function_object)
+      static AnyFunction dispatch(U&& func, ka::false_t is_function_object)
       {
         return makeAnyFunctionBare(std::forward<U>(func));
       }
@@ -625,7 +625,7 @@ namespace qi
       {
         // If T is a function object (a lambda for example), type-erase it with a boost::function
         // to allow the type system to handle it.
-        return dispatch(std::forward<U>(func), ka::traits::IsFunctionObject<T>{});
+        return dispatch(std::forward<U>(func), ka::IsFunctionObject<T>{});
       }
     };
     template<typename T> struct AnyFunctionMaker<T*>
@@ -671,7 +671,7 @@ namespace qi
   AnyFunction AnyFunction::from(T&& f)
   {
     // If an lvalue is passed then T is deduced to be U&, so remove the reference.
-    return detail::AnyFunctionMaker<ka::traits::RemoveRef<T>>::make(std::forward<T>(f));
+    return detail::AnyFunctionMaker<ka::RemoveRef<T>>::make(std::forward<T>(f));
   }
 
   namespace detail

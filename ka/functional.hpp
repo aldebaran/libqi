@@ -139,9 +139,9 @@ namespace ka {
 
   namespace detail {
     template<typename G, typename F>
-    using IsCompositionIdentity = traits::Conjunction<
+    using IsCompositionIdentity = Conjunction<
       std::is_empty<G>,
-      traits::IsRetract<G, F>>;
+      ka::IsRetract<G, F>>;
   } // namespace detail
 
   /// Performs a mathematical function composition.
@@ -178,18 +178,18 @@ namespace ka {
 #if KA_COMPILER_VS2013_OR_BELOW
   // Poor-man version that does not perform  simplifications.
   template<typename G, typename F>
-  composition_t<traits::Decay<G>, traits::Decay<F>> compose(G&& g, F&& f) {
+  composition_t<Decay<G>, Decay<F>> compose(G&& g, F&& f) {
     return {fwd<G>(g), fwd<F>(f)};
   }
 #else
   template<typename G, typename F, typename =
-    traits::EnableIf<!detail::IsCompositionIdentity<traits::Decay<G>, traits::Decay<F>>::value>>
-  composition_t<traits::Decay<G>, traits::Decay<F>> compose(G&& g, F&& f) {
+    EnableIf<!detail::IsCompositionIdentity<Decay<G>, Decay<F>>::value>>
+  composition_t<Decay<G>, Decay<F>> compose(G&& g, F&& f) {
     return {fwd<G>(g), fwd<F>(f)};
   }
 
-  template<typename F, typename = traits::EnableIf<std::is_empty<F>::value>>
-  id_transfo_t compose(traits::Retract<traits::Decay<F>> const&, F const&) {
+  template<typename F, typename = EnableIf<std::is_empty<F>::value>>
+  id_transfo_t compose(Retract<Decay<F>> const&, F const&) {
     return {};
   }
 #endif
@@ -277,14 +277,14 @@ namespace ka {
   /// that undoes it), the identity action will be returned.
   ///
   /// Accumulation<T...> G, Accumulation<T...> F
-  template<typename G, typename F, typename = traits::EnableIf<
-    !detail::IsCompositionIdentity<traits::Decay<G>, traits::Decay<F>>::value>>
-  composition_accu_t<traits::Decay<G>, traits::Decay<F>> compose_accu(G&& g, F&& f) {
+  template<typename G, typename F, typename = EnableIf<
+    !detail::IsCompositionIdentity<Decay<G>, Decay<F>>::value>>
+  composition_accu_t<Decay<G>, Decay<F>> compose_accu(G&& g, F&& f) {
     return {fwd<G>(g), fwd<F>(f)};
   }
 
-  template<typename F, typename = traits::EnableIf<std::is_empty<F>::value>>
-  id_action_t compose_accu(traits::Retract<F> const&, F const&) {
+  template<typename F, typename = EnableIf<std::is_empty<F>::value>>
+  id_action_t compose_accu(Retract<F> const&, F const&) {
     return {};
   }
 
@@ -505,12 +505,12 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_1(data_bound_transfo_t, data)
   // PolymorphicTransformation:
     template<typename Proc>
-    data_bound_proc_t<traits::Decay<Proc>, T> operator()(Proc&& p) {
+    data_bound_proc_t<Decay<Proc>, T> operator()(Proc&& p) {
       return {fwd<Proc>(p), data};
     }
 
     template<typename Proc>
-    data_bound_proc_t<traits::Decay<Proc>, T> operator()(Proc&& p) const {
+    data_bound_proc_t<Decay<Proc>, T> operator()(Proc&& p) const {
       return {fwd<Proc>(p), data};
     }
   };
@@ -553,8 +553,8 @@ namespace ka {
 
   /// Helper function that performs type deduction for `MoveAssign`.
   template<typename Dest, typename Src>
-  move_assign_t<Dest, traits::Decay<Src>> move_assign(Src&& s) {
-    return std::move(move_assign_t<Dest, traits::Decay<Src>>(fwd<Src>(s)));
+  move_assign_t<Dest, Decay<Src>> move_assign(Src&& s) {
+    return std::move(move_assign_t<Dest, Decay<Src>>(fwd<Src>(s)));
   }
 
   template<typename T>
@@ -776,9 +776,9 @@ namespace ka {
   BOOST_CONSTEXPR auto apply(Proc&& proc, Args&& args)
     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
       -> decltype(detail::apply_impl(fwd<Proc>(proc), fwd<Args>(args),
-        make_index_sequence<std::tuple_size<traits::Decay<Args>>::value>{})) {
+        make_index_sequence<std::tuple_size<Decay<Args>>::value>{})) {
     return detail::apply_impl(fwd<Proc>(proc), fwd<Args>(args),
-      make_index_sequence<std::tuple_size<traits::Decay<Args>>::value>{});
+      make_index_sequence<std::tuple_size<Decay<Args>>::value>{});
   }
 
   /// Procedure accepting a tuple of arguments and unpacking them for the underlying
@@ -845,7 +845,7 @@ namespace ka {
   ///
   /// Procedure Proc
   template<typename Proc>
-  apply_t<traits::Decay<Proc>> apply(Proc&& proc) {
+  apply_t<Decay<Proc>> apply(Proc&& proc) {
     return {fwd<Proc>(proc)};
   }
 
@@ -898,17 +898,17 @@ namespace ka {
   // Procedure:
     template<typename... Args>
     auto operator()(Args&&... args)
-      -> decltype(detail::scope_lock_proc_t<traits::Decay<decltype(proc(fwd<Args>(args)...))>>{}
+      -> decltype(detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
                     (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
-      return detail::scope_lock_proc_t<traits::Decay<decltype(proc(fwd<Args>(args)...))>>{}
+      return detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
         (proc, src(mut_lockable), fwd<Args>(args)...);
     }
 
     template<typename... Args>
     auto operator()(Args&&... args) const
-      -> decltype(detail::scope_lock_proc_t<traits::Decay<decltype(proc(fwd<Args>(args)...))>>{}
+      -> decltype(detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
                     (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
-      return detail::scope_lock_proc_t<traits::Decay<decltype(proc(fwd<Args>(args)...))>>{}
+      return detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
         (proc, src(mut_lockable), fwd<Args>(args)...);
     }
   };
@@ -948,13 +948,13 @@ namespace ka {
   // PolymorphicTransformation:
     /// Procedure<T (...)> Proc0
     template<typename Proc>
-    scope_lock_proc_t<traits::Decay<Proc>, M> operator()(Proc&& p) {
+    scope_lock_proc_t<Decay<Proc>, M> operator()(Proc&& p) {
       return { fwd<Proc>(p), mut_lockable };
     }
 
     /// Procedure<T (...)> Proc0
     template<typename Proc>
-    scope_lock_proc_t<traits::Decay<Proc>, M> operator()(Proc&& p) const {
+    scope_lock_proc_t<Decay<Proc>, M> operator()(Proc&& p) const {
       return { fwd<Proc>(p), mut_lockable };
     }
   };

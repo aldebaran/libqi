@@ -1127,9 +1127,9 @@ namespace qi {
   // PolymorphicFunction<Future<T> (T), Future<void> ()>:
     /// There is no constraint on T.
     template<typename T>
-    Future<ka::traits::Decay<T>> operator()(T&& t) const
+    Future<ka::Decay<T>> operator()(T&& t) const
     {
-      return Future<ka::traits::Decay<T>>{std::forward<T>(t)};
+      return Future<ka::Decay<T>>{std::forward<T>(t)};
     }
 
     Future<void> operator()() const

@@ -80,8 +80,8 @@
 /// Precondition: 'ka/typetraits.hpp' and 'ka/utility.hpp' have been included.
 #define KA_DERIVE_CTOR_FUNCTION_TEMPLATE(FUNCTION)                            \
   template<typename... Args>                                                  \
-  FUNCTION##_t<ka::traits::Decay<Args>...> FUNCTION(Args&&... args) {         \
-    return FUNCTION##_t<ka::traits::Decay<Args>...>{ka::fwd<Args>(args)...};  \
+  FUNCTION##_t<ka::Decay<Args>...> FUNCTION(Args&&... args) {         \
+    return FUNCTION##_t<ka::Decay<Args>...>{ka::fwd<Args>(args)...};  \
   }
 
 /// Derives (i.e. generates) a function that creates a value of a *template

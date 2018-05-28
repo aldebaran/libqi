@@ -9,36 +9,34 @@
 #include "typetraits.hpp"
 
 namespace ka {
-  namespace traits {
-    namespace detail {
-      template<typename M> struct IsMutex : False {};
+  namespace detail {
+    template<typename M> struct IsMutex : false_t {};
 
-      // Common mutexes that might be used in this library.
-      template<> struct IsMutex<std::mutex>                   : True {};
-      template<> struct IsMutex<std::recursive_mutex>         : True {};
+    // Common mutexes that might be used in this library.
+    template<> struct IsMutex<std::mutex>                   : true_t {};
+    template<> struct IsMutex<std::recursive_mutex>         : true_t {};
 #if !BOOST_OS_ANDROID
-      template<> struct IsMutex<std::timed_mutex>             : True {};
-      template<> struct IsMutex<std::recursive_timed_mutex>   : True {};
+    template<> struct IsMutex<std::timed_mutex>             : true_t {};
+    template<> struct IsMutex<std::recursive_timed_mutex>   : true_t {};
 #endif
-      template<> struct IsMutex<boost::mutex>                 : True {};
-      template<> struct IsMutex<boost::recursive_mutex>       : True {};
-      template<> struct IsMutex<boost::timed_mutex>           : True {};
-      template<> struct IsMutex<boost::recursive_timed_mutex> : True {};
-      template<> struct IsMutex<boost::shared_mutex>          : True {};
-    } // namespace detail
-
-    /// True if T is one of the commonly used mutex types:
-    /// std::mutex, std::recursive_mutex, std::timed_mutex, std::recursive_timed_mutex, boost::mutex
-    /// boost::recursive_mutex, boost::timed_mutex, boost::recursive_timed_mutex, boost::shared_mutex
-    template<typename T>
-    using IsMutex = typename detail::IsMutex<T>::type;
+    template<> struct IsMutex<boost::mutex>                 : true_t {};
+    template<> struct IsMutex<boost::recursive_mutex>       : true_t {};
+    template<> struct IsMutex<boost::timed_mutex>           : true_t {};
+    template<> struct IsMutex<boost::recursive_timed_mutex> : true_t {};
+    template<> struct IsMutex<boost::shared_mutex>          : true_t {};
   } // namespace detail
+
+  /// True if T is one of the commonly used mutex types:
+  /// std::mutex, std::recursive_mutex, std::timed_mutex, std::recursive_timed_mutex, boost::mutex
+  /// boost::recursive_mutex, boost::timed_mutex, boost::recursive_timed_mutex, boost::shared_mutex
+  template<typename T>
+  using IsMutex = typename detail::IsMutex<T>::type;
 } // namespace ka
 
 namespace std {
   /// model ScopeLockable M:
   /// Mutex M
-  template<typename M, typename = ka::traits::EnableIf<ka::traits::IsMutex<M>::value>>
+  template<typename M, typename = ka::EnableIf<ka::IsMutex<M>::value>>
   std::unique_lock<M> scopelock(M& m) {
     return std::unique_lock<M>{ m };
   }
@@ -47,7 +45,7 @@ namespace std {
 namespace boost {
   /// model ScopeLockable M:
   /// Mutex M
-  template<typename M, typename = ka::traits::EnableIf<ka::traits::IsMutex<M>::value>>
+  template<typename M, typename = ka::EnableIf<ka::IsMutex<M>::value>>
   std::unique_lock<M> scopelock(M& m) { // std::unique_lock works for boost mutexes
     return std::unique_lock<M>{ m };
   }

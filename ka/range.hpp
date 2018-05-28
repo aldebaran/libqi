@@ -206,7 +206,7 @@ namespace ka {
   /// Preconditions: boundedRange(N{}, end)
   /// Regular T, Iterator N
   template<typename T, typename N>
-  repeat_range_t<traits::RemoveCvRef<T>, traits::RemoveCvRef<N>> repeat_range(T&& a, N&& end) {
+  repeat_range_t<RemoveCvRef<T>, RemoveCvRef<N>> repeat_range(T&& a, N&& end) {
     return {fwd<T>(a), N{}, fwd<N>(end)};
   }
 } // namespace ka

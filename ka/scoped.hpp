@@ -113,7 +113,7 @@ namespace ka {
     bool moved_from = false;
   public:
     /// We must ensure this cannot be (ab)used as a copy constructor (hence EnableIf).
-    template<typename G, typename = traits::EnableIf<!std::is_base_of<scoped_t, G>::value>>
+    template<typename G, typename = EnableIf<!std::is_base_of<scoped_t, G>::value>>
     explicit scoped_t(G&& f)
       : f(fwd<G>(f)) {
     }
@@ -145,8 +145,8 @@ namespace ka {
   ///
   /// Regular T, FunctionObject<U (T)> F where U is not constrained
   template<typename T, typename F>
-  scoped_t<traits::Decay<T>, traits::Decay<F>> scoped(T&& value, F&& f) {
-    return scoped_t<traits::Decay<T>, traits::Decay<F>>{fwd<T>(value), fwd<F>(f)};
+  scoped_t<Decay<T>, Decay<F>> scoped(T&& value, F&& f) {
+    return scoped_t<Decay<T>, Decay<F>>{fwd<T>(value), fwd<F>(f)};
   }
 
   /// Returns a scoped_t for the given function.
@@ -154,8 +154,8 @@ namespace ka {
   ///
   /// FunctionObject<U (T)> F where U is not constrained
   template<typename F>
-  scoped_t<void, traits::Decay<F>> scoped(F&& f) {
-    return scoped_t<void, traits::Decay<F>>{fwd<F>(f)};
+  scoped_t<void, Decay<F>> scoped(F&& f) {
+    return scoped_t<void, Decay<F>>{fwd<F>(f)};
   }
 
   /// Applies an action and applies its retraction on scope exit.
@@ -187,7 +187,7 @@ namespace ka {
   auto scoped_apply_and_retract(T& value, F&& f, G&& retraction)
   // TODO: Remove the trailing return when get rid of VS2013.
   // A lambda is not used because of the non-evaluated decltype context.
-      -> scoped_t<std::reference_wrapper<T>, traits::Decay<G>> {
+      -> scoped_t<std::reference_wrapper<T>, Decay<G>> {
     // Apply the action now.
     fwd<F>(f)(value);
 
@@ -205,7 +205,7 @@ namespace ka {
   // TODO: 1) Get rid of VS2013
   //       2) Remove the trailing return when we upgrade to C++14 or higher (aka C++14+)
   // A lambda is not used because of the non-evaluated decltype context.
-      -> scoped_t<std::reference_wrapper<T>, vs13::Retract<traits::Decay<F>>> {
+      -> scoped_t<std::reference_wrapper<T>, vs13::Retract<Decay<F>>> {
     return scoped_apply_and_retract(value, fwd<F>(f), retract(f));
   }
 

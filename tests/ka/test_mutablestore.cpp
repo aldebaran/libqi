@@ -42,7 +42,7 @@ namespace ka {
     }
 
     template<typename... Args>
-    traits::ResultOf<T& (Args&&...)> operator()(Args&&... args) const
+    ResultOf<T& (Args&&...)> operator()(Args&&... args) const
       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(ref(std::forward<Args>(args)...))) {
       return ref(std::forward<Args>(args)...);
     }

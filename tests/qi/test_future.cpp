@@ -1336,7 +1336,6 @@ TEST(FutureSrc, SrcFutureUnitFutureCompose)
 #if !KA_COMPILER_VS2013_OR_BELOW
   using namespace qi;
   using namespace ka;
-  using namespace ka::traits;
   using namespace ka::functional_ops;
   SrcFuture src;
   UnitFuture unit;
@@ -1377,9 +1376,9 @@ namespace
     }
 
     template<typename T>
-    qi::FutureSync<ka::traits::Decay<T>> operator()(T&& t) const
+    qi::FutureSync<ka::Decay<T>> operator()(T&& t) const
     {
-      return qi::FutureSync<ka::traits::Decay<T>>{std::forward<T>(t)};
+      return qi::FutureSync<ka::Decay<T>>{std::forward<T>(t)};
     }
 
     qi::FutureSync<void> operator()() const
