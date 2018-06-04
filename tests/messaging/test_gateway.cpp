@@ -22,6 +22,21 @@
 
 qiLogCategory("TestGateway");
 
+namespace qi
+{
+
+  template<typename T>
+  std::ostream& operator<<(std::ostream& os, const qi::Object<T>& obj)
+  {
+    if (obj.isValid())
+      os << obj.ptrUid() << "\n";
+    else
+      os << "<INVALID OBJECT>\n";
+    return os;
+  }
+
+}
+
 namespace
 {
 
@@ -474,6 +489,46 @@ namespace
     danglingObject.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
+  }
+
+  TEST_F(TestGateway, RegisterServiceOnGWRegistersItOnSD)
+  {
+    auto gwServer = connectClientToGw();
+    auto sdClient = connectClientToSd();
+
+    const auto serviceName = "my_service";
+    qi::Object<ObjectUserService> concreteService(boost::make_shared<ObjectUserService>());
+    gwServer->registerService(serviceName, concreteService);
+
+    qi::AnyObject serviceObject;
+    ASSERT_TRUE(test::finishesWithValue(sdClient->waitForService(serviceName)));
+    ASSERT_TRUE(test::finishesWithValue(sdClient->service(serviceName),
+                                        test::willAssignValue(serviceObject)));
+    ASSERT_TRUE(serviceObject.isValid());
+
+    // TODO: It would be good if this worked but right now these two objects don't have the same
+    // PtrUid.
+    // ASSERT_EQ(concreteService, serviceObject);
+  }
+
+  TEST_F(TestGateway, ServiceRegisteredOnGWIsAvailableOnGW)
+  {
+    auto gwServer = connectClientToGw();
+    auto gwClient = connectClientToGw();
+
+    const auto serviceName = "my_service";
+    qi::Object<ObjectUserService> concreteService(boost::make_shared<ObjectUserService>());
+    gwServer->registerService(serviceName, concreteService);
+
+    qi::AnyObject serviceObject;
+    ASSERT_TRUE(test::finishesWithValue(gwClient->waitForService(serviceName)));
+    ASSERT_TRUE(test::finishesWithValue(gwClient->service(serviceName),
+                                        test::willAssignValue(serviceObject)));
+    ASSERT_TRUE(serviceObject.isValid());
+
+    // TODO: It would be good if this worked but right now these two objects don't have the same
+    // PtrUid.
+    // ASSERT_EQ(concreteService, serviceObject);
   }
 
   TEST(TestGatewayLateSD, AttachesToSDWhenAvailable)
