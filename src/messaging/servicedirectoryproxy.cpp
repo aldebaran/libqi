@@ -8,6 +8,7 @@
 #include <ka/errorhandling.hpp>
 #include <ka/functional.hpp>
 #include <ka/scoped.hpp>
+#include <ka/typetraits.hpp>
 #include <qi/log.hpp>
 #include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/messaging/servicedirectoryproxy.hpp>
@@ -16,6 +17,9 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/algorithm/transform.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <boost/optional.hpp>
+
+#include <unordered_map>
 
 qiLogCategory("qimessaging.servicedirectoryproxy");
 
@@ -39,12 +43,13 @@ struct MirroringResult
   };
   std::string serviceName;
   Status status;
+  boost::optional<unsigned int> mirroredId;
 };
 using MirroringResults = std::vector<MirroringResult>;
 
 const auto delayIncreaseExponent = 1;
 const auto delayIncreaseFactor = 1 << delayIncreaseExponent;
-const auto maxRetryCount = 7;
+const auto maxTryCount = 7;
 
 void logAnyMirroringFailure(const MirroringResults& results)
 {
@@ -87,6 +92,54 @@ AuthProviderFactoryPtr placeholderIfNull(AuthProviderFactoryPtr factory)
   return factory;
 }
 
+MirroringResult mirrorService(const std::string& name,
+                              Session& srcSess,
+                              Session& destSess,
+                              const std::string& srcDesc,
+                              const std::string& destDesc)
+{
+  AnyObject service;
+  try
+  {
+    qiLogVerbose() << "Getting service '" << name << "' from " << srcDesc << ".";
+    service = srcSess.service(name).value();
+    qiLogVerbose() << "Got service '" << name << "' from " << srcDesc << ".";
+  }
+  catch (const std::exception& e)
+  {
+    qiLogError() << "Failed to get service '" << name << "' from " << srcDesc << ": " << e.what();
+    return { name, MirroringResult::Status::Failed_Error, {} };
+  }
+
+  boost::optional<unsigned int> destId;
+  try
+  {
+    qiLogVerbose() << "Registering service '" << name << "' on " << destDesc << ".";
+    destId = destSess.registerService(name, service).value();
+    qiLogVerbose() << "Registered service '" << name << "' (#" << *destId << ") on " << destDesc
+                   << ".";
+  }
+  catch (const std::exception& e)
+  {
+    qiLogError() << "Failed to register service '" << name << " on " << destDesc
+                 << " ': " << e.what();
+    if (destId)
+    {
+      qiLogVerbose() << "Unregistering '" << name << "' (#" << *destId
+                     << ") on " << destDesc << " (rollback because an error occurred)";
+      ka::invoke_catch(ka::poly_constant_function<void>{}, // TODO: Log something as verbose when there is
+                                                // something like LogExceptionError for all levels.
+                                                // For now do nothing, it should be rare enough to
+                                                // be acceptable.
+                       [&] { destSess.unregisterService(*destId).value(); });
+      qiLogVerbose() << "Unregistered service '" << name << "' (#" << *destId
+                     << ") on " << destDesc << " (rollback because an error occurred)";
+    }
+    return { name, MirroringResult::Status::Failed_Error, {} };
+  }
+  return { name, MirroringResult::Status::Done, destId };
+}
+
 static const ServiceDirectoryProxy::Status totallyDisconnected{
   ServiceDirectoryProxy::ConnectionStatus::NotConnected,
   ServiceDirectoryProxy::ListenStatus::NotListening
@@ -94,11 +147,14 @@ static const ServiceDirectoryProxy::Status totallyDisconnected{
 
 }
 
+// To implement the proxy, we use a session that listens and provides endpoints for connections and
+// another session that connects to the service directory. The first session is referenced as
+// the 'server' and the second is referenced as the 'service directory client'.
 class ServiceDirectoryProxy::Impl
 {
 public:
-  static const Seconds initRetryDelay;
-  static Seconds maxRetryDelay();
+  static const Seconds initTryDelay;
+  static Seconds maxTryDelay();
 
   explicit Impl(bool enforceAuth);
   ~Impl();
@@ -116,16 +172,60 @@ public:
   Future<ServiceFilter> setServiceFilter(ServiceFilter filter);
 
 private:
+  // Precondition synchronized():
+  // Concurrent calls of functions with the same precondition on the same object must be sequenced.
+
+  // Precondition: synchronized()
   void closeUnsync();
+
   Future<void> mirrorAllServices();
-  MirroringResult::Status mirrorServiceUnsync(const std::string& serviceName);
-  void bindToServiceDirectoryUnsync(const Url& url);
-  void removeServiceUnsync(const std::string& service);
-  Future<void> retryAttach(const qi::Url& sdUrl, Seconds lastDelay);
+
+  // Precondition: synchronized()
+  MirroringResult mirrorServiceFromSDUnsync(unsigned int remoteId, const std::string& serviceName);
+
+  // Precondition: synchronized() && _sdClient
+  //
+  // Binds to a service directory by connecting to its signals.
+  void bindToServiceDirectoryUnsync();
+
+  // Precondition: synchronized()
+  void unmirrorServiceFromSDUnsync(const std::string& service);
+
+  // Precondition: synchronized() && _sdUrl.isValid()
+  //
+  // Attaches the proxy to a service directory at _sdUrl. Returns a future set when the attachment
+  // is successful.
+  Future<void> doAttachUnsync();
+
+  // Precondition: synchronized()
+  //
+  // Tries to reattach to a service directory and in case of failure, schedules another try with
+  // a delay calculated from the last try delay. Returns a future set when the attachment is
+  // successful.
+  Future<void> tryAttachUnsync(Seconds lastDelay);
+
+  // Precondition: synchronized()
+  //
+  // Instanciates a server (as a session) and initializes it with the current state of the proxy.
+  // Returns the pointer the new server.
   std::unique_ptr<Session> createServerUnsync();
-  void handleSdDisconnectionUnsync(const Url& url, const std::string& reason);
-  Future<void> delayRetryAttach(const Url& url, Seconds delay = initRetryDelay);
-  bool shouldMirrorServiceUnsync(boost::string_ref serviceName) const;
+
+  // Precondition: synchronized()
+  //
+  // Resets this object by closing it then trying to reattach it to the service directory.
+  void resetUnsync();
+
+  // Tries to attach to a service directory after a delay.
+  Future<void> delayTryAttach(Seconds delay = initTryDelay);
+
+  // Precondition: synchronized()
+  bool shouldMirrorServiceFromSDUnsync(const std::string& serviceName) const;
+
+  // Precondition: synchronized()
+  MirroringResult mirrorServiceToSDUnsync(unsigned int localId, const std::string& serviceName);
+
+  // Precondition: synchronized()
+  void unmirrorServiceToSDUnsync(const std::string& serviceName);
 
   struct Identity
   {
@@ -169,8 +269,17 @@ private:
   } _status{totallyDisconnected, status};
 
   std::unique_ptr<Session> _server; // ptr because we have to recreate it every time we listen
-  std::map<std::string, unsigned int> _serviceIndexes;
   std::unique_ptr<Session> _sdClient;
+
+  struct MirroredServiceInfo
+  {
+    unsigned int localId;
+    unsigned int remoteId;
+    enum class Source { Proxy, ServiceDirectory };
+    Source source;
+  };
+  using MirroredServiceInfoMap = std::unordered_map<std::string, MirroredServiceInfo>;
+  MirroredServiceInfoMap _servicesInfo;
   Url _listenUrl;
   Url _sdUrl;
   boost::optional<Identity> _identity;
@@ -181,7 +290,7 @@ private:
   mutable Strand _strand;
 };
 
-const Seconds ServiceDirectoryProxy::Impl::initRetryDelay { 1 };
+const Seconds ServiceDirectoryProxy::Impl::initTryDelay { 1 };
 
 ServiceDirectoryProxy::ServiceDirectoryProxy(bool enforceAuth)
   : _p(new Impl(enforceAuth))
@@ -279,10 +388,10 @@ ServiceDirectoryProxy::Impl::~Impl()
 }
 
 
-Seconds ServiceDirectoryProxy::Impl::maxRetryDelay()
+Seconds ServiceDirectoryProxy::Impl::maxTryDelay()
 {
   static const Seconds val = boost::chrono::duration_cast<Seconds>(
-      initRetryDelay * std::ldexp(initRetryDelay.count(), delayIncreaseExponent * maxRetryCount));
+      initTryDelay * std::ldexp(initTryDelay.count(), delayIncreaseExponent * maxTryCount));
   return val;
 }
 
@@ -294,7 +403,7 @@ void ServiceDirectoryProxy::Impl::closeUnsync()
     auto sdClient = std::move_if_noexcept(_sdClient); // will be destroyed at end of scope
     auto server = std::move_if_noexcept(_server);     // idem
     _status.set(totallyDisconnected);
-    _serviceIndexes.clear();
+    _servicesInfo.clear();
   }
   catch (const std::exception& ex)
   {
@@ -352,7 +461,7 @@ Future<ServiceDirectoryProxy::ListenStatus> ServiceDirectoryProxy::Impl::listenA
         {
           qiLogVerbose() << "Instanciating server";
           _status.set(ListenStatus::NotListening);
-          _serviceIndexes.clear();
+          _servicesInfo.clear();
           _server = createServerUnsync();
           _status.set(ListenStatus::Starting);
         }
@@ -369,7 +478,7 @@ Future<ServiceDirectoryProxy::ListenStatus> ServiceDirectoryProxy::Impl::listenA
           });
         }
 
-        qiLogInfo() << "Starting listening on URL '" << url.str() << "'";
+        qiLogVerbose() << "Starting listening on URL '" << url.str() << "'";
         return _server->listenStandalone(url).async()
             .then(_strand.unwrappedSchedulerFor([=](Future<void> listenFut) {
               if (listenFut.hasError())
@@ -420,39 +529,47 @@ Future<void> ServiceDirectoryProxy::Impl::attachToServiceDirectory(const Url& sd
 {
   if (!sdUrl.isValid()) return makeFutureError<void>("Invalid service directory URL");
   return _strand.async([=] {
-    if (_status.current().connection != ConnectionStatus::NotConnected
-    && _sdClient && sdUrl == _sdUrl)
-    {
-      return futurize();
-    }
+        if (_status.current().connection != ConnectionStatus::NotConnected
+            && _sdClient && sdUrl == _sdUrl)
+        {
+          return futurize();
+        }
 
-    _sdUrl = sdUrl;
-    _status.set(ConnectionStatus::NotConnected);
+        _sdUrl = sdUrl;
+        return doAttachUnsync();
+      }).unwrap()
+      .then([=](Future<void> connectFut) {
+        if (connectFut.hasError())
+          connectFut = delayTryAttach(); // try again
+        return connectFut;
+      }).unwrap();
+}
 
-    qiLogDebug() << "Instanciating new service directory client session";
-    _sdClient.reset(new Session);
-    _status.set(ConnectionStatus::Starting);
+Future<void> ServiceDirectoryProxy::Impl::doAttachUnsync()
+{
+  qiLogVerbose() << "Attaching to service directory at URL '" << _sdUrl.str() << "'";
 
-    qiLogInfo() << "Attaching to service directory at URL '" << sdUrl.str() << "'";
-    return _sdClient->connect(sdUrl).async()
-        .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
-          if (connectFut.hasError())
-          {
-            return delayRetryAttach(sdUrl) // try again
-              .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
-                if (connectFut.hasError())
-                  _status.set(ConnectionStatus::NotConnected);
-                return connectFut;
-              })).unwrap();
-          }
-          else
-          {
-            _status.set(ConnectionStatus::Connected);
-            bindToServiceDirectoryUnsync(sdUrl);
-            return futurize();
-          }
-        })).unwrap();
-  }).unwrap();
+  _status.set(ConnectionStatus::NotConnected);
+
+  qiLogDebug() << "Instanciating new service directory client session";
+  _sdClient.reset(new Session);
+  _status.set(ConnectionStatus::Starting);
+
+  return _sdClient->connect(_sdUrl).async()
+      .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
+        if (connectFut.hasError())
+        {
+          _sdClient.reset();
+          _status.set(ConnectionStatus::NotConnected);
+        }
+        else
+        {
+          bindToServiceDirectoryUnsync();
+          _status.set(ConnectionStatus::Connected);
+        }
+        return connectFut;
+      })).unwrap();
+
 }
 
 Future<ServiceDirectoryProxy::ServiceFilter> ServiceDirectoryProxy::Impl::setServiceFilter(
@@ -476,78 +593,53 @@ Future<void> ServiceDirectoryProxy::Impl::mirrorAllServices()
                   << "Mirroring services: received list of services from the ServiceDirectory";
               MirroringResults results;
               for (const auto& serviceInfo : services)
-                results.push_back({ serviceInfo.name(), mirrorServiceUnsync(serviceInfo.name()) });
+                results.push_back(mirrorServiceFromSDUnsync(serviceInfo.serviceId(), serviceInfo.name()));
               return results;
             })).unwrap();
       }).unwrap()
       .andThen(&logAnyMirroringFailure);
 }
 
-MirroringResult::Status ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
-    const std::string& serviceName)
+MirroringResult ServiceDirectoryProxy::Impl::mirrorServiceFromSDUnsync(unsigned int remoteId,
+                                                                 const std::string& name)
 {
-  qiLogInfo() << "Mirroring service '" << serviceName << "'";
-  if (!shouldMirrorServiceUnsync(serviceName))
-  {
-    qiLogVerbose() << "Service '" << serviceName << "' should not be mirrored, skipping";
-    return MirroringResult::Status::Skipped;
-  }
+  qiLogVerbose() << "Trying to mirror service '" << name << "'";
 
   if (!_status.current().isListening())
-    return MirroringResult::Status::Failed_NotListening;
+  {
+    qiLogVerbose() << "Proxy is not yet listening, cannot mirror service.";
+    return { name, MirroringResult::Status::Failed_NotListening, {} };
+  }
   QI_ASSERT_TRUE(_server);
 
   if (!_status.current().isConnected())
-    return MirroringResult::Status::Failed_NoSdConnection;
+  {
+    qiLogVerbose() << "Proxy is not yet connected, cannot mirror service.";
+    return { name, MirroringResult::Status::Failed_NoSdConnection, {} };
+  }
   QI_ASSERT_TRUE(_sdClient);
 
-  AnyObject service;
-  try
+  if (!shouldMirrorServiceFromSDUnsync(name))
   {
-    qiLogVerbose() << "Getting service '" << serviceName << "' from service directory";
-    service = _sdClient->service(serviceName).value();
-    qiLogVerbose() << "Got service '" << serviceName << "' from service directory";
-  }
-  catch (const std::exception& e)
-  {
-    qiLogError() << "Failed to get service '" << serviceName << "': " << e.what();
-    return MirroringResult::Status::Failed_Error;
+    qiLogVerbose() << "Service '" << name << "' should not be mirrored, skipping";
+    return { name, MirroringResult::Status::Skipped, {} };
   }
 
-  boost::optional<unsigned int> serviceId;
-  try
-  {
-    qiLogVerbose() << "Registering service '" << serviceName << "'";
-    serviceId = _server->registerService(serviceName, service).value();
-    qiLogVerbose() << "Registered service '" << serviceName << "' (#" << *serviceId << ")";
-
-    _serviceIndexes[serviceName] = *serviceId;
-  }
-  catch (const std::exception& e)
-  {
-    qiLogError() << "Failed to register service '" << serviceName << "': " << e.what();
-    if (serviceId)
-    {
-      qiLogInfo() << "Unregistering '" << serviceName
-                  << "' (#" << *serviceId << ") (rollback because an error occurred)";
-      _serviceIndexes.erase(serviceName);
-      _server->unregisterService(*serviceId).value();
-      qiLogVerbose() << "Unregistered service '" << serviceName << "' (#" << *serviceId
-                     << ") (rollback because an error occurred)";
-    }
-    return MirroringResult::Status::Failed_Error;
-  }
-  return MirroringResult::Status::Done;
+  qiLogVerbose() << "Mirroring service '" << name
+                 << "' from the service directory to the proxy.";
+  const auto result =
+      mirrorService(name, *_sdClient, *_server, "service directory", "proxy");
+  if (result.mirroredId)
+    _servicesInfo[name] = { *result.mirroredId, remoteId,
+                            MirroredServiceInfo::Source::ServiceDirectory };
+  return result;
 }
 
-void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
+void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync()
 {
   using ka::scoped;
-  if (!_status.current().isConnected())
-    throw std::runtime_error("Not connected to service directory");
   QI_ASSERT_TRUE(_sdClient);
-
-  qiLogInfo() << "Binding to service directory at url '" << url.str() << "'";
+  qiLogVerbose() << "Binding to service directory at url '" << _sdUrl.str() << "'";
 
   bool bindingSucceeded = false;
 
@@ -555,10 +647,10 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
   // directory, register it to this service directory.
   auto scopedDisconnectServiceRegistered =
       scoped(_sdClient->serviceRegistered.connect(
-                 _strand.schedulerFor([=](unsigned int id, const std::string& service) {
-                   qiLogInfo() << "Service '" << service << "' (#" << id
-                               << ") was just registered on service directory";
-                   mirrorServiceUnsync(service);
+                 _strand.schedulerFor([=](unsigned int remoteId, const std::string& service) {
+                   qiLogVerbose() << "Service '" << service << "' (#" << remoteId
+                                  << ") was just registered on service directory";
+                   mirrorServiceFromSDUnsync(remoteId, service);
                  })),
              [&](const SignalSubscriber& sigSub) {
                if (!bindingSucceeded)
@@ -569,10 +661,10 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
   // directory, unregister it from the this service directory.
   auto scopedDisconnectServiceUnregistered =
       scoped(_sdClient->serviceUnregistered.connect(
-                 _strand.schedulerFor([=](unsigned int id, const std::string& service) {
-                   qiLogInfo() << "Service '" << service << "' (#" << id
-                               << ") was just unregistered from service directory";
-                   removeServiceUnsync(service);
+                 _strand.schedulerFor([=](unsigned int remoteId, const std::string& service) {
+                   qiLogVerbose() << "Service '" << service << "' (#" << remoteId
+                                  << ") was just unregistered from service directory";
+                   unmirrorServiceFromSDUnsync(service);
                  })),
              [&](const SignalSubscriber& sigSub) {
                if (!bindingSucceeded)
@@ -583,7 +675,8 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
   auto scopedDisconnectDisconnected =
       scoped(_sdClient->disconnected
                  .connect(_strand.schedulerFor([=](const std::string& reason) {
-                   handleSdDisconnectionUnsync(url, reason);
+                   qiLogWarning() << "Lost connection to the service directory, reason: " << reason;
+                   resetUnsync();
                  })),
              [&](const SignalSubscriber& sigSub) {
                if (!bindingSucceeded)
@@ -593,69 +686,158 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync(const Url& url)
   bindingSucceeded = true;
 }
 
-void ServiceDirectoryProxy::Impl::handleSdDisconnectionUnsync(const Url& url,
-                                                              const std::string& reason)
+void ServiceDirectoryProxy::Impl::resetUnsync()
 {
-  qiLogWarning() << "Lost connection to the service directory, reason: " << reason;
+  qiLogVerbose() << "Resetting";
   closeUnsync();
-  delayRetryAttach(url);
+  delayTryAttach();
 }
 
-Future<void> ServiceDirectoryProxy::Impl::delayRetryAttach(const Url& url, Seconds delay)
+Future<void> ServiceDirectoryProxy::Impl::delayTryAttach(Seconds delay)
 {
-  qiLogInfo() << "Retrying to attach to the service directory in "
-              << boost::chrono::duration_cast<Seconds>(delay).count() << "sec.";
-  return asyncDelay(_strand.schedulerFor([=] {
-      return retryAttach(url, delay);
-  }), delay).unwrap();
+  qiLogVerbose() << "Trying to attach to the service directory in "
+                 << boost::chrono::duration_cast<Seconds>(delay).count() << "sec.";
+  return asyncDelay(_strand.schedulerFor([=] { return tryAttachUnsync(delay); }), delay).unwrap();
 }
 
-bool ServiceDirectoryProxy::Impl::shouldMirrorServiceUnsync(boost::string_ref serviceName) const
+bool ServiceDirectoryProxy::Impl::shouldMirrorServiceFromSDUnsync(const std::string& serviceName) const
 {
-  return serviceName != Session::serviceDirectoryServiceName() && !_serviceFilter(serviceName);
+  if (!_status.current().isReady())
+    return false;
+  QI_ASSERT_TRUE(_server);
+
+  if (serviceName == Session::serviceDirectoryServiceName() || _serviceFilter(serviceName))
+    return false;
+
+  // Only mirror services that are not yet registered on the proxy server.
+  return !_server->service(serviceName).hasValue();
 }
 
-void ServiceDirectoryProxy::Impl::removeServiceUnsync(const std::string& serviceName)
+MirroringResult ServiceDirectoryProxy::Impl::mirrorServiceToSDUnsync(unsigned int localId,
+                                                                  const std::string& name)
+{
+  auto it = _servicesInfo.find(name);
+  if (it != _servicesInfo.end())
+  {
+    // The service comes from the service directory, do nothing.
+    qiLogVerbose() << "Service '" << name
+                   << "' should not be mirrored to the service directory, skipping.";
+    return { name, MirroringResult::Status::Skipped, {} };
+  }
+
+  if (!_status.current().isListening())
+    return { name, MirroringResult::Status::Failed_NotListening, {} };
+  QI_ASSERT_TRUE(_server);
+
+  if (!_status.current().isConnected())
+    return { name, MirroringResult::Status::Failed_NoSdConnection, {} };
+  QI_ASSERT_TRUE(_sdClient);
+
+  qiLogVerbose() << "Mirroring service '" << name << "' from the proxy to the service directory.";
+  const auto result =
+      mirrorService(name, *_server, *_sdClient, "proxy", "service directory");
+  if (result.mirroredId)
+    _servicesInfo[name] = { localId, *result.mirroredId, MirroredServiceInfo::Source::Proxy };
+  return result;
+}
+
+void ServiceDirectoryProxy::Impl::unmirrorServiceToSDUnsync(const std::string& serviceName)
+{
+  if (!_sdClient)
+    return;
+
+  try
+  {
+    const auto serviceIndexIt = _servicesInfo.find(serviceName);
+    if (serviceIndexIt == end(_servicesInfo))
+    {
+      qiLogVerbose() << "Cannot unmirror service '" << serviceName
+                     << "' to service directory : could not find mirrored service info.";
+      return;
+    }
+
+    if (serviceIndexIt->second.source != MirroredServiceInfo::Source::Proxy)
+    {
+      qiLogVerbose() << "Cannot unmirror service '" << serviceName
+                     << "' to service directory : service was not registered locally.";
+      return;
+    }
+
+    auto scopeErase = ka::scoped([&]{ _servicesInfo.erase(serviceIndexIt); });
+
+    const auto localId = serviceIndexIt->second.localId;
+    const auto remoteId = serviceIndexIt->second.remoteId;
+    qiLogVerbose() << "Unmirroring service '" << serviceName << "' to service directory, (#"
+                   << localId << ").";
+    _sdClient->unregisterService(serviceIndexIt->second.remoteId).value();
+    qiLogVerbose() << "Unmirrored service '" << serviceName << "' to service directory, (#"
+                   << localId << ").";
+  }
+  catch (const std::exception& e)
+  {
+    qiLogVerbose() << "Error while unmirroring '" << serviceName
+                   << "' to service directory: " << e.what();
+    throw;
+  }
+}
+
+void ServiceDirectoryProxy::Impl::unmirrorServiceFromSDUnsync(const std::string& serviceName)
 {
   if (!_server)
     return;
 
   try
   {
-    const auto serviceIndexIt = _serviceIndexes.find(serviceName);
-    if (serviceIndexIt == end(_serviceIndexes))
+    const auto serviceIndexIt = _servicesInfo.find(serviceName);
+    if (serviceIndexIt == end(_servicesInfo))
     {
-      qiLogWarning() << "Cannot unregister service '" << serviceName
-                     << "' : could not find local index of the service";
+      qiLogVerbose() << "Cannot unmirror service '" << serviceName
+                     << "' from service directory : could not find mirrored service info.";
       return;
     }
-    const auto id = serviceIndexIt->second;
-    _serviceIndexes.erase(serviceIndexIt);
 
-    qiLogInfo() << "Unregistering service '" << serviceName << "', (#" << id << ")";
-    _server->unregisterService(id).value();
-    qiLogVerbose() << "Unregistered service '" << serviceName << "', (#" << id << ")";
+    if (serviceIndexIt->second.source != MirroredServiceInfo::Source::ServiceDirectory)
+    {
+      qiLogVerbose() << "Cannot unmirror service '" << serviceName
+                     << "' from service directory : service was not registered on the service "
+                        "directory first.";
+      return;
+    }
+
+    auto scopeErase = ka::scoped([&]{ _servicesInfo.erase(serviceIndexIt); });
+    const auto localId = serviceIndexIt->second.localId;
+
+    qiLogVerbose() << "Unmirroring service '" << serviceName << "' from the service directory, (#"
+                   << localId << ").";
+    _server->unregisterService(localId).value();
+    qiLogVerbose() << "Unmirrored service '" << serviceName << "' from the service directory, (#"
+                   << localId << ").";
   }
   catch (const std::exception& e)
   {
-    qiLogInfo() << "Error while unregistering " << serviceName << ": " << e.what();
+    qiLogVerbose() << "Error while unmirroring '" << serviceName
+                   << "' from the service directory: " << e.what();
     throw;
   }
 }
 
-Future<void> ServiceDirectoryProxy::Impl::retryAttach(const Url& sdUrl, Seconds lastDelay)
+Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync(Seconds lastDelay)
 {
-  return attachToServiceDirectory(sdUrl)
+  if (!(_sdUrl.isValid())) // precondition
+    return makeFutureError<void>(
+        "Cannot try to attach to the service directory, the URL is invalid");
+  return doAttachUnsync()
       .then(_strand.unwrappedSchedulerFor([=](const Future<void>& attachFuture) {
         if (attachFuture.hasError())
         {
-          auto newDelay = std::max(lastDelay * delayIncreaseFactor, maxRetryDelay());
-          qiLogWarning() << "Could not reach ServiceDirectory at URL '" << sdUrl.str() << "'";
-          return delayRetryAttach(sdUrl, newDelay);
+          auto newDelay = std::min(lastDelay * delayIncreaseFactor, maxTryDelay());
+          qiLogWarning() << "Could not attach to the ServiceDirectory at URL '" << _sdUrl.str()
+                         << "', reason: '" << attachFuture.error() << "'";
+          return delayTryAttach(newDelay);
         }
 
-        qiLogInfo() << "Successfully established connection to the ServiceDirectory at URL '"
-                    << sdUrl.str() << "'";
+        qiLogVerbose() << "Successfully established connection to the ServiceDirectory at URL '"
+                       << _sdUrl.str() << "'";
         return futurize();
       })).unwrap();
 }
@@ -670,7 +852,80 @@ std::unique_ptr<Session> ServiceDirectoryProxy::Impl::createServerUnsync()
                               "', crt: '" + _identity->crt + "'" };
   }
   server->setAuthProviderFactory(placeholderIfNull(_authProviderFactory));
+
+  bool connectSucceeded = false;
+
+  auto scopedDisconnectServiceRegistered =
+      ka::scoped(server->serviceRegistered.connect(
+                     _strand.schedulerFor([=](unsigned int localId, const std::string& name) {
+                       mirrorServiceToSDUnsync(localId, name);
+                     })),
+                 [&](const SignalSubscriber& sigSub) {
+                   if (!connectSucceeded)
+                     _server->serviceRegistered.disconnect(sigSub.link());
+                 });
+
+  auto scopedDisconnectServiceUnregistered =
+      ka::scoped(server->serviceUnregistered.connect(
+                     _strand.schedulerFor([=](unsigned int, const std::string& name) {
+                       unmirrorServiceToSDUnsync(name);
+                     })),
+                 [&](const SignalSubscriber& sigSub) {
+                   if (!connectSucceeded)
+                     _server->serviceRegistered.disconnect(sigSub.link());
+                 });
+
+  connectSucceeded = true;
+
   return server;
+}
+
+namespace
+{
+  template <typename T>
+  void printUnexpectedEnumValue(std::ostream& out, T value)
+  {
+    out << "<UNEXPECTED VALUE '" << static_cast<ka::traits::UnderlyingType<T>>(value) << "'>";
+  }
+}
+
+std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::IdValidationStatus status)
+{
+  using Status = ServiceDirectoryProxy::IdValidationStatus;
+  switch (status)
+  {
+    case Status::Done:                 out << "Done";                         break;
+    case Status::PendingCheckOnListen: out << "PendingCheckOnListen";         break;
+    default:                           printUnexpectedEnumValue(out, status); break;
+  };
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::ListenStatus status)
+{
+  using Status = ServiceDirectoryProxy::ListenStatus;
+  switch (status)
+  {
+    case Status::NotListening:      out << "NotListening";                 break;
+    case Status::Listening:         out << "Listening";                    break;
+    case Status::Starting:          out << "Starting";                     break;
+    case Status::PendingConnection: out << "PendingConnection";            break;
+    default:                        printUnexpectedEnumValue(out, status); break;
+  };
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::ConnectionStatus status)
+{
+  using Status = ServiceDirectoryProxy::ConnectionStatus;
+  switch (status)
+  {
+    case Status::NotConnected: out << "NotConnected";                 break;
+    case Status::Connected:    out << "Connected";                    break;
+    case Status::Starting:     out << "Starting";                     break;
+    default:                   printUnexpectedEnumValue(out, status); break;
+  };
+  return out;
 }
 
 }

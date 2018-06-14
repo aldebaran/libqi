@@ -27,6 +27,26 @@ using AuthProviderFactoryPtr = boost::shared_ptr<AuthProviderFactory>;
 class ClientAuthenticatorFactory;
 using ClientAuthenticatorFactoryPtr = boost::shared_ptr<ClientAuthenticatorFactory>;
 
+/// This class implements a proxy to a service directory that clients can connect to in order to
+/// access the service directory services. It does that by propagating the services from the service
+/// directory to itself and its own services back to the service directory.
+///
+/// It can also filter out some of the services to disable their access from clients.
+///
+/// The following diagram roughly explains how the service propagation is implemented:
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// Proxy Client                   Proxy               Service Directory             SD Client
+/// ------------                   -----               -----------------             ---------
+///      |                           |                         |                         |
+///      | --- Register service ---> | --- Mirror to SD -----> |                         |
+///      | --- Unregister service -> | --- Unmirror to SD ---> |                         |
+///      |                           |                         |                         |
+///      |                           | <-- Mirror from SD ---- | <- Register service --- |
+///      |                           | <-- Unmirror from SD -- | <- Unregister service - |
+///      |                           |                         |                         |
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class QI_API ServiceDirectoryProxy
 {
   class Impl;
@@ -80,7 +100,7 @@ public:
   ServiceDirectoryProxy(bool enforceAuth = true);
   ~ServiceDirectoryProxy();
 
-  QI_API_DEPRECATED_MSG("Use `statusChanged` instead.")
+  QI_API_DEPRECATED_MSG("Use `status` instead.")
   Property<bool>& connected;
 
   Property<Status>& status;
@@ -102,6 +122,11 @@ public:
   Future<ServiceFilter> setServiceFilter(ServiceFilter filter
      = ka::poly_constant_function<bool>{ false });
 };
+
+QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::IdValidationStatus);
+QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::ListenStatus);
+QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::ConnectionStatus);
+
 }
 
 #endif // _QIMESSAGING_SERVICEDIRECTORYPROXY_HPP_

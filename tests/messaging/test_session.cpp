@@ -32,6 +32,7 @@ namespace
 {
   static const auto defaultWaitDisconnectedSignalDuration = std::chrono::milliseconds{ 200 };
   static const auto defaultWaitLoopDuration = std::chrono::microseconds{ 50 };
+  static const auto defaultWaitServiceDuration = qi::MilliSeconds{ 500 };
   static const auto dummyServiceName = "serviceTest";
   static const auto invalidUrl = "invalid url";
 
@@ -310,8 +311,21 @@ TEST(TestSession, UnregistersServiceWhenClosed)
                                 willAssignValue(serviceIndex)));
   ASSERT_TRUE(finishesWithValue(server.service(dummyServiceName)));
 
-  ASSERT_TRUE(finishesWithValue(server.close()));
-  ASSERT_FALSE(server.isConnected());
+  // Wait for the service to be available on the service directory. The reason we do this is because
+  // the service being accessible from the server does not imply it has been registered on the
+  // service directory yet (eg when there is a gateway between the two).
+  ASSERT_TRUE(finishesWithValue(sd.waitForService(dummyServiceName)));
+
+  {
+    // Wait for the service to be unregistered from the service directory.
+    SignalSpy unregisteredSpy(sd.serviceUnregistered);
+    auto futSignal = unregisteredSpy.waitUntil(1, defaultWaitServiceDuration).async();
+    ASSERT_TRUE(finishesWithValue(server.close()));
+    ASSERT_FALSE(server.isConnected());
+    ASSERT_TRUE(finishesWithValue(futSignal));
+    ASSERT_TRUE(futSignal.value());
+    ASSERT_EQ(dummyServiceName, unregisteredSpy.lastRecord().args.at(1).toString());
+  }
 
   ASSERT_TRUE(finishesWithError(server.services()));
 

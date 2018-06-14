@@ -18,8 +18,24 @@
 #include <qi/messaging/gateway.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/log.hpp>
+#include <qi/testutils/testutils.hpp>
 
 qiLogCategory("TestGateway");
+
+namespace qi
+{
+
+  template<typename T>
+  std::ostream& operator<<(std::ostream& os, const qi::Object<T>& obj)
+  {
+    if (obj.isValid())
+      os << obj.ptrUid() << "\n";
+    else
+      os << "<INVALID OBJECT>\n";
+    return os;
+  }
+
+}
 
 namespace
 {
@@ -473,5 +489,60 @@ namespace
     danglingObject.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
+  }
+
+  TEST_F(TestGateway, RegisterServiceOnGWRegistersItOnSD)
+  {
+    auto gwServer = connectClientToGw();
+    auto sdClient = connectClientToSd();
+
+    const auto serviceName = "my_service";
+    qi::Object<ObjectUserService> concreteService(boost::make_shared<ObjectUserService>());
+    gwServer->registerService(serviceName, concreteService);
+
+    qi::AnyObject serviceObject;
+    ASSERT_TRUE(test::finishesWithValue(sdClient->waitForService(serviceName)));
+    ASSERT_TRUE(test::finishesWithValue(sdClient->service(serviceName),
+                                        test::willAssignValue(serviceObject)));
+    ASSERT_TRUE(serviceObject.isValid());
+
+    // TODO: It would be good if this worked but right now these two objects don't have the same
+    // PtrUid.
+    // ASSERT_EQ(concreteService, serviceObject);
+  }
+
+  TEST_F(TestGateway, ServiceRegisteredOnGWIsAvailableOnGW)
+  {
+    auto gwServer = connectClientToGw();
+    auto gwClient = connectClientToGw();
+
+    const auto serviceName = "my_service";
+    qi::Object<ObjectUserService> concreteService(boost::make_shared<ObjectUserService>());
+    gwServer->registerService(serviceName, concreteService);
+
+    qi::AnyObject serviceObject;
+    ASSERT_TRUE(test::finishesWithValue(gwClient->waitForService(serviceName)));
+    ASSERT_TRUE(test::finishesWithValue(gwClient->service(serviceName),
+                                        test::willAssignValue(serviceObject)));
+    ASSERT_TRUE(serviceObject.isValid());
+
+    // TODO: It would be good if this worked but right now these two objects don't have the same
+    // PtrUid.
+    // ASSERT_EQ(concreteService, serviceObject);
+  }
+
+  TEST(TestGatewayLateSD, AttachesToSDWhenAvailable)
+  {
+    qi::Gateway gw;
+    auto futAttach = gw.attachToServiceDirectory("tcp://127.0.0.1:59345");
+    ASSERT_TRUE(test::isStillRunning(futAttach, test::willDoNothing(), qi::Seconds{ 2 }));
+
+    qi::Session sd;
+    sd.listenStandalone("tcp://127.0.0.1:59345");
+
+    // It can take a while for the gateway to reconnect if the service directory has not be found
+    // after a long time, so wait for a while.
+    ASSERT_TRUE(test::finishesWithValue(futAttach, test::willDoNothing(), qi::Minutes{ 5 }));
+    ASSERT_EQ(qi::Gateway::ConnectionStatus::Connected, gw.status.get().value().connection);
   }
 }

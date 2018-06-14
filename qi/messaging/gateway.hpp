@@ -21,6 +21,7 @@ private:
 public:
   using IdValidationStatus = ServiceDirectoryProxy::IdValidationStatus;
   using ListenStatus = ServiceDirectoryProxy::ListenStatus;
+  using ConnectionStatus = ServiceDirectoryProxy::ConnectionStatus;
   using Status = ServiceDirectoryProxy::Status;
 
   /**
@@ -31,7 +32,7 @@ public:
 
   ~Gateway();
 
-  QI_API_DEPRECATED_MSG("Use `statusChanged` instead.")
+  QI_API_DEPRECATED_MSG("Use `status` instead.")
   Property<bool>& connected;
 
   Property<Status>& status;

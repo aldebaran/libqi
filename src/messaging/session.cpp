@@ -299,7 +299,7 @@ namespace qi {
     if (!obj)
       return makeFutureError<unsigned int>("registerService: Object is empty");
     if (endpoints().empty()) {
-      qi::Url listeningAddress("tcp://0.0.0.0:0");
+      qi::Url listeningAddress("tcp://127.0.0.1:0");
       qiLogVerbose() << listeningAddress.str() << "." << std::endl;
       listen(listeningAddress);
     }
