@@ -127,7 +127,7 @@ MirroringResult mirrorService(const std::string& name,
     {
       qiLogVerbose() << "Unregistering '" << name << "' (#" << *destId
                      << ") on " << destDesc << " (rollback because an error occurred)";
-      ka::invoke_catch(ka::poly_constant_function<void>{}, // TODO: Log something as verbose when there is
+      ka::invoke_catch(ka::constant_function(), // TODO: Log something as verbose when there is
                                                 // something like LogExceptionError for all levels.
                                                 // For now do nothing, it should be rare enough to
                                                 // be acceptable.
@@ -885,7 +885,7 @@ namespace
   template <typename T>
   void printUnexpectedEnumValue(std::ostream& out, T value)
   {
-    out << "<UNEXPECTED VALUE '" << static_cast<ka::traits::UnderlyingType<T>>(value) << "'>";
+    out << "<UNEXPECTED VALUE '" << static_cast<ka::UnderlyingType<T>>(value) << "'>";
   }
 }
 
