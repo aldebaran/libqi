@@ -120,7 +120,7 @@ public:
   /// will be set to a function that always return false, thus filtering nothing.
   /// @returns The previous filter
   Future<ServiceFilter> setServiceFilter(ServiceFilter filter
-     = ka::poly_constant_function<bool>{ false });
+     = ka::constant_function(false));
 };
 
 QI_API std::ostream& operator<<(std::ostream&, ServiceDirectoryProxy::IdValidationStatus);

@@ -215,7 +215,7 @@ namespace ka {
   /// Relation<T> R0, ReadableForwardRange<T> Rng
   template<typename R0, typename Rng>
   bool is_trichotomic(R0 r, Rng values) {
-    using T = traits::RemoveCvRef<decltype(front(values))>;
+    using T = RemoveCvRef<decltype(front(values))>;
     return is_weak_trichotomic(r, std::equal_to<T>{}, values);
   }
 
@@ -235,7 +235,7 @@ namespace ka {
   /// Relation<T> R, ReadableForwardRange<T> Rng
   template<typename R, typename Rng>
   bool is_total_ordering(R r, Rng values) {
-    using T = traits::RemoveCvRef<decltype(front(values))>;
+    using T = RemoveCvRef<decltype(front(values))>;
     return is_weak_ordering(r, std::equal_to<T>{}, values);
   }
 

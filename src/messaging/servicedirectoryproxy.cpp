@@ -343,7 +343,7 @@ ServiceDirectoryProxy::Impl::Impl(bool enforceAuth)
   : connected{ false, Property<bool>::Getter{}, util::SetAndNotifyIfChanged{}}
   , status{ totallyDisconnected, Property<Status>::Getter{}, util::SetAndNotifyIfChanged{}}
   ,_isEnforcedAuth(enforceAuth)
-  , _serviceFilter{ ka::poly_constant_function<bool>{ false } }
+  , _serviceFilter{ ka::constant_function(false) }
 {
   status.connect(_strand.schedulerFor([this](const Status& newStatus) {
     connected.set(newStatus.isConnected()).async();

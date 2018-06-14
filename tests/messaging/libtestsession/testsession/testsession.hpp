@@ -73,7 +73,6 @@
 #define _TESTS_LIBTESTSESSION_TESTSESSION_HPP_
 
 #include <stdexcept>
-#include <gtest/gtest.h>
 #include <boost/utility/string_ref.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <qi/session.hpp>

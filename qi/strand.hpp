@@ -23,8 +23,6 @@
 #  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
 
-#define QI_DETAIL_FEATURE_STRANDED_UNWRAPPED
-
 namespace qi
 {
 
@@ -180,6 +178,36 @@ public:
    */
   bool isInThisContext() const override;
 
+
+  /// Returns a function which, when called, defers a call to the original
+  /// function to the strand.
+  ///
+  /// If the strand has been joined, the returned function will be a no-op.
+  ///
+  /// @example This code provides a function to set a data from within the
+  /// strand:
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// Strand strand;
+  /// int data = 0;
+  /// auto dataSetter = [&](int i){ data = i };
+  /// auto safeDataSetter = strand.schedulerFor(dataSetter);
+  /// safeDataSetter(42);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// Since the strand prevents concurrent calls, the data is safely set if
+  /// this setter is used.
+  ///
+  /// If the function was already asynchronous (returning a qi::Future<T>),
+  /// the returned function will return a qi::Future<qi::Future<T>>, that you
+  /// can choose to unwrap.
+  ///
+  /// If you want the return type of the transformed function to remain a
+  /// qi::Future<T>, @see unwrappedSchedulerFor.
+  ///
+  /// @note Using std::bind with arguments wrapped in std::ref on a function
+  /// transformed with schedulerFor may have counter-intuitive effects. STL's
+  /// invocation of the bound function will lose the std::ref, so that when
+  /// the deferred call is performed, the reference will not be recognized,
+  /// and the argument will be copied to the target function.
   template <typename F>
   auto schedulerFor(F&& func, boost::function<void()> onFail = {})
       -> detail::Stranded<typename std::decay<F>::type>
@@ -189,6 +217,9 @@ public:
                                                               std::move(onFail));
   }
 
+  /// Returns a function which, when called, defers a call to the original
+  /// function to the strand, but with the return value unwrapped if possible.
+  /// @see schedulerFor for details.
   template <typename F>
   auto unwrappedSchedulerFor(F&& func, boost::function<void()> onFail = {})
       -> detail::StrandedUnwrapped<typename std::decay<F>::type>
@@ -255,12 +286,12 @@ namespace detail
       F& func,
       const boost::function<void()>& onFail,
       boost::weak_ptr<StrandPrivate> weakStrand,
-      Args&&... args)
-      -> decltype(weakStrand.lock()->async(std::bind(func, std::forward<Args>(args)...))) // TODO: remove in C++14
+      Args... args)
+      -> decltype(weakStrand.lock()->async(std::bind(func, std::move(args)...))) // TODO: remove in C++14
   {
     if (auto strand = weakStrand.lock())
     {
-      return strand->async(std::bind(func, std::forward<Args>(args)...));
+      return strand->async(std::bind(func, std::move(args)...));
     }
     else
     {
@@ -308,15 +339,15 @@ namespace detail
   template <typename F>
   struct StrandedUnwrapped
   {
-    QI_API_DEPRECATED_MSG("is_async used")
     static const bool is_async = true;
 
   private:
     Stranded<F> _stranded;
 
   public:
-    StrandedUnwrapped(F&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
-      : _stranded(std::forward<F>(f), strand, onFail)
+    template <typename FF>
+    StrandedUnwrapped(FF&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
+      : _stranded(std::forward<FF>(f), strand, onFail)
     {}
 
     template <typename... Args>

@@ -12,7 +12,9 @@
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <qi/log.hpp>
+#include <qi/tag.hpp>
 #include <ka/conceptpredicate.hpp>
+#include <ka/src.hpp>
 #include "test_future.hpp"
 
 qiLogCategory("test");
@@ -1334,14 +1336,204 @@ TEST(FutureSrc, SrcFutureUnitFutureCompose)
 #if !KA_COMPILER_VS2013_OR_BELOW
   using namespace qi;
   using namespace ka;
-  using namespace ka::traits;
   using namespace ka::functional_ops;
   SrcFuture src;
   UnitFuture unit;
-  static_assert(Equal<decltype(src * unit), id_transfo>::value, "");
-  static_assert(Equal<decltype(unit * src), id_transfo>::value, "");
-  id_transfo _1;
+  static_assert(Equal<decltype(src * unit), id_transfo_t>::value, "");
+  static_assert(Equal<decltype(unit * src), id_transfo_t>::value, "");
+  id_transfo_t _1;
   ASSERT_EQ(src * unit, _1);
   ASSERT_EQ(unit * src, _1);
 #endif
+}
+
+namespace
+{
+  // Makes destruction visible from outside, by inserting the address of
+  // destroyed objects into a persistent set.
+  // The user is responsible for the set's lifetime and synchronization.
+  struct X
+  {
+    std::set<const X*>* destroyed;
+    X(std::set<const X*>* destroyed = nullptr) : destroyed(destroyed)
+    {
+    }
+    ~X()
+    {
+      if (destroyed) destroyed->insert(this);
+    }
+  };
+}
+
+namespace
+{
+  struct UnitFutureSync
+  {
+    // Constructor added because of an error with Clang on Mac.
+    // TODO: Remove this constructor when Clang is upgraded.
+    UnitFutureSync()
+    {
+    }
+
+    template<typename T>
+    qi::FutureSync<ka::Decay<T>> operator()(T&& t) const
+    {
+      return qi::FutureSync<ka::Decay<T>>{std::forward<T>(t)};
+    }
+
+    qi::FutureSync<void> operator()() const
+    {
+      return qi::FutureSync<void>{nullptr};
+    }
+  };
+
+  static const qi::MilliSeconds longTimeout = qi::Seconds{100};
+}
+
+TEST(Future, ValueThrowsOnTimeoutAsMilliSeconds)
+{
+  using namespace qi;
+  using namespace std::chrono;
+  const std::size_t ms = 100;
+  Promise<int> prom;
+
+  const auto begin = steady_clock::now();
+  EXPECT_THROW(prom.future().value(MilliSeconds{ms}), FutureException);
+  const auto end = steady_clock::now();
+
+  // Tests that we have waited at least the required duration.
+  const auto delta = duration_cast<milliseconds>(end - begin).count();
+  ASSERT_GE(delta, ms);
+}
+
+TEST(Future, ValueTimeoutAsMilliSeconds)
+{
+  using namespace qi;
+  const int i = 232143;
+  Promise<int> prom;
+  std::thread t{[=]() mutable {
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+    prom.setValue(i);
+  }};
+  EXPECT_EQ(i, prom.future().value(longTimeout));
+  t.join();
+}
+
+TEST(Future, ValueTimeoutAsInfinity)
+{
+  using namespace qi;
+  const int i = 232143;
+  Promise<int> prom;
+  std::thread t{[=]() mutable {
+    std::this_thread::sleep_for(std::chrono::seconds{1});
+    prom.setValue(i);
+  }};
+  EXPECT_EQ(i, prom.future().value(Infinity{}));
+  t.join();
+}
+
+template<typename T>
+struct FutureValue : testing::Test {
+};
+
+using unit_types = testing::Types<qi::UnitFuture, UnitFutureSync>;
+
+// Make `FutureValue` tests with `Future` and `FutureSync`.
+TYPED_TEST_CASE(FutureValue, unit_types);
+
+namespace
+{
+  template<typename T>
+  T* underlyingAddress(T& x)
+  {
+    return &x;
+  }
+
+  template<typename T>
+  T* underlyingAddress(T* x)
+  {
+    return x;
+  }
+
+  template<typename T>
+  T* underlyingAddress(const boost::shared_ptr<T>& x)
+  {
+    return x.get();
+  }
+} // namespace
+
+// Illustrates a case where we get a dangling reference on Future's value.
+// See `FutureValue.SafeValue` for a safe alternative.
+TYPED_TEST(FutureValue, UnsafeValue)
+{
+  using UnitFuture = TypeParam;
+  using namespace qi;
+  std::set<const X*> destroyed;
+  const X a(&destroyed);
+  const UnitFuture future;
+
+  // Creates a Future from `a` and returns its value *by constant reference*.
+  const X& b = future(a).value();
+
+  // Here the future has been destroyed, and so is its underlying `X` value.
+  // Therefore, `b` is dangling reference.
+  const bool bIsDestroyed = destroyed.find(underlyingAddress(b)) != destroyed.end();
+  EXPECT_TRUE(bIsDestroyed);
+}
+
+namespace
+{
+  /// Function<Readable<T> (qi::Future<T>)> F0,
+  /// Function<qi::Future<T> (T)> F1
+  template<typename F0, typename F1>
+  void testSafeValue(F0 safeValue, F1 future)
+  {
+    using namespace qi;
+    using ka::src;
+    std::set<const X*> destroyed;
+    const X a(&destroyed);
+
+    // Creates a Future from `a` and returns its value in a safe way (by copy,
+    // by `shared_ptr`, etc.).
+    const auto& b = safeValue(future(a));
+
+    // Here the future has been destroyed, but `safeValue` offers a guarantee
+    // that `b` is still valid.
+    const bool bIsDestroyed = destroyed.find(underlyingAddress(b)) != destroyed.end();
+    EXPECT_FALSE(bIsDestroyed);
+  }
+}
+
+// Safe alternative to `FutureValue.UnsafeValue`. The only difference is the
+// use of `valueCopy()` instead of `value()`.
+TYPED_TEST(FutureValue, SafeValue)
+{
+  using UnitFuture = TypeParam;
+  using namespace qi;
+  SCOPED_TRACE("SafeValue");
+  testSafeValue([](const Future<X>& f) {return f.valueCopy();}, UnitFuture{});
+  testSafeValue([](const Future<X>& f) {return f.valueCopy(longTimeout);}, UnitFuture{});
+  testSafeValue([](const Future<X>& f) {return f.valueCopy(Infinity{});}, UnitFuture{});
+}
+
+// `*` behaves as `valueCopy`.
+TYPED_TEST(FutureValue, OperatorStar)
+{
+  using UnitFuture = TypeParam;
+  using namespace qi;
+  SCOPED_TRACE("OperatorStar");
+  testSafeValue([](const Future<X>& f) {return *f;}, UnitFuture{});
+}
+
+// Second safe alternative to `FutureValue.UnsafeValue`. The only difference is
+// the use of `valueSharedPtr()` instead of `value()`: the returned `shared_ptr`
+// extends the lifetime of the `Future`.
+TYPED_TEST(FutureValue, SafeValuePtr)
+{
+  using UnitFuture = TypeParam;
+  using namespace qi;
+  SCOPED_TRACE("SafeValuePtr");
+  testSafeValue([](const Future<X>& f) {return f.valueSharedPtr();}, UnitFuture{});
+  testSafeValue([](const Future<X>& f) {return f.valueSharedPtr(longTimeout);}, UnitFuture{});
+  testSafeValue([](const Future<X>& f) {return f.valueSharedPtr(Infinity{});}, UnitFuture{});
 }

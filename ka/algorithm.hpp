@@ -45,19 +45,19 @@ namespace detail {
 
   /// ContiguousLikeSequence<T> S, Predicate<T> P
   template<typename S, typename P>
-  void erase_if_dispatch(S& s, P const& p, traits::True is_contiguous_like, traits::False is_list) {
+  void erase_if_dispatch(S& s, P const& p, true_t is_contiguous_like, false_t is_list) {
     erase_if_contiguous_like(s, p);
   }
 
   /// ListSequence<T> S, Predicate<T> P
   template<typename S, typename P>
-  void erase_if_dispatch(S& s, P const& p, traits::False is_contiguous_like, traits::True is_list) {
+  void erase_if_dispatch(S& s, P const& p, false_t is_contiguous_like, true_t is_list) {
     erase_if_list(s, p);
   }
 
   /// Sequence<T> S, Predicate<T> P
   template<typename S, typename P>
-  void erase_if_dispatch(S& s, P const& p, traits::False is_contiguous_like, traits::False is_list) {
+  void erase_if_dispatch(S& s, P const& p, false_t is_contiguous_like, false_t is_list) {
     erase_if_default(s, p);
   }
 } // namespace detail
@@ -67,7 +67,7 @@ namespace detail {
 /// Optimizations are performed for contiguous-like sequences (vector, deque...)
 /// and for list sequences (list, forward_list).
 /// If you want to take advantage on this for your own containers, specialize
-/// traits::IsContiguousLike or traits::IsList.
+/// IsContiguousLike or IsList.
 /// Note: It would be nice to return the predicate, because it could be stateful
 /// and for example count the number of true elements, but it's not possible because
 /// underlying stl algorithms and member functions do not return the predicate...
@@ -75,7 +75,7 @@ namespace detail {
 /// Sequence<T> S, Predicate<T> P
 template<typename S, typename P>
 void erase_if(S& s, P const& p) {
-  detail::erase_if_dispatch(s, p, traits::IsContiguousLike<S>{}, traits::IsList<S>{});
+  detail::erase_if_dispatch(s, p, IsContiguousLike<S>{}, IsList<S>{});
 }
 
 } // namespace ka

@@ -594,6 +594,8 @@ namespace qi {
       QI_LOG_DEBUG_SOCKET(this) << "Socket must be connected to send().";
       return false;
     }
+    // NOTE: Should we specify an `onSent` callback and stop sending if an error
+    // occurred?
     asConnected(_state).send(msg, _ssl);
     return true;
   }

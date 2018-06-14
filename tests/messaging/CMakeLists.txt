@@ -1,3 +1,6 @@
+# A helper library to test two sessions communicating in various modes
+add_subdirectory(libtestsession)
+
 if(QI_WITH_TESTS)
 
   qi_create_module(naoqi.testanymodule        SRC testanymodule.cpp        SHARED DEPENDS QI NO_INSTALL)
@@ -46,9 +49,6 @@ if(QI_WITH_TESTS)
 
     TIMEOUT 120
   )
-
-  # A helper library to test two sessions communicating in various modes
-  add_subdirectory(libtestsession)
 
   # Tests using two sessions communicating in various modes
   qimessaging_create_session_test(

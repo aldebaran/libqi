@@ -16,8 +16,8 @@
 std::string fsconcat(const std::vector<std::string>& paths);
 
 template <typename... S,
-          typename = ka::traits::EnableIf<
-              ka::traits::Conjunction<std::is_convertible<S, std::string>...>::value>>
+          typename = ka::EnableIf<
+              ka::Conjunction<std::is_convertible<S, std::string>...>::value>>
 std::string fsconcat(S&&... paths)
 {
   return fsconcat(

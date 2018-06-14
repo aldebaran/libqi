@@ -67,7 +67,7 @@ TYPED_TEST(FunctionalSemiLift0, NonVoidCodomain)
   };
   auto f = semilift(positive, unit);
 
-  static_assert(traits::Equal<T, decltype(f(0))>::value, "");
+  static_assert(Equal<T, decltype(f(0))>::value, "");
   ASSERT_TRUE(equal(T{true}, f(1)));
   ASSERT_TRUE(equal(T{false}, f(-1)));
 }
@@ -86,7 +86,6 @@ TYPED_TEST_CASE(FunctionalSemiLift1, void_types);
 TYPED_TEST(FunctionalSemiLift1, VoidCodomain)
 {
   using namespace ka;
-  using namespace ka::traits;
   using T = TypeParam;
 
   auto noop = [](int) {
@@ -101,7 +100,6 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomain)
 TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain)
 {
   using namespace ka;
-  using namespace ka::traits;
   using T = TypeParam;
 
   auto noop = [] {

@@ -19,6 +19,7 @@ qi_create_gmock(
   "test_bind.cpp"
   "test_buffer.cpp"
   "test_bufferreader.cpp"
+  "test_either.cpp"
   "test_errorhandling.cpp"
   "test_eventloop.cpp"
   "test_flags.cpp"

@@ -18,10 +18,10 @@ namespace qi
   ///
   /// This overload is only available for enum types through SFINAE because
   /// std::underlying_type has undefined behavior for non-enum types.
-  template <typename E, typename = ka::traits::EnableIf<std::is_enum<E>::value>>
-  auto underlying(const E& e) -> ka::traits::UnderlyingType<E>
+  template <typename E, typename = ka::EnableIf<std::is_enum<E>::value>>
+  auto underlying(const E& e) -> ka::UnderlyingType<E>
   {
-    return static_cast<ka::traits::UnderlyingType<E>>(e);
+    return static_cast<ka::UnderlyingType<E>>(e);
   }
 
   /// Class providing type-safe flags semantics for bitwise combinable types.
@@ -61,7 +61,7 @@ namespace qi
   {
   public:
     using type = Type;
-    using underlying_type = ka::traits::Decay<decltype(underlying(std::declval<Type>()))>;
+    using underlying_type = ka::Decay<decltype(underlying(std::declval<Type>()))>;
 
   private:
     explicit Flags(underlying_type value)

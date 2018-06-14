@@ -46,7 +46,6 @@ TEST(UtilityFwd, RealWord) {
 
 TEST(UtilityDeclref, Basic) {
   using namespace ka;
-  using namespace ka::traits;
   static_assert(Equal<decltype(declref<int>()), int&>::value, "");
   static_assert(Equal<decltype(declref<int&>()), int&>::value, ""); // Ref collapse
   static_assert(Equal<decltype(declref<int&&>()), int&>::value, ""); // Ref collapse
@@ -67,7 +66,7 @@ namespace test {
 } // namespace test
 
 TEST(UtilityDeclref, RealWorld) {
-  using namespace ka::traits;
+  using namespace ka;
   using namespace test;
   static_assert(Equal<x_t<int>::type, int&>::value, "");
   static_assert(Equal<x_t<int [2]>::type, int*>::value, "");
@@ -75,7 +74,6 @@ TEST(UtilityDeclref, RealWorld) {
 
 TEST(UtilityDeclcref, Basic) {
   using namespace ka;
-  using namespace ka::traits;
   static_assert(Equal<decltype(declcref<int>()), const int&>::value, "");
 
   // A ref itself can't be const and you can't have a ref on a ref.

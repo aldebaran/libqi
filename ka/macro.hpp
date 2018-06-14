@@ -31,4 +31,66 @@
 /// See isRegular() in conceptpredicates.hpp for a use example.
 #define KA_TRUE_OR_RETURN_FALSE( expr__ ) if (!(expr__)) return false
 
+/// Derives (i.e. generates) a function that creates a value of a *non-template
+/// type*. This kind of functions are called here "constructor functions".
+///
+/// Note: The type name is deduced from the function name, by appending "_t".
+///
+/// Example: Deriving a constructor function
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// struct my_stuff_t {
+///   // `my_stuff_t` is constructible from an `int` and a `bool`.
+///   ...
+/// };
+///
+/// KA_DERIVE_CTOR_FUNCTION(my_stuff)
+///
+/// // In user code:
+/// auto x = my_stuff(5, true); // `x` has type `my_stuff_t`
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// Precondition: 'ka/utility.hpp' has been included.
+#define KA_DERIVE_CTOR_FUNCTION(FUNCTION)        \
+  template<typename... Args>                     \
+  FUNCTION##_t FUNCTION(Args&&... args) {        \
+    return FUNCTION##_t{ka::fwd<Args>(args)...}; \
+  }
+
+/// Derives (i.e. generates) a function that creates a value of a *template
+/// type*.
+///
+/// Template parameters are obtained from function arguments after decaying.
+///
+/// This macro is the template alternative to `KA_DERIVE_CTOR_FUNCTION`.
+///
+/// Example: Deriving a constructor function for a template type.
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// template<typename T, typename U>
+/// struct my_stuff_t {
+///   // `my_stuff_t` is constructible from a `T` and a `U`.
+///   ...
+/// };
+///
+/// KA_DERIVE_CTOR_FUNCTION_TEMPLATE(my_stuff)
+///
+/// // In user code:
+/// auto x = my_stuff(5, true); // `x` has type `my_stuff_t<int, bool>`
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+/// Precondition: 'ka/typetraits.hpp' and 'ka/utility.hpp' have been included.
+#define KA_DERIVE_CTOR_FUNCTION_TEMPLATE(FUNCTION)                            \
+  template<typename... Args>                                                  \
+  FUNCTION##_t<ka::Decay<Args>...> FUNCTION(Args&&... args) {         \
+    return FUNCTION##_t<ka::Decay<Args>...>{ka::fwd<Args>(args)...};  \
+  }
+
+/// Derives (i.e. generates) a function that creates a value of a *template
+/// type* from no argument (`void`).
+///
+/// This macro is the `void` alternative to `KA_DERIVE_CTOR_FUNCTION_TEMPLATE`.
+#define KA_DERIVE_CTOR_FUNCTION_TEMPLATE_VOID(FUNCTION) \
+  inline FUNCTION##_t<void> FUNCTION() {                \
+    return FUNCTION##_t<void>{};                        \
+  }
+
 #endif // KA_MACRO_HPP

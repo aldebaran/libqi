@@ -85,6 +85,7 @@ set(QI_H qi/detail/async.hxx
          qi/atomic.hpp
          qi/buffer.hpp
          qi/clock.hpp
+         qi/either.hpp
          qi/flags.hpp
          qi/future.hpp
          qi/futuregroup.hpp
@@ -130,8 +131,9 @@ set(QI_H qi/detail/async.hxx
          qi/messaging/sock/resolve.hpp
          qi/messaging/sock/send.hpp
          qi/messaging/sock/traits.hpp
-         qi/uuid.hpp
-         qi/ptruid.hpp)
+         qi/ptruid.hpp
+         qi/tag.hpp
+         qi/uuid.hpp)
 
 set(QI_C src/dlfcn.cpp
          src/path.cpp

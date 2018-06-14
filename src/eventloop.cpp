@@ -464,7 +464,7 @@ namespace qi {
   // boost::synchronized_value<P> PP
   // Procedure<U (P)> Proc1
   // Procedure<U ()> Proc2
-  template<typename PP, typename Proc1, typename Proc2 = ka::no_op_procedure<void()>>
+  template<typename PP, typename Proc1, typename Proc2 = ka::constant_function_t<void>>
     auto safeCall(PP& syncPtr, Proc1&& proc, Proc2&& onFail = Proc2{})
       -> decltype(std::forward<Proc1>(proc)(syncPtr.get()))
   {

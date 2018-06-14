@@ -45,7 +45,7 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_1(ark_mutable_t, m_)
 
   // Custom:
-    template<typename T, typename = traits::EnableIfNotBaseOf<ark_mutable_t, T>>
+    template<typename T, typename = EnableIfNotBaseOf<ark_mutable_t, T>>
     BOOST_CONSTEXPR
     explicit ark_mutable_t(T&& t) KA_NOEXCEPT_EXPR(M{fwd<T>(t)})
       : m_(fwd<T>(t)) {
@@ -67,8 +67,8 @@ namespace ka {
   };
 
   template<typename M>
-  ark_mutable_t<traits::Decay<M>> make_mutable(M&& m) {
-    return ark_mutable_t<traits::Decay<M>>{fwd<M>(m)};
+  ark_mutable_t<Decay<M>> make_mutable(M&& m) {
+    return ark_mutable_t<Decay<M>>{fwd<M>(m)};
   }
 
 // TODO: Put this namespace back when get rid of VS2013.

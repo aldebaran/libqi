@@ -1,3 +1,5 @@
+#include <chrono>
+#include <future>
 /*
 ** Copyright (C) 2014 Aldebaran
 */
@@ -19,6 +21,7 @@
 qiLogCategory("test");
 
 const qi::MilliSeconds usualTimeout{ 200 };
+const std::chrono::milliseconds stdUsualTimeout{usualTimeout.count()};
 
 void setValueWait(boost::mutex& mutex, int waittime, int& i, int v)
 {
@@ -45,6 +48,68 @@ TEST(TestStrand, StrandSimple)
   qi::sleepFor(usualTimeout);
   EXPECT_EQ(i, 2);
 }
+
+
+TEST(TestStrand, StrandSchedulerForRunsAndEnds)
+{
+  qi::Strand strand;
+  std::promise<void> promise;
+  auto stranded = strand.schedulerFor([&]{ promise.set_value(); });
+  stranded();
+  auto status = promise.get_future().wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+}
+
+
+TEST(TestStrand, StrandSchedulerForWithBoundReference)
+{
+  qi::Strand strand;
+  std::promise<int> promise;
+  int expected = 42;
+  auto function = [&](int& n){ promise.set_value(n); };
+  auto bound = std::bind(std::move(function), std::ref(expected));
+  auto stranded = strand.schedulerFor(std::move(bound));
+  expected = 13;
+  stranded();
+  auto future = promise.get_future();
+  auto status = future.wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+  EXPECT_EQ(expected, future.get());
+}
+
+
+TEST(TestStrand, StrandSchedulerForWithMoveOnlyBoundReference)
+{
+  qi::Strand strand;
+  std::promise<int> promise;
+  std::unique_ptr<int> expected{new int{42}};
+  auto function = [&](std::unique_ptr<int>& n){ promise.set_value(*n); };
+  auto bound = std::bind(std::move(function), std::ref(expected));
+  auto stranded = strand.schedulerFor(std::move(bound));
+  *expected = 13;
+  stranded();
+  auto future = promise.get_future();
+  auto status = future.wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+  EXPECT_EQ(*expected, future.get());
+}
+
+
+TEST(TestStrand, StrandSchedulerForWithMoveOnlyArg)
+{
+  qi::Strand strand;
+  std::promise<int> promise;
+  std::unique_ptr<int> expected{new int{42}};
+  auto function = [&](std::unique_ptr<int>& n){ promise.set_value(*n); };
+  auto stranded = strand.schedulerFor(std::move(function));
+  *expected = 13;
+  stranded(std::ref(expected)); // stranded(expected) must not compile
+  auto future = promise.get_future();
+  auto status = future.wait_for(stdUsualTimeout);
+  EXPECT_EQ(std::future_status::ready, status);
+  EXPECT_EQ(*expected, future.get());
+}
+
 
 static void fail()
 {
@@ -527,4 +592,41 @@ TEST(TestStrand, JoinNoThrowUnknownException)
   E error{5};
   TestStrand<E> strand{error};
   ASSERT_EQ(Strand::OptionalErrorMessage{ka::exception_message::unknown_error()}, strand.join(std::nothrow));
+}
+
+TEST(TestStrand, build_schedulerFor)
+{
+  qi::Strand strand;
+
+  // rvalue
+  auto f1 = strand.schedulerFor([](int){});
+  (void) f1;
+
+  // lvalue
+  auto func = [](int){};
+  auto f2 = strand.schedulerFor(func);
+  (void) f2;
+}
+
+TEST(TestStrand, build_unwrappedSchedulerFor)
+{
+  qi::Strand strand;
+
+  // rvalue
+  auto f1 = strand.unwrappedSchedulerFor([](int){});
+  (void) f1;
+
+  // lvalue
+  auto func = [](int){};
+  auto f2 = strand.unwrappedSchedulerFor(func);
+  (void) f2;
+
+  // rvalue not convertible to function pointer
+  auto f3 = strand.unwrappedSchedulerFor([this](int) {});
+  (void)f3;
+
+  // lvalue not convertible to function pointer
+  auto bigfunc = [this](int) {};
+  auto f4 = strand.unwrappedSchedulerFor(bigfunc);
+  (void)f4;
 }

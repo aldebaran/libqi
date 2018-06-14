@@ -8,11 +8,11 @@
 include_directories(".")
 
 qi_stage_dir(".")
-qi_install_test_data("share/qi/server.crt" SUBFOLDER qi)
-qi_install_test_data("share/qi/server.key" SUBFOLDER qi)
+qi_install_data("share/qi/server.crt" SUBFOLDER qi)
+qi_install_data("share/qi/server.key" SUBFOLDER qi)
 
 function(qimessaging_create_session_test name)
-  if (DEFINED BUILD_TESTS AND NOT BUILD_TESTS)
+  if ((DEFINED BUILD_TESTS AND NOT BUILD_TESTS) OR NOT QI_WITH_TESTS)
     return()
   endif()
   cmake_parse_arguments(ARG "" "TIMEOUT" "ARGUMENTS;SRC;DEPENDS" ${ARGN})
@@ -32,11 +32,13 @@ function(qimessaging_create_session_test name)
     TIMEOUT ${ARG_TIMEOUT_SSL} GMOCK_TEST)
 endfunction()
 
-qi_create_lib(
-  testsession
-  STATIC NO_INSTALL
+
+set(TESTSESSION_H
   testsession/testsession.hpp
   testsession/testsessionpair.hpp
+)
+
+set(TESTSESSION_C
   src/testmode.cpp
   src/testsessionpair.cpp
   src/testsession.cpp
@@ -51,19 +53,29 @@ qi_create_lib(
   src/sessioninitializer.cpp
   src/defaultservice.hpp
   src/defaultservice.cpp
+)
+
+qi_install_header(${TESTSESSION_H} KEEP_RELATIVE_PATHS)
+
+qi_create_lib(
+  testsession
+  STATIC
+  ${TESTSESSION_H} ${TESTSESSION_C}
   DEPENDS QI
 )
 
 qi_stage_lib(testsession)
 
-qi_create_gtest(
-  test_testsession
+if(QI_WITH_TESTS)
+  qi_create_gtest(
+    test_testsession
 
-  "test/test_testsession.cpp"
+    "test/test_testsession.cpp"
 
-  DEPENDS
-  qi
-  testsession
+    DEPENDS
+    qi
+    testsession
 
-  TIMEOUT 30
-)
+    TIMEOUT 30
+  )
+endif()

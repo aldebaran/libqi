@@ -93,14 +93,14 @@ namespace ka {
   public:
     /// With U&& u, the following is valid:
     ///   boost::variant<M, T>(fwd<U>(u))
-    template<typename U, typename = traits::EnableIfNotBaseOf<mutable_store_t, U>>
+    template<typename U, typename = EnableIfNotBaseOf<mutable_store_t, U>>
     explicit mutable_store_t(U&& u) KA_NOEXCEPT_EXPR(variant_type(fwd<U>(u)))
         : data(fwd<U>(u)) {
     }
 
     /// With boost::variant<M, T> v, U&& u, the following is valid:
     ///   v = fwd<U>(u);
-    template<typename U, typename = traits::EnableIfNotBaseOf<mutable_store_t, U>>
+    template<typename U, typename = EnableIfNotBaseOf<mutable_store_t, U>>
     mutable_store_t& operator=(U&& u) KA_NOEXCEPT_EXPR(data = fwd<U>(u)) {
       data = fwd<U>(u);
       return *this;
@@ -145,19 +145,19 @@ namespace ka {
 
   namespace detail {
     template<typename T>
-    mutable_store_t<traits::Decay<T>, traits::Decay<T>*> mutable_store_fwd_impl(T&& t, std::true_type /*isRValue*/) {
+    mutable_store_t<Decay<T>, Decay<T>*> mutable_store_fwd_impl(T&& t, std::true_type /*isRValue*/) {
       // rvalue: move it inside the mutable.
-      return mutable_store_t<traits::Decay<T>, traits::Decay<T>*>{std::move(t)};
+      return mutable_store_t<Decay<T>, Decay<T>*>{std::move(t)};
     }
 
     template<typename T>
-    mutable_store_t<traits::Decay<T>, traits::Decay<T>*> mutable_store_fwd_impl(T&& t, std::false_type /*isRValue*/) {
+    mutable_store_t<Decay<T>, Decay<T>*> mutable_store_fwd_impl(T&& t, std::false_type /*isRValue*/) {
       // Not an rvalue (i.e it is an lvalue): put the address inside the mutable.
-      return mutable_store_t<traits::Decay<T>, traits::Decay<T>*>{&t};
+      return mutable_store_t<Decay<T>, Decay<T>*>{&t};
     }
 
     template<typename T>
-    using Raw = traits::RemovePointer<traits::Decay<T>>;
+    using Raw = RemovePointer<Decay<T>>;
   } // namespace detail
 
   /// Helper function to perform type-deduction for `mutable_store_t`.
@@ -215,7 +215,7 @@ namespace ka {
   /// If you just want to construct a `mutable_store_t` with type deduction, simply
   /// use `makemutable_store_t`.
   template<typename T>
-  mutable_store_t<traits::Decay<T>, traits::Decay<T>*> mutable_store_fwd(T&& t) {
+  mutable_store_t<Decay<T>, Decay<T>*> mutable_store_fwd(T&& t) {
     return detail::mutable_store_fwd_impl(std::forward<T>(t), std::is_rvalue_reference<T&&>{});
   }
 

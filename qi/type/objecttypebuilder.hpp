@@ -305,7 +305,8 @@ public:
     ADVERTISE(hasError);
     ADVERTISE(isCanceled);
     ADVERTISE(cancel);
-    ADVERTISE(value);
+    b.advertiseMethod("value",
+      (const typename FutT<T>::ValueType& (FutT<T>::*)(int) const) &FutT<T>::value);
     ADVERTISE(waitUntil);
     ADVERTISE(waitFor);
     ADVERTISE(isRunning);

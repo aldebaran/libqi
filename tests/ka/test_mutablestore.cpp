@@ -42,7 +42,7 @@ namespace ka {
     }
 
     template<typename... Args>
-    traits::ResultOf<T& (Args&&...)> operator()(Args&&... args) const
+    ResultOf<T& (Args&&...)> operator()(Args&&... args) const
       BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(ref(std::forward<Args>(args)...))) {
       return ref(std::forward<Args>(args)...);
     }
@@ -101,7 +101,7 @@ TEST(MutableStoreRegular, Direct) {
   using namespace ka;
   using namespace functional_ops;
   using M = mutable_store_t<int, int*>;
-  ASSERT_TRUE(is_regular(bounded_range(M{0}, M{10}, incr<int&>{} * src_t{})));
+  ASSERT_TRUE(is_regular(bounded_range(M{0}, M{10}, incr_t{} * src_t{})));
 }
 
 TEST(MutableStoreRegular, Indirect) {

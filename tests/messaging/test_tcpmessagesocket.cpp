@@ -125,7 +125,7 @@ struct SignalPromises
 struct SignalConnection
 {
   SignalPromises promises;
-  std::function<void()> disconnect = ka::no_op_procedure<void()>{};
+  std::function<void()> disconnect = ka::constant_function();
 
   ~SignalConnection()
   {

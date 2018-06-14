@@ -65,7 +65,7 @@ namespace ka {
   /// InputIterator<T> I, with T having the size of one byte
   template<typename I>
   sha1_digest_t sha1(I b, I e) {
-    static_assert(sizeof(traits::Decay<decltype(*b)>) == 1,
+    static_assert(sizeof(Decay<decltype(*b)>) == 1,
       "sha1: element size is different than 1.");
     SHA_CTX x;
     if (!SHA1_Init(&x)) {

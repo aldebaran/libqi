@@ -1,4 +1,4 @@
-qi_create_gtest(
+qi_create_gmock(
   test_type
 
   SRC

@@ -140,7 +140,7 @@ namespace qi
   ///
   /// Procedure<void ()> Proc, Trackable T
   template<typename Proc, typename T>
-  TrackWithFallbackTransfo<ka::traits::Decay<Proc>, T> trackWithFallbackTransfo(Proc&& fallback, T* t)
+  TrackWithFallbackTransfo<ka::Decay<Proc>, T> trackWithFallbackTransfo(Proc&& fallback, T* t)
   {
     return {std::forward<Proc>(fallback), t};
   }
