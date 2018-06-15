@@ -119,7 +119,7 @@ namespace qi
             {
               AnyReference deref = *const_cast<AnyReference&>(arg);
               if (deref.type() == target[ti] || deref.type()->info() == target[ti]->info())
-                v = detail::UniqueAnyReference{ deref, detail::DeferOwnership };
+                v = detail::UniqueAnyReference{ deref, detail::DeferOwnership{} };
               else
                 v = deref.convert(target[ti]);
             }

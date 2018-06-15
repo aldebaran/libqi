@@ -430,8 +430,7 @@ public:
 namespace detail
 {
 
-struct DeferOwnership_tag {};
-extern const DeferOwnership_tag DeferOwnership;
+struct DeferOwnership {};
 
 class UniqueAnyReference
 {
@@ -445,7 +444,7 @@ public:
     , owned{ ref.isValid() }
   {}
 
-  explicit UniqueAnyReference(AnyReference ref, DeferOwnership_tag)
+  explicit UniqueAnyReference(AnyReference ref, DeferOwnership)
     : ref{ ref }
     , owned{ false }
   {}
@@ -495,10 +494,10 @@ public:
     return ka::exchange(ref, AnyReference{});
   }
 
-  UniqueAnyReference release(DeferOwnership_tag)
+  UniqueAnyReference release(DeferOwnership)
   {
     owned = false;
-    return UniqueAnyReference{ ka::exchange(ref, AnyReference{}), DeferOwnership };
+    return UniqueAnyReference{ ka::exchange(ref, AnyReference{}), DeferOwnership{} };
   }
 
   void reset(AnyReference newRef = {})
@@ -507,7 +506,7 @@ public:
     ref = newRef;
   }
 
-  void reset(AnyReference newRef, DeferOwnership_tag)
+  void reset(AnyReference newRef, DeferOwnership)
   {
     owned = false;
     ref = newRef;

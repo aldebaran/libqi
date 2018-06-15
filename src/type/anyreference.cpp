@@ -51,7 +51,6 @@ namespace
 
 namespace detail
 {
-  const DeferOwnership_tag DeferOwnership{};
 
   UniqueAnyReference AnyReferenceBase::convert(DynamicTypeInterface* targetType) const
   {
@@ -60,7 +59,7 @@ namespace detail
 
     // same-type check (not done before, useful mainly for AnyObject)
     if (targetType->info() == type()->info())
-      return UniqueAnyReference{ *this, DeferOwnership };
+      return UniqueAnyReference{ *this, DeferOwnership{} };
 
     return ka::invoke_catch(DefaultUniqueAnyRef{},
                             [&] {
@@ -88,7 +87,7 @@ namespace detail
       {
         // However, we need the full check for exact match here
         if (_type->info() == targetType->info())
-          return UniqueAnyReference{ *this, DeferOwnership };
+          return UniqueAnyReference{ *this, DeferOwnership{} };
         else
         {
           qiLogDebug() << "Conversion between non-object pointers not supported";
@@ -118,7 +117,7 @@ namespace detail
 
         UniqueAnyReference result{ AnyReference{ targetType } };
         targetType->setPointee(&result->_value, ptr);
-        return result.release(DeferOwnership);
+        return result.release(DeferOwnership{});
       });
     }
     case TypeKind_Object:
@@ -131,7 +130,7 @@ namespace detail
         void* ptr = gv->_type->ptrFromStorage(&gv->_value);
         UniqueAnyReference result{ AnyReference{ targetType } };
         targetType->setPointee(&result->_value, ptr);
-        return result.release(DeferOwnership);
+        return result.release(DeferOwnership{});
       });
     }
     default:
@@ -193,7 +192,7 @@ namespace detail
     case TypeKind_String:
     {
       if (targetType->info() == _type->info())
-        return UniqueAnyReference{ *this, DeferOwnership };
+        return UniqueAnyReference{ *this, DeferOwnership{} };
       return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
         UniqueAnyReference result{ AnyReference{ targetType } };
         StringTypeInterface::ManagedRawString v =
@@ -225,7 +224,7 @@ namespace detail
     case TypeKind_Raw:
     {
       if (targetType->info() == _type->info())
-        return UniqueAnyReference{ *this, DeferOwnership };
+        return UniqueAnyReference{ *this, DeferOwnership{} };
       return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
         UniqueAnyReference result{ AnyReference { targetType } };
         std::pair<char*, size_t> v = static_cast<RawTypeInterface*>(_type)->get(_value);
@@ -793,7 +792,7 @@ namespace detail
       << targetType->infoString() << '(' << targetType->kind() << ')' ;
 
     if (_type == targetType)
-      return UniqueAnyReference{ *this, DeferOwnership };
+      return UniqueAnyReference{ *this, DeferOwnership{} };
 
     UniqueAnyReference result;
     TypeKind skind = _type->kind();
@@ -838,7 +837,7 @@ namespace detail
             || targetType->info().asString() ==  _type->info().asString()
     #endif
             )
-          return UniqueAnyReference{ *this, DeferOwnership };
+          return UniqueAnyReference{ *this, DeferOwnership{} };
         else
           return {};
       }
@@ -953,12 +952,12 @@ namespace detail
       {
         // We return a Value that point to the same data as this.
         result.reset(AnyReference{ targetType, (void*)((intptr_t)_value + inheritOffset) });
-        return result.release(DeferOwnership);
+        return result.release(DeferOwnership{});
       }
     }
 
     if (_type->info() == targetType->info())
-      return UniqueAnyReference{ *this, DeferOwnership };
+      return UniqueAnyReference{ *this, DeferOwnership{} };
 
     return {};
   }
@@ -1185,8 +1184,8 @@ namespace detail
       throw std::runtime_error("Expected a map");
     MapTypeInterface* t = static_cast<MapTypeInterface*>(_type);
 
-    UniqueAnyReference ck{ key, DeferOwnership };
-    UniqueAnyReference cv{ val, DeferOwnership };
+    UniqueAnyReference ck{ key, DeferOwnership{} };
+    UniqueAnyReference cv{ val, DeferOwnership{} };
 
     if (key._type != t->keyType())
       ck = key.convert(t->keyType());

@@ -263,7 +263,7 @@ inline void futureAdapter(const qi::Future<qi::AnyReference>& metaFut, qi::Promi
     return;
   }
 
-  auto val = UniqueAnyReference{ metaFut.value(), DeferOwnership };
+  auto val = UniqueAnyReference{ metaFut.value(), DeferOwnership{} };
   if (handleFuture(*val, promise)) // handleFuture takes ownership of the value if it succeeds.
     return;
   val.takeOwnership();
