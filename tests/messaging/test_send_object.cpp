@@ -171,7 +171,7 @@ TEST(SendObject, pass_obj_made_from_module)
   remotePlop.disconnect(signalLink);
 }
 
-TEST(Module, IdentityOfRemoteObjects)
+TEST(SendObject, IdentityOfRemoteObjects)
 {
   TestSessionPair p;
   p.server()->registerService("plop", boost::make_shared<ObjectEmitter>());
@@ -192,17 +192,19 @@ TEST(Module, IdentityOfRemoteObjects)
   EXPECT_NE(remoteObject2, o);
 }
 
+static int next_dummy_id = 0;
 struct dummy_t
 {
+  int value = next_dummy_id++;
   int one() const
   {
-    return 1;
+    return value;
   }
 };
 
 QI_REGISTER_OBJECT(dummy_t, one);
 
-TEST(Module, IdentityOfRemoteObjectsDifferentProcess)
+TEST(SendObject, IdentityOfRemoteObjectsDifferentProcess)
 {
   using namespace qi;
 
@@ -224,7 +226,10 @@ TEST(Module, IdentityOfRemoteObjectsDifferentProcess)
   AnyObject copy1 = service.call<AnyObject>("take");
   ASSERT_EQ(copy1, copy0);
   ASSERT_EQ(copy1, original);
+
+  ASSERT_EQ(copy1.call<int>("one"), copy0.call<int>("one"));
 }
+
 
 class ObjectStore
 {
@@ -242,7 +247,101 @@ public:
 
 QI_REGISTER_OBJECT(ObjectStore, get, set);
 
-TEST(Module, IdentityOfRemoteObjectsMoreIndirections)
+TEST(SendObject, IdentityMaintainedBetweenSessions)
+{
+  TestSessionPair sessionPair;
+  auto original_store = boost::make_shared<ObjectStore>();
+  sessionPair.server()->registerService("store", original_store);
+
+  auto object = qi::AnyObject{boost::make_shared<dummy_t>()};
+  original_store->set(object);
+
+  auto store_from_server = sessionPair.server()->service("store").value();
+  auto store_from_client = sessionPair.client()->service("store").value();
+
+  qi::AnyObject object_from_server_1 = store_from_server.call<qi::AnyObject>("get");
+  qi::AnyObject object_from_server_2 = store_from_server.call<qi::AnyObject>("get");
+
+  qi::AnyObject object_from_client_1 = store_from_client.call<qi::AnyObject>("get");
+  qi::AnyObject object_from_client_2 = store_from_client.call<qi::AnyObject>("get");
+
+  EXPECT_EQ(object_from_server_1, object);
+  EXPECT_EQ(object_from_server_2, object);
+  EXPECT_EQ(object_from_server_1, object_from_server_2);
+
+  EXPECT_EQ(object_from_client_1, object);
+  EXPECT_EQ(object_from_client_2, object);
+  EXPECT_EQ(object_from_client_1, object_from_client_2);
+
+  EXPECT_EQ(object_from_server_1, object_from_client_1);
+  EXPECT_EQ(object_from_server_1, object_from_client_2);
+  EXPECT_EQ(object_from_server_2, object_from_client_1);
+  EXPECT_EQ(object_from_server_2, object_from_client_2);
+
+  qi::Session outterSession;
+  outterSession.connect(sessionPair.endpointToServiceSource());
+  qi::AnyObject store_from_outter = outterSession.service("store");
+  qi::AnyObject object_from_outter_1 = store_from_outter.call<qi::AnyObject>("get");
+  qi::AnyObject object_from_outter_2 = store_from_outter.call<qi::AnyObject>("get");
+
+  EXPECT_EQ(object_from_outter_1, object);
+  EXPECT_EQ(object_from_outter_2, object);
+  EXPECT_EQ(object_from_outter_1, object_from_outter_2);
+
+  EXPECT_EQ(object_from_outter_1, object_from_client_1);
+  EXPECT_EQ(object_from_outter_1, object_from_client_2);
+  EXPECT_EQ(object_from_outter_2, object_from_client_1);
+  EXPECT_EQ(object_from_outter_2, object_from_client_2);
+
+  EXPECT_EQ(object_from_outter_1, object_from_server_1);
+  EXPECT_EQ(object_from_outter_1, object_from_server_2);
+  EXPECT_EQ(object_from_outter_2, object_from_server_1);
+  EXPECT_EQ(object_from_outter_2, object_from_server_2);
+
+}
+
+TEST(SendObject, IdentityMaintainedBetweenSessionsWithRemote)
+{
+  using namespace qi;
+
+  const Url serviceUrl{ "tcp://127.0.0.1:54321" };
+  test::ScopedProcess _{ path::findBin("remoteserviceowner"),
+  { "--qi-standalone", "--qi-listen-url=" + serviceUrl.str() }
+  };
+
+  auto client = makeSession();
+  client->connect(serviceUrl);
+  AnyObject store_from_client = client->service("PingPongService");
+
+  auto object = qi::AnyObject{ boost::make_shared<dummy_t>() };
+  store_from_client.call<void>("give", object);
+
+  AnyObject object_from_client_1 = store_from_client.call<AnyObject>("take");
+  AnyObject object_from_client_2 = store_from_client.call<AnyObject>("take");
+
+  EXPECT_EQ(object_from_client_1, object);
+  EXPECT_EQ(object_from_client_2, object);
+  EXPECT_EQ(object_from_client_1, object_from_client_2);
+
+  Session outterSession;
+  outterSession.connect(serviceUrl);
+  AnyObject store_from_outter = outterSession.service("PingPongService");
+  AnyObject object_from_outter_1 = store_from_outter.call<AnyObject>("take");
+  AnyObject object_from_outter_2 = store_from_outter.call<AnyObject>("take");
+
+  EXPECT_EQ(object_from_outter_1, object);
+  EXPECT_EQ(object_from_outter_2, object);
+  EXPECT_EQ(object_from_outter_1, object_from_outter_2);
+
+  EXPECT_EQ(object_from_outter_1, object_from_client_1);
+  EXPECT_EQ(object_from_outter_1, object_from_client_2);
+  EXPECT_EQ(object_from_outter_2, object_from_client_1);
+  EXPECT_EQ(object_from_outter_2, object_from_client_2);
+
+}
+
+
+TEST(SendObject, IdentityOfRemoteObjectsMoreIndirections)
 {
   qi::AnyObject originalObject(boost::make_shared<dummy_t>());
   TestSessionPair pairA;
