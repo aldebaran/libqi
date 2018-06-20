@@ -11,6 +11,7 @@
 #  pragma warning( disable: 4503 ) // decorated name length
 # endif
 
+# include <boost/asio/io_service.hpp>
 # include <boost/thread/synchronized_value.hpp>
 # include <boost/function.hpp>
 
@@ -24,11 +25,6 @@
 #  pragma warning( disable: 4251 )
 #  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
-
-namespace boost {
-  namespace asio {
-    class io_service;
-}}
 
 namespace qi
 {
