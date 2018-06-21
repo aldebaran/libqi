@@ -11,6 +11,8 @@
 
 qiLogCategory("qimessaging.boundobject");
 
+const auto invalidValueError = "The value is invalid.";
+
 namespace qi {
 
   static AnyReference forwardEvent(const GenericFunctionParameters& params,
@@ -572,10 +574,11 @@ namespace qi {
     const Signature& targetSignature, boost::weak_ptr<ObjectHost> host,
     MessageSocket* socket, const Signature& forcedSignature)
   {
+    if (!val.isValid())
+      throw std::runtime_error(invalidValueError);
+
     // We allow forced signature conversion to fail, in which case we
     // go on with original expected signature.
-
-
     if (forcedSignature.isValid() && socket->remoteCapability("MessageFlags", false))
     {
       auto conv = val.convert(TypeInterface::fromSignature(forcedSignature));
@@ -602,6 +605,7 @@ namespace qi {
                                                    const Signature& forcedReturnSignature,
                                                    CancelableKitWeak kit)
   {
+    QI_ASSERT_TRUE(val.isValid());
     _removeCachedFuture(kit, socket, replyaddr.messageId);
     if (!socket->isConnected())
     {

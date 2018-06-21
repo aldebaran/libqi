@@ -16,10 +16,14 @@ namespace qi
 namespace detail
 {
 
+static const char* InvalidValueError = "value is invalid";
 static const char* InvalidFutureError = "function returned an invalid future";
 
 template<typename T> void setPromise(qi::Promise<T>& promise, const AnyValue& v)
 {
+  if (!v.isValid())
+    throw std::runtime_error(InvalidValueError);
+
   try
   {
     qiLogDebug("qi.adapter") << "converting value";
@@ -54,6 +58,9 @@ template <typename T>
 void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
     boost::shared_ptr<GenericObject>& ao)
 {
+  if (!val.isValid())
+    throw std::runtime_error(InvalidValueError);
+
   QI_ASSERT(ao);
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
@@ -89,7 +96,7 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
   // For a Future<void>, value() gave us a void*
   if (isvoid)
     v = AnyValue(qi::typeOf<void>());
-  qiLogDebug("qi.adapter") << v.type()->infoString();
+  qiLogDebug("qi.adapter") << (v.isValid() ? v.type()->infoString() : "<invalid AnyValue>");
   setPromise(promise, v);
   qiLogDebug("qi.adapter") << "Promise set";
 }
@@ -98,6 +105,12 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
 // remember that you need a shared_ptr pointing on the genericobject so that it can work (shared_from_this)
 inline boost::shared_ptr<GenericObject> getGenericFuture(AnyReference val, TypeKind* kind = 0)
 {
+  if (!val.isValid())
+  {
+    qiLogDebug("qi.adapter") << "getGenericFuture: Invalid value.";
+    return boost::shared_ptr<GenericObject>();
+  }
+
   TypeOfTemplate<Future>* ft1 = QI_TEMPLATE_TYPE_GET(val.type(), Future);
   TypeOfTemplate<FutureSync>* ft2 = QI_TEMPLATE_TYPE_GET(val.type(), FutureSync);
   ObjectTypeInterface* onext = NULL;
@@ -161,6 +174,9 @@ template <typename T>
 inline T extractFuture(const qi::Future<qi::AnyReference>& metaFut)
 {
   auto val = UniqueAnyReference{ metaFut.value() };
+  if (!val->isValid())
+    throw std::runtime_error(InvalidValueError);
+
 
   AnyValue hold;
   if (boost::shared_ptr<GenericObject> ao = getGenericFuture(*val))
@@ -193,6 +209,8 @@ template <>
 inline void extractFuture<void>(const qi::Future<qi::AnyReference>& metaFut)
 {
   auto val = UniqueAnyReference{ metaFut.value() };
+  if (!val->isValid())
+    throw std::runtime_error(InvalidValueError);
 
   if (boost::shared_ptr<GenericObject> ao = getGenericFuture(*val))
   {
@@ -207,6 +225,9 @@ inline void extractFuture<void>(const qi::Future<qi::AnyReference>& metaFut)
 template <typename T>
 inline void setAdaptedResult(Promise<T>& promise, AnyReference& ref)
 {
+  if (!ref.isValid())
+    throw std::runtime_error(InvalidValueError);
+
   static TypeInterface* targetType;
   QI_ONCE(targetType = typeOf<T>());
   try
@@ -283,6 +304,12 @@ inline void futureAdapterVal(const qi::Future<qi::AnyValue>& metaFut, qi::Promis
     return;
   }
   const AnyValue& val =  metaFut.value();
+  if (!val.isValid())
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
+
   try
   {
     promise.setValue(val.to<T>());
