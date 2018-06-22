@@ -9,7 +9,6 @@
 # pragma warning(disable: 4355)
 #endif
 
-#include <atomic>
 #include <sstream>
 #include <qi/session.hpp>
 #include <ka/scoped.hpp>
@@ -366,37 +365,6 @@ namespace qi {
     return promise.future();
   }
 
-  void SessionPrivate::onTrackedServiceAdded(const std::string& actual,
-      const std::string& expected,
-      qi::Promise<void> promise,
-      boost::shared_ptr<qi::Atomic<int> > link)
-  {
-    if (actual != expected)
-      return;
-
-    // only do it once in case of multiple calls
-    SignalLink link2 = link->swap(0);
-
-    if (link2 == 0)
-      return;
-
-    _sdClient.serviceAdded.disconnect(link2);
-
-    promise.setValue(0);
-  }
-
-  void SessionPrivate::onServiceTrackingCanceled(qi::Promise<void> promise,
-      boost::shared_ptr<qi::Atomic<int> > link)
-  {
-    SignalLink link2 = link->swap(0);
-
-    if (link2 == 0)
-      return;
-
-    _sdClient.serviceAdded.disconnect(link2);
-    promise.setCanceled();
-  }
-
   FutureSync<void> Session::waitForService(const std::string& servicename)
   {
     return waitForService(servicename, defaultWaitForServiceTimeout());
@@ -409,29 +377,66 @@ namespace qi {
 
   qi::FutureSync<void> Session::waitForServiceImpl(const std::string& servicename)
   {
-    boost::shared_ptr<qi::Atomic<int> > link =
-      boost::make_shared<qi::Atomic<int> >(0);
+    qi::Promise<void> promise(
+          [](qi::Promise<void> &promise)
+          {
+            try
+            {
+              promise.setCanceled();
+            }
+            catch (...) {} // promise already set
+          });
 
-    qi::Promise<void> promise(qi::bindSilent(
-          &SessionPrivate::onServiceTrackingCanceled,
-          boost::weak_ptr<SessionPrivate>(_p),
-          _1,
-          link));
-    *link = (int)_p->_sdClient.serviceAdded.connect(
-          &SessionPrivate::onTrackedServiceAdded,
-          boost::weak_ptr<SessionPrivate>(_p),
-          _2,
-          servicename,
-          promise,
-          link);
+    auto onServiceAdded =
+          [promise, servicename](unsigned int, const std::string &name) mutable
+          {
+            if (name != servicename)
+              return;
+            try
+            {
+              promise.setValue(nullptr);
+            }
+            catch (...) {} // promise already set
+          };
 
-    service(servicename).async().then(track([=](Future<AnyObject> fut) {
-      if (!fut.hasError())
-      {
-        _p->onTrackedServiceAdded(servicename, servicename, promise, link);
-      }
-    }, this));
+    auto futureLink = _p->_sdClient.serviceAdded.connectAsync(
+          qi::AnyFunction::from(onServiceAdded)).andThen( // TODO avoid qi::AnyFunction. see #42091
+          [](const SignalSubscriber &sub) { return sub.link(); });
 
+    // check if the service is already there *after* connecting to the signal,
+    // to avoid a race.
+    auto futureService = futureLink.andThen(track(
+          [this, servicename](qi::SignalLink) mutable
+          {
+            return this->service(servicename).async();
+          }, this)).unwrap();
+
+    futureService.connect(
+          [promise](qi::Future<AnyObject> futureService) mutable
+          {
+             if (!futureService.hasError())
+             {
+               try
+               {
+                 promise.setValue(nullptr);
+               }
+               catch (...) {} // promise already set
+             }
+          });
+
+    // schedule some clean up
+    boost::weak_ptr<SessionPrivate> weakPrivSession(_p);
+    promise.future().connect(
+          [futureLink, weakPrivSession] (qi::Future<void>) mutable
+          {
+            futureLink.cancel();
+            futureLink.andThen(
+                  [weakPrivSession](qi::SignalLink link)
+                  {
+                    if (auto privateSession = weakPrivSession.lock())
+                      privateSession->_sdClient.serviceAdded.disconnectAsync(link);
+                  });
+          });
     return promise.future();
   }
 }
