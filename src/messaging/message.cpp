@@ -5,9 +5,8 @@
 #include <cstring>
 
 #include <boost/make_shared.hpp>
-#include <boost/dynamic_bitset.hpp>
+#include <boost/container/small_vector.hpp>
 
-#include <ka/scoped.hpp>
 #include <qi/assert.hpp>
 #include <qi/anyvalue.hpp>
 #include "message.hpp"
@@ -300,8 +299,8 @@ namespace qi
       TypeInterface* ti = TypeInterface::fromSignature(sig);
       if (!ti)
         qiLogWarning() << "setValue(): cannot construct type for signature " << sig.toString();
-      std::pair<AnyReference, bool> conv = value.convert(ti);
-      if (!conv.first.type()) {
+      auto conv = value.convert(ti);
+      if (!conv->type()) {
         std::stringstream ss;
         ss << "Setvalue(): failed to convert effective value "
            << value.type()->signature().toString()
@@ -312,9 +311,8 @@ namespace qi
         setError(ss.str());
       }
       else
-        encodeBinary(conv.first, boost::bind(serializeObject, _1, context, streamContext), streamContext);
-      if (conv.second)
-        conv.first.destroy();
+        encodeBinary(*conv, boost::bind(serializeObject, _1, context, streamContext),
+                     streamContext);
     }
     else if (value.type()->kind() != qi::TypeKind_Void)
     {
@@ -370,7 +368,10 @@ namespace qi
     if (src.size() != dst.size())
       throw std::runtime_error("remote call: signature size mismatch");
     SignatureVector::iterator its = src.begin(), itd = dst.begin();
-    boost::dynamic_bitset<> allocated(nargs.size());
+
+    boost::container::small_vector<detail::UniqueAnyReference, detail::maxAnyFunctionArgsCountHint>
+      uniqueArgs;
+    uniqueArgs.reserve(nargs.size());
     for (unsigned i = 0; i< nargs.size(); ++i, ++its, ++itd)
     {
       if (*its != *itd)
@@ -379,20 +380,18 @@ namespace qi
         if (!target)
           throw std::runtime_error("remote call: Failed to obtain a type from signature " +
                                    (*itd).toString());
-        std::pair<AnyReference, bool> c = nargs[i].convert(target);
-        if (!c.first.type())
+        auto c = nargs[i].convert(target);
+        if (!c->type())
         {
           throw std::runtime_error(
               _QI_LOG_FORMAT("remote call: failed to convert argument %s from %s to %s", i,
                              (*its).toString(), (*itd).toString()));
         }
-        nargs[i] = c.first;
-        allocated[i] = c.second;
+        nargs[i] = *c;
+        uniqueArgs.emplace_back(std::move(c));
       }
     }
+
     setValues(nargs, context, streamContext);
-    for (unsigned i = 0; i< nargs.size(); ++i)
-      if (allocated[i])
-        nargs[i].destroy();
   }
 }

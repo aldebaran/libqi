@@ -16,6 +16,7 @@
 #include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/typeinterface.hpp>
+#include <ka/scoped.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/optional.hpp>
 
@@ -25,6 +26,9 @@ class AnyReference;
 using AnyReferenceVector = std::vector<AnyReference>;
 
 namespace detail {
+
+class UniqueAnyReference;
+
 
 /** Class that holds any value, with informations to manipulate it.
  *  operator=() makes a shallow copy.
@@ -71,19 +75,18 @@ protected:
 
 public:
   /// Attempts the conversion of the value behind the reference to the given type.
-  /// @return the pair (convertedValue, trueIfCopiedAndNeedsDestroy).
   /// Converted value is invalid if conversion failed.
-  std::pair<AnyReference, bool> convert(TypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(ListTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(StructTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(MapTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(IntTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(FloatTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(RawTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(StringTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(PointerTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(DynamicTypeInterface* targetType) const;
-  std::pair<AnyReference, bool> convert(OptionalTypeInterface* targetType) const;
+  UniqueAnyReference convert(TypeInterface* targetType) const;
+  UniqueAnyReference convert(ListTypeInterface* targetType) const;
+  UniqueAnyReference convert(StructTypeInterface* targetType) const;
+  UniqueAnyReference convert(MapTypeInterface* targetType) const;
+  UniqueAnyReference convert(IntTypeInterface* targetType) const;
+  UniqueAnyReference convert(FloatTypeInterface* targetType) const;
+  UniqueAnyReference convert(RawTypeInterface* targetType) const;
+  UniqueAnyReference convert(StringTypeInterface* targetType) const;
+  UniqueAnyReference convert(PointerTypeInterface* targetType) const;
+  UniqueAnyReference convert(DynamicTypeInterface* targetType) const;
+  UniqueAnyReference convert(OptionalTypeInterface* targetType) const;
 
   /** Return the typed pointer behind a AnyReference. T *must* be the type
    * of the value.
@@ -342,23 +345,6 @@ public:
   std::vector<TypeInterface*> membersType() const;
   void* rawValue() const { return _value; }
 
-  /// This function will set an optional value by passing a reference (as an `AnyReference`) to that
-  /// value to a procedure `setValue` which must assign a value to it. It will handle the case
-  /// where the optional has no value yet by creating one, setting it and then inserting it into
-  /// the optional.
-  ///
-  /// Preconditions: type != nullptr && value != nullptr
-  ///
-  /// Procedure<void (AnyReference&)> Proc
-  template<typename Proc>
-  friend void setOptionalValueReference(OptionalTypeInterface* type, void* value, Proc setValue);
-
-  /// Overload that takes an AnyReference. It will do nothing if kind of `optRef` is not Optional.
-  ///
-  /// Procedure<void (AnyReference&)> Proc
-  template<typename Proc>
-  friend void setOptionalValueReference(AnyReference optRef, Proc setValue);
-
 protected:
   TypeInterface* _type;
   void*          _value;
@@ -441,10 +427,111 @@ public:
   }
 };
 
+namespace detail
+{
+
+struct DeferOwnership {};
+
+class UniqueAnyReference
+{
+public:
+  UniqueAnyReference() = default;
+
+  KA_GENERATE_FRIEND_REGULAR_OPS_2(UniqueAnyReference, ref, owned)
+
+  explicit UniqueAnyReference(AnyReference ref)
+    : ref{ ref }
+    , owned{ ref.isValid() }
+  {}
+
+  explicit UniqueAnyReference(AnyReference ref, DeferOwnership)
+    : ref{ ref }
+    , owned{ false }
+  {}
+
+  UniqueAnyReference(UniqueAnyReference&& o)
+    : ref{ ka::exchange(o.ref, AnyReference{}) }
+    , owned{ ka::exchange(o.owned, false) }
+  {
+  }
+
+  UniqueAnyReference& operator=(UniqueAnyReference&& o)
+  {
+    ref = ka::exchange(o.ref, AnyReference{});
+    owned = ka::exchange(o.owned, false);
+    return *this;
+  }
+
+  ~UniqueAnyReference()
+  {
+    if (owned)
+      ref.destroy();
+  }
+
+  AnyReference& operator*()
+  {
+    return ref;
+  }
+
+  const AnyReference& operator*() const
+  {
+    return ref;
+  }
+
+  AnyReference* operator->()
+  {
+    return &ref;
+  }
+
+  const AnyReference* operator->() const
+  {
+    return &ref;
+  }
+
+  AnyReference release()
+  {
+    owned = false;
+    return ka::exchange(ref, AnyReference{});
+  }
+
+  UniqueAnyReference release(DeferOwnership)
+  {
+    owned = false;
+    return UniqueAnyReference{ ka::exchange(ref, AnyReference{}), DeferOwnership{} };
+  }
+
+  void reset(AnyReference newRef = {})
+  {
+    owned = newRef.isValid();
+    ref = newRef;
+  }
+
+  void reset(AnyReference newRef, DeferOwnership)
+  {
+    owned = false;
+    ref = newRef;
+  }
+
+  bool ownsReference() const
+  {
+    return owned;
+  }
+
+  void takeOwnership()
+  {
+    owned = true;
+  }
+
+private:
+  AnyReference ref;
+  bool owned = false;
+};
+
+} // namespace detail
+
 } // namespace qi
 
 #include <qi/type/detail/anyreference.hxx>
-#include <qi/type/detail/anyreferenceoptional.hxx>
 #include <qi/type/typeinterface.hpp>
 
 /* Since AnyReference does not handle its memory, it cannot be used

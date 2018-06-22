@@ -157,50 +157,31 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   return true;
 }
 
-struct AutoRefDestroy
-{
-  AnyReference val;
-  AutoRefDestroy(AnyReference ref) : val(ref) {}
-  ~AutoRefDestroy()
-  {
-    val.destroy();
-  }
-};
-
 template <typename T>
 inline T extractFuture(const qi::Future<qi::AnyReference>& metaFut)
 {
-  AnyReference val =  metaFut.value();
-  AutoRefDestroy destroy(val);
+  auto val = UniqueAnyReference{ metaFut.value() };
 
   AnyValue hold;
-  if (boost::shared_ptr<GenericObject> ao = getGenericFuture(val))
+  if (boost::shared_ptr<GenericObject> ao = getGenericFuture(*val))
   {
     if (!ao->call<bool>("isValid"))
       throw std::runtime_error(InvalidFutureError);
 
     hold = ao->call<qi::AnyValue>("value", (int)FutureTimeout_Infinite);
-    val = hold.asReference();
+    *val = hold.asReference();
   }
 
   static TypeInterface* targetType;
   QI_ONCE(targetType = typeOf<T>());
   try
   {
-    std::pair<AnyReference, bool> conv = val.convert(targetType);
-    if (!conv.first.type())
-      throw std::runtime_error(std::string("Unable to convert call result to target type: from ")
-        + val.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature());
-    else
-    {
-      if (conv.second)
-      {
-        AutoRefDestroy destroy(conv.first);
-        return std::move(*conv.first.ptr<T>(false));
-      }
-      else
-        return std::move(*conv.first.ptr<T>(false));
-    }
+    auto conv = val->convert(targetType);
+    if (!conv->type())
+      throw std::runtime_error(std::string("Unable to convert call result to target type: from ") +
+                               val->signature(true).toPrettySignature() + " to " +
+                               targetType->signature().toPrettySignature());
+    return std::move(*conv->ptr<T>(false));
   }
   catch(const std::exception& e)
   {
@@ -211,10 +192,9 @@ inline T extractFuture(const qi::Future<qi::AnyReference>& metaFut)
 template <>
 inline void extractFuture<void>(const qi::Future<qi::AnyReference>& metaFut)
 {
-  AnyReference val = metaFut.value();
-  AutoRefDestroy destroy(val);
+  auto val = UniqueAnyReference{ metaFut.value() };
 
-  if (boost::shared_ptr<GenericObject> ao = getGenericFuture(val))
+  if (boost::shared_ptr<GenericObject> ao = getGenericFuture(*val))
   {
     if (!ao->call<bool>("isValid"))
       throw std::runtime_error(InvalidFutureError);
@@ -231,16 +211,14 @@ inline void setAdaptedResult(Promise<T>& promise, AnyReference& ref)
   QI_ONCE(targetType = typeOf<T>());
   try
   {
-    std::pair<AnyReference, bool> conv = ref.convert(targetType);
-    if (!conv.first.type())
+    auto conv = ref.convert(targetType);
+    if (!conv->type())
       promise.setError(std::string("Unable to convert call result to target type: from ")
         + ref.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
     else
     {
-      promise.setValue(*conv.first.ptr<T>(false));
+      promise.setValue(*conv->ptr<T>(false));
     }
-    if (conv.second)
-      conv.first.destroy();
   }
   catch(const std::exception& e)
   {
@@ -285,12 +263,11 @@ inline void futureAdapter(const qi::Future<qi::AnyReference>& metaFut, qi::Promi
     return;
   }
 
-  AnyReference val = metaFut.value();
-  if (handleFuture(val, promise))
+  auto val = UniqueAnyReference{ metaFut.value(), DeferOwnership{} };
+  if (handleFuture(*val, promise)) // handleFuture takes ownership of the value if it succeeds.
     return;
-
-  setAdaptedResult(promise, val);
-  val.destroy();
+  val.takeOwnership();
+  setAdaptedResult(promise, *val);
 }
 
 template <typename T>

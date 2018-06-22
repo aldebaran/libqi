@@ -2,6 +2,7 @@
 #define KA_UTILITY_HPP
 #pragma once
 #include <type_traits>
+#include <utility>
 #include "macro.hpp"
 
 namespace ka {
@@ -42,7 +43,7 @@ namespace ka {
   ///   // ...
   /// }
   ///
-  /// template<ytpename T>
+  /// template<typename T>
   /// struct X {
   ///   // Produce a "fake" L-value reference in a `decltype` context.
   ///   using U = decltype(f(declref<T>()));
@@ -60,6 +61,37 @@ namespace ka {
   /// See also `declref`.
   template<typename T>
   T const& declcref();
+
+  /// Replaces the value of an object with a new value and returns the old value of the object.
+  /// It is useful to implement move assignment operators and move constructors for example.
+  ///
+  /// Note: If any of the constructors and assigment operators throws an exception, the behavior
+  /// is undefined as is the value of the object.
+  ///
+  /// Note: This is equivalent to `std::exchange()` from C++14.
+  /// TODO: Deprecate then remove it when C++14 is enabled on this library.
+  ///
+  /// Example: Implementing a move constructor.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// struct my_struct_t {
+  ///   int* p;
+  ///   int n;
+  ///
+  ///   my_struct_t(my_struct_t&& o)
+  ///     : p{ ka::exchange(o.p, nullptr) }
+  ///     , n{ ka::exchange(o.n, 0) } {
+  ///   }
+  /// };
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// MoveConstructible T && MoveAssignable<U> T
+  template<typename T, typename U = T>
+  T exchange(T& obj, U&& new_value) {
+    T old_value = std::move(obj);
+    obj = fwd<U>(new_value);
+    return old_value;
+  }
+
 } // namespace ka
 
 #endif // KA_UTILITY_HPP

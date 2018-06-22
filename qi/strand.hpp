@@ -46,7 +46,7 @@ public:
 
   using Queue = std::deque<boost::shared_ptr<Callback>>;
 
-  qi::ExecutionContext& _eventLoop;
+  qi::ExecutionContext& _executor;
   std::atomic<unsigned int> _curId;
   std::atomic<unsigned int> _aliveCount;
   bool _processing; // protected by mutex, no need for atomic
@@ -56,39 +56,43 @@ public:
   bool _dying;
   Queue _queue;
 
-  StrandPrivate(qi::ExecutionContext& eventLoop);
+  explicit StrandPrivate(qi::ExecutionContext& executor);
 
   // Schedules the callback for execution. If the trigger date `tp` is in the past, executes the
   // callback immediately in the calling thread.
-  Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
+  Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp, ExecutionOptions options = defaultExecutionOptions()) override;
 
   // Schedules the callback for execution. If delay is 0, executes the callback immediately in the
   // calling thread.
-  Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+  Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay, ExecutionOptions options = defaultExecutionOptions()) override;
 
   // Schedules the callback for deferred execution and returns immediately.
-  Future<void> deferImpl(boost::function<void()> cb, qi::Duration delay);
+  Future<void> deferImpl(boost::function<void()> cb, qi::Duration delay, ExecutionOptions options = defaultExecutionOptions());
 
-  boost::shared_ptr<Callback> createCallback(boost::function<void()> cb);
-  void enqueue(boost::shared_ptr<Callback> cbStruct);
+  boost::shared_ptr<Callback> createCallback(boost::function<void()> cb, ExecutionOptions options);
+  void enqueue(boost::shared_ptr<Callback> cbStruct, ExecutionOptions options);
 
   void process();
   void cancel(boost::shared_ptr<Callback> cbStruct);
   bool isInThisContext() const override;
 
-  void postImpl(boost::function<void()> callback) override { QI_ASSERT(false); throw 0; }
+  void postImpl(boost::function<void()> callback, ExecutionOptions options) override
+  { QI_ASSERT(false); throw 0; }
+
   qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
   { QI_ASSERT(false); throw 0; }
+
   qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
   { QI_ASSERT(false); throw 0; }
+
   using ExecutionContext::async;
 private:
   void stopProcess(boost::recursive_mutex::scoped_lock& lock,
                    bool finished);
 };
 
-inline StrandPrivate::StrandPrivate(qi::ExecutionContext& eventLoop)
-  : _eventLoop(eventLoop)
+inline StrandPrivate::StrandPrivate(qi::ExecutionContext& executor)
+  : _executor(executor)
   , _curId(0)
   , _aliveCount(0)
   , _processing(false)
@@ -209,40 +213,49 @@ public:
   /// the deferred call is performed, the reference will not be recognized,
   /// and the argument will be copied to the target function.
   template <typename F>
-  auto schedulerFor(F&& func, boost::function<void()> onFail = {})
+  auto schedulerFor(F&& func, boost::function<void()> onFail = {}, ExecutionOptions options = defaultExecutionOptions())
       -> detail::Stranded<typename std::decay<F>::type>
   {
     return detail::Stranded<typename std::decay<F>::type>(std::forward<F>(func),
                                                               _p,
-                                                              std::move(onFail));
+                                                              std::move(onFail),
+                                                              options);
   }
 
   /// Returns a function which, when called, defers a call to the original
   /// function to the strand, but with the return value unwrapped if possible.
   /// @see schedulerFor for details.
   template <typename F>
-  auto unwrappedSchedulerFor(F&& func, boost::function<void()> onFail = {})
+  auto unwrappedSchedulerFor(F&& func, boost::function<void()> onFail = {}, ExecutionOptions options = defaultExecutionOptions())
       -> detail::StrandedUnwrapped<typename std::decay<F>::type>
   {
     return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::forward<F>(func),
                                                               _p,
-                                                              std::move(onFail));
+                                                              std::move(onFail),
+                                                              options);
   }
 
   /**
    * Defers a function for execution in the strand thus without allowing the strand to call it from
    * inside this function. It implies that this function always returns immediately.
+   * @param cb: The function to execute.
+   * @param delay: Duration that defer will wait (without blocking the caller) before queuing the
+   *               function for execution. If zero (the default value), the function will be queued
+   *               immediately.
+   * @param options: Execution options.
    * @returns A future that is set once the function argument is executed
    */
-  Future<void> defer(const boost::function<void()>& cb);
+  Future<void> defer(const boost::function<void()>& cb,
+                      MicroSeconds delay = MicroSeconds::zero(),
+                      ExecutionOptions options = defaultExecutionOptions());
 
 private:
   boost::shared_ptr<StrandPrivate> _p;
 
-  void postImpl(boost::function<void()> callback) override;
+  void postImpl(boost::function<void()> callback, ExecutionOptions options) override;
 
-  qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
-  qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+  qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp, ExecutionOptions options) override;
+  qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay, ExecutionOptions options) override;
 
   // DEPRECATED
   template <int N, typename T>
@@ -286,12 +299,13 @@ namespace detail
       F& func,
       const boost::function<void()>& onFail,
       boost::weak_ptr<StrandPrivate> weakStrand,
+      ExecutionOptions options,
       Args... args)
-      -> decltype(weakStrand.lock()->async(std::bind(func, std::move(args)...))) // TODO: remove in C++14
+      -> decltype(weakStrand.lock()->async(std::bind(func, std::move(args)...), options)) // TODO: remove in C++14
   {
     if (auto strand = weakStrand.lock())
     {
-      return strand->async(std::bind(func, std::move(args)...));
+      return strand->async(std::bind(func, std::move(args)...), options);
     }
     else
     {
@@ -312,26 +326,28 @@ namespace detail
     F _func;
     boost::weak_ptr<StrandPrivate> _strand;
     boost::function<void()> _onFail;
+    ExecutionOptions _executionOptions;
 
-    Stranded(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail)
+    Stranded(F f, boost::weak_ptr<StrandPrivate> strand, boost::function<void()> onFail, ExecutionOptions options)
       : _func(std::move(f))
       , _strand(std::move(strand))
       , _onFail(std::move(onFail))
+      , _executionOptions(std::move(options))
     {
     }
 
     template <typename... Args>
     auto operator()(Args&&... args) const
-        -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
+        -> decltype(callInStrand(_func, _onFail, _strand, _executionOptions, std::forward<Args>(args)...))
     {
-      return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
+      return callInStrand(_func, _onFail, _strand, _executionOptions, std::forward<Args>(args)...);
     }
 
     template <typename... Args>
     auto operator()(Args&&... args)
-        -> decltype(callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...))
+        -> decltype(callInStrand(_func, _onFail, _strand, _executionOptions, std::forward<Args>(args)...))
     {
-      return callInStrand(_func, _onFail, _strand, std::forward<Args>(args)...);
+      return callInStrand(_func, _onFail, _strand, _executionOptions, std::forward<Args>(args)...);
     }
   };
 
@@ -346,8 +362,8 @@ namespace detail
 
   public:
     template <typename FF>
-    StrandedUnwrapped(FF&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail)
-      : _stranded(std::forward<FF>(f), strand, onFail)
+    StrandedUnwrapped(FF&& f, const boost::weak_ptr<StrandPrivate>& strand, const boost::function<void()>& onFail, ExecutionOptions options)
+      : _stranded(std::forward<FF>(f), strand, onFail, options)
     {}
 
     template <typename... Args>

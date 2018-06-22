@@ -630,3 +630,60 @@ TEST(TestStrand, build_unwrappedSchedulerFor)
   auto f4 = strand.unwrappedSchedulerFor(bigfunc);
   (void)f4;
 }
+
+TEST(TestStrand, LastStrandedThenContinuationCalledWhenCanceled)
+{
+  // This test was written because of a bug making one or several continuations
+  // following a cancel (sequence point 5 to 7) randomly never be executed
+  // while the whole graph is correctly finished.
+  // This issue required the following context:
+  // 1. Execute all the continuations in the qi::Strand qi::Strand::schedulerFor/unwrappedSchedulerFor
+  //    continuation in the task graph, in particular the last .then continuation;
+  // 2. The future corresponding to the task graph has to request cancel
+  //    before the 2 last continuation is executed;
+  // 3. The promise has to set itself to canceled when it gets a cancel request
+  //    (the problem does not appear if the promise was set outside the cancel callback);
+
+  qi::Strand strand;
+  std::vector<int> executionSequence;
+  static const std::vector<int> expectedSequence {0, 1, 2, 3, 4, 5, 6, 7};
+  std::atomic<bool> canceledAsExpected {false};
+
+  qi::Promise<void> promise {[&] (qi::Promise<void>& p) {
+    executionSequence.push_back(3);
+    p.setCanceled(); // Requirement 3
+  }};
+
+  qi::Promise<void> promiseSync1, promiseSync2;
+
+  qi::Future<void> future = strand.defer([&] {executionSequence.push_back(0);})
+    .then(strand.unwrappedSchedulerFor([&] (qi::Future<void>) {
+       executionSequence.push_back(1);
+       auto fut = promise.future().then(strand.unwrappedSchedulerFor( // Requirement 1
+        [&] (qi::Future<void> result) {
+          if(result.isCanceled())
+            canceledAsExpected = true;
+          executionSequence.push_back(4);
+        })).unwrap()
+        .then(strand.unwrappedSchedulerFor([&] (qi::Future<void>) {
+          executionSequence.push_back(5);
+        }, {}, qi::ExecutionOptions{ qi::CancelOption::NeverSkipExecution} )).unwrap()
+        .then(strand.unwrappedSchedulerFor([&] (qi::Future<void>) {
+          executionSequence.push_back(6);
+        }, {}, qi::ExecutionOptions{ qi::CancelOption::NeverSkipExecution })).unwrap()
+        .then(strand.unwrappedSchedulerFor([&] (qi::Future<void>) {
+          executionSequence.push_back(7);
+        }, {}, qi::ExecutionOptions{ qi::CancelOption::NeverSkipExecution })).unwrap();
+       executionSequence.push_back(2);
+       promiseSync1.setValue(nullptr);// Requirement 2
+       promiseSync2.future().wait();// Requirement 2
+       return fut;
+     })).unwrap();
+
+  promiseSync1.future().wait(); // Requirement 2
+  future.cancel(); // Requirement 2
+  promiseSync2.setValue(nullptr); // Requirement 2
+  future.wait();
+  EXPECT_EQ(expectedSequence, executionSequence);
+  EXPECT_TRUE(canceledAsExpected);
+}

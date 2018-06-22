@@ -167,13 +167,22 @@ namespace qi
     boost::synchronized_value<ImplPtr> _p;
     std::string       _name;
 
-    void postImpl(boost::function<void()> callback) override
+    void postImpl(boost::function<void()> callback, ExecutionOptions options) override
     {
-      postDelayImpl(callback, qi::Duration(0));
+      postDelayImpl(callback, qi::Duration(0), options);
     }
-    void postDelayImpl(boost::function<void()> callback, qi::Duration delay);
-    qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp) override;
-    qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay) override;
+
+    void postDelayImpl(boost::function<void()> callback, qi::Duration delay
+      , ExecutionOptions options = defaultExecutionOptions()
+    );
+
+    qi::Future<void> asyncAtImpl(boost::function<void()> cb, qi::SteadyClockTimePoint tp
+      , ExecutionOptions options = defaultExecutionOptions()
+    ) override;
+
+    qi::Future<void> asyncDelayImpl(boost::function<void()> cb, qi::Duration delay
+      , ExecutionOptions options = defaultExecutionOptions()
+    ) override;
   };
 
   /// \brief Returns the global eventloop, created on demand on first call.

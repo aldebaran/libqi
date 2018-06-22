@@ -587,35 +587,35 @@ TEST(Value, Convert_ListToTuple)
   qi::AnyValue gv1 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", \"b\"]]");
   qi::AnyValue gv2 = qi::decodeJSON("[42, \"plop\", 1.42, [\"a\", 42]]");
 
-  std::pair<qi::AnyReference, bool> res1 = gv1.convert(type);
-  std::pair<qi::AnyReference, bool> res2 = gv2.convert(type);
+  auto res1 = gv1.convert(type);
+  auto res2 = gv2.convert(type);
 
-  ASSERT_FALSE(res2.first.type());
-  ASSERT_TRUE(res1.first.type() != 0);
-  ASSERT_EQ(res1.first.type()->info(), type->info());
-  ASSERT_EQ(gv1.size(), res1.first.size());
-  ASSERT_STREQ("b", res1.first[3][1].asString().c_str());
+  ASSERT_FALSE(res2->type());
+  ASSERT_TRUE(res1->type() != 0);
+  ASSERT_EQ(res1->type()->info(), type->info());
+  ASSERT_EQ(gv1.size(), res1->size());
+  ASSERT_STREQ("b", (*res1)[3][1].asString().c_str());
 
   qi::TypeInterface *dest3 = qi::TypeInterface::fromSignature("(fffI)");
   qi::AnyValue gv3 = qi::decodeJSON("[1.1, 2.2, 3.3, \"42\"]");
-  std::pair<qi::AnyReference, bool> res3 = gv3.convert(dest3);
-  ASSERT_FALSE(res3.first.type());
+  auto res3 = gv3.convert(dest3);
+  ASSERT_FALSE(res3->type());
 }
 
 TEST(Value, Convert_ListToMap)
 {
   qi::TypeInterface *type1= qi::TypeInterface::fromSignature("{if}");
   qi::AnyValue gv1 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [30, 44.44]]");
-  std::pair<qi::AnyReference, bool> res1 = gv1.convert(type1);
-  ASSERT_TRUE(res1.first.type() != 0);
-  ASSERT_EQ(res1.first.type()->info(), type1->info());
-  ASSERT_EQ(gv1.size(), res1.first.size());
-  ASSERT_EQ(44.44f, res1.first[30].asFloat());
+  auto res1 = gv1.convert(type1);
+  ASSERT_TRUE(res1->type() != 0);
+  ASSERT_EQ(res1->type()->info(), type1->info());
+  ASSERT_EQ(gv1.size(), res1->size());
+  ASSERT_EQ(44.44f, (*res1)[30].asFloat());
 
   qi::TypeInterface *type2 = qi::TypeInterface::fromSignature("{if}");
   qi::AnyValue gv2 = qi::decodeJSON("[[10.10, 42.42], [20, 43], [\"plop\", 44.44]]");
-  std::pair<qi::AnyReference, bool> res2 = gv2.convert(type2);
-  ASSERT_FALSE(res2.first.type());
+  auto res2 = gv2.convert(type2);
+  ASSERT_FALSE(res2->type());
 }
 
 struct EasyStruct
@@ -891,8 +891,8 @@ TYPED_TEST_CASE(ConvertWithTypeInterface, TypeInterfaces);
 TYPED_TEST(ConvertWithTypeInterface, convertInvalidToNullTypeInterfaceYieldsInvalid)
 {
   auto result = qi::AnyValue{}.convert(static_cast<typename TestFixture::TypeInterface*>(nullptr));
-  EXPECT_FALSE(result.first.isValid());
-  EXPECT_FALSE(result.second);
+  EXPECT_FALSE(result->isValid());
+  EXPECT_FALSE(result.ownsReference());
 }
 
 template <typename T>
@@ -923,15 +923,15 @@ TYPED_TEST_CASE(ConvertWithTypes, Types);
 TYPED_TEST(ConvertWithTypes, convertInvalidToOtherTypeInterfaceIsYieldsInvalid)
 {
   auto result = qi::AnyValue{}.convert(qi::typeOf<typename TestFixture::Type>());
-  EXPECT_FALSE(result.first.isValid());
-  EXPECT_FALSE(result.second);
+  EXPECT_FALSE(result->isValid());
+  EXPECT_FALSE(result.ownsReference());
 }
 
 TYPED_TEST(ConvertWithTypes, convertInvalidAsReferenceToOtherTypeInterfaceYieldsInvalid)
 {
   auto result = qi::AnyValue{}.asReference().convert(qi::typeOf<typename TestFixture::Type>());
-  EXPECT_FALSE(result.first.isValid());
-  EXPECT_FALSE(result.second);
+  EXPECT_FALSE(result->isValid());
+  EXPECT_FALSE(result.ownsReference());
 }
 
 TYPED_TEST(ConvertWithTypes, convertReferenceFromInvalidToOtherTypeInterfaceIsSafe)
@@ -1026,12 +1026,14 @@ TEST(Value, OptionalBool)
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_FALSE(v.content().to<bool>());
 
-  // optional with a different type of int is not allowed
-  EXPECT_THROW(v.set(make_optional(1337)), std::exception);
+  // optional with a different type of int is allowed
+  EXPECT_NO_THROW(v.set(make_optional(1337)));
+  EXPECT_NO_THROW(v.set(make_optional(67u)));
 
-  // conversion from a totally different type is not allowed
-  EXPECT_THROW(v.set(make_optional(67)), std::exception);
-  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
+  // conversion from a float is technically allowed
+  EXPECT_NO_THROW(v.set(make_optional(33.2)));
+
+  // conversion from a non numeric type is not allowed
   EXPECT_THROW(v.set(make_optional<std::string>("cookies")), std::exception);
 
   // it did not affect the value

@@ -343,7 +343,7 @@ namespace qi {
   }
 
   void EventLoopAsio::post(qi::Duration delay,
-      const boost::function<void ()>& cb)
+      const boost::function<void ()>& cb, ExecutionOptions options)
   {
     static boost::system::error_code erc;
 
@@ -365,7 +365,7 @@ namespace qi {
     }
     else
     {
-      asyncCall(delay, cb).then([](const Future<void>& fut)
+      asyncCall(delay, cb, options).then([](const Future<void>& fut)
       {
         if (fut.hasError())
         {
@@ -375,8 +375,20 @@ namespace qi {
     }
   }
 
+  namespace detail
+  {
+    template<class CancelFunc>
+    qi::Promise<void> makeCancelingPromise(ExecutionOptions options, CancelFunc&& onCancel)
+    {
+      if (options.onCancelRequested == CancelOption::NeverSkipExecution)
+        return qi::Promise<void>();
+      else
+        return qi::Promise<void>(std::forward<CancelFunc>(onCancel));
+    }
+  }
+
   qi::Future<void> EventLoopAsio::asyncCall(qi::Duration delay,
-      boost::function<void ()> cb)
+      boost::function<void ()> cb, ExecutionOptions options)
   {
     static boost::system::error_code erc;
 
@@ -392,7 +404,7 @@ namespace qi {
     {
       boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
       timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
-      qi::Promise<void> prom(boost::bind(&boost::asio::steady_timer::cancel, timer));
+      auto prom = detail::makeCancelingPromise(options, boost::bind(&boost::asio::steady_timer::cancel, timer));
       timer->async_wait([=](const boost::system::error_code& erc) { invoke_maybe(cb, id, prom, erc, countTotalTask); });
       return prom.future();
     }
@@ -402,9 +414,9 @@ namespace qi {
   }
 
   void EventLoopAsio::post(qi::SteadyClockTimePoint timepoint,
-      const boost::function<void ()>& cb)
+      const boost::function<void ()>& cb, ExecutionOptions options)
   {
-    asyncCall(timepoint, cb).then([](const Future<void>& fut)
+    asyncCall(timepoint, cb, options).then([](const Future<void>& fut)
     {
       if (fut.hasError())
       {
@@ -414,7 +426,7 @@ namespace qi {
   }
 
   qi::Future<void> EventLoopAsio::asyncCall(qi::SteadyClockTimePoint timepoint,
-      boost::function<void ()> cb)
+      boost::function<void ()> cb, ExecutionOptions options)
   {
     if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
@@ -426,7 +438,7 @@ namespace qi {
     //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
     boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(boost::ref(_io));
     timer->expires_at(timepoint);
-    qi::Promise<void> prom(boost::bind(&SteadyTimer::cancel, timer));
+    auto prom = detail::makeCancelingPromise(options, boost::bind(&SteadyTimer::cancel, timer));
     timer->async_wait([=](const boost::system::error_code& erc) { invoke_maybe(cb, id, prom, erc, countTotalTask); });
     return prom.future();
   }
@@ -519,11 +531,11 @@ namespace qi {
   }
 
   void EventLoop::postDelayImpl(boost::function<void()> callback,
-      qi::Duration delay)
+      qi::Duration delay, ExecutionOptions options)
   {
     return safeCall(_p, [&](const ImplPtr& impl){
       qiLogDebug() << this << " EventLoop post " << &callback;
-      impl->post(delay, callback);
+      impl->post(delay, callback, options);
       qiLogDebug() << this << " EventLoop post done " << &callback;
     });
   }
@@ -546,17 +558,17 @@ namespace qi {
   }
 
 
-  qi::Future<void> EventLoop::asyncDelayImpl(boost::function<void()> callback, qi::Duration delay)
+  qi::Future<void> EventLoop::asyncDelayImpl(boost::function<void()> callback, qi::Duration delay, ExecutionOptions options)
   {
     return safeCall(_p, [&](const ImplPtr& impl) {
-        return impl->asyncCall(delay, callback);
+        return impl->asyncCall(delay, callback, options);
       }, onDestructingError );
   }
 
-  qi::Future<void> EventLoop::asyncAtImpl(boost::function<void()> callback, qi::SteadyClockTimePoint timepoint)
+  qi::Future<void> EventLoop::asyncAtImpl(boost::function<void()> callback, qi::SteadyClockTimePoint timepoint, ExecutionOptions options)
   {
     return safeCall(_p, [&](const ImplPtr& impl){
-      return impl->asyncCall(timepoint, callback);
+      return impl->asyncCall(timepoint, callback, options);
     }, onDestructingError );
   }
 

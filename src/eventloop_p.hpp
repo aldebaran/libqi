@@ -45,10 +45,10 @@ namespace qi {
     virtual void start(int nthreads)=0; // 0=auto
     virtual void join()=0;
     virtual void stop()=0;
-    virtual qi::Future<void> asyncCall(qi::Duration delay, boost::function<void ()> callback)=0;
-    virtual void post(qi::Duration delay, const boost::function<void ()>& callback)=0;
-    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback)=0;
-    virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback)=0;
+    virtual qi::Future<void> asyncCall(qi::Duration delay, boost::function<void ()> callback, ExecutionOptions options = defaultExecutionOptions())=0;
+    virtual void post(qi::Duration delay, const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions())=0;
+    virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback, ExecutionOptions options = defaultExecutionOptions())=0;
+    virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions())=0;
     virtual void* nativeHandle()=0;
     virtual void setMaxThreads(unsigned int max)=0;
     boost::synchronized_value<boost::function<void()>> _emergencyCallback;
@@ -69,13 +69,13 @@ namespace qi {
     void join() override;
     void stop() override;
     qi::Future<void> asyncCall(qi::Duration delay,
-      boost::function<void ()> callback) override;
+      boost::function<void ()> callback, ExecutionOptions options = defaultExecutionOptions()) override;
     void post(qi::Duration delay,
-      const boost::function<void ()>& callback) override;
+      const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions()) override;
     qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint,
-        boost::function<void ()> callback) override;
+        boost::function<void ()> callback, ExecutionOptions options = defaultExecutionOptions()) override;
     void post(qi::SteadyClockTimePoint timepoint,
-        const boost::function<void ()>& callback) override;
+        const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions()) override;
     void* nativeHandle() override;
     void setMaxThreads(unsigned int max) override;
 

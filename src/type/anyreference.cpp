@@ -5,9 +5,12 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm/transform.hpp>
 
 #include <qi/type/detail/anyreference.hpp>
 #include <qi/anyobject.hpp>
+
+#include <ka/errorhandling.hpp>
 
 #if defined(_MSC_VER) && _MSC_VER <= 1500
 // vs2008 32 bits does not have std::abs() on int64
@@ -35,41 +38,42 @@ namespace
     qiLogDebug() << "dropIt";
     delete ptr;
   }
+
+  struct DefaultUniqueAnyRef
+  {
+    template<typename... Args>
+    detail::UniqueAnyReference operator()(Args&&...) const
+    {
+      return detail::UniqueAnyReference{};
+    }
+  };
 }
 
 namespace detail
 {
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(DynamicTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(DynamicTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
+      return {};
 
     // same-type check (not done before, useful mainly for AnyObject)
     if (targetType->info() == type()->info())
-      return std::make_pair(*this, false);
+      return UniqueAnyReference{ *this, DeferOwnership{} };
 
-    try
-    {
-      AnyReference result;
-      result._value = targetType->initializeStorage();
-      static_cast<DynamicTypeInterface*>(targetType)->set(&result._value, AnyReference(*this));
-      result._type = targetType;
-      return std::make_pair(result, true);
-    }
-    catch (const std::exception& e)
-    {
-      qiLogDebug() << "Failed to convert to dynamic type: " << e.what();
-    }
-    return std::make_pair(AnyReference{}, false);
+    return ka::invoke_catch(DefaultUniqueAnyRef{},
+                            [&] {
+                              UniqueAnyReference result { AnyReference{ targetType } };
+                              static_cast<DynamicTypeInterface*>(targetType)
+                                  ->set(&result->_value, AnyReference(*this));
+                              return result;
+                            });
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(PointerTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(PointerTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
@@ -83,17 +87,17 @@ namespace detail
       {
         // However, we need the full check for exact match here
         if (_type->info() == targetType->info())
-          return std::make_pair(*this, false);
+          return UniqueAnyReference{ *this, DeferOwnership{} };
         else
         {
           qiLogDebug() << "Conversion between non-object pointers not supported";
-          return std::make_pair(AnyReference(), false);
+          return {};
         }
       }
       AnyReference pointedSrc = static_cast<PointerTypeInterface*>(_type)->dereference(_value);
       // try object conversion (inheritance)
-      std::pair<AnyReference, bool> pointedDstPair = pointedSrc.convert(dstPointedType);
-      if (!pointedDstPair.first._type)
+      auto pointedDstPair = pointedSrc.convert(dstPointedType);
+      if (!pointedDstPair->_type)
       {
         qiLogDebug() << "Attempting object->proxy conversion";
         // try object->proxy conversion by simply rewrapping this
@@ -104,320 +108,253 @@ namespace detail
               boost::bind(dropIt, _1, qi::AnyValue(*this)));
         return AnyReference::from(o).convert((TypeInterface*)targetType);
       }
-      if (pointedDstPair.second)
+      if (pointedDstPair.ownsReference())
         qiLogError() << "assertion error, allocated converted reference";
-      // We must re-reference
-      AnyReference pointedDst = pointedDstPair.first;
-      void* ptr = pointedDst._type->ptrFromStorage(&pointedDst._value);
-      result = AnyReference((TypeInterface*)targetType);
-      try
-      {
-        targetType->setPointee(&result._value, ptr);
-      }
-      catch (std::exception& e)
-      {
-        qiLogVerbose() << "setPointee: " << e.what();
-        result.destroy();
-        return std::make_pair(AnyReference(), false);
-      }
-      return std::make_pair(result, false);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        // We must re-reference
+        AnyReference pointedDst = *pointedDstPair;
+        void* ptr = pointedDst._type->ptrFromStorage(&pointedDst._value);
+
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        targetType->setPointee(&result->_value, ptr);
+        return result.release(DeferOwnership{});
+      });
     }
     case TypeKind_Object:
     {
-      std::pair<AnyReference, bool> gv = convert(
-                                              static_cast<PointerTypeInterface*>(targetType)->pointedType());
-      if (!gv.first._type)
-        return std::make_pair(AnyReference(), false);
-      // Re-pointerise it
-      void* ptr = gv.first._type->ptrFromStorage(&gv.first._value);
-      AnyReference result(targetType);
-      try
-      {
-        targetType->setPointee(&result._value, ptr);
-      }
-      catch (std::exception& e)
-      {
-        qiLogVerbose() << "setPointee: " << e.what();
-        result.destroy();
-        return std::make_pair(AnyReference(), false);
-      }
-      return std::make_pair(result, false);
+      auto gv = convert(static_cast<PointerTypeInterface*>(targetType)->pointedType());
+      if (!gv->_type)
+        return {};
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        // Re-pointerise it
+        void* ptr = gv->_type->ptrFromStorage(&gv->_value);
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        targetType->setPointee(&result->_value, ptr);
+        return result.release(DeferOwnership{});
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(ListTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(ListTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_VarArgs:
     case TypeKind_List:
     {
-      ListTypeInterface* targetListType = static_cast<ListTypeInterface*>(targetType);
-      ListTypeInterface* sourceListType = static_cast<ListTypeInterface*>(_type);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&]() -> UniqueAnyReference {
+        ListTypeInterface* targetListType = static_cast<ListTypeInterface*>(targetType);
+        ListTypeInterface* sourceListType = static_cast<ListTypeInterface*>(_type);
 
-      TypeInterface* srcElemType = sourceListType->elementType();
-      TypeInterface* dstElemType = targetListType->elementType();
-      bool needConvert = (srcElemType->info() != dstElemType->info());
-      result = AnyReference((TypeInterface*)targetListType);
-
-      AnyIterator iend = end();
-      for (AnyIterator it = begin(); it!= iend; ++it)
-      {
-        AnyReference val = *it;
-        if (!needConvert)
-          result.append(val);
-        else
+        TypeInterface* srcElemType = sourceListType->elementType();
+        TypeInterface* dstElemType = targetListType->elementType();
+        bool needConvert = (srcElemType->info() != dstElemType->info());
+        UniqueAnyReference result{ AnyReference{ targetListType } };
+        for (auto val : *this)
         {
-          std::pair<AnyReference,bool> c = val.convert(dstElemType);
-          if (!c.first._type)
+          if (!needConvert)
+            result->append(val);
+          else
           {
-            qiLogDebug() << "List element conversion failure from "
-                         << val._type->infoString() << " to " << dstElemType->infoString();
-            result.destroy();
-            return std::make_pair(AnyReference(), false);
+            auto c = val.convert(dstElemType);
+            if (!c->_type)
+            {
+              qiLogDebug() << "List element conversion failure from " << val._type->infoString()
+                           << " to " << dstElemType->infoString();
+              return {};
+            }
+            result->append(*c);
           }
-          result.append(c.first);
-          if (c.second)
-            c.first.destroy();
         }
-      }
-      return std::make_pair(result, true);
+        return result;
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(StringTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(StringTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_String:
     {
       if (targetType->info() == _type->info())
-        return std::make_pair(*this, false);
-      result._type = targetType;
-      result._value = targetType->initializeStorage();
-      StringTypeInterface::ManagedRawString v =
-        static_cast<StringTypeInterface*>(_type)->get(_value);
-      targetType->set(&result._value, v.first.first, v.first.second);
-      if (v.second)
-        v.second(v.first);
-      return std::make_pair(result, true);
+        return UniqueAnyReference{ *this, DeferOwnership{} };
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        StringTypeInterface::ManagedRawString v =
+            static_cast<StringTypeInterface*>(_type)->get(_value);
+        targetType->set(&result->_value, v.first.first, v.first.second);
+        if (v.second)
+          v.second(v.first);
+        return result;
+      });
     }
     case TypeKind_Raw:
     {
       qiLogWarning() << "Conversion attempt from raw to string";
-      return std::make_pair(AnyReference(), false);
+      return {};
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(RawTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(RawTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_Raw:
     {
       if (targetType->info() == _type->info())
-        return std::make_pair(*this, false);
-      result._type = targetType;
-      result._value = targetType->initializeStorage();
-      std::pair<char*, size_t> v = static_cast<RawTypeInterface*>(_type)->get(_value);
-      static_cast<RawTypeInterface*>(result._type)->set(&result._value, v.first, v.second);
-      return std::make_pair(result, true);
+        return UniqueAnyReference{ *this, DeferOwnership{} };
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        UniqueAnyReference result{ AnyReference { targetType } };
+        std::pair<char*, size_t> v = static_cast<RawTypeInterface*>(_type)->get(_value);
+        static_cast<RawTypeInterface*>(result->_type)->set(&result->_value, v.first, v.second);
+        return result;
+      });
     }
     case TypeKind_String:
     {
-      StringTypeInterface::ManagedRawString data = static_cast<StringTypeInterface*>(_type)->get(_value);
-      result._type = targetType;
-      result._value = targetType->initializeStorage();
-      static_cast<RawTypeInterface*>(result._type)->set(&result._value, data.first.first, data.first.second);
-      if (data.second)
-        data.second(data.first);
-      return std::make_pair(result, true);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        StringTypeInterface::ManagedRawString data =
+            static_cast<StringTypeInterface*>(_type)->get(_value);
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        static_cast<RawTypeInterface*>(result->_type)
+            ->set(&result->_value, data.first.first, data.first.second);
+        if (data.second)
+          data.second(data.first);
+        return result;
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(FloatTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(FloatTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_Float:
     {
-      result._type = targetType;
-      result._value = targetType->initializeStorage();
-      static_cast<FloatTypeInterface*>(targetType)->set(&result._value,
-                                                        static_cast<FloatTypeInterface*>(_type)->get(_value));
-      return std::make_pair(result, true);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        static_cast<FloatTypeInterface*>(targetType)
+            ->set(&result->_value, static_cast<FloatTypeInterface*>(_type)->get(_value));
+        return result;
+      });
     }
     case TypeKind_Int:
     {
-      AnyReference result(static_cast<TypeInterface*>(targetType));
-      int64_t v = static_cast<IntTypeInterface*>(_type)->get(_value);
-      if (static_cast<IntTypeInterface*>(_type)->isSigned())
-        result.setInt(v);
-      else
-        result.setUInt((uint64_t)v);
-      return std::make_pair(result, true);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        int64_t v = static_cast<IntTypeInterface*>(_type)->get(_value);
+        if (static_cast<IntTypeInterface*>(_type)->isSigned())
+          result->setInt(v);
+        else
+          result->setUInt((uint64_t)v);
+        return result;
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(IntTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(IntTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_Int:
     {
-      IntTypeInterface* tsrc = static_cast<IntTypeInterface*>(_type);
-      IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
-      int64_t v = tsrc->get(_value);
-      /* Bounce to GVP to perform overflow checks
-      */
-      AnyReference result((TypeInterface*)tdst);
-      if (tsrc->isSigned())
-        result.setInt(v);
-      else
-        result.setUInt((uint64_t)v);
-      tdst->set(&result._value, v);
-      return std::make_pair(result, true);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        IntTypeInterface* tsrc = static_cast<IntTypeInterface*>(_type);
+        IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
+        int64_t v = tsrc->get(_value);
+        /* Bounce to GVP to perform overflow checks
+        */
+        UniqueAnyReference result{ AnyReference{ tdst } };
+        if (tsrc->isSigned())
+          result->setInt(v);
+        else
+          result->setUInt((uint64_t)v);
+        tdst->set(&result->_value, v);
+        return result;
+      });
     }
     case TypeKind_Float:
     {
-      double v = static_cast<FloatTypeInterface*>(_type)->get(_value);
-      IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
-      AnyReference result((TypeInterface*)tdst);
-      // bounce to setDouble for overflow check
-      result.setDouble(v);
-      return std::make_pair(result, true);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        double v = static_cast<FloatTypeInterface*>(_type)->get(_value);
+        IntTypeInterface* tdst = static_cast<IntTypeInterface*>(targetType);
+        UniqueAnyReference result{ AnyReference{ tdst } };
+        // bounce to setDouble for overflow check
+        result->setDouble(v);
+        return result;
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(OptionalTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(OptionalTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
+      return {};
 
-    AnyReference result;
-    try
-    {
-      result = AnyReference{ targetType };
+    return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+      UniqueAnyReference result{ AnyReference{ targetType } };
       switch (_type->kind())
       {
-        case TypeKind_Void:
-          // do nothing, converting void to optional means creating an unset optional
-          break;
-        case TypeKind_Optional:
-          result.setOptional(*this);
-          break;
-        // In all other cases, try setting this value as the value of the optional
-        default:
-          detail::setOptionalValueReference(result, [&](AnyReference& optValRef){
-            // Recurse the conversion to the value type of the optional
-            const auto optValType = optValRef._type;
-            AnyReference thisConverted;
-            bool shouldDestroy = false;
-            std::tie(thisConverted, shouldDestroy) = convert(optValType);
-
-            auto scopedRefDestruction = ka::scoped([&]{
-              if (shouldDestroy)
-                thisConverted.destroy();
-            });
-
-            if (!thisConverted.isValid())
-              throwConversionFailure(_type, optValType, "");
-
-            optValRef.update(thisConverted);
-          });
-          break;
+      case TypeKind_Void:
+        // do nothing, converting void to optional means creating an unset
+        // optional
+        break;
+      case TypeKind_Optional:
+        result->setOptional(*this);
+        break;
+      // In all other cases, try setting this value as the value of the
+      // optional
+      default:
+        // Recurse the conversion to the value type of the optional
+        const auto optValType = targetType->valueType();
+        auto converted = convert(optValType);
+        if (!converted->isValid())
+          throwConversionFailure(_type, optValType, "");
+        targetType->set(&result->_value, converted->_value);
+        break;
       }
-      return std::make_pair(result, true);
-    }
-    catch (const std::runtime_error& ex)
-    {
-      qiLogDebug() << "Failed to convert " << _type->infoString() << " to an optional type "
-                   << targetType->infoString() << " : " << ex.what();
-    }
-    catch (...)
-    {
-      qiLogDebug() << "Failed to convert " << _type->infoString() << " to an optional type "
-                   << targetType->infoString() << " : unknown exception";
-    }
-
-    // If result is valid, it also means it holds an initialized value that must be destroyed.
-    // It can happen if an exception was caught above.
-    if (result.isValid())
-      result.destroy();
-    return std::make_pair(AnyReference{}, false);
-  }
-
-  namespace {
-    // Cleanup allocated stuff when exiting scope
-    struct CleanUp
-    {
-      CleanUp(const std::vector<void*>& targetData,
-        const std::vector<bool>& mustDestroy,
-        const std::vector<TypeInterface*>& dstTypes)
-      : targetData(targetData)
-      , mustDestroy(mustDestroy)
-      , dstTypes(dstTypes) {}
-      ~CleanUp()
-      {
-        for (unsigned i=0; i<mustDestroy.size(); ++i)
-        {
-          if (mustDestroy[i])
-            dstTypes[i]->destroy(targetData[i]);
-        }
-      }
-      const std::vector<void*>& targetData;
-      const std::vector<bool>& mustDestroy;
-      const std::vector<TypeInterface*>& dstTypes;
-    };
+      return result;
+    });
   }
 
   static std::string fieldList(const std::map<std::string, qi::AnyReference>& map)
@@ -432,7 +369,7 @@ namespace detail
     return ret;
   }
 
-  static std::pair<AnyReference, bool> structConverter(const AnyReferenceBase* src, StructTypeInterface* tdst)
+  static UniqueAnyReference structConverter(const AnyReferenceBase* src, StructTypeInterface* tdst)
   {
     StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(src->type());
 
@@ -444,7 +381,7 @@ namespace detail
     {
       qiLogVerbose() << "Cannot convert between not fully named mismatching tuples " << tsrc->infoString() << " and "
                      << tdst->infoString();
-      return std::make_pair(AnyReference(), false);
+      return {};
     }
     // Compute mapping between src and dst fields based on names
     std::vector<int> fieldMap; // fieldMap[i] = index of src's field i in dst (-1 for not present)
@@ -482,29 +419,26 @@ namespace detail
                  << " missing=" << vecOfTuplesToStrings(fieldMissing);
 
     // convert what we can (missing field check might need the data)
-    std::vector<void*> targetData;
-    std::vector<bool> mustDestroy;
-    targetData.resize(dstTypes.size(), 0);
-    mustDestroy.resize(dstTypes.size(), false);
+    std::vector<UniqueAnyReference> uniqueConvertedFields;
+    uniqueConvertedFields.reserve(dstTypes.size());
+    std::vector<void*> targetData(dstTypes.size(), nullptr);
 
     const std::vector<void*> sourceData = tsrc->get(src->rawValue());
-
-    CleanUp scopeCleanup(targetData, mustDestroy, dstTypes);
 
     for (unsigned i = 0; i < srcTypes.size(); ++i)
     {
       int targetIndex = fieldMap[i];
       if (targetIndex == -1)
         continue; // dropped field, do not convert
-      std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[targetIndex]);
-      if (!conv.first.type())
+      auto conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[targetIndex]);
+      if (!conv->type())
       {
         qiLogVerbose() << "Conversion failure in tuple member " << srcNames[i] << " between "
                        << srcTypes[i]->infoString() << " and " << dstTypes[targetIndex]->infoString();
-        return std::make_pair(AnyReference(), false);
+        return {};
       }
-      targetData[targetIndex] = conv.first.rawValue();
-      mustDestroy[targetIndex] = conv.second;
+      uniqueConvertedFields.emplace_back(std::move(conv));
+      targetData[targetIndex] = uniqueConvertedFields.back()->rawValue();
     }
 
     // Then ask source and target if it's okay to drop fields and fill missing fields
@@ -523,106 +457,115 @@ namespace detail
         fields[dstNames[i]] = AnyValue();
       // Fill elements we have, transfering ownership
       for (unsigned i = 0; i < dstNames.size(); ++i)
+      {
         if (std::find(fieldMap.begin(), fieldMap.end(), i) != fieldMap.end())
-          fields[dstNames[i]].reset(AnyReference(dstTypes[i], targetData[i]), false, mustDestroy[i]);
-      mustDestroy.assign(mustDestroy.size(), false);
+        {
+          auto& uniqueConvertedField = uniqueConvertedFields[i];
+          fields[dstNames[i]].reset(AnyReference(dstTypes[i],
+                                                 uniqueConvertedField->rawValue()),
+                                    false, uniqueConvertedField.ownsReference());
+          uniqueConvertedField.release();
+        }
+      }
+
       // attempt both conversions
       if (!tsrc->convertTo(fields, fieldMissing, fieldDrop) &&
           !tdst->convertFrom(fields, fieldMissing, fieldDrop))
       {
         qiLogVerbose() << "Source and target cannot convert struct";
-        return std::make_pair(AnyReference(), false);
+        return {};
       }
       // move stuff back to targetdata
       for (unsigned i = 0; i < dstNames.size(); ++i)
+      {
         targetData[i] = fields[dstNames[i]].rawValue();
+      }
     }
+
     void* dst = tdst->initializeStorage();
     tdst->set(&dst, targetData);
-    return std::make_pair(AnyReference(tdst, dst), true);
+    return UniqueAnyReference{ AnyReference(tdst, dst) };
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(StructTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(StructTypeInterface* tdst) const
   {
-    if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
-    StructTypeInterface* tdst = targetType;
+    if (!tdst)
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_Tuple:
     {
-      StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(_type);
-      std::vector<void*> sourceData = tsrc->get(_value);
-      std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
-      std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
-      QI_ASSERT(sourceData.size() == srcTypes.size());
-      if (srcTypes.size() != dstTypes.size())
-      {
-        qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->infoString() << " and " << tdst->infoString();
-        return structConverter(this, targetType);
-      }
-      std::vector<std::string> srcNames = tsrc->elementsName();
-      std::vector<std::string> dstNames = tdst->elementsName();
-      if (srcNames.size() == srcTypes.size() && dstNames.size() == dstTypes.size())
-      {
-        std::sort(srcNames.begin(), srcNames.end());
-        std::sort(dstNames.begin(), dstNames.end());
-        if (srcNames != dstNames)
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+        StructTypeInterface* tsrc = static_cast<StructTypeInterface*>(_type);
+        std::vector<void*> sourceData = tsrc->get(_value);
+        std::vector<TypeInterface*> srcTypes = tsrc->memberTypes();
+        std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
+        QI_ASSERT(sourceData.size() == srcTypes.size());
+        if (srcTypes.size() != dstTypes.size())
         {
-          qiLogVerbose() << "Conversion glitch: names mismatch in named tuple";
-          return structConverter(this, targetType);
+          qiLogVerbose() << "Conversion glitch: tuple size mismatch between " << tsrc->infoString() << " and " << tdst->infoString();
+          return structConverter(this, tdst);
         }
-      }
-      // Note: start converting without further check.
-      // It means the case where a struct was modified but the
-      // field count is unchanged will be badly suboptimal.
-      // But further checks will degrade the nominal case.
-      std::vector<void*> targetData;
-      std::vector<bool> mustDestroy;
-      CleanUp scopeCleanup(targetData, mustDestroy, dstTypes);
-      for (unsigned i=0; i<dstTypes.size(); ++i)
-      {
-        std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
-        if (!conv.first._type)
+        std::vector<std::string> srcNames = tsrc->elementsName();
+        std::vector<std::string> dstNames = tdst->elementsName();
+        if (srcNames.size() == srcTypes.size() && dstNames.size() == dstTypes.size())
         {
-          qiLogVerbose() << "Conversion failure in tuple member between "
-                         << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
-          return structConverter(this, targetType);
+          std::sort(srcNames.begin(), srcNames.end());
+          std::sort(dstNames.begin(), dstNames.end());
+          if (srcNames != dstNames)
+          {
+            qiLogVerbose() << "Conversion glitch: names mismatch in named tuple";
+            return structConverter(this, tdst);
+          }
         }
-        targetData.push_back(conv.first._value);
-        mustDestroy.push_back(conv.second);
-      }
-      void* dst = tdst->initializeStorage();
-      tdst->set(&dst, targetData);
+        // Note: start converting without further check.
+        // It means the case where a struct was modified but the
+        // field count is unchanged will be badly suboptimal.
+        // But further checks will degrade the nominal case.
+        std::vector<UniqueAnyReference> uniqueConvertedFields;
+        uniqueConvertedFields.reserve(dstTypes.size());
+        std::vector<void*> targetData;
+        targetData.reserve(dstTypes.size());
+        for (unsigned i=0; i<dstTypes.size(); ++i)
+        {
+          auto conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstTypes[i]);
+          if (!conv->_type)
+          {
+            qiLogVerbose() << "Conversion failure in tuple member between "
+                           << srcTypes[i]->infoString() << " and " << dstTypes[i]->infoString();
+            return structConverter(this, tdst);
+          }
+          uniqueConvertedFields.emplace_back(std::move(conv));
+          targetData.push_back(uniqueConvertedFields.back()->rawValue());
+        }
 
-      result._type = targetType;
-      result._value = dst;
-      return std::make_pair(result, true);
+        void* dst = tdst->initializeStorage();
+        tdst->set(&dst, targetData);
+
+        return UniqueAnyReference{ AnyReference{ tdst, dst } };
+      });
     }
     case TypeKind_Map: {
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&]() -> UniqueAnyReference {
         MapTypeInterface* tsrc = static_cast<MapTypeInterface*>(_type);
 
         //key must be string
         if (tsrc->keyType()->kind() != TypeKind_String && tsrc->keyType()->kind() != TypeKind_Dynamic) {
           qiLogWarning() << "convert from map to struct, the key should be a string. (was " << tsrc->keyType()->kind() << ")";
-          return std::make_pair(AnyReference(), false);
+          return {};
         }
-        const std::vector<std::string>& elems = targetType->elementsName();
-        std::vector<TypeInterface*> dstTypes = targetType->memberTypes();
+        const std::vector<std::string>& elems = tdst->elementsName();
+        std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
 
         if (elems.size() != dstTypes.size()) {
           qiLogWarning() << "convert from map to struct, can't convert to tuple";
-          return std::make_pair(AnyReference(), false);
+          return {};
         }
 
-        std::vector<void*> targetData;
-        targetData.resize(dstTypes.size());
-        std::vector<bool> mustDestroy;
-        mustDestroy.resize(dstTypes.size());
-        size_t count = 0;
+        std::vector<UniqueAnyReference> uniqueConvertedFields;
+        uniqueConvertedFields.reserve(dstTypes.size());
+        std::vector<void*> targetData { dstTypes.size(), nullptr };
         for (AnyIterator iter = tsrc->begin(_value), end = tsrc->end(_value);
             iter != end;
             ++iter)
@@ -645,219 +588,187 @@ namespace detail
           AnyReference ref = (*iter)[1];
           QI_ASSERT(ref.isValid());
 
-          std::pair<AnyReference, bool> conv =
-            ref.convert(dstTypes[rpos]);
-          if (!conv.first.isValid())
+          auto conv = ref.convert(dstTypes[rpos]);
+          if (!conv->isValid())
           {
-            for (unsigned u = 0; u < targetData.size(); ++u)
-              if (mustDestroy[u])
-                dstTypes[u]->destroy(targetData[u]);
             qiLogWarning() << "convert from map to struct, cant convert to the right type for '" << *riter << "' from " << ref.type()->infoString() << " to " << dstTypes[rpos]->infoString();
-            return std::make_pair(AnyReference(), false);
+            return {};
           }
-          targetData[rpos] = conv.first._value;
-          mustDestroy[rpos] = conv.second;
-          ++count;
+          uniqueConvertedFields.emplace_back(std::move(conv));
+          targetData[rpos] = uniqueConvertedFields.back()->rawValue();
         }
 
-        bool bresult = true;
-        if (count != elems.size())
+        if (uniqueConvertedFields.size() != elems.size())
         {
           qiLogWarning() << "convert from map to struct failed, some elements do not exist";
-          bresult = false;
+          return {};
         }
-        else
-        {
-          void* dst = tdst->initializeStorage();
-          tdst->set(&dst, targetData);
-          result._type = targetType;
-          result._value = dst;
-        }
-        for (unsigned i = 0; i < mustDestroy.size(); ++i)
-        {
-          if (mustDestroy[i])
-            dstTypes[i]->destroy(targetData[i]);
-        }
-        return std::make_pair(result, bresult);
+
+        void* dst = tdst->initializeStorage();
+        tdst->set(&dst, targetData);
+        return UniqueAnyReference{ AnyReference{ tdst, dst } };
+      });
     }
     case TypeKind_VarArgs:
     case TypeKind_List:
     {
-      // No explicit type-check, convert will do it
-      // handles for instance [i] -> (iii) if size matches
-      // or [m] -> (anything) if effective types match
-      ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(_type);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&]() -> UniqueAnyReference {
+        // No explicit type-check, convert will do it
+        // handles for instance [i] -> (iii) if size matches
+        // or [m] -> (anything) if effective types match
+        ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(_type);
 
-      AnyIterator srcBegin = tsrc->begin(_value);
-      AnyIterator srcEnd = tsrc->end(_value);
+        AnyIterator srcBegin = tsrc->begin(_value);
+        AnyIterator srcEnd = tsrc->end(_value);
 
-      std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
-      std::vector<void*> targetData;
-      targetData.reserve(dstTypes.size());
-      std::vector<bool> mustDestroy;
-      mustDestroy.reserve(dstTypes.size());
+        std::vector<TypeInterface*> dstTypes = tdst->memberTypes();
+        std::vector<UniqueAnyReference> uniqueConvertedFields;
+        uniqueConvertedFields.reserve(dstTypes.size());
+        std::vector<void*> targetData;
+        targetData.reserve(dstTypes.size());
 
-      if (this->size() != dstTypes.size())
-      {
-        qiLogWarning() << "Conversion failure: containers size mismatch between "
-                       << tsrc->signature().toString() << " and " << tdst->signature().toString();
-        return std::make_pair(AnyReference(), false);
-      }
-
-      unsigned int i = 0;
-      while (srcBegin != srcEnd)
-      {
-        std::pair<AnyReference, bool> conv = (*srcBegin).convert(dstTypes[i]);
-        if (!conv.first.isValid())
+        if (this->size() != dstTypes.size())
         {
-          for (unsigned u = 0; u < targetData.size(); ++u)
-            if (mustDestroy[u])
-              dstTypes[u]->destroy(targetData[u]);
-          return std::make_pair(AnyReference(), false);
+          qiLogWarning() << "Conversion failure: containers size mismatch between "
+                         << tsrc->signature().toString() << " and " << tdst->signature().toString();
+          return {};
         }
-        targetData.push_back(conv.first._value);
-        mustDestroy.push_back(conv.second);
-        ++srcBegin;
-        ++i;
-      }
-      void* dst = tdst->initializeStorage();
-      tdst->set(&dst, targetData);
-      for (i = 0; i < mustDestroy.size(); ++i)
-      {
-        if (mustDestroy[i])
-          dstTypes[i]->destroy(targetData[i]);
-      }
-      result._type = targetType;
-      result._value = dst;
-      return std::make_pair(result, true);
+
+        unsigned int i = 0;
+        while (srcBegin != srcEnd)
+        {
+          auto conv = (*srcBegin).convert(dstTypes[i]);
+          if (!conv->isValid())
+            return {};
+          uniqueConvertedFields.emplace_back(std::move(conv));
+          targetData.push_back(uniqueConvertedFields.back()->rawValue());
+          ++srcBegin;
+          ++i;
+        }
+        void* dst = tdst->initializeStorage();
+        tdst->set(&dst, targetData);
+        return UniqueAnyReference{ AnyReference{ tdst, dst } };
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(MapTypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(MapTypeInterface* targetType) const
   {
     if (!targetType)
-      return std::make_pair(AnyReference{}, false);
-
-    AnyReference result;
+      return {};
 
     switch (_type->kind())
     {
     case TypeKind_Map:
     {
-      result = AnyReference(static_cast<TypeInterface*>(targetType));
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&]() -> UniqueAnyReference {
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        MapTypeInterface* targetMapType = static_cast<MapTypeInterface*>(targetType);
+        MapTypeInterface* srcMapType = static_cast<MapTypeInterface*>(_type);
 
-      MapTypeInterface* targetMapType = static_cast<MapTypeInterface*>(targetType);
-      MapTypeInterface* srcMapType = static_cast<MapTypeInterface*>(_type);
+        TypeInterface* srcKeyType = srcMapType->keyType();
+        TypeInterface* srcElementType = srcMapType->elementType();
 
-      TypeInterface* srcKeyType = srcMapType->keyType();
-      TypeInterface* srcElementType = srcMapType->elementType();
+        TypeInterface* targetKeyType = targetMapType->keyType();
+        TypeInterface* targetElementType = targetMapType->elementType();
 
-      TypeInterface* targetKeyType = targetMapType->keyType();
-      TypeInterface* targetElementType = targetMapType->elementType();
+        bool sameKey = srcKeyType->info() == targetKeyType->info();
+        bool sameElem = srcElementType->info() == targetElementType->info();
 
-      bool sameKey = srcKeyType->info() == targetKeyType->info();
-      bool sameElem = srcElementType->info() == targetElementType->info();
-
-      AnyIterator iend = end();
-      for (AnyIterator it = begin(); it != iend; ++it)
-      {
-        std::pair<AnyReference, bool> ck, cv;
-        AnyReference kv = *it;
-        if (!sameKey)
+        for (auto kv : *this)
         {
-          ck = kv[0].convert(targetKeyType);
-          if (!ck.first._type)
-            return std::make_pair(AnyReference(), false);
+          UniqueAnyReference ck, cv;
+          if (!sameKey)
+          {
+            ck = kv[0].convert(targetKeyType);
+            if (!ck->_type)
+              return {};
+          }
+          if (!sameElem)
+          {
+            cv = kv[1].convert(targetElementType);
+            if (!cv->_type)
+              return {};
+          }
+          result->insert(sameKey ? kv[0] : *ck, sameElem ? kv[1] : *cv);
         }
-        if (!sameElem)
-        {
-          cv = kv[1].convert(targetElementType);
-          if (!cv.first._type)
-            return std::make_pair(AnyReference(), false);
-        }
-        result.insert(sameKey?kv[0]:ck.first, sameElem?kv[1]:cv.first);
-        if (!sameKey && ck.second)
-          ck.first.destroy();
-        if (!sameElem && cv.second)
-          cv.first.destroy();
-      }
-      return std::make_pair(result, true);
+        return result;
+      });
     }
     case TypeKind_VarArgs:
     case TypeKind_List:
     {
-      // Accept [(kv)] and convert to {kv}
-      // Also accept [[m]] , [[k]] if k=v and size match, and other compatible stuffs
-      result = AnyReference(static_cast<TypeInterface*>(targetType));
-      ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(_type);
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&]() -> UniqueAnyReference {
+        // Accept [(kv)] and convert to {kv}
+        // Also accept [[m]] , [[k]] if k=v and size match, and other compatible stuffs
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        ListTypeInterface* tsrc = static_cast<ListTypeInterface*>(_type);
 
-      AnyIterator srcBegin = tsrc->begin(_value);
-      AnyIterator srcEnd = tsrc->end(_value);
+        AnyIterator srcBegin = tsrc->begin(_value);
+        AnyIterator srcEnd = tsrc->end(_value);
 
-      std::vector<TypeInterface*> vectorValueType;
-      vectorValueType.push_back(static_cast<MapTypeInterface*>(targetType)->keyType());
-      vectorValueType.push_back(static_cast<MapTypeInterface*>(targetType)->elementType());
+        std::vector<TypeInterface*> vectorValueType;
+        vectorValueType.push_back(static_cast<MapTypeInterface*>(targetType)->keyType());
+        vectorValueType.push_back(static_cast<MapTypeInterface*>(targetType)->elementType());
 
-      TypeInterface *pairType = makeTupleType(vectorValueType);
+        TypeInterface* pairType = makeTupleType(vectorValueType);
 
-      while (srcBegin != srcEnd)
-      {
-        std::pair<AnyReference, bool> conv = (*srcBegin).convert(pairType);
-        if (!conv.first._type)
+        while (srcBegin != srcEnd)
         {
-          result.destroy();
-          return std::make_pair(AnyReference(), false);
+          auto conv = (*srcBegin).convert(pairType);
+          if (!conv->_type)
+          {
+            return {};
+          }
+          result->insert((*conv)[0], (*conv)[1]);
+          ++srcBegin;
         }
-        result.insert(conv.first[0], conv.first[1]);
-        if (conv.second)
-          conv.first.destroy();
-        ++srcBegin;
-      }
-      return std::make_pair(result, true);
+        return result;
+      });
     }
     case TypeKind_Tuple:
     {
-      result = AnyReference(targetType);
-      auto srcStructType = static_cast<StructTypeInterface*>(_type);
-      MapTypeInterface* targetMapType = targetType;
+      return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] () -> UniqueAnyReference{
+        UniqueAnyReference result{ AnyReference{ targetType } };
+        auto srcStructType = static_cast<StructTypeInterface*>(_type);
+        MapTypeInterface* targetMapType = targetType;
 
-      // Source fields value
-      std::vector<void*> sourceData = srcStructType->get(_value);
-      // Source fields name
-      std::vector<std::string> srcElementName = srcStructType->elementsName();
-      // Source members type
-      std::vector<TypeInterface*> srcTypes = srcStructType->memberTypes();
-      // Destination members type
-      TypeInterface* dstType = targetMapType->elementType();
+        // Source fields value
+        std::vector<void*> sourceData = srcStructType->get(_value);
+        // Source fields name
+        std::vector<std::string> srcElementName = srcStructType->elementsName();
+        // Source members type
+        std::vector<TypeInterface*> srcTypes = srcStructType->memberTypes();
+        // Destination members type
+        TypeInterface* dstType = targetMapType->elementType();
 
-      // trying to convert std::pair to std::map
-      if (srcElementName.size() != srcTypes.size())
-        return std::make_pair(AnyReference(), false);
+        // trying to convert std::pair to std::map
+        if (srcElementName.size() != srcTypes.size())
+          return {};
 
-      for (unsigned int i = 0; i < srcElementName.size(); ++i)
-      {
-        std::pair<AnyReference, bool> conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstType);
-        if (!conv.first._type)
+        for (unsigned int i = 0; i < srcElementName.size(); ++i)
         {
-          qiLogVerbose() << "Conversion failure in tuple member between "
-                         << srcTypes[i]->infoString() << " and " << dstType->infoString();
-          result.destroy();
-          return std::make_pair(AnyReference(), false);
+          auto conv = AnyReference(srcTypes[i], sourceData[i]).convert(dstType);
+          if (!conv->_type)
+          {
+            qiLogVerbose() << "Conversion failure in tuple member between "
+                           << srcTypes[i]->infoString() << " and " << dstType->infoString();
+            return {};
+          }
+          result->insert(AnyReference::from(srcElementName[i]), *conv);
         }
-        result.insert(AnyReference::from(srcElementName[i]), conv.first);
-        if (conv.second)
-          conv.first.destroy();
-      }
-      return std::make_pair(result, true);
+        return result;
+      });
     }
     default:
       break;
     }
-    return std::make_pair(AnyReference(), false);
+
+    return {};
   }
 
   std::pair<char*, size_t> AnyReferenceBase::asRaw() const {
@@ -866,7 +777,7 @@ namespace detail
     return static_cast<RawTypeInterface*>(_type)->get(_value);
   }
 
-  std::pair<AnyReference, bool> AnyReferenceBase::convert(TypeInterface* targetType) const
+  UniqueAnyReference AnyReferenceBase::convert(TypeInterface* targetType) const
   {
     /* Can have false-negative (same effective type, different Type instances
      * but we do not care, correct check (by comparing info() result
@@ -874,16 +785,16 @@ namespace detail
      */
     if (!targetType || !_type) {
       qiLogWarning() << "Conversion error: can't convert to/from a null type.";
-      return std::make_pair(AnyReference(), false);
+      return {};
     }
     qiLogDebug() << "convert "
       << _type->infoString() << '(' << _type->kind() << ") "
       << targetType->infoString() << '(' << targetType->kind() << ')' ;
 
     if (_type == targetType)
-      return std::make_pair(*this, false);
+      return UniqueAnyReference{ *this, DeferOwnership{} };
 
-    AnyReference result;
+    UniqueAnyReference result;
     TypeKind skind = _type->kind();
     TypeKind dkind = targetType->kind();
 
@@ -892,7 +803,7 @@ namespace detail
       switch(dkind)
       {
       case TypeKind_Void:
-        return std::make_pair(qi::AnyReference(targetType), true);
+        return UniqueAnyReference{ qi::AnyReference(targetType) };
       case TypeKind_Float:
         return convert(static_cast<FloatTypeInterface*>(targetType));
       case TypeKind_Int:
@@ -926,9 +837,9 @@ namespace detail
             || targetType->info().asString() ==  _type->info().asString()
     #endif
             )
-          return std::make_pair(*this, false);
+          return UniqueAnyReference{ *this, DeferOwnership{} };
         else
-          return std::make_pair(AnyReference(), false);
+          return {};
       }
       default:
         break;
@@ -982,7 +893,7 @@ namespace detail
               static_cast<ObjectTypeInterface*>(pT->pointedType()),
               pT->dereference(_value)._value),
              boost::bind(&AnyObject::deleteGenericObjectOnlyAndKeep<AnyValue>, _1, AnyValue(*this)));
-      return std::make_pair(AnyReference::from(obj).clone(), true);
+      return UniqueAnyReference{ AnyReference::from(obj).clone() };
     }
 
     if (_type->info() == typeOf<AnyObject>()->info()
@@ -995,7 +906,7 @@ namespace detail
       {
         AnyReference res(pT);
         pT->set(&res._value, qi::AnyReference::from(boost::static_pointer_cast<void>(self->asSharedPtr())));
-        return std::make_pair(res, true);
+        return UniqueAnyReference{ res };
       }
 
       // Attempt specialized proxy conversion
@@ -1005,8 +916,7 @@ namespace detail
                                                  static_cast<PointerTypeInterface*>(targetType)->pointedType()->info());
       if (it != map.end())
       {
-        AnyReference res = (it->second)(*(AnyObject*)_value);
-        return std::make_pair(res, true);
+        return UniqueAnyReference{ (it->second)(*(AnyObject*)_value) };
       }
       else
         qiLogDebug() << "type "
@@ -1020,8 +930,7 @@ namespace detail
     if (_type->kind() == TypeKind_Dynamic)
     {
       AnyReference gv = content();
-      std::pair<AnyReference, bool> result = gv.convert(targetType);
-      return result;
+      return gv.convert(targetType);
     }
 
     if (targetType->kind() == TypeKind_Optional)
@@ -1042,25 +951,24 @@ namespace detail
       if (osrc && (inheritOffset = osrc->inherits(targetType)) != ObjectTypeInterface::INHERITS_FAILED)
       {
         // We return a Value that point to the same data as this.
-        result._type = targetType;
-        result._value = (void*)((intptr_t)_value + inheritOffset);
-        return std::make_pair(result, false);
+        result.reset(AnyReference{ targetType, (void*)((intptr_t)_value + inheritOffset) });
+        return result.release(DeferOwnership{});
       }
     }
 
     if (_type->info() == targetType->info())
-      return std::make_pair(*this, false);
+      return UniqueAnyReference{ *this, DeferOwnership{} };
 
-    return std::make_pair(AnyReference(), false);
+    return {};
   }
 
   AnyReference AnyReferenceBase::convertCopy(TypeInterface* targetType) const
   {
-    std::pair<AnyReference, bool> res = convert(targetType);
-    if (res.second)
-      return res.first;
+    auto res = convert(targetType);
+    if (res.ownsReference())
+      return res.release();
     else
-      return res.first.clone();
+      return res->clone();
   }
 
 }
@@ -1234,13 +1142,10 @@ namespace detail
     else if (kind() == TypeKind_Map)
     {
       MapTypeInterface* t = static_cast<MapTypeInterface*>(_type);
-      std::pair<AnyReference, bool> c = key.convert(t->keyType());
-      if (!c.first._type)
+      auto c = key.convert(t->keyType());
+      if (!c->_type)
         throw std::runtime_error("Incompatible key type");
-      AnyReference result = t->element(&_value, c.first._value, autoInsert);
-      if (c.second)
-        c.first.destroy();
-      return result;
+      return t->element(&_value, c->_value, autoInsert);
     }
     else if (kind() == TypeKind_Tuple)
     {
@@ -1265,39 +1170,34 @@ namespace detail
     if (kind() != TypeKind_List && kind() != TypeKind_VarArgs)
       throw std::runtime_error("Expected a list");
     ListTypeInterface* t = static_cast<ListTypeInterface*>(_type);
-    std::pair<AnyReference, bool> c = elem.convert(t->elementType());
+    auto c = elem.convert(t->elementType());
 
-    if (!c.first.isValid())
+    if (!c->isValid())
       throwConversionFailure(elem._type, t->elementType(), "(invalid value type)");
 
-    t->pushBack(&_value, c.first._value);
-    if (c.second)
-      c.first.destroy();
+    t->pushBack(&_value, c->_value);
   }
 
   void AnyReferenceBase::insert(const AnyReference& key, const AnyReference& val)
   {
     if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");
-    std::pair<AnyReference, bool> ck(key, false);
-    std::pair<AnyReference, bool> cv(val, false);
     MapTypeInterface* t = static_cast<MapTypeInterface*>(_type);
+
+    UniqueAnyReference ck{ key, DeferOwnership{} };
+    UniqueAnyReference cv{ val, DeferOwnership{} };
 
     if (key._type != t->keyType())
       ck = key.convert(t->keyType());
-    if (!ck.first.isValid())
+    if (!ck->isValid())
       throwConversionFailure(key._type, t->keyType(), "(invalid key type)");
 
     if (val._type != t->elementType())
       cv = val.convert(t->elementType());
-    if (!cv.first.isValid())
+    if (!cv->isValid())
       throwConversionFailure(val._type, t->elementType(), "(invalid value type)");
 
-    t->insert(&_value, ck.first._value, cv.first._value);
-    if (ck.second)
-      ck.first.destroy();
-    if (cv.second)
-      cv.first.destroy();
+    t->insert(&_value, ck->_value, cv->_value);
   }
 
   void AnyReferenceBase::update(const AutoAnyReference& val)
@@ -1372,28 +1272,28 @@ namespace detail
     const auto argType = static_cast<OptionalTypeInterface*>(opt._type);
     const auto thisType = static_cast<OptionalTypeInterface*>(_type);
 
-    if (!argType->hasValue(opt._value))
-    {
-      // When argument optional has no value, we might not know what its real value type is (when
-      // for instance its type is dynamic), which means that we cannot know for sure that the
-      // argument value type would have been convertible to this object value type.
-      // The signature conversion check returns zero when conversion cannot be ensured.
-      if (argType->valueType()->signature().isConvertibleTo(thisType->valueType()->signature()) ==
-          0.f)
-      {
-        throw std::runtime_error(
-            "Cannot set optional from argument: argument has no value and its signature is not "
-            "convertible to the object signature");
-      }
+    const auto argValueType = argType->valueType();
+    const auto thisValueType = thisType->valueType();
 
-      // Otherwise, we accept that if it had a value it would have been convertible in any cases.
-      thisType->reset(&_value);
+    // When argument optional has no value, we might not know what its real value type is (when
+    // for instance its type is dynamic), which means that we cannot know for sure that the
+    // argument value type would have been convertible to this object value type.
+    // The signature conversion check returns zero when conversion cannot be ensured.
+    // Otherwise, we accept that if it had a value it would have been convertible in any cases.
+    if (argValueType->signature().isConvertibleTo(thisValueType->signature()) == 0.f)
+    {
+      throw std::runtime_error(
+          "Cannot set optional from argument: argument value type is not convertible to this "
+          "object value type");
     }
+
+    if (!argType->hasValue(opt._value))
+      thisType->reset(&_value);
     else
     {
-      setOptionalValueReference(thisType, _value, [&](AnyReference& optValueRef){
-        optValueRef.update(argType->value(opt._value));
-      });
+      auto conv = opt.content().convert(thisValueType);
+      if (conv->isValid())
+        thisType->set(&_value, conv->_value);
     }
   }
 
@@ -1454,10 +1354,8 @@ namespace detail
     else if (kind() == TypeKind_List || kind() == TypeKind_VarArgs || kind() == TypeKind_Map)
     {
       AnyReferenceVector result;
-      AnyIterator iend = end();
-      AnyIterator it = begin();
-      for(; it != iend; ++it)
-        result.push_back(*it);
+      for(auto elem : *this)
+        result.push_back(elem);
       return result;
     }
     else if (kind() == TypeKind_Dynamic)
@@ -1493,13 +1391,8 @@ namespace detail
     if (kind() != TypeKind_Map)
       throw std::runtime_error("Expected a map");
     std::map<AnyReference, AnyReference> result;
-    AnyIterator iend = end();
-    AnyIterator it = begin();
-    for(; it != iend; ++it)
-    {
-      AnyReference elem = *it;
+    for(auto elem : *this)
       result[elem[0]] = elem[1];
-    }
     return result;
   }
 

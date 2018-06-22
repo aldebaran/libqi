@@ -84,14 +84,7 @@ namespace ka {
     }
 
     scoped_t& operator=(scoped_t const&) = delete;
-
-    // TODO : use "= default" when get rid of vs2013.
-    scoped_t& operator=(scoped_t&& a) {
-      value = std::move(a.value);
-      f = std::move(a.f);
-      a.moved_from = true;
-      return *this;
-    }
+    scoped_t& operator=(scoped_t&& a) = delete;
 
     ~scoped_t() {
       if (!moved_from) f(std::move(value));
@@ -126,13 +119,7 @@ namespace ka {
     }
 
     scoped_t& operator=(scoped_t const&) = delete;
-
-    // TODO : use "= default" when get rid of vs2013.
-    scoped_t& operator=(scoped_t&& a) {
-      f = std::move(a.f);
-      a.moved_from = true;
-      return *this;
-    }
+    scoped_t& operator=(scoped_t&&) = delete;
 
     ~scoped_t() {
       if (!moved_from) f();

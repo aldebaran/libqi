@@ -138,14 +138,12 @@ template<typename T>
 inline T AnyReferenceBase::to() const
 {
   TypeInterface* targetType = typeOf<T>();
-  std::pair<AnyReference, bool> conv = convert(targetType);
-  if (!conv.first._type)
+  auto conv = convert(targetType);
+  if (!conv->_type)
   {
     throwConversionFailure(_type, targetType, ""); // no additional message
   }
-  T result = *conv.first.ptr<T>(false);
-  if (conv.second)
-    conv.first.destroy();
+  T result = *conv->ptr<T>(false);
   return result;
 }
 

@@ -3,6 +3,7 @@
 **  See COPYING for the license
 */
 #include <boost/noncopyable.hpp>
+#include <boost/container/small_vector.hpp>
 #include <qi/future.hpp>
 #include <qi/signature.hpp>
 #include <qi/anyfunction.hpp>
@@ -12,45 +13,6 @@ qiLogCategory("qitype.functiontype");
 
 namespace qi
 {
-
-  //make destroy exception-safe for AnyFunction::call
-  class AnyReferenceArrayDestroyer : private boost::noncopyable {
-  public:
-    AnyReferenceArrayDestroyer(AnyReference *toDestroy, void **convertedArgs, bool shouldDelete)
-      : toDestroy(toDestroy)
-      , convertedArgs(convertedArgs)
-      , toDestroyPos(0)
-      , shouldDelete(shouldDelete)
-    {
-    }
-
-    ~AnyReferenceArrayDestroyer() {
-      destroy();
-    }
-
-    void destroy() {
-      if (toDestroy) {
-        for (unsigned i = 0; i < toDestroyPos; ++i)
-          toDestroy[i].destroy();
-        if (shouldDelete)
-          delete[] toDestroy;
-        toDestroy = 0;
-      }
-      if (shouldDelete && convertedArgs) {
-        delete[] convertedArgs;
-        convertedArgs = 0;
-      }
-    }
-
-
-  public:
-    AnyReference* toDestroy;
-    void**        convertedArgs;
-    unsigned int  toDestroyPos;
-    bool          shouldDelete;
-  };
-
-
 
   AnyReference AnyFunction::call(AnyReference arg1, const AnyReferenceVector& remaining)
   {
@@ -122,17 +84,16 @@ namespace qi
       --sz;
     }
     unsigned offset = transform.prependValue? 1:0;
-#if QI_HAS_VARIABLE_LENGTH_ARRAY
-    AnyReference sstoDestroy[sz+offset];
-    void* ssconvertedArgs[sz+offset];
-    AnyReferenceArrayDestroyer arad(sstoDestroy, ssconvertedArgs, false);
-#else
-    AnyReference* sstoDestroy = new AnyReference[sz+offset];
-    void** ssconvertedArgs = new void*[sz+offset];
-    AnyReferenceArrayDestroyer arad(sstoDestroy, ssconvertedArgs, true);
-#endif
+
+    boost::container::small_vector<detail::UniqueAnyReference, detail::maxAnyFunctionArgsCountHint>
+        uniqueConvertedArgs;
+    uniqueConvertedArgs.reserve(sz);
+    boost::container::small_vector<void*, detail::maxAnyFunctionArgsCountHint> callArgs;
+    callArgs.reserve(sz + offset);
+
     if (transform.prependValue)
-      arad.convertedArgs[0] = transform.boundValue;
+      callArgs.push_back(transform.boundValue);
+
     for (unsigned i=0; i<sz; ++i)
     {
       const unsigned ti = i + offset;
@@ -140,14 +101,16 @@ namespace qi
       auto* argType = arg.type();
 
       if (!argType) // invalid argument not wrapped into a dynamic AnyReference!
-        throwForInvalidConversion(i, arg.signature(), target[ti]->signature(), this->parametersSignature(this->transform.dropFirst));
+        throwForInvalidConversion(i, arg.signature(), target[ti]->signature(),
+                                  this->parametersSignature(this->transform.dropFirst));
 
+      void* callArg = nullptr;
       if (argType == target[ti] || argType->info() == target[ti]->info())
-        arad.convertedArgs[ti] = arg.rawValue();
+        callArg = arg.rawValue();
       else
       {
-        std::pair<AnyReference,bool> v = arg.convert(target[ti]);
-        if (!v.first.type())
+        auto v = arg.convert(target[ti]);
+        if (!v->type())
         {
           if (arg.isValid())
           {
@@ -156,24 +119,24 @@ namespace qi
             {
               AnyReference deref = *const_cast<AnyReference&>(arg);
               if (deref.type() == target[ti] || deref.type()->info() == target[ti]->info())
-                v = std::make_pair(deref, false);
+                v = detail::UniqueAnyReference{ deref, detail::DeferOwnership{} };
               else
                 v = deref.convert(target[ti]);
             }
           }
 
-          if (!v.first.type())
-            throwForInvalidConversion(i, arg.signature(true), target[ti]->signature(), this->parametersSignature(this->transform.dropFirst));
+          if (!v->type())
+            throwForInvalidConversion(i, arg.signature(true), target[ti]->signature(),
+                                      this->parametersSignature(this->transform.dropFirst));
         }
 
-        if (v.second)
-          arad.toDestroy[arad.toDestroyPos++] = v.first;
-        arad.convertedArgs[ti] = v.first.rawValue();
+        uniqueConvertedArgs.emplace_back(std::move(v));
+        callArg = uniqueConvertedArgs.back()->rawValue();
       }
+      callArgs.push_back(callArg);
     }
-    void* res;
-    res = type->call(value, arad.convertedArgs, sz+offset);
-    arad.destroy();
+
+    void* res = type->call(value, callArgs.data(), sz+offset);
     return AnyReference(resultType(), res);
   }
 

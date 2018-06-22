@@ -11,7 +11,7 @@
 #include <boost/function.hpp>
 #include <vector>
 
-namespace qi {
+namespace qi{
   class AnyValue;
   class AutoAnyReference;
 
@@ -278,6 +278,17 @@ QI_GEN(genCall)
 
   /// @return the type used by dynamic functions
   QI_API FunctionTypeInterface* dynamicFunctionTypeInterface();
+
+namespace detail
+{
+
+  // This is just a hint of the maximum of the number of arguments that can be passed to a function,
+  // that is used to preallocate on the stack some of the arguments containers. It should be a
+  // number that will cover, if not all, most cases of functions without being too big that it would
+  // be unused stack space.
+  const std::size_t maxAnyFunctionArgsCountHint = 8u;
+
+}
 }
 
 #include <qi/type/detail/anyfunction.hxx>

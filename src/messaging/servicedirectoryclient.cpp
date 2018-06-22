@@ -23,7 +23,7 @@ namespace qi {
     , _localSd(false)
     , _enforceAuth(enforceAuth)
   {
-    _object = makeDynamicAnyObject(_remoteObject, true);
+    _object = makeDynamicAnyObject(_remoteObject.get(), false);
 
     connected.setCallType(MetaCallType_Direct);
     disconnected.setCallType(MetaCallType_Direct);
@@ -77,6 +77,75 @@ namespace qi {
     if (socket)
       socket->disconnect().async();
     connectionPromise.setError("Socket has been reset");
+  }
+
+  Future<void> ServiceDirectoryClient::closeImpl(const std::string& reason,
+                                                 bool sendSignalDisconnected)
+  {
+    // In order to hold the mutex for the shortest time, we swap the member variables with local
+    // variables (thus resetting the member variables to 0).
+    MessageSocketPtr sdSocket;
+    SignalLink addLink = 0, removeLink = 0, socketDisconnectedLink = 0, socketEventLink = 0;
+    bool localSd = false;
+    {
+      boost::mutex::scoped_lock lock(_mutex);
+      using std::swap;
+      swap(sdSocket, _sdSocket);
+      swap(socketDisconnectedLink, _sdSocketDisconnectedSignalLink);
+      swap(socketEventLink, _sdSocketSocketEventSignalLink);
+      swap(addLink, _addSignalLink);
+      swap(removeLink, _removeSignalLink);
+      swap(localSd, _localSd);
+    }
+
+    Future<void> fut = futurize(); // if there was nothing asynchronous to do, return a future with
+                                   // a value already set
+
+    using std::placeholders::_1;
+    if (sdSocket)
+    {
+      static const auto logSocketSignalDisc = [](const char* prefix, Future<bool> discFut) {
+        if (discFut.hasError())
+          qiLogDebug() << prefix << discFut.error();
+        else if (!discFut.value())
+          qiLogDebug() << prefix << "unknown error";
+      };
+
+      // Unlink from socket signal before disconnecting it.
+      if (socketDisconnectedLink != 0)
+        sdSocket->disconnected.disconnectAsync(socketDisconnectedLink)
+            .then(std::bind(logSocketSignalDisc, "Failed to disconnect Socket::disconnected: ", _1));
+      if (socketEventLink != 0)
+        sdSocket->socketEvent.disconnectAsync(socketEventLink)
+            .then(std::bind(logSocketSignalDisc, "Failed to disconnect Socket::socketEvent: ", _1));
+      fut = sdSocket->disconnect().async();
+
+      if (sendSignalDisconnected)
+        disconnected(reason);
+    }
+
+    {
+      static const auto logObjectSignalDisc = [](const char* prefix, Future<void> discFut) {
+        if (discFut.hasError())
+          qiLogDebug() << prefix << discFut.error();
+      };
+
+      if (addLink != 0)
+        _object.disconnect(addLink).async().then(
+              std::bind(logObjectSignalDisc, "Failed to disconnect SDC::serviceAdded: ", _1));
+
+      if (removeLink != 0)
+        _object.disconnect(removeLink).async().then(
+              std::bind(logObjectSignalDisc, "Failed to disconnect SDC::serviceRemoved: ", _1));
+    }
+
+    if (localSd)
+    {
+      boost::mutex::scoped_lock lock(_mutex);
+      _object = makeDynamicAnyObject(_remoteObject.get(), false);
+    }
+
+    return fut;
   }
 
   void ServiceDirectoryClient::onMetaObjectFetched(MessageSocketPtr socket,
@@ -313,7 +382,7 @@ namespace qi {
   }
 
   qi::FutureSync<void> ServiceDirectoryClient::close() {
-    return onSocketFailure(_sdSocket, "User closed the connection");
+    return closeImpl("User closed the connection", true);
   }
 
   bool ServiceDirectoryClient::isConnected() const
@@ -350,56 +419,15 @@ namespace qi {
 
   qi::FutureSync<void> ServiceDirectoryClient::onSocketFailure(MessageSocketPtr socket,
                                                                std::string error,
-                                                               bool mustSignalDisconnected)
+                                                               bool sendSignalDisconnected)
   {
-    qi::Future<void> fut;
-    qi::SignalLink add=0, remove=0;
-    { // can't hold lock while disconnecting signals
-      boost::mutex::scoped_lock lock(_mutex);
-      if (!socket || socket != _sdSocket)
-      {
-        if (socket)
-          socket->disconnect().async();
-        return FutureSync<void>{nullptr};
-      }
-      _sdSocket.reset();
-
-      // We just manually triggered onSocketFailure, so unlink
-      // from socket signal before disconnecting it.
-      socket->disconnected.disconnect(_sdSocketDisconnectedSignalLink);
-      _sdSocketDisconnectedSignalLink = 0;
-
-      socket->socketEvent.disconnect(_sdSocketSocketEventSignalLink);
-      _sdSocketSocketEventSignalLink = 0;
-      fut = socket->disconnect().async();
-
-      // Hold the socket shared ptr alive until the future returns.
-      // otherwise, the destructor will block us until disconnect terminates
-      fut.then([socket](Future<void>){});
-
-      std::swap(add, _addSignalLink);
-      std::swap(remove, _removeSignalLink);
+    if (isPreviousSdSocket(socket))
+    {
+      cleanupPreviousSdSocket(socket, qi::Promise<void>{});
+      return futurize();
     }
-    try {
-      if (add != 0)
-      {
-        _object.disconnect(add).async();
-      }
-    } catch (std::runtime_error &e) {
-      qiLogDebug() << "Cannot disconnect SDC::serviceAdded: " << e.what();
-    }
-    try {
-      if (remove != 0)
-      {
-        _object.disconnect(remove).async();
-      }
-    } catch (std::runtime_error &e) {
-        qiLogDebug() << "Cannot disconnect SDC::serviceRemoved: " << e.what();
-    }
-    if (mustSignalDisconnected)
-      disconnected(error);
 
-    return fut;
+    return closeImpl(error, sendSignalDisconnected);
   }
 
   MessageSocketPtr ServiceDirectoryClient::socket()
