@@ -20,6 +20,7 @@
 #include <map>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
 
 #include <qi/application.hpp>
 #include <qi/atomic.hpp>

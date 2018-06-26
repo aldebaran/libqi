@@ -293,6 +293,15 @@ namespace qi
                          boost::weak_ptr<ObjectHost> context,
                          StreamContext* streamContext)
   {
+    if (!value.isValid())
+    {
+      const auto msg = "Setvalue(): invalid value";
+      qiLogWarning() << msg;
+      setType(qi::Message::Type_Error);
+      setError(msg);
+      return;
+    }
+
     Signature effective = value.type()->signature();
     if (effective != sig)
     {
