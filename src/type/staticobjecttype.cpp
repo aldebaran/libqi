@@ -23,6 +23,10 @@ void StaticObjectTypeBase::initialize(const MetaObject& mo, const ObjectTypeData
   _data = data;
 }
 
+PtrUid StaticObjectTypeBase::ptrUid(void* instance) const
+{
+  return PtrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), instance);
+}
 
 const MetaObject&
 StaticObjectTypeBase::metaObject(void* )

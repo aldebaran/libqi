@@ -37,6 +37,7 @@ namespace qi
     MethodMap           methodMap;
     MetaObject          meta;
     ObjectThreadingModel threadingModel;
+    PtrUid ptrUid;
 
     using PropertyMap = std::map<unsigned int, std::pair<PropertyBase*, bool>>;
     PropertyMap propertyMap;
@@ -47,7 +48,9 @@ namespace qi
 
   DynamicObjectPrivate::DynamicObjectPrivate()
     : threadingModel(ObjectThreadingModel_Default)
+    , ptrUid{ os::getMachineIdAsUuid(), os::getProcessUuid(), this }
   {
+
   }
 
   void DynamicObject::setManageable(Manageable* m)
@@ -107,6 +110,7 @@ namespace qi
   {
   public:
     DynamicObjectTypeInterface() {}
+    PtrUid ptrUid(void* instance) const override;
     const MetaObject& metaObject(void* instance) override;
     qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override;
     void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params) override;
@@ -379,7 +383,22 @@ namespace qi
     });
   }
 
+  PtrUid DynamicObject::ptrUid() const
+  {
+    return _p->ptrUid;
+  }
+
+  void DynamicObject::setPtrUid(PtrUid newUid)
+  {
+    _p->ptrUid = newUid;
+  }
+
+
   //DynamicObjectTypeInterface implementation: just bounces everything to metaobject
+  PtrUid DynamicObjectTypeInterface::ptrUid(void* instance) const
+  {
+    return reinterpret_cast<DynamicObject*>(instance)->ptrUid();
+  }
 
   const MetaObject& DynamicObjectTypeInterface::metaObject(void* instance)
   {
@@ -425,6 +444,8 @@ namespace qi
       ->metaSetProperty(context, id, value);
   }
 
+
+
   static void cleanupDynamicObject(GenericObject *obj, bool destroyObject,
     boost::function<void (GenericObject*)> onDelete)
   {
@@ -446,18 +467,19 @@ namespace qi
 
   AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other)
   {
-    GenericObject* go = new GenericObject(getDynamicTypeInterface(), obj);
+    GenericObject* go = new GenericObject(getDynamicTypeInterface(), obj, obj->ptrUid());
     return AnyObject(go, other);
   }
 
-  AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
+  AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject, // TODO: take the ptruid from the obj
     const boost::optional<PtrUid>& ptrUid,
     boost::function<void (GenericObject*)> onDelete)
   {
+    QI_ASSERT_TRUE(obj);
     ObjectTypeInterface* type = getDynamicTypeInterface();
     std::unique_ptr<GenericObject> go;
     if (ptrUid) go.reset(new GenericObject(type, obj, *ptrUid));
-    else        go.reset(new GenericObject(type, obj));
+    else        go.reset(new GenericObject(type, obj, obj->ptrUid()));
     if (destroyObject || onDelete)
       return AnyObject(go.release(),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));

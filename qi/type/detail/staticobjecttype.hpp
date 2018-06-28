@@ -62,22 +62,23 @@ class QI_API StaticObjectTypeBase: public ObjectTypeInterface
 {
 public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
-  virtual const TypeInfo& info();
-  virtual const MetaObject& metaObject(void* instance);
-  virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature);
-  virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params);
-  virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber);
+  const TypeInfo& info() override;
+  const MetaObject& metaObject(void* instance) override;
+  PtrUid ptrUid(void* instance) const override;
+  qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override;
+  void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params) override;
+  qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber) override;
   /// Disconnect an event link. Returns if disconnection was successful.
-  virtual qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId);
-  virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id);
-  virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value);
+  qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId) override;
+  qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) override;
+  qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value) override;
 
-  virtual const std::vector<std::pair<TypeInterface*, int> >& parentTypes();
-  virtual void* initializeStorage(void*);
-  virtual void* ptrFromStorage(void**);
-  virtual void* clone(void* inst);
-  virtual void destroy(void*);
-  virtual bool less(void* a, void* b);
+  const std::vector<std::pair<TypeInterface*, int> >& parentTypes() override;
+  void* initializeStorage(void*) override;
+  void* ptrFromStorage(void**) override;
+  void* clone(void* inst) override;
+  void destroy(void*) override;
+  bool less(void* a, void* b) override;
 private:
   MetaObject     _metaObject;
   ObjectTypeData _data;

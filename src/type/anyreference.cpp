@@ -104,7 +104,7 @@ namespace detail
         detail::ManagedObjectPtr o(
               new GenericObject(
                 static_cast<ObjectTypeInterface*>(pointedSrc._type),
-                pointedSrc._value),
+                pointedSrc._value, pointedSrc.to<AnyObject>().ptrUid()),
               boost::bind(dropIt, _1, qi::AnyValue(*this)));
         return AnyReference::from(o).convert((TypeInterface*)targetType);
       }
@@ -888,9 +888,13 @@ namespace detail
       // Keep a copy of this in AnyObject, and destroy on AnyObject destruction
       // That way if this is a shared_ptr, we link to it correctly
       PointerTypeInterface* pT = static_cast<PointerTypeInterface*>(_type);
-      AnyObject obj(new GenericObject(
-              static_cast<ObjectTypeInterface*>(pT->pointedType()),
-              pT->dereference(_value)._value),
+      auto pointee = pT->dereference(_value);
+      auto* pointeeType = static_cast<ObjectTypeInterface*>(pointee.type());
+      QI_ASSERT_TRUE(pointeeType);
+      auto* pointeeValue = pointee.rawValue();
+      QI_ASSERT_TRUE(pointeeValue);
+      const PtrUid pointeeUid = pointeeType->ptrUid(pointeeValue);
+      AnyObject obj(new GenericObject(pointeeType, pointeeValue, pointeeUid),
              boost::bind(&AnyObject::deleteGenericObjectOnlyAndKeep<AnyValue>, _1, AnyValue(*this)));
       return UniqueAnyReference{ AnyReference::from(obj).clone() };
     }

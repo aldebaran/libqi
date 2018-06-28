@@ -159,7 +159,7 @@ namespace detail
 {
 
 // Storage type used by Object<T>, and Proxy.
-using ManagedObjectPtr = boost::shared_ptr<class GenericObject>;
+using ManagedObjectPtr = boost::shared_ptr<GenericObject>;
 
 }
 

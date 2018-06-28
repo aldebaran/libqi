@@ -12,6 +12,7 @@
 #include <qi/type/metaobject.hpp>
 #include <qi/future.hpp>
 #include <qi/anyfunction.hpp>
+#include <qi/ptruid.hpp>
 
 namespace qi {
 
@@ -46,6 +47,7 @@ namespace qi {
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;
+    virtual PtrUid ptrUid(void* instance) const = 0;
     virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSig = Signature())=0;
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)=0;
     virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)=0;
@@ -56,7 +58,6 @@ namespace qi {
     virtual qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) = 0;
     virtual qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value) = 0;
     virtual TypeKind kind() { return TypeKind_Object;}
-
     static const int INHERITS_FAILED = INT_MIN;
 
     /// @return INHERITS_FAILED if there is no inheritance, or the pointer offset
