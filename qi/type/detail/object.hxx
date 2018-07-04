@@ -311,8 +311,7 @@ public:
   static void noDelete(GenericObject*) {qiLogDebug("qi.object") << "AnyObject noop deleter";}
   // deletor callback that deletes only the GenericObject and not the content
   static void deleteGenericObjectOnly(GenericObject* obj) { qiLogDebug("qi.object") << "AnyObject GO deleter"; delete obj;}
-  template<typename U>
-  static void deleteGenericObjectOnlyAndKeep(GenericObject* obj, U) { qiLogDebug("qi.object") << "AnyObject GO-keep deleter";delete obj;}
+
   static void deleteCustomDeleter(GenericObject* obj, boost::function<void(T*)> deleter)
   {
     qiLogDebug("qi.object") << "custom deleter";

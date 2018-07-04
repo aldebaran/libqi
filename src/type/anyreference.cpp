@@ -894,8 +894,14 @@ namespace detail
       auto* pointeeValue = pointee.rawValue();
       QI_ASSERT_TRUE(pointeeValue);
       const PtrUid pointeeUid = pointeeType->ptrUid(pointeeValue);
+      AnyValue pointer{*this};
       AnyObject obj(new GenericObject(pointeeType, pointeeValue, pointeeUid),
-             boost::bind(&AnyObject::deleteGenericObjectOnlyAndKeep<AnyValue>, _1, AnyValue(*this)));
+              [pointer] (GenericObject *obj) mutable {
+                delete obj;
+                pointer.reset(); // reset explicitly because we don't want the pointer's
+                                 // lifetime be that of the deleter
+              });
+
       return UniqueAnyReference{ AnyReference::from(obj).clone() };
     }
 
