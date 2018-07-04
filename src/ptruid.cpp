@@ -61,4 +61,6 @@ namespace qi
     boost::algorithm::hex(begin(uid), end(uid), std::ostream_iterator<uint8_t>(o));
     return o;
   }
+
 } // qi
+

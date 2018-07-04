@@ -685,6 +685,15 @@ TEST(QiOs, dlerror)
 #endif
 }
 
+TEST(QiOs, ptrUid)
+{
+  using namespace qi;
+  void* ptr = &ptr;
+  const auto ptruid = os::ptrUid(ptr);
+  const auto expectedPtrUid = PtrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), ptr);
+  ASSERT_EQ(expectedPtrUid, ptruid);
+}
+
 #ifdef _MSC_VER
 # pragma warning( pop )
 #endif

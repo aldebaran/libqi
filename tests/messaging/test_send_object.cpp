@@ -413,7 +413,7 @@ TEST(SendObjectInterfaceProxy, IdentityDependsOnObjectAddressWithAnyObject)
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImpl>();
-  const PtrUid ptruid{ os::getMachineIdAsUuid(), os::getProcessUuid(), realObject.get() };
+  const PtrUid ptruid = os::ptrUid(realObject.get());
   Object<SomeInterface> a{ AnyObject{ realObject } };
   Object<SomeInterface> b{ AnyObject{ realObject } };
 
@@ -426,7 +426,7 @@ TEST(SendObjectInterfaceProxy, IdentityDependsOnObjectAddressWithObjectT)
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImpl>();
-  const PtrUid ptruid{ os::getMachineIdAsUuid(), os::getProcessUuid(), realObject.get() };
+  const PtrUid ptruid = os::ptrUid(realObject.get());
   Object<SomeInterface> a{ realObject };
   Object<SomeInterface> b{ realObject };
 

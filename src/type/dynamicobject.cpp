@@ -48,7 +48,7 @@ namespace qi
 
   DynamicObjectPrivate::DynamicObjectPrivate()
     : threadingModel(ObjectThreadingModel_Default)
-    , ptrUid{ os::getMachineIdAsUuid(), os::getProcessUuid(), this }
+    , ptrUid{ os::ptrUid(this) }
   {
 
   }
@@ -397,7 +397,10 @@ namespace qi
   //DynamicObjectTypeInterface implementation: just bounces everything to metaobject
   PtrUid DynamicObjectTypeInterface::ptrUid(void* instance) const
   {
-    return reinterpret_cast<DynamicObject*>(instance)->ptrUid();
+    auto* object = reinterpret_cast<DynamicObject*>(instance);
+    if(!object->ptrUid())
+      object->setPtrUid(os::ptrUid(instance));
+    return *object->ptrUid();
   }
 
   const MetaObject& DynamicObjectTypeInterface::metaObject(void* instance)

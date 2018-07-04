@@ -19,7 +19,7 @@ GenericObject::GenericObject(ObjectTypeInterface *type, void *value, const PtrUi
 GenericObject::GenericObject(ObjectTypeInterface *type, void *value)
   : type(type)
   , value(value)
-  , ptrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), value)
+  , ptrUid(os::ptrUid(value))
 {
 }
 

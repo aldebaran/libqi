@@ -214,7 +214,7 @@ namespace qi
         ObjectSerializationInfo res;
         res.serviceId = sid;
         res.objectId = nullObjectId;
-        res.objectPtrUid = PtrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), nullptr);
+        res.objectPtrUid = os::ptrUid(nullptr);
         return res;
       }
 
