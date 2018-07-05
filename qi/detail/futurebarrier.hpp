@@ -225,12 +225,14 @@ private:
 };
 
 /**
- * \brief Helper function to wait on a vector of futures.
+ * \brief Helper function that creates a future waiting on a vector of futures.
  * \param vect The vector of futures to wait on.
  *
  * \verbatim
- * This function will wait on all the futures of the given vector and return
- * when they have all been set, either with an error or a valid value.
+ * Returns a future that is set when all input futures are set, either on error
+ * or with a valid value.
+ *
+ * Note: Cancelling the returned future cancels all underlying futures.
  * \endverbatim
  */
 template <typename T>
