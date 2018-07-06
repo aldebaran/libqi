@@ -9,17 +9,10 @@ qiLogCategory("qitype.genericobject");
 namespace qi
 {
 
-GenericObject::GenericObject(ObjectTypeInterface *type, void *value, const PtrUid& ptrUid)
+GenericObject::GenericObject(ObjectTypeInterface *type, void *value, const boost::optional<PtrUid>& maybePtrUid)
   : type(type)
   , value(value)
-  , ptrUid(ptrUid)
-{
-}
-
-GenericObject::GenericObject(ObjectTypeInterface *type, void *value)
-  : type(type)
-  , value(value)
-  , ptrUid(os::ptrUid(value))
+  , ptrUid(maybePtrUid ? *maybePtrUid : os::ptrUid(value))
 {
 }
 

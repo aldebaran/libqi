@@ -37,7 +37,7 @@ namespace qi
     MethodMap           methodMap;
     MetaObject          meta;
     ObjectThreadingModel threadingModel;
-    PtrUid ptrUid;
+    boost::optional<PtrUid> ptrUid;
 
     using PropertyMap = std::map<unsigned int, std::pair<PropertyBase*, bool>>;
     PropertyMap propertyMap;
@@ -50,7 +50,6 @@ namespace qi
     : threadingModel(ObjectThreadingModel_Default)
     , ptrUid{ os::ptrUid(this) }
   {
-
   }
 
   void DynamicObject::setManageable(Manageable* m)
@@ -383,12 +382,12 @@ namespace qi
     });
   }
 
-  PtrUid DynamicObject::ptrUid() const
+  boost::optional<PtrUid> DynamicObject::ptrUid() const
   {
     return _p->ptrUid;
   }
 
-  void DynamicObject::setPtrUid(PtrUid newUid)
+  void DynamicObject::setPtrUid(boost::optional<PtrUid> newUid)
   {
     _p->ptrUid = newUid;
   }
@@ -481,8 +480,9 @@ namespace qi
     QI_ASSERT_TRUE(obj);
     ObjectTypeInterface* type = getDynamicTypeInterface();
     std::unique_ptr<GenericObject> go;
+
     if (ptrUid) go.reset(new GenericObject(type, obj, *ptrUid));
-    else        go.reset(new GenericObject(type, obj, obj->ptrUid()));
+    else go.reset(new GenericObject(type, obj, obj->ptrUid()));
     if (destroyObject || onDelete)
       return AnyObject(go.release(),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));

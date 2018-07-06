@@ -42,8 +42,7 @@ class QI_API GenericObject
   , public boost::enable_shared_from_this<GenericObject>
 {
 public:
-  GenericObject(ObjectTypeInterface *type, void *value, const PtrUid& ptrUid);
-  GenericObject(ObjectTypeInterface *type, void *value);
+  GenericObject(ObjectTypeInterface *type, void *value, const boost::optional<PtrUid>& maybePtrUid = boost::none);
   ~GenericObject();
   const MetaObject &metaObject();
 

@@ -53,8 +53,8 @@ namespace qi
     SignalBase*   signal(unsigned int id) const;
     PropertyBase* property(unsigned int) const;
 
-    PtrUid ptrUid() const;
-    void setPtrUid(PtrUid newUid);
+    boost::optional<PtrUid> ptrUid() const;
+    void setPtrUid(boost::optional<PtrUid> newUid);
 
     virtual qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSignature=Signature());
     virtual void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& params);
