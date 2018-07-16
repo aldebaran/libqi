@@ -22,7 +22,10 @@ static const char* InvalidFutureError = "function returned an invalid future";
 template<typename T> void setPromise(qi::Promise<T>& promise, const AnyValue& v)
 {
   if (!v.isValid())
-    throw std::runtime_error(InvalidValueError);
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
 
   try
   {
@@ -59,7 +62,10 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
     boost::shared_ptr<GenericObject>& ao)
 {
   if (!val.isValid())
-    throw std::runtime_error(InvalidValueError);
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
 
   QI_ASSERT(ao);
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
@@ -226,7 +232,10 @@ template <typename T>
 inline void setAdaptedResult(Promise<T>& promise, AnyReference& ref)
 {
   if (!ref.isValid())
-    throw std::runtime_error(InvalidValueError);
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
 
   static TypeInterface* targetType;
   QI_ONCE(targetType = typeOf<T>());
