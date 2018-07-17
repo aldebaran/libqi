@@ -1604,3 +1604,26 @@ TEST(TestObject, ConversionToBool)
   SCOPED_TRACE("ConversionToBool");
   testValidity([](const qi::Object<Apple>& o) {return static_cast<bool>(o);});
 }
+
+struct Exhaustive
+{
+  void call() {}
+  qi::Property<int> prop;
+  qi::Signal<> sig;
+};
+QI_REGISTER_OBJECT(Exhaustive, call, prop, sig);
+
+TEST(TestObject, NullObjectApiThrows)
+{
+  qi::Object<Exhaustive> obj;
+
+  EXPECT_THROW(obj.property<int>("prop").value(), std::runtime_error);
+  EXPECT_THROW(obj.setProperty("prop", 42).value(), std::runtime_error);
+  EXPECT_THROW(obj.connect("prop", [](int){}).value(), std::runtime_error);
+  EXPECT_THROW(obj.connect("sig", []{}).value(), std::runtime_error);
+  EXPECT_THROW(obj.disconnect(qi::SignalLink{ 42 }).value(), std::runtime_error);
+  EXPECT_THROW(obj.post("sig"), std::runtime_error);
+  EXPECT_THROW(obj.findMethod("call", qi::GenericFunctionParameters{}), std::runtime_error);
+  EXPECT_THROW(obj.call<void>("call"), std::runtime_error);
+  EXPECT_THROW(obj.async<void>("call").value(), std::runtime_error);
+}
