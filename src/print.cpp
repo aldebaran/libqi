@@ -5,6 +5,7 @@
 
 #include <qi/detail/print.hpp>
 #include <qi/iocolor.hpp>
+#include <qi/numeric.hpp>
 #include <qi/type/metaobject.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/type/detail/structtypeinterface.hxx>
@@ -12,31 +13,11 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/algorithm/max_element.hpp>
-#include <boost/numeric/conversion/converter.hpp>
 #include <iomanip>
 #include <limits>
 
 namespace
 {
-  /// Integral Dst
-  /// Integral Src
-  template <typename Dst, typename Src>
-  Dst convertBoundedTo(Src v)
-  {
-    try
-    {
-      return boost::numeric::converter<Dst, Src>::convert(v);
-    }
-    catch (const boost::numeric::positive_overflow)
-    {
-      return std::numeric_limits<Dst>::max();
-    }
-    catch (const boost::numeric::negative_overflow)
-    {
-      return std::numeric_limits<Dst>::min();
-    }
-  }
-
   /// (MetaMethod || MetaSignal || MetaProperty) M
   template <typename M>
   struct MustDisplay
@@ -53,7 +34,7 @@ namespace
   template <typename MP>
   int memberNameSize(const MP& member)
   {
-    return convertBoundedTo<int>(member.second.name().size());
+    return qi::numericConvertBound<int>(member.second.name().size());
   }
 }
 
@@ -337,7 +318,7 @@ namespace detail
       if (elementNames.empty())
         return 0;
       const auto maxElemIt = max_element(elementNames | transformed(boost::size<std::string>));
-      return std::min(convertBoundedTo<int>(*maxElemIt), maxOffset);
+      return std::min(numericConvertBound<int>(*maxElemIt), maxOffset);
     }();
 
     if (!memberTypes.empty())
@@ -372,7 +353,7 @@ namespace detail
 
     const std::vector<string_ref> labels {keyTypeLabel, elementTypeLabel};
     const auto maxLabelIt = max_element(labels | transformed(boost::size<string_ref>));
-    const auto offset = std::min(convertBoundedTo<int>(*maxLabelIt), maxOffset);
+    const auto offset = std::min(numericConvertBound<int>(*maxLabelIt), maxOffset);
 
     TypeInterface* const keyType = mapType.keyType();
     print(keyType, [&](const std::string& typeName) -> optional<Line> {
@@ -478,7 +459,7 @@ namespace detail
         });
       }
 
-      const auto line = makeExtraLine(convertBoundedTo<int>(index));
+      const auto line = makeExtraLine(numericConvertBound<int>(index));
       if (line)
       {
         print(*line);
