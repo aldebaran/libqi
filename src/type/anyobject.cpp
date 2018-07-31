@@ -193,9 +193,9 @@ class MFunctorCall
 {
 public:
   MFunctorCall(AnyFunction& func_, GenericFunctionParameters& params_,
-     qi::Promise<AnyReference>* out_, bool noCloneFirst_,
+     qi::Promise<AnyReference> out_, bool noCloneFirst_,
      AnyObject context_, unsigned int methodId_, unsigned int callerId_, qi::os::timeval postTimestamp_)
-    : out(out_)
+    : out(std::move(out_))
     , noCloneFirst(noCloneFirst_)
     , context(context_)
     , methodId(methodId_)
@@ -206,6 +206,7 @@ public:
     std::swap((AnyReferenceVector&) params_,
       (AnyReferenceVector&) this->params);
   }
+
   MFunctorCall(const MFunctorCall& b)
   {
     (*this) = b;
@@ -225,11 +226,10 @@ public:
   }
   void operator()()
   {
-    call(*out, context, params, methodId, func, callerId, postTimestamp);
+    call(out, context, params, methodId, func, callerId, postTimestamp);
     params.destroy(noCloneFirst);
-    delete out;
   }
-  qi::Promise<AnyReference>* out;
+  qi::Promise<AnyReference> out;
   GenericFunctionParameters params;
   AnyFunction func;
   bool noCloneFirst;
@@ -277,12 +277,11 @@ qi::Future<AnyReference> metaCall(ExecutionContext* el,
   {
     // If call is handled by our thread pool, we can safely switch the promise
     // to synchronous mode.
-    std::unique_ptr<qi::Promise<AnyReference>> out(
-        new qi::Promise<AnyReference>());
+    qi::Promise<AnyReference> out;
     GenericFunctionParameters pCopy = params.copy(noCloneFirst);
-    qi::Future<AnyReference> result = out->future();
+    qi::Future<AnyReference> result = out.future();
     qi::os::timeval t(qi::SystemClock::now().time_since_epoch());
-    el->post(MFunctorCall(func, pCopy, out.release(), noCloneFirst, context,
+    el->post(MFunctorCall(func, pCopy, out, noCloneFirst, context,
                            methodId, callerId ? callerId : qi::os::gettid(), t));
     return result;
   }
