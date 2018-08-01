@@ -1678,4 +1678,28 @@ TEST(TestCall, MetaObjectCacheFailureWhenCallsInParallel)
 
 }
 
+struct TypeErasedCancellableAsyncFuture
+{
+  qi::Promise<void> prom {[](qi::Promise<void>& p){ p.setCanceled(); }};
 
+  qi::Future<void> cancellableAsyncFuture()
+  {
+    return prom.future();
+  }
+
+  qi::AnyReference operator()(const qi::GenericFunctionParameters&)
+  {
+    return qi::AnyReference::from(cancellableAsyncFuture()).clone();
+  }
+};
+
+TEST(TestCall, callAdvertisedAnyFunctionReturningAFuture)
+{
+  TypeErasedCancellableAsyncFuture typeErasedCancellableAsyncFuture;
+  auto anyFunction = qi::AnyFunction::fromDynamicFunction(typeErasedCancellableAsyncFuture);
+  qi::DynamicObjectBuilder ob;
+  ob.xAdvertiseMethod("v", "cancellableAsyncFuture", "()", std::move(anyFunction));
+  auto anyObject = ob.object();
+  auto future = anyObject.metaCall("cancellableAsyncFuture", qi::GenericFunctionParameters{});
+  EXPECT_TRUE(test::isStillRunning(future, test::willDoNothing(), qi::MilliSeconds{100}));
+}
