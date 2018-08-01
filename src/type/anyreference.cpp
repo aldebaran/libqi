@@ -117,7 +117,7 @@ namespace detail
 
         UniqueAnyReference result{ AnyReference{ targetType } };
         targetType->setPointee(&result->_value, ptr);
-        return result.release(DeferOwnership{});
+        return UniqueAnyReference{ result.release(), DeferOwnership{}};
       });
     }
     case TypeKind_Object:
@@ -130,7 +130,7 @@ namespace detail
         void* ptr = gv->_type->ptrFromStorage(&gv->_value);
         UniqueAnyReference result{ AnyReference{ targetType } };
         targetType->setPointee(&result->_value, ptr);
-        return result.release(DeferOwnership{});
+        return UniqueAnyReference{ result.release(), DeferOwnership{}};
       });
     }
     default:
@@ -794,7 +794,6 @@ namespace detail
     if (_type == targetType)
       return UniqueAnyReference{ *this, DeferOwnership{} };
 
-    UniqueAnyReference result;
     TypeKind skind = _type->kind();
     TypeKind dkind = targetType->kind();
 
@@ -951,8 +950,9 @@ namespace detail
       if (osrc && (inheritOffset = osrc->inherits(targetType)) != ObjectTypeInterface::INHERITS_FAILED)
       {
         // We return a Value that point to the same data as this.
-        result.reset(AnyReference{ targetType, (void*)((intptr_t)_value + inheritOffset) });
-        return result.release(DeferOwnership{});
+        return UniqueAnyReference{ AnyReference{ targetType,
+                                                 (void*)((intptr_t)_value + inheritOffset) },
+                                   DeferOwnership{} };
       }
     }
 
