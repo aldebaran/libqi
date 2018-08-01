@@ -1499,12 +1499,12 @@ TEST(TestObject, StructVersioningEvent)
   qi::DynamicObjectBuilder builder;
   builder.advertiseSignal<Color>("onColor");
   builder.advertiseSignal<ColorA>("onColorA");
-  qi::Session c2;
-  c2.connect(p.server()->url());
+  auto c2 = qi::makeSession();
+  c2->connect(p.server()->url());
   AnyObject s = builder.object();
   p.server()->registerService("color", s);
   AnyObject o = p.client()->service("color");
-  AnyObject o2 = c2.service("color");
+  AnyObject o2 = c2->service("color");
   o.connect("onColor", &onColor);
   o.connect("onColorA", &onColor);
   o2.connect("onColor", &onColorA);

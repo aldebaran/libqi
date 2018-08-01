@@ -156,20 +156,20 @@ TEST(TestSession, CreateMany)
 
 TEST(TestSession, CreateOne)
 {
-  Session session;
-  ASSERT_TRUE(finishesWithValue(session.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(session.endpoints().empty());
+  auto session = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(session->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(session->endpoints().empty());
 }
 
 TEST(TestSession, TrivialDirectConnection)
 {
-  Session session1;
-  ASSERT_TRUE(finishesWithValue(session1.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(session1.endpoints().empty());
+  auto session1 = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(session1->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(session1->endpoints().empty());
 
-  Session session2;
-  ASSERT_TRUE(finishesWithValue(session2.connect(test::url(session1)), willDoNothing(), qi::Seconds{1000}));
-  ASSERT_TRUE(session2.isConnected());
+  auto session2 = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(session2->connect(test::url(*session1)), willDoNothing(), qi::Seconds{1000}));
+  ASSERT_TRUE(session2->isConnected());
 }
 
 namespace
@@ -221,82 +221,82 @@ TEST(TestSession, SimpleConnectionToSd)
 TEST(TestSession, MultipleConnectionToNonReachableSd)
 {
   static const auto tryTotal = 3;
-  Session session;
+  auto session = qi::makeSession();
   const auto url = "tcp://127.0.0.1:1234";
   for (int tryCount = 0; tryCount < tryTotal; ++tryCount)
   {
-    ASSERT_TRUE(finishesWithError(session.connect(url)));
+    ASSERT_TRUE(finishesWithError(session->connect(url)));
   }
 }
 
 TEST(TestSession, ConnectOnSecondAttempt)
 {
-  Session client;
+  auto client = qi::makeSession();
   const auto url = "tcp://127.0.0.1:1234";
-  ASSERT_TRUE(finishesWithError(client.connect(url)));
-  ASSERT_FALSE(client.isConnected());
+  ASSERT_TRUE(finishesWithError(client->connect(url)));
+  ASSERT_FALSE(client->isConnected());
 
-  Session server;
-  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(server.endpoints().empty());
+  auto server = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(server->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server->endpoints().empty());
 
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
 }
 
 TEST(TestSession, MultipleConnectSuccess)
 {
-  Session server;
-  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(server.endpoints().empty());
+  auto server = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(server->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server->endpoints().empty());
 
-  Session client;
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
+  auto client = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(client.close()));
-  ASSERT_FALSE(client.isConnected());
+  ASSERT_TRUE(finishesWithValue(client->close()));
+  ASSERT_FALSE(client->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(client.close()));
-  ASSERT_FALSE(client.isConnected());
+  ASSERT_TRUE(finishesWithValue(client->close()));
+  ASSERT_FALSE(client->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
 }
 
 TEST(TestSession, SimpleConnectionToNonReachableSd)
 {
-  Session session;
+  auto session = qi::makeSession();
   const auto url = "tcp://127.0.0.1:1234";
-  ASSERT_TRUE(finishesWithError(session.connect(url)));
-  ASSERT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithError(session->connect(url)));
+  ASSERT_FALSE(session->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(session.close()));
-  ASSERT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithValue(session->close()));
+  ASSERT_FALSE(session->isConnected());
 }
 
 TEST(TestSession, SimpleConnectionToInvalidAddrToSd)
 {
-  Session session;
+  auto session = qi::makeSession();
   const auto url = "tcp://127.0.0.1:1234";
-  ASSERT_TRUE(finishesWithError(session.connect(url)));
-  ASSERT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithError(session->connect(url)));
+  ASSERT_FALSE(session->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(session.close()));
-  ASSERT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithValue(session->close()));
+  ASSERT_FALSE(session->isConnected());
 }
 
 TEST(TestSession, SimpleConnectionToInvalidSd)
 {
-  Session session;
-  ASSERT_TRUE(finishesWithError(session.connect(invalidUrl)));
-  ASSERT_FALSE(session.isConnected());
+  auto session = qi::makeSession();
+  ASSERT_TRUE(finishesWithError(session->connect(invalidUrl)));
+  ASSERT_FALSE(session->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(session.close()));
-  ASSERT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithValue(session->close()));
+  ASSERT_FALSE(session->isConnected());
 }
 
 TEST(TestSession, UnregistersServiceWhenClosed)
@@ -426,13 +426,13 @@ TEST(TestSession, Services)
 
 TEST(TestSession, ServiceDirectoryEndpointsAreValid)
 {
-  Session session;
-  ASSERT_TRUE(finishesWithValue(session.listenStandalone("tcp://0.0.0.0:0")));
-  ASSERT_FALSE(session.endpoints().empty());
+  auto session = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(session->listenStandalone("tcp://0.0.0.0:0")));
+  ASSERT_FALSE(session->endpoints().empty());
 
   // The first endpoint has to be an accessible address/port.
-  ASSERT_NE(session.endpoints().at(0).host(), "0.0.0.0");
-  ASSERT_NE(session.endpoints().at(0).port(), 0);
+  ASSERT_NE(session->endpoints().at(0).host(), "0.0.0.0");
+  ASSERT_NE(session->endpoints().at(0).port(), 0);
 }
 
 TEST(TestSession, GetCallInConnect)
@@ -462,12 +462,12 @@ TEST(TestSession, GetCallInConnect)
 
 TEST(TestSession, SignalConnectedDisconnectedNotSend)
 {
-  Session session;
-  SignalSpy connectedSpy{ session.connected };
-  SignalSpy disconnectedSpy{ session.disconnected };
+  auto session = makeSession();
+  SignalSpy connectedSpy{ session->connected };
+  SignalSpy disconnectedSpy{ session->disconnected };
 
-  ASSERT_TRUE(finishesWithError(session.connect(invalidUrl)));
-  ASSERT_FALSE(session.isConnected());
+  ASSERT_TRUE(finishesWithError(session->connect(invalidUrl)));
+  ASSERT_FALSE(session->isConnected());
 
   ASSERT_EQ(0u, connectedSpy.recordCount());
   ASSERT_EQ(0u, disconnectedSpy.recordCount());
@@ -475,19 +475,19 @@ TEST(TestSession, SignalConnectedDisconnectedNotSend)
 
 TEST(TestSession, SignalConnectedDisconnectedSend)
 {
-  Session server;
-  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(server.endpoints().empty());
+  auto server = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(server->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server->endpoints().empty());
 
-  Session client;
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
+  auto client = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
 
-  SignalSpy disconnectedSpy{ client.disconnected };
+  SignalSpy disconnectedSpy{ client->disconnected };
   ASSERT_EQ(0u, disconnectedSpy.recordCount());
 
-  ASSERT_TRUE(finishesWithValue(client.close()));
-  ASSERT_FALSE(client.isConnected());
+  ASSERT_TRUE(finishesWithValue(client->close()));
+  ASSERT_FALSE(client->isConnected());
 
   // The disconnected signal is asynchronous, it can arrive late
   std::this_thread::sleep_for(defaultWaitDisconnectedSignalDuration);
@@ -497,32 +497,32 @@ TEST(TestSession, SignalConnectedDisconnectedSend)
 TEST(TestSession, AsyncConnect)
 {
   // TODO: this test might be redundant with GetUnregisterService
-  Session server;
-  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(server.endpoints().empty());
+  auto server = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(server->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server->endpoints().empty());
 
-  Session client;
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
-  ASSERT_TRUE(finishesWithError(client.service("IDontWantToSegfaultHere")));
+  auto client = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
+  ASSERT_TRUE(finishesWithError(client->service("IDontWantToSegfaultHere")));
 }
 
 TEST(TestSession, UrlOnClosed)
 {
-  Session server;
-  ASSERT_TRUE(finishesWithValue(server.listenStandalone(test::defaultListenUrl())));
-  ASSERT_FALSE(server.endpoints().empty());
+  auto server = qi::makeSession();
+  ASSERT_TRUE(finishesWithValue(server->listenStandalone(test::defaultListenUrl())));
+  ASSERT_FALSE(server->endpoints().empty());
 
-  Session client;
-  ASSERT_ANY_THROW(client.url());
+  auto client = qi::makeSession();
+  ASSERT_ANY_THROW(client->url());
 
-  ASSERT_TRUE(finishesWithValue(client.connect(test::url(server))));
-  ASSERT_TRUE(client.isConnected());
-  ASSERT_NO_THROW(client.url());
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(client->isConnected());
+  ASSERT_NO_THROW(client->url());
 
-  ASSERT_TRUE(finishesWithValue(client.close()));
-  ASSERT_FALSE(client.isConnected());
-  ASSERT_ANY_THROW(client.url());
+  ASSERT_TRUE(finishesWithValue(client->close()));
+  ASSERT_FALSE(client->isConnected());
+  ASSERT_ANY_THROW(client->url());
 }
 
 TEST(TestSession, ServiceRegisteredCtrl)

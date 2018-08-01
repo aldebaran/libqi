@@ -21,7 +21,7 @@ void __chaosThread(void *data);
 
 struct Behavior
 {
-  qi::Session  *session;
+  qi::SessionPtr session;
   std::string   service;
   boost::mutex *mutex;
 };
@@ -33,8 +33,8 @@ public:
   ~TrafficGenerator();
 
 public:
-  bool generateCommonTraffic(const std::vector<qi::Session*> &sessions, const std::string &serviceName);
-  bool generateSpam(std::vector<qi::Session *> &sessions);
+  bool generateCommonTraffic(const std::vector<qi::SessionPtr>& sessions, const std::string &serviceName);
+  bool generateSpam(std::vector<qi::SessionPtr> &sessions);
 
   bool stopTraffic();
 

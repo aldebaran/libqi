@@ -15,19 +15,17 @@ PopulationGenerator::PopulationGenerator()
 
 PopulationGenerator::~PopulationGenerator()
 {
-  for (std::vector<qi::Session *>::iterator it = _clients.begin(); it != _clients.end(); ++it)
-    delete (*it);
 }
 
 bool PopulationGenerator::populateClients(const std::string &serviceDirectoryUrl, int nbWantedClients)
 {
   int i = 0;
-  qi::Session *session;
+  qi::SessionPtr session;
   bool ret = true;
 
   while (i < nbWantedClients)
   {
-    session = new qi::Session();
+    session = qi::makeSession();
 
     if (session->connect(serviceDirectoryUrl).wait(1000) != qi::FutureState_FinishedWithValue)
       ret = false;
@@ -39,7 +37,7 @@ bool PopulationGenerator::populateClients(const std::string &serviceDirectoryUrl
   return ret;
 }
 
-const std::vector<qi::Session*>&   PopulationGenerator::clientPopulation() const
+const std::vector<qi::SessionPtr>&   PopulationGenerator::clientPopulation() const
 {
   return _clients;
 }

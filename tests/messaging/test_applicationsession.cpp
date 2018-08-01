@@ -11,7 +11,7 @@
 #include <qi/future.hpp>
 
 static bool _stopped = false;
-static qi::Session _sd;
+static qi::SessionPtr _sd;
 static qi::ApplicationSession* _app;
 static char **_argv = nullptr;
 static int _argc = 5;
@@ -33,7 +33,7 @@ TEST(QiApplicationSession, defaultConnect)
   ASSERT_EQ(qi::Url(_url), _app->session()->url());
 
   ASSERT_FALSE(_stopped);
-  _sd.close();
+  _sd->close();
   _sync.future().wait();
   ASSERT_TRUE(_stopped);
 
@@ -63,8 +63,9 @@ int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
 
-  _sd.listenStandalone("tcp://127.0.0.1:0");
-  _url = _sd.endpoints()[0].str();
+  _sd = qi::makeSession();
+  _sd->listenStandalone("tcp://127.0.0.1:0");
+  _url = _sd->endpoints()[0].str();
 
   _argv = new char*[6];
   strcpy((_argv[0] = new char[4]), "foo");

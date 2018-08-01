@@ -140,7 +140,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
 TEST(QiService, RemoteObjectCacheABANewServer)
 {
   TestSessionPair p;
-  qi::Session     ses;
+  auto ses = qi::makeSession();
   if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
     return;
   qi::DynamicObjectBuilder ob;
@@ -158,11 +158,11 @@ TEST(QiService, RemoteObjectCacheABANewServer)
 
   PERSIST_ASSERT(fut = p.client()->service("serviceTest"), fut.hasError(), 1000);
 
-  qi::Future<void> f = ses.connect(p.client()->url().str());
+  qi::Future<void> f = ses->connect(p.client()->url().str());
   f.wait(8000);
   EXPECT_FALSE(f.hasError());
-  ses.listen("tcp://0.0.0.0:0");
-  unsigned int idx2 = ses.registerService("serviceTest", obj);
+  ses->listen("tcp://0.0.0.0:0");
+  unsigned int idx2 = ses->registerService("serviceTest", obj);
   //new service should not have a previoulsy registered ID
   EXPECT_NE(idx2, idx);
 
@@ -382,19 +382,19 @@ QI_REGISTER_OBJECT(ServiceThatServesObjects, getObject);
 
 TEST(QiService, NetworkObjectsAreClosedWithTheSession)
 {
-  qi::Session server;
-  qi::Session client;
+  auto server = qi::makeSession();
+  auto client = qi::makeSession();
   ServiceThatServesObjects *concreteService = new ServiceThatServesObjects;
   qi::Future<void> fut = concreteService->prom.future();
 
-  server.listenStandalone(qi::Url("tcp://127.0.0.1:0"));
-  server.registerService("service", qi::Object<ServiceThatServesObjects>(concreteService));
-  client.connect(server.endpoints()[0]);
+  server->listenStandalone(qi::Url("tcp://127.0.0.1:0"));
+  server->registerService("service", qi::Object<ServiceThatServesObjects>(concreteService));
+  client->connect(server->endpoints()[0]);
 
-  ASSERT_TRUE(client.isConnected());
-  qi::AnyObject service = client.service("service");
+  ASSERT_TRUE(client->isConnected());
+  qi::AnyObject service = client->service("service");
   qi::AnyObject obj = service.call<qi::AnyObject>("getObject");
-  client.close();
+  client->close();
   fut.wait();
   // if we reach here, the test is a success: the remote reference "client"
   // is gone so our object has been deleted.

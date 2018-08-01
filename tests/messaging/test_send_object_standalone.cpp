@@ -59,10 +59,10 @@ TEST(SendObjectToStandalone, MultiProcessPingPong_CallArgumentMethod)
   ScopedProcess remoteServiceOwner{
     remoteServiceOwnerPath, {"--qi-url=tcp://127.0.0.1:54321"}};
 
-  qi::Session session;
-  session.connect("tcp://127.0.0.1:54321");
-  session.waitForService("PingPongService").wait(5000);
-  qi::AnyObject serviceProxy = session.service("PingPongService");
+  auto session = qi::makeSession();
+  session->connect("tcp://127.0.0.1:54321");
+  session->waitForService("PingPongService").wait(5000);
+  qi::AnyObject serviceProxy = session->service("PingPongService");
   serviceProxy.call<void>("give", boost::make_shared<MiddleMan>());
   qi::AnyObject middleman = serviceProxy.call<qi::AnyObject>("take");
   qi::AnyObject precious = boost::make_shared<InterestingObject>();

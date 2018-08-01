@@ -55,18 +55,19 @@ class TestConnection
 public:
   TestConnection()
     : obj()
+    , session(qi::makeSession())
   {
   }
 
   ~TestConnection()
   {
-    session.close();
+    session->close();
   }
 
   bool init()
   {
-    session.connect(connectionAddr);
-    obj = session.service("serviceTest");
+    session->connect(connectionAddr);
+    obj = session->service("serviceTest");
 
     if (!obj)
     {
@@ -81,7 +82,7 @@ public:
   qi::AnyObject obj;
 
 private:
-  qi::Session session;
+  qi::SessionPtr session;
 };
 
 class Connection: public ::testing::Test
@@ -89,8 +90,9 @@ class Connection: public ::testing::Test
 protected:
   void SetUp() override
   {
-    session.listenStandalone("tcp://127.0.0.1:0");
-    connectionAddr = session.endpoints()[0].str();
+    session = qi::makeSession();
+    session->listenStandalone("tcp://127.0.0.1:0");
+    connectionAddr = session->endpoints()[0].str();
 
     std::cout << "Service Directory ready." << std::endl;
     qi::DynamicObjectBuilder ob;
@@ -102,7 +104,7 @@ protected:
 
     obj = ob.object();
 
-    unsigned int id = session.registerService("serviceTest", obj);
+    unsigned int id = session->registerService("serviceTest", obj);
     std::cout << "serviceTest ready:" << id << std::endl;
 
   #ifdef WITH_GATEWAY_
@@ -114,11 +116,11 @@ protected:
 
   void TearDown() override
   {
-    session.close();
+    session->close();
   }
 
 private:
-  qi::Session session;
+  qi::SessionPtr session;
   qi::AnyObject obj;
 #ifdef WITH_GATEWAY_
   static qi::Gateway gate;
@@ -208,11 +210,11 @@ TEST(ConnectionToStandalone, TcpThenTcps)
   ScopedProcess remoteServiceOwner{
     remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=tcps://127.0.0.1:54321"}};
 
-  Session sessionTcp;
-  auto futTcp = test::attemptConnect(sessionTcp, "tcp://127.0.0.1:54321");
+  auto sessionTcp = qi::makeSession();
+  auto futTcp = test::attemptConnect(*sessionTcp, "tcp://127.0.0.1:54321");
   ASSERT_TRUE(test::finishesWithError(futTcp));
 
-  Session sessionTcps;
-  auto futTcps = test::attemptConnect(sessionTcps, "tcps://127.0.0.1:54321");
+  auto sessionTcps = qi::makeSession();
+  auto futTcps = test::attemptConnect(*sessionTcps, "tcps://127.0.0.1:54321");
   ASSERT_TRUE(test::finishesWithValue(futTcps));
 }

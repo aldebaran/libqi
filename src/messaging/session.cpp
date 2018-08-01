@@ -146,7 +146,6 @@ namespace qi {
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     qi::Promise<void> p;
 
-    // go through hoops to get shared_ptr on this
     f.then([=](Future<void> f) {
       _sdClientClosedByThis = false;
       addSdSocketToCache(f, serviceDirectoryURL, p);
@@ -178,8 +177,9 @@ namespace qi {
 
   Session::~Session()
   {
-    //nothing to do here, the _p is shared between multiples sessions
-    //so we should not touch it.
+    // Reset the pointer before the end of the destructor in case it is tracked by callbacks that
+    // might use other members of Session.
+    _p.reset();
   }
 
   const char* Session::serviceDirectoryServiceName()
@@ -409,7 +409,7 @@ namespace qi {
           [this, servicename](qi::SignalLink) mutable
           {
             return this->service(servicename).async();
-          }, this)).unwrap();
+          }, _p.get())).unwrap();
 
     futureService.connect(
           [promise](qi::Future<AnyObject> futureService) mutable
@@ -425,18 +425,16 @@ namespace qi {
           });
 
     // schedule some clean up
-    boost::weak_ptr<SessionPrivate> weakPrivSession(_p);
-    promise.future().connect(
-          [futureLink, weakPrivSession] (qi::Future<void>) mutable
+    promise.future().connect(track(
+          [futureLink, this] (qi::Future<void>) mutable
           {
             futureLink.cancel();
-            futureLink.andThen(
-                  [weakPrivSession](qi::SignalLink link)
+            futureLink.andThen(track(
+                  [this](qi::SignalLink link)
                   {
-                    if (auto privateSession = weakPrivSession.lock())
-                      privateSession->_sdClient.serviceAdded.disconnectAsync(link);
-                  });
-          });
+                    _p->_sdClient.serviceAdded.disconnectAsync(link);
+                  }, _p.get()));
+          }, _p.get()));
     return promise.future();
   }
 }
