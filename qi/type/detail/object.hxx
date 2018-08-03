@@ -199,6 +199,15 @@ typename boost::disable_if<typename detail::InterfaceImplTraits<T>::Defined, qi:
   return Object<T>(new T(std::forward<Args>(args)...));
 }
 
+// QI_REGISTER_IMPLEMENTATION_H associates an interface type to an
+// implementation type that might be unrelated (no inheritance or conversion).
+// However, not like QI_REGISTER_IMPLEMENTATION(note the absence of `_H`),
+// QI_REGISTER_IMPLEMENTATION_H also generates special proxy types wrapping
+// the real implementation object.
+// These wrappers are then used as implementation details by libqi
+// when an object of the implementation type is stored in a qi::Object.
+// The wrappers handle the thread-safety and the different kinds of API
+// (returning or not futures, for example) while not modifying the original type.
 #define QI_REGISTER_IMPLEMENTATION_H(interface, impl)\
 namespace qi\
 {\
@@ -293,7 +302,7 @@ public:
   void reset();
   unsigned use_count() const { return _obj.use_count();}
 
-  ObjectTypeInterface* interface();
+  static ObjectTypeInterface* interface();
   // Check or obtain T interface, or throw
   void checkT();
   // no-op deletor callback
@@ -432,10 +441,11 @@ namespace detail
   template<typename T>
   ManagedObjectPtr managedObjectFromSharedPtr(
       ObjectTypeInterface* oit,
-      boost::shared_ptr<T>& other)
+      boost::shared_ptr<T> other,
+      const boost::optional<PtrUid>& maybePtrUid = boost::none)
   {
     return ManagedObjectPtr(
-            new GenericObject(oit, other.get()),
+            new GenericObject(oit, other.get(), maybePtrUid),
             [other](GenericObject* object) mutable {
               other.reset();
               delete object;
@@ -494,8 +504,10 @@ namespace detail
       std::true_type)
   {
     using SyncProxyType = typename InterfaceImplTraits<From>::SyncType;
+    // We want the ptrUid value to match the real impl object, not the proxy object we are using here.
+    const auto realImplPtrUid = os::ptrUid(other.get());
     auto localProxy = boost::make_shared<SyncProxyType>(other);
-    return qi::Object<To>(std::move(localProxy)).managedObjectPtr();
+    return managedObjectFromSharedPtr(qi::Object<To>::interface(), std::move(localProxy), realImplPtrUid);
   }
 }
 

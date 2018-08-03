@@ -408,6 +408,31 @@ public:
 };
 QI_REGISTER_OBJECT(SomeInterfaceImpl, get)
 
+// See QI_REGISTER_IMPLEMENTATION_H for details explaining why we need to build all this.
+template<class Interface, class SharedT>
+class SomeInterfaceImplWrapper : public Interface
+{
+  SharedT impl;
+public:
+  explicit SomeInterfaceImplWrapper(SharedT impl) : impl(impl) {}
+  int get() const override { return impl->get(); }
+};
+
+template<class SharedT>
+using SomeInterfaceLocalAsync = SomeInterfaceImplWrapper<SomeInterface, SharedT>;
+template<class SharedT>
+using SomeInterfaceLocalSync = SomeInterfaceImplWrapper<SomeInterface, SharedT>;
+
+class SomeInterfaceImplNoInheritance
+{
+  int id = nextSomeInterfaceId++;
+public:
+  int get() const { return id; }
+};
+QI_REGISTER_OBJECT(SomeInterfaceImplNoInheritance, get)
+QI_REGISTER_IMPLEMENTATION_H(SomeInterface, SomeInterfaceImplNoInheritance)
+
+
 
 TEST(SendObjectInterfaceProxy, IdentityDependsOnObjectAddressWithAnyObject)
 {
@@ -434,6 +459,37 @@ TEST(SendObjectInterfaceProxy, IdentityDependsOnObjectAddressWithObjectT)
   EXPECT_EQ(a, b);
   EXPECT_EQ(a->get(), b->get());
 }
+
+
+
+TEST(SendObjectInterfaceProxy, IdentityDependsOnObjectAddressWithAnyObjectNoInheritance)
+{
+  using namespace qi;
+  auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
+  const PtrUid ptruid = os::ptrUid(realObject.get());
+  // Object constructor implicitely instanciates SomeInterfaceLocalSync<shared_ptr<SomeInterfaceImplNoInheritance>>
+  Object<SomeInterface> a{ AnyObject{ realObject } };
+  Object<SomeInterface> b{ AnyObject{ realObject } };
+
+  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a->get(), b->get());
+}
+
+TEST(SendObjectInterfaceProxy, IdentityDependsOnObjectAddressWithObjectTNoInheritance)
+{
+  using namespace qi;
+  auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
+  const PtrUid ptruid = os::ptrUid(realObject.get());
+  // Object constructor implicitely instanciates SomeInterfaceLocalSync<shared_ptr<SomeInterfaceImplNoInheritance>>
+  Object<SomeInterface> a{ realObject };
+  Object<SomeInterface> b{ realObject };
+
+  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a->get(), b->get());
+}
+
 
 
 TEST(SendObjectInterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingAnyObject)
