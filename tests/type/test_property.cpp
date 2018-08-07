@@ -184,3 +184,25 @@ TEST(TestProperty, customSetterThrowIsTransmitted)
   ASSERT_THROW(property.set(newValue), CustomException);
   EXPECT_EQ(initialValue, property.get().value());
 }
+
+TEST(TestProperty, WithStrandCallsGetterSetterFromIt)
+{
+  qi::Strand strand;
+  qi::Property<int> property{ 42, strand,
+                              [&](const int& v) {
+                                EXPECT_TRUE(strand.isInThisContext());
+                                return v;
+                              },
+                              [&](int& val, int newVal) {
+                                EXPECT_TRUE(strand.isInThisContext());
+                                val = newVal;
+                                return true;
+                              } };
+  auto newVal = 13;
+  EXPECT_NO_THROW(property.set(newVal).value());
+  EXPECT_EQ(newVal, property.get().value());
+
+  newVal = 8392;
+  EXPECT_NO_THROW(property.set(newVal).value());
+  EXPECT_EQ(newVal, property.get().value());
+}

@@ -9,6 +9,8 @@
 
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/variant.hpp>
+#include <ka/mutablestore.hpp>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/strand.hpp>
@@ -76,7 +78,18 @@ namespace qi
     PropertyImpl(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
 
+    /// This overload takes an ExecutionContext pointer that will be passed to the Signal
+    /// constructor.
+    PropertyImpl(ExecutionContext* execContext, Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
+
     PropertyImpl(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
+      SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
+
+    /// This overload takes an ExecutionContext pointer that will be passed to the Signal
+    /// constructor.
+    PropertyImpl(AutoAnyReference defaultValue, ExecutionContext* execContext = nullptr,
+      Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
 
     virtual FutureSync<T> get() const = 0;
@@ -129,7 +142,6 @@ namespace qi
 
   };
 
-
   /** Povide thread-safe access to a stored value and signal to connected callbacks when the value changed.
       @see qi::Signal which implement a similar pattern but without storing the value.
       @remark For more performance in a single-threaded context, consider using UnsafeProperty instead.
@@ -143,15 +155,48 @@ namespace qi
     using Getter = typename ImplType::Getter;
     using Setter = typename ImplType::Setter;
 
+    /// Instantiates a strand by default and owns it.
+    /// That strand will be used to wrap the getters and setters and synchronize them.
     Property(Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
       : PropertyImpl<T>(std::move(getter), std::move(setter), std::move(onsubscribe))
     {}
 
+    /// Uses the strand that is passed but does not own it.
+    /// That strand will be used to wrap the getters and setters and synchronize them.
+    Property(Strand& strand,
+             Getter getter = Getter(),
+             Setter setter = Setter(),
+             SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(&strand, std::move(getter), std::move(setter), std::move(onsubscribe))
+      , _strand{ &strand }
+    {
+    }
+
+    /// Instantiates a strand by default and owns it.
+    /// That strand will be used to wrap the getters and setters and synchronize them.
     Property(AutoAnyReference defaultValue, Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
       : PropertyImpl<T>(std::move(defaultValue), std::move(getter), std::move(setter), std::move(onsubscribe))
     {}
+
+    /// Uses the strand that is passed but does not own it.
+    /// That strand will be used to wrap the getters and setters and synchronize them.
+    Property(AutoAnyReference defaultValue,
+             Strand& strand,
+             Getter getter = Getter(),
+             Setter setter = Setter(),
+             SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers())
+      : PropertyImpl<T>(std::move(defaultValue),
+                        &strand,
+                        std::move(getter),
+                        std::move(setter),
+                        std::move(onsubscribe))
+      , _strand{ &strand }
+    {
+    }
+
+    ~Property() override;
 
     Property<T>& operator=(const T& v) { this->set(v); return *this; }
 
@@ -163,20 +208,43 @@ namespace qi
     FutureSync<AnyValue> value() const override;
 
   private:
-    mutable Strand _strand;
+    // This class has to have a Trackable member even though it holds a strand because it does not
+    // always own that strand, and thus it can not always join it before being destroyed. Tracking
+    // a member ensures that no stranded callback might be executed after it has been destroyed.
+    struct Tracked : public Trackable<Tracked> { using Trackable<Tracked>::destroy; };
+    mutable Tracked _tracked;
+
+    Strand& strand() const;
+    Strand::OptionalErrorMessage tryJoinStrandNoThrow() QI_NOEXCEPT(true);
+
+    // TODO:
+    // Right now, mutable_store_t stores the Mutable first (the pointer in this case) which
+    // is the one that will be instanciated by the default constructor. But since Strand is
+    // neither copyable nor movable and mutable_store_t relies on boost::variant and boost::variant
+    // does not support in-place construction of its value, the Strand value can never be set to the
+    // mutable_store_t. So use ka::mutable_store_t once we are able to construct values in-place in
+    // it.
+    mutable boost::variant<Strand, Strand*> _strand;
   };
 
   /// Type-erased property, simulating a typed property but using AnyValue.
   class QI_API GenericProperty : public Property<AnyValue>
   {
   public:
-    GenericProperty(TypeInterface* type, Getter getter = Getter(), Setter setter = Setter())
-    :Property<AnyValue>(getter, setter)
-    , _type(type)
-    { // Initialize with default value for given type
+    /// Constructs a GenericProperty with the given type. Forwards all other arguments to the
+    /// constructor of qi::Property<AnyValue>.
+    ///
+    /// @see qi::Property<AnyValue>::Property
+    template<typename... Args,
+             typename Enable = ka::EnableIf<
+               std::is_constructible<Property<AnyValue>, Args&&...>::value>>
+    GenericProperty(TypeInterface* type, Args&&... args)
+      : Property<AnyValue>{ ka::fwd<Args>(args)... }
+      , _type{ type }
+    {
+      // Initialize with default value for given type
       set(AnyValue(_type));
-      std::vector<TypeInterface*> types(&_type, &_type + 1);
-      _setSignature(makeTupleSignature(types));
+      _setSignature(makeTupleSignature({ _type }));
     }
 
     GenericProperty& operator=(const AnyValue& v) { this->set(v); return *this; }
@@ -186,9 +254,11 @@ namespace qi
     qi::Signature signature() const override {
       return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
     }
+
   private:
     TypeInterface* _type;
   };
+
 }
 
 #include <qi/type/detail/property.hxx>
