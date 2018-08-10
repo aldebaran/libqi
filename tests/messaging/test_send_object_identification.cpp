@@ -1,0 +1,482 @@
+/*
+**
+** Copyright (C) 2018 Softbank Robotics Europe
+*/
+
+#include <gtest/gtest.h>
+#include <qi/anyobject.hpp>
+#include <qi/type/dynamicobjectbuilder.hpp>
+#include <testsession/testsessionpair.hpp>
+#include <qi/testutils/testutils.hpp>
+
+qiLogCategory("test");
+
+static const int timeoutMs = 300;
+static const qi::Duration timeout = qi::MilliSeconds(timeoutMs);
+
+
+static int next_dummy_id = 0;
+struct dummy_t
+{
+  int value = next_dummy_id++;
+  int one() const
+  {
+    return value;
+  }
+  qi::AnyObject identity(qi::AnyObject o) { return o; }
+};
+
+QI_REGISTER_OBJECT(dummy_t, one, identity);
+
+
+TEST(SendObject, IdentityOfRemoteObjects)
+{
+  TestSessionPair p;
+  p.server()->registerService("plop", boost::make_shared<dummy_t>());
+
+  qi::DynamicObjectBuilder builder;
+  auto o = builder.object();
+
+  qi::AnyObject remotePlop = p.client()->service("plop");
+  auto remoteObject = remotePlop.call<qi::AnyObject>("identity", o);
+  EXPECT_EQ(o, remoteObject);
+
+  qi::DynamicObjectBuilder builder2;
+  auto o2 = builder2.object();
+  auto remoteObject2 = remotePlop.call<qi::AnyObject>("identity", o2);
+  EXPECT_EQ(o2, remoteObject2);
+  EXPECT_NE(o2, remoteObject);
+  EXPECT_NE(remoteObject2, remoteObject);
+  EXPECT_NE(remoteObject2, o);
+}
+
+
+TEST(SendObjectIdentity, IdentityOfRemoteObjectsDifferentProcess)
+{
+  using namespace qi;
+
+  const Url serviceUrl{"tcp://127.0.0.1:54321"};
+  test::ScopedProcess _{path::findBin("remoteserviceowner"),
+    {"--qi-standalone", "--qi-listen-url=" + serviceUrl.str()}
+  };
+
+  auto client = makeSession();
+  client->connect(serviceUrl);
+  AnyObject service = client->service("PingPongService");
+  AnyObject original{boost::make_shared<dummy_t>()};
+
+  service.call<void>("give", original);
+  AnyObject copy0 = service.call<AnyObject>("take");
+  EXPECT_EQ(copy0, original);
+
+  service.call<void>("give", copy0);
+  AnyObject copy1 = service.call<AnyObject>("take");
+  ASSERT_EQ(copy1, copy0);
+  ASSERT_EQ(copy1, original);
+
+  ASSERT_EQ(copy1.call<int>("one"), copy0.call<int>("one"));
+}
+
+
+class ObjectStore
+{
+  qi::AnyObject obj;
+public:
+  qi::AnyObject get() const
+  {
+    return obj;
+  }
+  void set(qi::AnyObject o)
+  {
+    obj = o;
+  }
+};
+
+QI_REGISTER_OBJECT(ObjectStore, get, set);
+
+TEST(SendObjectIdentity, IdentityMaintainedBetweenSessions)
+{
+  TestSessionPair sessionPair;
+  auto original_store = boost::make_shared<ObjectStore>();
+  sessionPair.server()->registerService("store", original_store);
+
+  auto object = qi::AnyObject{boost::make_shared<dummy_t>()};
+  original_store->set(object);
+
+  auto store_from_server = sessionPair.server()->service("store").value();
+  auto store_from_client = sessionPair.client()->service("store").value();
+
+  qi::AnyObject object_from_server_1 = store_from_server.call<qi::AnyObject>("get");
+  qi::AnyObject object_from_server_2 = store_from_server.call<qi::AnyObject>("get");
+
+  qi::AnyObject object_from_client_1 = store_from_client.call<qi::AnyObject>("get");
+  qi::AnyObject object_from_client_2 = store_from_client.call<qi::AnyObject>("get");
+
+  EXPECT_EQ(object_from_server_1, object);
+  EXPECT_EQ(object_from_server_2, object);
+  EXPECT_EQ(object_from_server_1, object_from_server_2);
+
+  EXPECT_EQ(object_from_client_1, object);
+  EXPECT_EQ(object_from_client_2, object);
+  EXPECT_EQ(object_from_client_1, object_from_client_2);
+
+  EXPECT_EQ(object_from_server_1, object_from_client_1);
+  EXPECT_EQ(object_from_server_1, object_from_client_2);
+  EXPECT_EQ(object_from_server_2, object_from_client_1);
+  EXPECT_EQ(object_from_server_2, object_from_client_2);
+
+  qi::Session outterSession;
+  outterSession.connect(sessionPair.endpointToServiceSource());
+  qi::AnyObject store_from_outter = outterSession.service("store");
+  qi::AnyObject object_from_outter_1 = store_from_outter.call<qi::AnyObject>("get");
+  qi::AnyObject object_from_outter_2 = store_from_outter.call<qi::AnyObject>("get");
+
+  EXPECT_EQ(object_from_outter_1, object);
+  EXPECT_EQ(object_from_outter_2, object);
+  EXPECT_EQ(object_from_outter_1, object_from_outter_2);
+
+  EXPECT_EQ(object_from_outter_1, object_from_client_1);
+  EXPECT_EQ(object_from_outter_1, object_from_client_2);
+  EXPECT_EQ(object_from_outter_2, object_from_client_1);
+  EXPECT_EQ(object_from_outter_2, object_from_client_2);
+
+  EXPECT_EQ(object_from_outter_1, object_from_server_1);
+  EXPECT_EQ(object_from_outter_1, object_from_server_2);
+  EXPECT_EQ(object_from_outter_2, object_from_server_1);
+  EXPECT_EQ(object_from_outter_2, object_from_server_2);
+
+}
+
+TEST(SendObjectIdentity, IdentityMaintainedBetweenSessionsWithRemote)
+{
+  using namespace qi;
+
+  const Url serviceUrl{ "tcp://127.0.0.1:54321" };
+  test::ScopedProcess _{ path::findBin("remoteserviceowner"),
+  { "--qi-standalone", "--qi-listen-url=" + serviceUrl.str() }
+  };
+
+  auto client = makeSession();
+  client->connect(serviceUrl);
+  AnyObject store_from_client = client->service("PingPongService");
+
+  auto object = qi::AnyObject{ boost::make_shared<dummy_t>() };
+  store_from_client.call<void>("give", object);
+
+  AnyObject object_from_client_1 = store_from_client.call<AnyObject>("take");
+  AnyObject object_from_client_2 = store_from_client.call<AnyObject>("take");
+
+  EXPECT_EQ(object_from_client_1, object);
+  EXPECT_EQ(object_from_client_2, object);
+  EXPECT_EQ(object_from_client_1, object_from_client_2);
+
+  Session outterSession;
+  outterSession.connect(serviceUrl);
+  AnyObject store_from_outter = outterSession.service("PingPongService");
+  AnyObject object_from_outter_1 = store_from_outter.call<AnyObject>("take");
+  AnyObject object_from_outter_2 = store_from_outter.call<AnyObject>("take");
+
+  EXPECT_EQ(object_from_outter_1, object);
+  EXPECT_EQ(object_from_outter_2, object);
+  EXPECT_EQ(object_from_outter_1, object_from_outter_2);
+
+  EXPECT_EQ(object_from_outter_1, object_from_client_1);
+  EXPECT_EQ(object_from_outter_1, object_from_client_2);
+  EXPECT_EQ(object_from_outter_2, object_from_client_1);
+  EXPECT_EQ(object_from_outter_2, object_from_client_2);
+
+}
+
+
+TEST(SendObjectIdentity, IdentityOfRemoteObjectsMoreIndirections)
+{
+  qi::AnyObject originalObject(boost::make_shared<dummy_t>());
+  TestSessionPair pairA;
+  pairA.server()->registerService("serviceA", boost::make_shared<ObjectStore>());
+  qi::AnyObject clientA = pairA.client()->service("serviceA");
+  clientA.call<void>("set", originalObject);
+  qi::AnyObject objA = clientA.call<qi::AnyObject>("get");
+  EXPECT_EQ(originalObject, objA);
+
+  TestSessionPair pairB;
+  pairB.server()->registerService("serviceB", boost::make_shared<ObjectStore>());
+  qi::AnyObject clientB = pairB.client()->service("serviceB");
+  clientB.call<void>("set", objA);
+  qi::AnyObject objB = clientB.call<qi::AnyObject>("get");
+  EXPECT_EQ(originalObject, objB);
+
+  TestSessionPair pairC;
+  pairC.server()->registerService("serviceC", boost::make_shared<ObjectStore>());
+  qi::AnyObject clientC = pairC.client()->service("serviceC");
+  clientC.call<void>("set", objB);
+  qi::AnyObject objC = clientC.call<qi::AnyObject>("get");
+  EXPECT_EQ(originalObject, objC);
+  EXPECT_EQ(objA, objC);
+  EXPECT_EQ(objB, objC);
+}
+
+////////////////////////////////////////////////////////////////////////////
+// The following tests check that object identity is maintained when
+// using the interface/proxy/impl system of libqi.
+// An interface type is always registered with an associated proxy type.
+// The proxy type will be instantiated when receiving an object of the
+// interface type. The real implementation can be any type compatible
+// with the interface type.
+// Here we want to make sure that the ptruid of the real implementation
+// object is propagated to all its proxies in all kinds of situations
+// so that it is always possible to identify if a proxy is actually representing
+// the same implementation object.
+//////
+
+struct SomeInterface
+{
+  virtual ~SomeInterface() = default;
+  virtual int get() const = 0;
+};
+
+QI_REGISTER_OBJECT(SomeInterface, get)
+
+struct SomeInterfaceProxy : SomeInterface, public qi::Proxy
+{
+  SomeInterfaceProxy(qi::AnyObject o)
+    : qi::Proxy(o) {}
+
+  int get() const override { return asObject().call<int>("get"); }
+};
+QI_REGISTER_PROXY_INTERFACE(SomeInterfaceProxy, SomeInterface);
+
+static std::atomic<int> nextSomeInterfaceId{ 0 };
+
+class SomeInterfaceImpl : public SomeInterface
+{
+  int id = nextSomeInterfaceId++;
+public:
+  int get() const override { return id; }
+};
+QI_REGISTER_OBJECT(SomeInterfaceImpl, get)
+
+// See QI_REGISTER_IMPLEMENTATION_H for details explaining why we need to build all this.
+template<class Interface, class SharedT>
+class SomeInterfaceImplWrapper : public Interface
+{
+  SharedT impl;
+public:
+  explicit SomeInterfaceImplWrapper(SharedT impl) : impl(impl) {}
+  int get() const override { return impl->get(); }
+};
+
+template<class SharedT>
+using SomeInterfaceLocalAsync = SomeInterfaceImplWrapper<SomeInterface, SharedT>;
+template<class SharedT>
+using SomeInterfaceLocalSync = SomeInterfaceImplWrapper<SomeInterface, SharedT>;
+
+class SomeInterfaceImplNoInheritance
+{
+  int id = nextSomeInterfaceId++;
+public:
+  int get() const { return id; }
+};
+QI_REGISTER_OBJECT(SomeInterfaceImplNoInheritance, get)
+QI_REGISTER_IMPLEMENTATION_H(SomeInterface, SomeInterfaceImplNoInheritance)
+
+
+TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObject)
+{
+  using namespace qi;
+  auto realObject = boost::make_shared<SomeInterfaceImpl>();
+  const PtrUid ptruid = os::ptrUid(realObject.get());
+  Object<SomeInterface> a{ AnyObject{ realObject } };
+  Object<SomeInterface> b{ AnyObject{ realObject } };
+
+  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a->get(), b->get());
+}
+
+TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObjectT)
+{
+  using namespace qi;
+  auto realObject = boost::make_shared<SomeInterfaceImpl>();
+  const PtrUid ptruid = os::ptrUid(realObject.get());
+  Object<SomeInterface> a{ realObject };
+  Object<SomeInterface> b{ realObject };
+
+  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a->get(), b->get());
+}
+
+
+
+TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObjectNoInheritance)
+{
+  using namespace qi;
+  auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
+  const PtrUid ptruid = os::ptrUid(realObject.get());
+  // Object constructor implicitely instanciates SomeInterfaceLocalSync<shared_ptr<SomeInterfaceImplNoInheritance>>
+  Object<SomeInterface> a{ AnyObject{ realObject } };
+  Object<SomeInterface> b{ AnyObject{ realObject } };
+
+  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a->get(), b->get());
+}
+
+TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObjectTNoInheritance)
+{
+  using namespace qi;
+  auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
+  const PtrUid ptruid = os::ptrUid(realObject.get());
+  // Object constructor implicitely instanciates SomeInterfaceLocalSync<shared_ptr<SomeInterfaceImplNoInheritance>>
+  Object<SomeInterface> a{ realObject };
+  Object<SomeInterface> b{ realObject };
+
+  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(a, b);
+  EXPECT_EQ(a->get(), b->get());
+}
+
+
+
+TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingAnyObject)
+{
+  using namespace qi;
+
+  TestSessionPair sessions;
+
+  AnyObject original{ boost::make_shared<SomeInterfaceImpl>() };
+  sessions.server()->registerService("Store", boost::make_shared<ObjectStore>());
+  AnyObject store = sessions.client()->service("Store");
+  store.call<void>("set", original);
+
+  Object<SomeInterface> objectA = store.call<AnyObject>("get");
+  EXPECT_EQ(original, objectA) << "original ptruid: {" << original.ptrUid() << "}; objectA ptruid: {" << objectA.ptrUid() << "};";
+
+}
+
+TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingObjectT)
+{
+  using namespace qi;
+
+  TestSessionPair sessions;
+
+  AnyObject original{ boost::make_shared<SomeInterfaceImpl>() };
+  sessions.server()->registerService("Store", boost::make_shared<ObjectStore>());
+  AnyObject store = sessions.client()->service("Store");
+  store.call<void>("set", original);
+
+  Object<SomeInterface> objectA = store.call<Object<SomeInterface>>("get");
+  EXPECT_EQ(original, objectA) << "original ptruid: {" << original.ptrUid() <<"}; vs objectA ptruid: {" << objectA.ptrUid() << "};";
+
+}
+
+struct SomeStore
+{
+  virtual qi::Object<SomeInterface> get() const = 0;
+  virtual void set(qi::Object<SomeInterface> o) = 0;
+};
+QI_REGISTER_OBJECT(SomeStore, get, set);
+
+class SomeStoreProxy : public SomeStore, public qi::Proxy
+{
+public:
+  SomeStoreProxy(qi::AnyObject o)
+    : qi::Proxy(o) {}
+
+  qi::Object<SomeInterface> get() const override
+  {
+    return asObject().call<qi::Object<SomeInterface>>("get");
+  }
+  void set(qi::Object<SomeInterface> o) override
+  {
+    return asObject().call<void>("set", o);
+  }
+};
+QI_REGISTER_PROXY_INTERFACE(SomeStoreProxy, SomeStore);
+
+class SomeStoreImpl : SomeStore
+{
+  qi::Object<SomeInterface> obj;
+public:
+  qi::Object<SomeInterface> get() const override
+  {
+    return obj;
+  }
+  void set(qi::Object<SomeInterface> o) override
+  {
+    obj = o;
+  }
+};
+QI_REGISTER_OBJECT(SomeStoreImpl, get, set);
+
+TEST(SomeInterface, IdentityIsMaintainedWhenSentToInterfaceSpecializedStoreRetrievingAnyObject)
+{
+  using namespace qi;
+
+  TestSessionPair sessions;
+
+  Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
+  sessions.server()->registerService("Store", boost::make_shared<SomeStoreImpl>());
+  Object<SomeStore> store = sessions.client()->service("Store");
+  store->set(original);
+
+  Object<SomeInterface> objectA = store->get();
+  EXPECT_EQ(original, objectA) << "original ptruid: {" << original.ptrUid() << "}; vs objectA ptruid: {" << objectA.ptrUid() << "};";
+
+}
+
+
+
+TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRetrievingAnyObject)
+{
+  using namespace qi;
+
+  const Url serviceUrl{ "tcp://127.0.0.1:54321" };
+  test::ScopedProcess _{ path::findBin("remoteserviceowner"),
+  { "--qi-standalone", "--qi-listen-url=" + serviceUrl.str() }
+  };
+
+  auto client = makeSession();
+  client->connect(serviceUrl);
+  AnyObject service = client->service("PingPongService");
+  Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
+
+  service.call<void>("give", original);
+  AnyObject copy0 = service.call<AnyObject>("take");
+  EXPECT_EQ(copy0, original) << "copy0 ptruid: {" << copy0.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+
+  service.call<void>("give", copy0);
+  AnyObject copy1 = service.call<AnyObject>("take");
+  EXPECT_EQ(copy1, copy0) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs copy0 ptruid: {" << copy0.ptrUid() << "};";
+  EXPECT_EQ(copy1, original) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+}
+
+
+
+TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRetrievingObjectT)
+{
+  using namespace qi;
+
+  const Url serviceUrl{ "tcp://127.0.0.1:54321" };
+  test::ScopedProcess _{ path::findBin("remoteserviceowner"),
+  { "--qi-standalone", "--qi-listen-url=" + serviceUrl.str() }
+  };
+
+  auto client = makeSession();
+  client->connect(serviceUrl);
+  AnyObject service = client->service("PingPongService");
+  Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
+
+  service.call<void>("give", original);
+  Object<SomeInterface> copy0 = service.call<Object<SomeInterface>>("take");
+  EXPECT_EQ(copy0, original) << "copy0 ptruid: {" << copy0.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+
+  service.call<void>("give", copy0);
+  Object<SomeInterface> copy1 = service.call<Object<SomeInterface>>("take");
+  EXPECT_EQ(copy1, copy0) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs copy0 ptruid: {" << copy0.ptrUid() << "};";
+  EXPECT_EQ(copy1, original) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+}
+
+////////
+// End of tests about object identification with interface/proxy/impl system.
+////////////////////////////////////////////////////////////////////////////////
