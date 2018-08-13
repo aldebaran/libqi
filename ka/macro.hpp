@@ -11,6 +11,12 @@
 /// Do nothing if noexcept is not available.
 #define KA_NOEXCEPT_EXPR(expr) BOOST_NOEXCEPT_IF(BOOST_NOEXCEPT_EXPR(expr))
 
+/// Specify that a function is evaluable at compile-time.
+/// Do nothing if constexpr is not available.
+///
+/// TODO: Remove this macro when all supported compilers support `constexpr`.
+#define KA_CONSTEXPR BOOST_CONSTEXPR
+
 /// True if the code is compiled with Visual Studio 2013 or below.
 ///
 /// This is needed because some code must be adapted, due to the limited
