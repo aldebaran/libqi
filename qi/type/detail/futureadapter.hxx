@@ -269,8 +269,14 @@ inline void setAdaptedResult(Promise<T>& promise, UniqueAnyReference ref)
 /// Specialization for setting the promise according to the future result in the case of void.
 /// This method takes ownership of the reference.
 template <>
-inline void setAdaptedResult<void>(Promise<void>& promise, UniqueAnyReference)
+inline void setAdaptedResult<void>(Promise<void>& promise, UniqueAnyReference ref)
 {
+  if (!ref->isValid())
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
+
   promise.setValue(nullptr);
 }
 
@@ -279,6 +285,12 @@ inline void setAdaptedResult<void>(Promise<void>& promise, UniqueAnyReference)
 template <>
 inline void setAdaptedResult<AnyReference>(Promise<AnyReference>& promise, UniqueAnyReference ref)
 {
+  if (!ref->isValid())
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
+
   try
   {
     promise.setValue(ref->clone());
