@@ -220,13 +220,21 @@ private:
   Future<void> delayTryAttach(Seconds delay = initTryDelay);
 
   // Precondition: synchronized()
-  bool shouldMirrorServiceFromSDUnsync(const std::string& serviceName) const;
+  //
+  // Returns true if the service should be mirrored, regardless of the current state of the proxy.
+  bool shouldMirrorServiceFromSDUnsync(const std::string& name) const;
 
   // Precondition: synchronized()
   MirroringResult mirrorServiceToSDUnsync(unsigned int localId, const std::string& serviceName);
 
   // Precondition: synchronized()
   void unmirrorServiceToSDUnsync(const std::string& serviceName);
+
+  // Precondition: synchronized()
+  //
+  // Returns an optional set with a failed MirroringResult if the service can not be mirrored,
+  // otherwise returns a empty optional.
+  boost::optional<MirroringResult> immediateMirroringFailureUnsync(const std::string& name) const;
 
   struct Identity
   {
@@ -605,23 +613,12 @@ Future<void> ServiceDirectoryProxy::Impl::mirrorAllServices()
 }
 
 MirroringResult ServiceDirectoryProxy::Impl::mirrorServiceFromSDUnsync(unsigned int remoteId,
-                                                                 const std::string& name)
+                                                                       const std::string& name)
 {
-  qiLogVerbose() << "Trying to mirror service '" << name << "'";
+  qiLogVerbose() << "Trying to mirror service '" << name << "' from the service directory.";
 
-  if (!_status.current().isListening())
-  {
-    qiLogVerbose() << "Proxy is not yet listening, cannot mirror service.";
-    return { name, MirroringResult::Status::Failed_NotListening, {} };
-  }
-  QI_ASSERT_TRUE(_server);
-
-  if (!_status.current().isConnected())
-  {
-    qiLogVerbose() << "Proxy is not yet connected, cannot mirror service.";
-    return { name, MirroringResult::Status::Failed_NoSdConnection, {} };
-  }
-  QI_ASSERT_TRUE(_sdClient);
+  if (const auto mirroringFailure = immediateMirroringFailureUnsync(name))
+    return *mirroringFailure;
 
   if (!shouldMirrorServiceFromSDUnsync(name))
   {
@@ -629,8 +626,7 @@ MirroringResult ServiceDirectoryProxy::Impl::mirrorServiceFromSDUnsync(unsigned 
     return { name, MirroringResult::Status::Skipped, {} };
   }
 
-  qiLogVerbose() << "Mirroring service '" << name
-                 << "' from the service directory to the proxy.";
+  qiLogVerbose() << "Mirroring service '" << name << "' from the service directory to the proxy.";
   const auto result =
       mirrorService(name, *_sdClient, *_server, "service directory", "proxy");
   if (result.mirroredId)
@@ -704,38 +700,18 @@ Future<void> ServiceDirectoryProxy::Impl::delayTryAttach(Seconds delay)
   return asyncDelay(_strand.schedulerFor([=] { return tryAttachUnsync(delay); }), delay).unwrap();
 }
 
-bool ServiceDirectoryProxy::Impl::shouldMirrorServiceFromSDUnsync(const std::string& serviceName) const
+bool ServiceDirectoryProxy::Impl::shouldMirrorServiceFromSDUnsync(const std::string& name) const
 {
-  if (!_status.current().isReady())
-    return false;
-  QI_ASSERT_TRUE(_server);
-
-  if (serviceName == Session::serviceDirectoryServiceName() || _serviceFilter(serviceName))
-    return false;
-
-  // Only mirror services that are not yet registered on the proxy server.
-  return !_server->service(serviceName).hasValue();
+  return name != Session::serviceDirectoryServiceName() && !_serviceFilter(name);
 }
 
 MirroringResult ServiceDirectoryProxy::Impl::mirrorServiceToSDUnsync(unsigned int localId,
-                                                                  const std::string& name)
+                                                                     const std::string& name)
 {
-  auto it = _servicesInfo.find(name);
-  if (it != _servicesInfo.end())
-  {
-    // The service comes from the service directory, do nothing.
-    qiLogVerbose() << "Service '" << name
-                   << "' should not be mirrored to the service directory, skipping.";
-    return { name, MirroringResult::Status::Skipped, {} };
-  }
+  qiLogVerbose() << "Trying to mirror service '" << name << "' to the service directory.";
 
-  if (!_status.current().isListening())
-    return { name, MirroringResult::Status::Failed_NotListening, {} };
-  QI_ASSERT_TRUE(_server);
-
-  if (!_status.current().isConnected())
-    return { name, MirroringResult::Status::Failed_NoSdConnection, {} };
-  QI_ASSERT_TRUE(_sdClient);
+  if (const auto mirroringFailure = immediateMirroringFailureUnsync(name))
+    return *mirroringFailure;
 
   qiLogVerbose() << "Mirroring service '" << name << "' from the proxy to the service directory.";
   const auto result =
@@ -770,7 +746,6 @@ void ServiceDirectoryProxy::Impl::unmirrorServiceToSDUnsync(const std::string& s
     auto scopeErase = ka::scoped([&]{ _servicesInfo.erase(serviceIndexIt); });
 
     const auto localId = serviceIndexIt->second.localId;
-    const auto remoteId = serviceIndexIt->second.remoteId;
     qiLogVerbose() << "Unmirroring service '" << serviceName << "' to service directory, (#"
                    << localId << ").";
     _sdClient->unregisterService(remoteId).value();
@@ -783,6 +758,33 @@ void ServiceDirectoryProxy::Impl::unmirrorServiceToSDUnsync(const std::string& s
                    << "' to service directory: " << e.what();
     throw;
   }
+}
+
+boost::optional<MirroringResult> ServiceDirectoryProxy::Impl::immediateMirroringFailureUnsync(
+  const std::string& name) const
+{
+  // Verify that the service is not already mirrored.
+  if (_servicesInfo.find(name) != _servicesInfo.end())
+  {
+    qiLogVerbose() << "Service '" << name << "' is already mirrored, skipping.";
+    return MirroringResult{ name, MirroringResult::Status::Skipped, {} };
+  }
+
+  if (!_status.current().isListening())
+  {
+    qiLogVerbose() << "Proxy is not yet listening, cannot mirror service.";
+    return MirroringResult{ name, MirroringResult::Status::Failed_NotListening, {} };
+  }
+  QI_ASSERT_TRUE(_server);
+
+  if (!_status.current().isConnected())
+  {
+    qiLogVerbose() << "Proxy is not yet connected, cannot mirror service.";
+    return MirroringResult{ name, MirroringResult::Status::Failed_NoSdConnection, {} };
+  }
+  QI_ASSERT_TRUE(_sdClient);
+
+  return {};
 }
 
 void ServiceDirectoryProxy::Impl::unmirrorServiceFromSDUnsync(const std::string& serviceName)
