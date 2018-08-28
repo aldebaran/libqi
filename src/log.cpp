@@ -1130,7 +1130,10 @@ namespace qi {
 
     static void _setLogLevel(const std::string &level)
     {
-      setLogLevel(stringToLogLevel(level.c_str()));
+      setLogLevel(stringToLogLevel(level.c_str()), 0u);
+#ifdef WITH_SYSTEMD
+      setLogLevel(stringToLogLevel(level.c_str()), 1u);
+#endif
     }
 
     static void _setColor(const std::string &color)
