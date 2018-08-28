@@ -17,21 +17,20 @@ namespace qi
 namespace log
 {
     /**
-     * \brief Write logs messages on a file.
-     * \param verb verbosity of the log message.
-     * \param date date at which the log message was issued.
-     * \param category will be used in future for filtering
-     * \param msg actual message to log.
-     * \param file filename from which this log message was issued.
-     * \param fct function name from which this log message was issued.
-     * \param line line number in the issuer file.
+     * \brief Return a log handler, which forwards logs to systemd's journal
+     *
+     * The following journal fields are added:
+     * - MESSAGE, the log message
+     * - QI_CATEGORY, the qiLogCategory
+     * - PRIORITY, with the log level (mapped to syslog priority)
+     * - QI=1
+     * - CODE_FILE, CODE_LINE, CODE_FUNC
+     *   (only when NO_QI_LOG_DETAILED_CONTEXT is not defined)
+     *
+     * The returned handler is not thread-safe, which is fine: libqi does not
+     * call its log handlers concurrently.
      */
-    void JournaldLogHandler(const qi::LogLevel verb,
-             const char* category,
-             const char* msg,
-             const char* file,
-             const char* fct,
-             const int line);
+    Handler makeJournaldLogHandler();
 }; // !log
 }; // !qi
 

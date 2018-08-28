@@ -451,8 +451,7 @@ namespace qi {
                    verb);
 #ifdef WITH_SYSTEMD
         addHandler("journaldloghandler",
-                   boost::bind(&qi::log::JournaldLogHandler,
-                               _1, _4, _5, _6, _7, _8),
+                   makeJournaldLogHandler(),
                    verb);
 #endif
 
