@@ -341,26 +341,12 @@ namespace qi {
     static privateLog             LogBuffer[RTLOG_BUFFERS];
     static volatile unsigned long LogPush = 0;
 
-#ifdef ANDROID
     namespace detail {
-      void createAndInstallDefaultHandler(qi::LogLevel verb)
+
+      // return a log handler on windows, an invalid boost::function otherwise
+      Handler makeWindowsDebuggerOutputLogHandler()
       {
-        addHandler("androidloghandler",
-                   makeAndroidLogHandler(),
-                   verb);
-      }
-
-      void destroyDefaultHandler()
-      {}
-    } // namespace detail
-#else
-
-
 #if BOOST_OS_WINDOWS && !defined(NDEBUG)
-    namespace detail {
-
-      void installWindowsDebugOutput(qi::LogLevel verb)
-      {
         auto winDebuggerOutputLogHandler = [](const qi::LogLevel verb, const qi::Clock::time_point date,
             const qi::SystemClock::time_point systemDate,
             const char* category, const char* msg,
@@ -414,16 +400,13 @@ namespace qi {
           auto wlogline = processName + boost::locale::conv::utf_to_utf<wchar_t>(logline.c_str(), logline.c_str() + logline.size());
           OutputDebugStringW(wlogline.c_str());
         };
-
-        addHandler("winDebuggerOutputLogHandler", std::move(winDebuggerOutputLogHandler), verb);
+        return winDebuggerOutputLogHandler;
+#else
+        return Handler{};
+#endif
       }
 
     }
-#else
-    namespace detail {
-        inline void installWindowsDebugOutput(qi::LogLevel) { }
-    }
-#endif
 
 
 
@@ -432,31 +415,75 @@ namespace qi {
     namespace detail {
       void createAndInstallDefaultHandler(qi::LogLevel verb)
       {
-        _glConsoleLogHandler = new ConsoleLogHandler;
-        addHandler("consoleloghandler",
-                   boost::bind(&ConsoleLogHandler::log,
-                               _glConsoleLogHandler,
-                               _1, _2, _3, _4, _5, _6, _7, _8),
-                   verb);
-#ifdef WITH_SYSTEMD
-        addHandler("journaldloghandler",
-                   makeJournaldLogHandler(),
-                   verb);
+        const auto loggerHandler = "logger";
+        const auto stdoutHandler = "stdout";
+        const auto debuggerHandler = "debugger";
+        const auto noneHandler = "none";
+        auto handler = qi::os::getenv("QI_DEFAULT_LOGHANDLER");
+        if (handler.empty())
+        {
+          handler =
+#if defined(ANDROID) || defined(WITH_SYSTEMD)
+              loggerHandler;
+#else
+              stdoutHandler;
 #endif
-
-        installWindowsDebugOutput(verb);
+        }
+        const auto invalidId = static_cast<SubscriberId>(-1);
+        auto id = invalidId;
+        if (handler == stdoutHandler){
+#ifndef ANDROID
+          _glConsoleLogHandler = new ConsoleLogHandler;
+          id = addHandler("consoleloghandler",
+                          boost::bind(&ConsoleLogHandler::log,
+                                      _glConsoleLogHandler,
+                                      _1, _2, _3, _4, _5, _6, _7, _8),
+                          verb);
+#endif
+        }
+        else if (handler == loggerHandler)
+        {
+#ifdef ANDROID
+          id = addHandler("androidloghandler", makeAndroidLogHandler(), verb);
+#elif defined(WITH_SYSTEMD)
+          id = addHandler("journaldloghandler", makeJournaldLogHandler(), verb);
+#endif
+        }
+        else if (handler == debuggerHandler)
+        {
+          auto h = makeWindowsDebuggerOutputLogHandler();
+          if (h)
+          {
+            id = addHandler("winDebuggerOutputLogHandler", std::move(h), verb);
+          }
+        }
+        QI_ASSERT(id == 0 || id == invalidId);
+        if (handler == noneHandler)
+        {
+          QI_ASSERT(id == invalidId);
+        }
+        else
+        {
+          if (id == invalidId)
+          {
+            std::cerr << "qi.log: failed to register \"" << handler
+                      << "\" log handler. Log messages will be lost until a"
+                         " log handler is added.\n";
+          }
+        }
       }
 
       void destroyDefaultHandler()
       {
+#ifndef ANDROID
         if(_glConsoleLogHandler)
         {
           delete _glConsoleLogHandler;
           _glConsoleLogHandler = nullptr;
         }
+#endif
       }
     } // namespace detail
-#endif
 
     namespace detail {
 
@@ -671,7 +698,7 @@ namespace qi {
         AsyncLogInit = true;
         LogThread = boost::thread(&Log::run, this);
       }
-    };
+    }
 
     inline Log::Log() :
       SyncLog(true),
@@ -679,7 +706,7 @@ namespace qi {
       , logs(50)
     {
       LogInit = true;
-    };
+    }
 
     inline Log::~Log()
     {
@@ -954,7 +981,10 @@ namespace qi {
     {
       _glColorWhen = color;
 #ifndef ANDROID
-      _glConsoleLogHandler->updateColor();
+      if(_glConsoleLogHandler)
+      {
+        _glConsoleLogHandler->updateColor();
+      }
 #endif
     }
 
@@ -1119,9 +1149,6 @@ namespace qi {
     static void _setLogLevel(const std::string &level)
     {
       setLogLevel(stringToLogLevel(level.c_str()), 0u);
-#ifdef WITH_SYSTEMD
-      setLogLevel(stringToLogLevel(level.c_str()), 1u);
-#endif
     }
 
     static void _setColor(const std::string &color)
