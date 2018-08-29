@@ -208,7 +208,7 @@ private:
   //
   // Instanciates a server (as a session) and initializes it with the current state of the proxy.
   // Returns the pointer the new server.
-  std::unique_ptr<Session> createServerUnsync();
+  SessionPtr createServerUnsync();
 
   // Precondition: synchronized()
   //
@@ -268,8 +268,8 @@ private:
 
   } _status{totallyDisconnected, status};
 
-  std::unique_ptr<Session> _server; // ptr because we have to recreate it every time we listen
-  std::unique_ptr<Session> _sdClient;
+  SessionPtr _server; // ptr because we have to recreate it every time we listen
+  SessionPtr _sdClient;
 
   struct MirroredServiceInfo
   {
@@ -552,7 +552,7 @@ Future<void> ServiceDirectoryProxy::Impl::doAttachUnsync()
   _status.set(ConnectionStatus::NotConnected);
 
   qiLogDebug() << "Instanciating new service directory client session";
-  _sdClient.reset(new Session);
+  _sdClient = makeSession();
   _status.set(ConnectionStatus::Starting);
 
   return _sdClient->connect(_sdUrl).async()
@@ -842,9 +842,9 @@ Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync(Seconds lastDelay)
       })).unwrap();
 }
 
-std::unique_ptr<Session> ServiceDirectoryProxy::Impl::createServerUnsync()
+SessionPtr ServiceDirectoryProxy::Impl::createServerUnsync()
 {
-  std::unique_ptr<Session> server{ new Session{ _isEnforcedAuth } };
+  auto server = makeSession(_isEnforcedAuth);
 
   if (_identity && !server->setIdentity(_identity->key, _identity->crt))
   {

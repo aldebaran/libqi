@@ -11,7 +11,7 @@
 
 static bool _stopped = false;
 static qi::ApplicationSession* _app;
-static qi::Session _sd;
+static qi::SessionPtr _sd;
 static char **_argv = nullptr;
 static int _argc = 3;
 
@@ -25,10 +25,10 @@ TEST(QiApplicationSessionNoAutoExit, defaultConnect)
   ASSERT_FALSE(_app->session()->isConnected());
   _app->startSession();
   ASSERT_TRUE(_app->session()->isConnected());
-  ASSERT_EQ(_sd.endpoints()[0].str(), _app->session()->url());
+  ASSERT_EQ(_sd->endpoints()[0].str(), _app->session()->url());
 
   ASSERT_FALSE(_stopped);
-  _sd.close();
+  _sd->close();
   qi::os::msleep(100);
   ASSERT_FALSE(_stopped);
 }
@@ -51,14 +51,15 @@ int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
 
-  _sd.listenStandalone("tcp://127.0.0.1:0");
+  _sd = qi::makeSession();
+  _sd->listenStandalone("tcp://127.0.0.1:0");
   _argv = new char*[4];
   strcpy((_argv[0] = new char[4]), "no");
   strcpy((_argv[1] = new char[10]), "options");
   strcpy((_argv[2] = new char[10]), "given");
   _argv[3] = 0;
 
-  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession::Option_NoAutoExit, _sd.endpoints()[0]);
+  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession::Option_NoAutoExit, _sd->endpoints()[0]);
   _app = &app;
   app.atStop(&onStop);
   return RUN_ALL_TESTS();

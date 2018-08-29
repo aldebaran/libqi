@@ -7,8 +7,6 @@
 #ifndef QI_TYPE_DETAIL_FUTURE_ADAPTER_HXX_
 #define QI_TYPE_DETAIL_FUTURE_ADAPTER_HXX_
 
-#include <boost/scope_exit.hpp>
-
 #include <qi/type/detail/futureadapter.hpp>
 
 namespace qi
@@ -22,7 +20,10 @@ static const char* InvalidFutureError = "function returned an invalid future";
 template<typename T> void setPromise(qi::Promise<T>& promise, const AnyValue& v)
 {
   if (!v.isValid())
-    throw std::runtime_error(InvalidValueError);
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
 
   try
   {
@@ -56,10 +57,13 @@ template<> inline void setPromise(qi::Promise<AnyReference>& promise, const AnyV
 
 template <typename T>
 void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
-    boost::shared_ptr<GenericObject>& ao)
+    boost::shared_ptr<GenericObject> ao)
 {
   if (!val.isValid())
-    throw std::runtime_error(InvalidValueError);
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
 
   QI_ASSERT(ao);
   qiLogDebug("qi.adapter") << "futureAdapter trigger";
@@ -72,11 +76,6 @@ void futureAdapterGeneric(AnyReference val, qi::Promise<T> promise,
   else if (ft2)
     isvoid = ft2->templateArgument()->kind() == TypeKind_Void;
   GenericObject& gfut = *ao;
-  // reset the shared_ptr to break the cycle
-  BOOST_SCOPE_EXIT_TPL(&ao, &val) {
-    ao.reset();
-    val.destroy();
-  } BOOST_SCOPE_EXIT_END
   if (gfut.call<bool>("hasError", 0))
   {
     qiLogDebug("qi.adapter") << "futureAdapter: future in error";
@@ -134,6 +133,7 @@ inline boost::shared_ptr<GenericObject> getGenericFuture(AnyReference val, TypeK
 
 // futureAdapter helper that detects and handles value of kind future
 // return true if value was a future and was handled
+// Takes ownership of the value if it returns true.
 template <typename T>
 inline bool handleFuture(AnyReference val, Promise<T> promise)
 {
@@ -141,14 +141,29 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   if (!ao)
     return false;
 
+  // At this point, we are sure that the value holds a Future, so we take its ownership.
+  UniqueAnyReference uval{ val };
   if (!ao->call<bool>("isValid"))
   {
     promise.setError(InvalidFutureError);
     return true;
   }
 
-  boost::function<void()> cb =
-    boost::bind(futureAdapterGeneric<T>, val, promise, ao);
+  // The callback takes ownership of the value. After that, the old reference will be in a invalid
+  // state.
+  // TODO: Remove use of a shared_ptr once we can initialize captures of the lambda (C++14).
+  auto spVal = std::make_shared<UniqueAnyReference>(std::move(uval));
+  boost::function<void()> cb = [=]() mutable {
+      if (!spVal || !(*spVal)->isValid() || !ao)
+        throw std::logic_error{"Future is either invalid or has already been adapted."};
+
+      // Transfer the value to a local UniqueAnyReference.
+      // Also reset the shared ptr to break the cycle.
+      auto localRef = ka::exchange(spVal, nullptr);
+      futureAdapterGeneric<T>(**localRef, promise, ka::exchange(ao, nullptr));
+    };
+  spVal.reset();
+
   // Careful, gfut will die at the end of this block, but it is
   // stored in call data. So call must finish before we exit this block,
   // and thus must be synchronous.
@@ -222,20 +237,24 @@ inline void extractFuture<void>(const qi::Future<qi::AnyReference>& metaFut)
 }
 
 /// Factorization of the setting of the promise according to the future result.
+/// This method takes ownership of the reference.
 template <typename T>
-inline void setAdaptedResult(Promise<T>& promise, AnyReference& ref)
+inline void setAdaptedResult(Promise<T>& promise, UniqueAnyReference ref)
 {
-  if (!ref.isValid())
-    throw std::runtime_error(InvalidValueError);
+  if (!ref->isValid())
+  {
+    promise.setError(InvalidValueError);
+    return;
+  }
 
   static TypeInterface* targetType;
   QI_ONCE(targetType = typeOf<T>());
   try
   {
-    auto conv = ref.convert(targetType);
+    auto conv = ref->convert(targetType);
     if (!conv->type())
       promise.setError(std::string("Unable to convert call result to target type: from ")
-        + ref.signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
+        + ref->signature(true).toPrettySignature() + " to " + targetType->signature().toPrettySignature() );
     else
     {
       promise.setValue(*conv->ptr<T>(false));
@@ -245,30 +264,29 @@ inline void setAdaptedResult(Promise<T>& promise, AnyReference& ref)
   {
     promise.setError(std::string("Return argument conversion error: ") + e.what());
   }
-  ref.destroy();
 }
 
 /// Specialization for setting the promise according to the future result in the case of void.
+/// This method takes ownership of the reference.
 template <>
-inline void setAdaptedResult<void>(Promise<void>& promise, AnyReference& ref)
+inline void setAdaptedResult<void>(Promise<void>& promise, UniqueAnyReference)
 {
   promise.setValue(nullptr);
-  ref.destroy();
 }
 
 /// Specialization for setting the promise according to the future result in the case of AnyReference.
+/// This method takes ownership of the reference.
 template <>
-inline void setAdaptedResult<AnyReference>(Promise<AnyReference>& promise, AnyReference& ref)
+inline void setAdaptedResult<AnyReference>(Promise<AnyReference>& promise, UniqueAnyReference ref)
 {
   try
   {
-    promise.setValue(ref.clone());
+    promise.setValue(ref->clone());
   }
   catch(const std::exception& e)
   {
     promise.setError(std::string("Return argument conversion error: ") + e.what());
   }
-  ref.destroy();
 }
 
 template <typename T>
@@ -284,11 +302,10 @@ inline void futureAdapter(const qi::Future<qi::AnyReference>& metaFut, qi::Promi
     return;
   }
 
-  auto val = UniqueAnyReference{ metaFut.value(), DeferOwnership{} };
-  if (handleFuture(*val, promise)) // handleFuture takes ownership of the value if it succeeds.
+  auto val = metaFut.value();
+  if (handleFuture(val, promise)) // Takes ownership of the value if it returns true.
     return;
-  val.takeOwnership();
-  setAdaptedResult(promise, *val);
+  setAdaptedResult(promise, UniqueAnyReference{ val });
 }
 
 template <typename T>

@@ -46,10 +46,10 @@ public:
 
 public:
   bool populateClients(const std::string &serviceDirectoryUrl, int nbWantedClients);
-  const std::vector<qi::Session*>&   clientPopulation() const;
+  const std::vector<qi::SessionPtr>& clientPopulation() const;
 
 private:
-  std::vector<qi::Session*> _clients;
+  std::vector<qi::SessionPtr> _clients;
 };
 
 #endif // !_TESTS_LIBTESTSESSION_POPULATIONGENERATOR_HPP_

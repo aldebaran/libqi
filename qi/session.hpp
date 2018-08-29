@@ -30,6 +30,9 @@ namespace qi {
   using AuthProviderPtr = boost::shared_ptr<AuthProvider>;
   using CapabilityMap = std::map<std::string, AnyValue>;
 
+  class Session;
+  using SessionPtr = boost::shared_ptr<Session>;
+
   /** A Session allows you to interconnect services on the same machine or over
    * the network.
    *
@@ -183,7 +186,7 @@ QI_GEN(genCall)
 
   protected:
     friend class SessionPrivate;
-    boost::shared_ptr<SessionPrivate>    _p;
+    std::unique_ptr<SessionPrivate> _p;
 
   private:
     qi::Future<AnyValue> _callModule(const std::string& moduleName,
@@ -193,10 +196,11 @@ QI_GEN(genCall)
     qi::FutureSync<void> waitForServiceImpl(const std::string& service);
   };
 
-  using SessionPtr = boost::shared_ptr<Session>;
-
   template <typename... Args>
-  SessionPtr makeSession(Args&&... args) { return boost::make_shared<qi::Session>(std::forward<Args>(args)...); }
+  SessionPtr makeSession(Args&&... args)
+  {
+    return boost::make_shared<qi::Session>(std::forward<Args>(args)...);
+  }
 }
 
 QI_TYPE_ENUM(qi::Session::ServiceLocality);

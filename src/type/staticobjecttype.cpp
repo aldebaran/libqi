@@ -23,6 +23,11 @@ void StaticObjectTypeBase::initialize(const MetaObject& mo, const ObjectTypeData
   _data = data;
 }
 
+PtrUid StaticObjectTypeBase::ptrUid(void* instance) const
+{
+  QI_ASSERT_TRUE(instance);
+  return os::ptrUid(instance);
+}
 
 const MetaObject&
 StaticObjectTypeBase::metaObject(void* )

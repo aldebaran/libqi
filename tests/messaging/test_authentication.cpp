@@ -25,26 +25,26 @@ class TestAuthentication : public ::testing::Test
 {
 protected:
   TestAuthentication()
-    : sd_(true),
-      client_(true)
+    : sd_(qi::makeSession(true)),
+      client_(qi::makeSession(true))
   {
   }
 
   void SetUp() override
   {
-    ASSERT_TRUE(sd_.setIdentity(
+    ASSERT_TRUE(sd_->setIdentity(
                   qi::path::findData("qi", "test/qi.public.aldebaran.lan.key"),
                   qi::path::findData("qi", "test/qi.public.aldebaran.lan.crt")));
-    sd_.listenStandalone("tcps://127.0.0.1:0");
+    sd_->listenStandalone("tcps://127.0.0.1:0");
   }
 
   void TearDown() override
   {
-    sd_.close();
+    sd_->close();
   }
 
-  qi::Session sd_;
-  qi::Session client_;
+  qi::SessionPtr sd_;
+  qi::SessionPtr client_;
 };
 
 namespace {
@@ -174,12 +174,12 @@ namespace {
 
 TEST_F(TestAuthentication, AuthErrorDisconnectsClient)
 {
-  sd_.setAuthProviderFactory(boost::make_shared<HarshProviderFactory>());
+  sd_->setAuthProviderFactory(boost::make_shared<HarshProviderFactory>());
 
-  qi::Future<void> conn1 = client_.connect(sd_.url());
+  qi::Future<void> conn1 = client_->connect(sd_->url());
 
   ASSERT_TRUE(conn1.hasError());
-  ASSERT_FALSE(client_.isConnected());
+  ASSERT_FALSE(client_->isConnected());
 }
 
 TEST_F(TestAuthentication, UserPassTest)
@@ -192,12 +192,12 @@ TEST_F(TestAuthentication, UserPassTest)
   UserPassProviderFactory* factory = new UserPassProviderFactory;
   factory->expectedUser_ = user;
   factory->expectedPass_ = pass;
-  sd_.setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
-  client_.setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
+  sd_->setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
+  client_->setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
 
-  qi::Future<void> connecting = client_.connect(sd_.url());
+  qi::Future<void> connecting = client_->connect(sd_->url());
   ASSERT_FALSE(connecting.hasError()) << "Error was: " << connecting.error();
-  ASSERT_TRUE(client_.isConnected());
+  ASSERT_TRUE(client_->isConnected());
 }
 
 TEST_F(TestAuthentication, UserPassFailTest)
@@ -210,22 +210,22 @@ TEST_F(TestAuthentication, UserPassFailTest)
   UserPassProviderFactory* factory = new UserPassProviderFactory;
   factory->expectedUser_ = "user";
   factory->expectedPass_ = "pass";
-  sd_.setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
-  client_.setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
+  sd_->setAuthProviderFactory(qi::AuthProviderFactoryPtr(factory));
+  client_->setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(clientFactory));
 
-  auto connecting = client_.connect(sd_.url());
+  auto connecting = client_->connect(sd_->url());
   EXPECT_EQ(qi::FutureState_FinishedWithError, connecting.waitFor(qi::MilliSeconds{500}));
-  ASSERT_FALSE(client_.isConnected());
+  ASSERT_FALSE(client_->isConnected());
 }
 
 TEST_F(TestAuthentication, MultiStepAuthenticationTest)
 {
-  sd_.setAuthProviderFactory(qi::AuthProviderFactoryPtr(new MultiStepProviderFactory));
-  client_.setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(new MultiStepAuthenticatorFactory));
+  sd_->setAuthProviderFactory(qi::AuthProviderFactoryPtr(new MultiStepProviderFactory));
+  client_->setClientAuthenticatorFactory(qi::ClientAuthenticatorFactoryPtr(new MultiStepAuthenticatorFactory));
 
-  qi::Future<void> conn = client_.connect(sd_.url());
+  qi::Future<void> conn = client_->connect(sd_->url());
   ASSERT_FALSE(conn.hasError());
-  ASSERT_TRUE(client_.isConnected());
+  ASSERT_TRUE(client_->isConnected());
 }
 
 TEST_F(TestAuthentication, ConnectionToServiceTest)
@@ -238,23 +238,23 @@ TEST_F(TestAuthentication, ConnectionToServiceTest)
   boost::shared_ptr<UserPassProviderFactory> factory = boost::make_shared<UserPassProviderFactory>();
   factory->expectedUser_ = user;
   factory->expectedPass_ = pass;
-  sd_.setAuthProviderFactory(factory);
-  client_.setClientAuthenticatorFactory(clientFactory);
+  sd_->setAuthProviderFactory(factory);
+  client_->setClientAuthenticatorFactory(clientFactory);
 
-  qi::Session serviceHost;
+  auto serviceHost = qi::makeSession();
   qi::DynamicObjectBuilder builder;
   builder.advertiseMethod<int (int)>("toto", &service_func);
   qi::AnyObject service = builder.object();
 
-  serviceHost.setClientAuthenticatorFactory(clientFactory);
-  serviceHost.setAuthProviderFactory(factory);
-  serviceHost.connect(sd_.url());
-  ASSERT_TRUE(serviceHost.isConnected());
-  serviceHost.registerService("toto", service);
+  serviceHost->setClientAuthenticatorFactory(clientFactory);
+  serviceHost->setAuthProviderFactory(factory);
+  serviceHost->connect(sd_->url());
+  ASSERT_TRUE(serviceHost->isConnected());
+  serviceHost->registerService("toto", service);
 
-  client_.connect(sd_.url());
-  ASSERT_TRUE(client_.isConnected());
+  client_->connect(sd_->url());
+  ASSERT_TRUE(client_->isConnected());
 
-  qi::AnyObject myObj = client_.service("toto");
+  qi::AnyObject myObj = client_->service("toto");
   ASSERT_EQ(myObj.call<int>("toto", 44), 88);
 }

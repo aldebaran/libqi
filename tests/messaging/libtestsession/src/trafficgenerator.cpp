@@ -19,12 +19,12 @@ TrafficGenerator::~TrafficGenerator()
   stopTraffic();
 }
 
-bool TrafficGenerator::generateCommonTraffic(const std::vector<qi::Session *> &sessions, const std::string &serviceName)
+bool TrafficGenerator::generateCommonTraffic(const std::vector<qi::SessionPtr> &sessions, const std::string &serviceName)
 {
   Behavior     *b;
-  qi::Session  *sess;
+  qi::SessionPtr sess;
 
-  for (std::vector<qi::Session *>::const_iterator it = sessions.begin(); it != sessions.end(); ++it)
+  for (std::vector<qi::SessionPtr>::const_iterator it = sessions.begin(); it != sessions.end(); ++it)
   {
     b = new Behavior();
     sess = (*it);
@@ -38,7 +38,7 @@ bool TrafficGenerator::generateCommonTraffic(const std::vector<qi::Session *> &s
   return true;
 }
 
-bool TrafficGenerator::generateSpam(std::vector<qi::Session *> &sessions)
+bool TrafficGenerator::generateSpam(std::vector<qi::SessionPtr> &sessions)
 {
   return false;
 }
@@ -59,7 +59,7 @@ bool TrafficGenerator::stopTraffic()
 void __chaosThread(void *data)
 {
   Behavior *b = reinterpret_cast<Behavior *>(data);
-  qi::Session  *session;
+  qi::SessionPtr  session;
   boost::mutex *mutex;
   std::string  service;
   std::string  methodToCall;

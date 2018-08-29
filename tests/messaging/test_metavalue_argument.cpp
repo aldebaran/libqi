@@ -34,6 +34,10 @@ class MetaValueArgument: public ::testing::Test
 public:
   MetaValueArgument()
   {
+    sd = qi::makeSession();
+    session = qi::makeSession();
+    sclient = qi::makeSession();
+
     qi::DynamicObjectBuilder ob;
     ob.advertiseSignal<const int&>("fire");
     ob.advertiseMethod("value", &value);
@@ -46,39 +50,39 @@ public:
 protected:
   void SetUp()
   {
-    qi::Future<void> f = sd.listenStandalone("tcp://127.0.0.1:0");
+    qi::Future<void> f = sd->listenStandalone("tcp://127.0.0.1:0");
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
-    f = session.connect(sd.endpoints()[0]);
+    f = session->connect(sd->endpoints()[0]);
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
-    f = session.listen("tcp://0.0.0.0:0");
+    f = session->listen("tcp://0.0.0.0:0");
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
-    ASSERT_TRUE(session.registerService("coin", oserver).hasValue(3000));
-    EXPECT_EQ(1U, session.services(qi::Session::ServiceLocality_Local).value().size());
+    ASSERT_TRUE(session->registerService("coin", oserver).hasValue(3000));
+    EXPECT_EQ(1U, session->services(qi::Session::ServiceLocality_Local).value().size());
 
-    f = sclient.connect(sd.endpoints()[0]);
+    f = sclient->connect(sd->endpoints()[0]);
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
-    std::vector<qi::ServiceInfo> services = sclient.services();
+    std::vector<qi::ServiceInfo> services = sclient->services();
     EXPECT_EQ(2U, services.size());
-    oclient = sclient.service("coin");
+    oclient = sclient->service("coin");
   }
 
   void TearDown()
   {
-    sclient.close();
-    session.close();
-    sd.close();
+    sclient->close();
+    session->close();
+    sd->close();
   }
 
 public:
   qi::Promise<int>     prom;
-  qi::Session          sd;
-  qi::Session          session;
+  qi::SessionPtr       sd;
+  qi::SessionPtr       session;
   qi::AnyObject        oserver;
-  qi::Session          sclient;
+  qi::SessionPtr       sclient;
   qi::AnyObject        oclient;
 };
 

@@ -464,8 +464,7 @@ public:
 
   ~UniqueAnyReference()
   {
-    if (owned)
-      ref.destroy();
+    destroyRef();
   }
 
   AnyReference& operator*()
@@ -494,20 +493,16 @@ public:
     return ka::exchange(ref, AnyReference{});
   }
 
-  UniqueAnyReference release(DeferOwnership)
-  {
-    owned = false;
-    return UniqueAnyReference{ ka::exchange(ref, AnyReference{}), DeferOwnership{} };
-  }
-
   void reset(AnyReference newRef = {})
   {
+    destroyRef();
     owned = newRef.isValid();
     ref = newRef;
   }
 
   void reset(AnyReference newRef, DeferOwnership)
   {
+    destroyRef();
     owned = false;
     ref = newRef;
   }
@@ -523,6 +518,12 @@ public:
   }
 
 private:
+  void destroyRef()
+  {
+    if (owned)
+      ref.destroy();
+  }
+
   AnyReference ref;
   bool owned = false;
 };

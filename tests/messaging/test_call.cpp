@@ -1499,12 +1499,12 @@ TEST(TestObject, StructVersioningEvent)
   qi::DynamicObjectBuilder builder;
   builder.advertiseSignal<Color>("onColor");
   builder.advertiseSignal<ColorA>("onColorA");
-  qi::Session c2;
-  c2.connect(p.server()->url());
+  auto c2 = qi::makeSession();
+  c2->connect(p.server()->url());
   AnyObject s = builder.object();
   p.server()->registerService("color", s);
   AnyObject o = p.client()->service("color");
-  AnyObject o2 = c2.service("color");
+  AnyObject o2 = c2->service("color");
   o.connect("onColor", &onColor);
   o.connect("onColorA", &onColor);
   o2.connect("onColor", &onColorA);
@@ -1678,4 +1678,28 @@ TEST(TestCall, MetaObjectCacheFailureWhenCallsInParallel)
 
 }
 
+struct TypeErasedCancellableAsyncFuture
+{
+  qi::Promise<void> prom {[](qi::Promise<void>& p){ p.setCanceled(); }};
 
+  qi::Future<void> cancellableAsyncFuture()
+  {
+    return prom.future();
+  }
+
+  qi::AnyReference operator()(const qi::GenericFunctionParameters&)
+  {
+    return qi::AnyReference::from(cancellableAsyncFuture()).clone();
+  }
+};
+
+TEST(TestCall, callAdvertisedAnyFunctionReturningAFuture)
+{
+  TypeErasedCancellableAsyncFuture typeErasedCancellableAsyncFuture;
+  auto anyFunction = qi::AnyFunction::fromDynamicFunction(typeErasedCancellableAsyncFuture);
+  qi::DynamicObjectBuilder ob;
+  ob.xAdvertiseMethod("v", "cancellableAsyncFuture", "()", std::move(anyFunction));
+  auto anyObject = ob.object();
+  auto future = anyObject.metaCall("cancellableAsyncFuture", qi::GenericFunctionParameters{});
+  EXPECT_TRUE(test::isStillRunning(future, test::willDoNothing(), qi::MilliSeconds{100}));
+}

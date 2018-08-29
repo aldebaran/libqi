@@ -84,6 +84,23 @@ public:
     return _mode;
   }
 
+  qi::Url endpointToServiceSource() const
+  {
+    switch (_mode)
+    {
+    case(TestMode::Mode_Gateway):
+      return gatewayEndpoints().at(0);
+    case(TestMode::Mode_SD):
+    case(TestMode::Mode_SSL):
+    case(TestMode::Mode_Direct):
+      return serviceDirectoryEndpoints().at(0);
+
+    default:
+      throw std::runtime_error("Unmanaged Mode: " + std::to_string(static_cast<int>(_mode)));
+    }
+
+  }
+
 private:
   TestMode::Mode _mode;
   qi::SessionPtr _sd;

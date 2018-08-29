@@ -1,6 +1,6 @@
 /*
 **
-** Copyright (C) 2012 Aldebaran Robotics
+** Copyright (C) 2018 Softbank Robotics Europe
 */
 
 #include <gtest/gtest.h>
@@ -15,8 +15,8 @@
 
 qiLogCategory("test");
 
-int timeoutMs = 300;
-qi::Duration timeout = qi::MilliSeconds(timeoutMs);
+static const int timeoutMs = 300;
+static const qi::Duration timeout = qi::MilliSeconds(timeoutMs);
 
 void test_service(const qi::AnyObject &o)
 {
@@ -171,103 +171,6 @@ TEST(SendObject, pass_obj_made_from_module)
   remotePlop.disconnect(signalLink);
 }
 
-TEST(Module, IdentityOfRemoteObjects)
-{
-  TestSessionPair p;
-  p.server()->registerService("plop", boost::make_shared<ObjectEmitter>());
-
-  qi::DynamicObjectBuilder builder;
-  auto o = builder.object();
-
-  qi::AnyObject remotePlop = p.client()->service("plop");
-  auto remoteObject = remotePlop.call<qi::AnyObject>("identity", o);
-  EXPECT_EQ(o, remoteObject);
-
-  qi::DynamicObjectBuilder builder2;
-  auto o2 = builder2.object();
-  auto remoteObject2 = remotePlop.call<qi::AnyObject>("identity", o2);
-  EXPECT_EQ(o2, remoteObject2);
-  EXPECT_NE(o2, remoteObject);
-  EXPECT_NE(remoteObject2, remoteObject);
-  EXPECT_NE(remoteObject2, o);
-}
-
-struct dummy_t
-{
-  int one() const
-  {
-    return 1;
-  }
-};
-
-QI_REGISTER_OBJECT(dummy_t, one);
-
-TEST(Module, IdentityOfRemoteObjectsDifferentProcess)
-{
-  using namespace qi;
-
-  const Url serviceUrl{"tcp://127.0.0.1:54321"};
-  test::ScopedProcess _{path::findBin("remoteserviceowner"),
-    {"--qi-standalone", "--qi-listen-url=" + serviceUrl.str()}
-  };
-
-  auto client = makeSession();
-  client->connect(serviceUrl);
-  AnyObject service = client->service("PingPongService");
-  AnyObject original{boost::make_shared<dummy_t>()};
-
-  service.call<void>("give", original);
-  AnyObject copy0 = service.call<AnyObject>("take");
-  ASSERT_EQ(copy0, original);
-
-  service.call<void>("give", copy0);
-  AnyObject copy1 = service.call<AnyObject>("take");
-  ASSERT_EQ(copy1, copy0);
-  ASSERT_EQ(copy1, original);
-}
-
-class ObjectStore
-{
-  qi::AnyObject obj;
-public:
-  qi::AnyObject get() const
-  {
-    return obj;
-  }
-  void set(qi::AnyObject o)
-  {
-    obj = o;
-  }
-};
-
-QI_REGISTER_OBJECT(ObjectStore, get, set);
-
-TEST(Module, IdentityOfRemoteObjectsMoreIndirections)
-{
-  qi::AnyObject originalObject(boost::make_shared<dummy_t>());
-  TestSessionPair pairA;
-  pairA.server()->registerService("serviceA", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientA = pairA.client()->service("serviceA");
-  clientA.call<void>("set", originalObject);
-  qi::AnyObject objA = clientA.call<qi::AnyObject>("get");
-  EXPECT_EQ(originalObject, objA);
-
-  TestSessionPair pairB;
-  pairB.server()->registerService("serviceB", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientB = pairB.client()->service("serviceB");
-  clientB.call<void>("set", objA);
-  qi::AnyObject objB = clientB.call<qi::AnyObject>("get");
-  EXPECT_EQ(originalObject, objB);
-
-  TestSessionPair pairC;
-  pairC.server()->registerService("serviceC", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientC = pairC.client()->service("serviceC");
-  clientC.call<void>("set", objB);
-  qi::AnyObject objC = clientC.call<qi::AnyObject>("get");
-  EXPECT_EQ(originalObject, objC);
-  EXPECT_EQ(objA, objC);
-  EXPECT_EQ(objB, objC);
-}
 
 class ObjectEmitterFactory
 {

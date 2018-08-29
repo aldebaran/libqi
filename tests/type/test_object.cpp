@@ -127,20 +127,12 @@ C* ptrfun(C* ptr) { return ptr;}
 C& reffun(const C& ref) { return const_cast<C&>(ref);}
 C valuefun(C val) { return val;}
 
-std::vector<qi::AnyReference> convert(qi::AutoAnyReference v1 = qi::AutoAnyReference(),
-  qi::AutoAnyReference v2 = qi::AutoAnyReference(),
-  qi::AutoAnyReference v3 = qi::AutoAnyReference(),
-  qi::AutoAnyReference v4 = qi::AutoAnyReference(),
-  qi::AutoAnyReference v5 = qi::AutoAnyReference())
+template <typename... Args>
+std::vector<qi::AnyReference> convert(Args&... args) // we explicitly take lvalue-ref
 {
-  std::vector<qi::AnyReference> res;
-  if (v1.rawValue())
-    res.push_back(v1);
-  if (v2.rawValue())
-    res.push_back(v2);
-  if (v3.rawValue())
-    res.push_back(v3);
-  return res;
+  qi::AnyReference r[]{ qi::AnyReference::from(args)... };
+  return { std::begin(r), std::remove_if(std::begin(r), std::end(r),
+                                         [](qi::AnyReference ref) { return !ref.rawValue(); }) };
 }
 
 template<int I>
@@ -218,13 +210,15 @@ TEST(TestFunction, Typing)
   qi::AnyFunction fv2 = qi::AnyFunction::from(&fun);
   qiLogDebug() << "Foo::fun";
   qi::AnyFunction mv = qi::AnyFunction::from(&Foo::fun);
-  std::vector<qi::AnyReference> args1 = convert(1, 2);
+  const auto arg1 = 1; const auto arg2 = 2;
+  std::vector<qi::AnyReference> args1 = convert(arg1, arg2);
   qi::AnyReference res = fv2.call(args1);
   ASSERT_TRUE(checkValue(res, 3));
 
   qi::AnyFunction adderAdd = qi::AnyFunction::from(&Adder::add);
   Adder add1(1);
-  std::vector<qi::AnyReference> argsAdd = convert(41);
+  const auto arg = 41;
+  std::vector<qi::AnyReference> argsAdd = convert(arg);
   res = adderAdd.call(qi::AnyReference::from(add1), argsAdd);
   ASSERT_TRUE(checkValue(res, 42));
 }
@@ -232,97 +226,105 @@ TEST(TestFunction, Typing)
 TEST(TestFunction, ABI)
 {
   using namespace qi;
+  const int intArg = 42;
+  const float floatArg = 42.42f;
+  const double doubleArg = 42.42;
+
   // We must declare inheritance between Foo and Parent
   ObjectTypeBuilder<Foo> b;
   b.inherits<Parent>();
   b.registerType();
   AnyFunction f;
   f = AnyFunction::from(&ping8);
-  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  EXPECT_EQ(42, f.call(convert(intArg)).toInt());
   f = AnyFunction::from(&ping16);
-  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  EXPECT_EQ(42, f.call(convert(intArg)).toInt());
   f = AnyFunction::from(&ping32);
-  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  EXPECT_EQ(42, f.call(convert(intArg)).toInt());
   f = AnyFunction::from(&ping64);
-  EXPECT_EQ(42, f.call(convert(42)).toInt());
+  EXPECT_EQ(42, f.call(convert(intArg)).toInt());
   f = AnyFunction::from(&pingFloat);
-  EXPECT_EQ(42.42f, f.call(convert(42.42f)).toFloat());
+  EXPECT_EQ(42.42f, f.call(convert(floatArg)).toFloat());
   f = AnyFunction::from(&pingDouble);
-  EXPECT_EQ(42.42, f.call(convert(42.42)).toDouble());
+  EXPECT_EQ(42.42, f.call(convert(doubleArg)).toDouble());
 
   Foo foo;
+  auto* const fooPtr = &foo;
   f = AnyFunction::from(&Foo::ping8);
-  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = AnyFunction::from(&Foo::ping8, &foo);
-  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  EXPECT_EQ(45, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, intArg)).toInt());
+  f = AnyFunction::from(&Foo::ping8, fooPtr);
+  EXPECT_EQ(45, f.call(convert(intArg)).toInt());
 
   f = AnyFunction::from(&Foo::ping16);
-  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = AnyFunction::from(&Foo::ping16, &foo);
-  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  EXPECT_EQ(45, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, intArg)).toInt());
+  f = AnyFunction::from(&Foo::ping16, fooPtr);
+  EXPECT_EQ(45, f.call(convert(intArg)).toInt());
 
   f = AnyFunction::from(&Foo::ping32);
-  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = AnyFunction::from(&Foo::ping32, &foo);
-  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  EXPECT_EQ(45, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, intArg)).toInt());
+  f = AnyFunction::from(&Foo::ping32, fooPtr);
+  EXPECT_EQ(45, f.call(convert(intArg)).toInt());
 
   f = AnyFunction::from(&Foo::ping64);
-  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = AnyFunction::from(&Foo::ping64, &foo);
-  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  EXPECT_EQ(45, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, intArg)).toInt());
+  f = AnyFunction::from(&Foo::ping64, fooPtr);
+  EXPECT_EQ(45, f.call(convert(intArg)).toInt());
 
   f = AnyFunction::from(&Foo::pingFloat);
-  EXPECT_EQ(45.42f, f.call(convert(&foo, 42.42f)).toFloat());
-  EXPECT_EQ(45.42f, f.call(convert(foo, 42.42f)).toFloat());
-  f = AnyFunction::from(&Foo::pingFloat, &foo);
-  EXPECT_EQ(45.42f, f.call(convert(42.42f)).toFloat());
+  EXPECT_EQ(45.42f, f.call(convert(fooPtr, floatArg)).toFloat());
+  EXPECT_EQ(45.42f, f.call(convert(foo, floatArg)).toFloat());
+  f = AnyFunction::from(&Foo::pingFloat, fooPtr);
+  EXPECT_EQ(45.42f, f.call(convert(floatArg)).toFloat());
 
   f = AnyFunction::from(&Foo::pingDouble);
-  EXPECT_EQ(45.42, f.call(convert(&foo, 42.42)).toDouble());
-  EXPECT_EQ(45.42, f.call(convert(foo, 42.42)).toDouble());
-  f = AnyFunction::from(&Foo::pingDouble, &foo);
-  EXPECT_EQ(45.42, f.call(convert(42.42)).toDouble());
+  EXPECT_EQ(45.42, f.call(convert(fooPtr, doubleArg)).toDouble());
+  EXPECT_EQ(45.42, f.call(convert(foo, doubleArg)).toDouble());
+  f = AnyFunction::from(&Foo::pingDouble, fooPtr);
+  EXPECT_EQ(45.42, f.call(convert(doubleArg)).toDouble());
 
   f = AnyFunction::from(&Parent::pping32);
-  EXPECT_EQ(44, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(44, f.call(convert(foo, 42)).toInt());
-  EXPECT_EQ(44, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
-  EXPECT_EQ(44, f.call(convert(static_cast<Parent&>(foo), 42)).toInt());
-  f = AnyFunction::from(&Parent::pping32, &foo);
-  EXPECT_EQ(44, f.call(convert(42)).toInt());
-  f = AnyFunction::from(&Parent::pping32, static_cast<Parent*>(&foo));
-  EXPECT_EQ(44, f.call(convert(42)).toInt());
+  EXPECT_EQ(44, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(44, f.call(convert(foo, intArg)).toInt());
+  auto* const parentPtr = static_cast<Parent*>(fooPtr);
+  EXPECT_EQ(44, f.call(convert(parentPtr, intArg)).toInt());
+  EXPECT_EQ(44, f.call(convert(static_cast<Parent&>(foo), intArg)).toInt());
+  f = AnyFunction::from(&Parent::pping32, fooPtr);
+  EXPECT_EQ(44, f.call(convert(intArg)).toInt());
+  f = AnyFunction::from(&Parent::pping32, static_cast<Parent*>(fooPtr));
+  EXPECT_EQ(44, f.call(convert(intArg)).toInt());
 
   f = AnyFunction::from(&Foo::pingV);
-  f.call(convert(&foo, 42));
+  f.call(convert(fooPtr, intArg));
   EXPECT_EQ(45, foo.r);
 
   f = AnyFunction::from(&Foo::pingB);
-  EXPECT_EQ(true, f.call(convert(&foo, true)).toInt() != 0);
-  EXPECT_EQ(true, f.call(convert(&foo, false)).toInt() == 0);
+  const bool trueArg = true;
+  const bool falseArg = false;
+  EXPECT_EQ(true, f.call(convert(fooPtr, trueArg)).toInt() != 0);
+  EXPECT_EQ(true, f.call(convert(fooPtr, falseArg)).toInt() == 0);
 
   f = AnyFunction::from(&Foo::vping32);
-  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
-  f = AnyFunction::from(&Foo::vping32, &foo);
-  EXPECT_EQ(45, f.call(convert(42)).toInt());
-  EXPECT_EQ(45, f.call(convert(42)).toInt());
+  EXPECT_EQ(45, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, intArg)).toInt());
+  f = AnyFunction::from(&Foo::vping32, fooPtr);
+  EXPECT_EQ(45, f.call(convert(intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(intArg)).toInt());
   f = AnyFunction::from(&Parent::vping32);
-  EXPECT_EQ(45, f.call(convert(&foo, 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(static_cast<Parent*>(&foo), 42)).toInt());
-  EXPECT_EQ(45, f.call(convert(foo, 42)).toInt());
+  EXPECT_EQ(45, f.call(convert(fooPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(parentPtr, intArg)).toInt());
+  EXPECT_EQ(45, f.call(convert(foo, intArg)).toInt());
 
   f = AnyFunction::from(&Foo::getRefF);
-  EXPECT_EQ(3, f.call(convert(&foo)).toInt());
+  EXPECT_EQ(3, f.call(convert(fooPtr)).toInt());
 
   f = AnyFunction::from(&Foo::pingString);
-  EXPECT_EQ("foo3", f.call(convert(&foo, "foo")).toString());
+  EXPECT_EQ("foo3", f.call(convert(fooPtr, "foo")).toString());
   f = AnyFunction::from(&Foo::pingConstString);
-  EXPECT_EQ("bar", f.call(convert(&foo, "bar")).toString());
+  EXPECT_EQ("bar", f.call(convert(fooPtr, "bar")).toString());
 }
 
 int summ(int p1, short p2, char p3, const char* s)
@@ -1603,4 +1605,27 @@ TEST(TestObject, ConversionToBool)
 {
   SCOPED_TRACE("ConversionToBool");
   testValidity([](const qi::Object<Apple>& o) {return static_cast<bool>(o);});
+}
+
+struct Exhaustive
+{
+  void call() {}
+  qi::Property<int> prop;
+  qi::Signal<> sig;
+};
+QI_REGISTER_OBJECT(Exhaustive, call, prop, sig);
+
+TEST(TestObject, NullObjectApiThrows)
+{
+  qi::Object<Exhaustive> obj;
+
+  EXPECT_THROW(obj.property<int>("prop").value(), std::runtime_error);
+  EXPECT_THROW(obj.setProperty("prop", 42).value(), std::runtime_error);
+  EXPECT_THROW(obj.connect("prop", [](int){}).value(), std::runtime_error);
+  EXPECT_THROW(obj.connect("sig", []{}).value(), std::runtime_error);
+  EXPECT_THROW(obj.disconnect(qi::SignalLink{ 42 }).value(), std::runtime_error);
+  EXPECT_THROW(obj.post("sig"), std::runtime_error);
+  EXPECT_THROW(obj.findMethod("call", qi::GenericFunctionParameters{}), std::runtime_error);
+  EXPECT_THROW(obj.call<void>("call"), std::runtime_error);
+  EXPECT_THROW(obj.async<void>("call").value(), std::runtime_error);
 }

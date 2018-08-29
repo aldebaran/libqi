@@ -47,10 +47,14 @@ namespace
   class TestGateway : public ::testing::Test
   {
   public:
+    TestGateway()
+      : sd_{ qi::makeSession() }
+    {}
+
     void SetUp()
     {
-      sd_.listenStandalone("tcp://127.0.0.1:0");
-      gw_.attachToServiceDirectory(sd_.url()).value(); // throw on error
+      sd_->listenStandalone("tcp://127.0.0.1:0");
+      gw_.attachToServiceDirectory(sd_->url()).value(); // throw on error
       const auto listenStatus = gw_.listenAsync("tcp://127.0.0.1:0").value();
       ASSERT_EQ(listenStatus, qi::Gateway::ListenStatus::Listening);
     }
@@ -59,7 +63,7 @@ namespace
     qi::SessionPtr connectClientToGw();
 
     qi::Gateway gw_;
-    qi::Session sd_;
+    qi::SessionPtr sd_;
   };
 
   int echoValue(int value)
@@ -87,7 +91,7 @@ namespace
   qi::SessionPtr TestGateway::connectClientToSd()
   {
     qi::SessionPtr session = qi::makeSession();
-    session->connect(sd_.url());
+    session->connect(sd_->url());
     return session;
   }
 
@@ -333,10 +337,10 @@ namespace
   {
     SessionPtr serviceHost = connectClientToGw();
     SessionPtr client = connectClientToGw();
-    qi::Session nextSD;
+    auto nextSD = qi::makeSession();
     std::atomic<int> count{ 0 };
     qi::AnyObject service;
-    qi::Url origUrl = sd_.url();
+    qi::Url origUrl = sd_->url();
 
     qi::Promise<void> sync;
     qi::SignalLink shl = serviceHost->disconnected.connect(setPromiseIfCountEquals, sync, std::ref(count), 2);
@@ -346,7 +350,7 @@ namespace
     int value = rand();
 
     ASSERT_EQ(service.call<int>("echoValue", value), value);
-    sd_.close();
+    sd_->close();
     sync.future().wait();
 
     {
@@ -355,7 +359,7 @@ namespace
         if(status.isReady())
           sync.setValue(nullptr);
       });
-      nextSD.listenStandalone(origUrl);
+      nextSD->listenStandalone(origUrl);
       sync.future().wait();
     }
 
@@ -537,8 +541,8 @@ namespace
     auto futAttach = gw.attachToServiceDirectory("tcp://127.0.0.1:59345");
     ASSERT_TRUE(test::isStillRunning(futAttach, test::willDoNothing(), qi::Seconds{ 2 }));
 
-    qi::Session sd;
-    sd.listenStandalone("tcp://127.0.0.1:59345");
+    auto sd = qi::makeSession();
+    sd->listenStandalone("tcp://127.0.0.1:59345");
 
     // It can take a while for the gateway to reconnect if the service directory has not be found
     // after a long time, so wait for a while.

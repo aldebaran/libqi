@@ -322,5 +322,10 @@ namespace qi {
       *t = qi::os::timeval(qi::SystemClock::now());
       return 0;
     }
+
+    PtrUid ptrUid(void * address)
+    {
+      return PtrUid(os::getMachineIdAsUuid(), os::getProcessUuid(), address);
+    }
   }
 }

@@ -19,6 +19,7 @@
 # include <qi/path.hpp>
 # include <qi/clock.hpp>
 # include <qi/uuid.hpp>
+# include <qi/ptruid.hpp>
 
 # include <boost/lexical_cast.hpp>
 
@@ -611,6 +612,9 @@ namespace qi {
      */
     QI_API size_t memoryUsage(unsigned int pid);
 
+    /** Constructs a PtrUid using process and machine ids provided by qi::os implementation.
+    */
+    QI_API PtrUid ptrUid(void* address);
 
     /**
      * \brief Returns the value of the environment variableif set, the defaultVal otherwise.

@@ -17,11 +17,11 @@ qiLogCategory("TestSD");
 
 TEST(ServiceDirectory, DoubleListen)
 {
-  qi::Session sd;
+  auto sd = qi::makeSession();
 
   try {
-    sd.listenStandalone("tcp://127.0.0.1:0");
-    sd.listen("tcp://127.0.0.1:0");
+    sd->listenStandalone("tcp://127.0.0.1:0");
+    sd->listen("tcp://127.0.0.1:0");
   }
   catch(std::runtime_error& e)
   {
@@ -44,50 +44,50 @@ QI_REGISTER_OBJECT(Serv, f);
 
 TEST(ServiceDirectory, MultiRegister)
 {
-  qi::Session sd1;
-  qi::Session sd2;
+  auto sd1 = qi::makeSession();
+  auto sd2 = qi::makeSession();
 
-  sd1.listenStandalone("tcp://127.0.0.1:0");
-  sd2.listenStandalone("tcp://127.0.0.1:0");
+  sd1->listenStandalone("tcp://127.0.0.1:0");
+  sd2->listenStandalone("tcp://127.0.0.1:0");
 
-  sd1.registerService("Serv", boost::make_shared<Serv>());
-  sd2.registerService("Serv", boost::make_shared<Serv>());
+  sd1->registerService("Serv", boost::make_shared<Serv>());
+  sd2->registerService("Serv", boost::make_shared<Serv>());
 
   {
-    qi::Session client;
-    client.connect(sd1.url());
-    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
+    auto client = qi::makeSession();
+    client->connect(sd1->url());
+    ASSERT_EQ(Serv::response, client->service("Serv").value().call<int>("f"));
   }
   {
-    qi::Session client;
-    client.connect(sd2.url());
-    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
+    auto client = qi::makeSession();
+    client->connect(sd2->url());
+    ASSERT_EQ(Serv::response, client->service("Serv").value().call<int>("f"));
   }
 }
 
 TEST(ServiceDirectory, Republish)
 {
-  qi::Session sd1;
-  qi::Session sd2;
+  auto sd1 = qi::makeSession();
+  auto sd2 = qi::makeSession();
 
-  sd1.listenStandalone("tcp://127.0.0.1:0");
-  sd2.listenStandalone("tcp://127.0.0.1:0");
+  sd1->listenStandalone("tcp://127.0.0.1:0");
+  sd2->listenStandalone("tcp://127.0.0.1:0");
 
-  sd1.registerService("Serv", boost::make_shared<Serv>());
+  sd1->registerService("Serv", boost::make_shared<Serv>());
 
-  sd2.registerService("Serv", sd1.service("Serv"));
+  sd2->registerService("Serv", sd1->service("Serv"));
 
-  ASSERT_EQ(Serv::response, sd1.service("Serv").value().call<int>("f"));
-  ASSERT_EQ(Serv::response, sd2.service("Serv").value().call<int>("f"));
+  ASSERT_EQ(Serv::response, sd1->service("Serv").value().call<int>("f"));
+  ASSERT_EQ(Serv::response, sd2->service("Serv").value().call<int>("f"));
   {
-    qi::Session client;
-    client.connect(sd1.url());
-    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
+    auto client = qi::makeSession();
+    client->connect(sd1->url());
+    ASSERT_EQ(Serv::response, client->service("Serv").value().call<int>("f"));
   }
   {
-    qi::Session client;
-    client.connect(sd2.url());
-    ASSERT_EQ(Serv::response, client.service("Serv").value().call<int>("f"));
+    auto client = qi::makeSession();
+    client->connect(sd2->url());
+    ASSERT_EQ(Serv::response, client->service("Serv").value().call<int>("f"));
   }
 }
 
@@ -270,8 +270,8 @@ TEST(ServiceDirectory, NoThreadSpawnOnClientClose)
 
 TEST(ServiceDirectory, IsNotConnectedAfterClose)
 {
-  qi::Session session;
-  session.listenStandalone("tcp://127.0.0.1:0");
-  session.close();
-  ASSERT_FALSE(session.isConnected());
+  auto session = qi::makeSession();
+  session->listenStandalone("tcp://127.0.0.1:0");
+  session->close();
+  ASSERT_FALSE(session->isConnected());
 }
