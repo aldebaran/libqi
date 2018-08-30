@@ -95,7 +95,7 @@ public:
 
   /**
    * @param enforceAuth If set to true, rejects clients that try to skip the authentication step. If
-   * false, accepts all incoming connections whether or not they authentify.
+   * false, accepts all incoming connections whether or not they authenticate.
    */
   ServiceDirectoryProxy(bool enforceAuth = true);
   ~ServiceDirectoryProxy();
