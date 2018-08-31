@@ -28,6 +28,8 @@ namespace
     detail::setPromiseFromCallWithExceptionSupport(p, std::forward<Proc>(proc));
     return p.future();
   }
+
+  static const auto dyingStrandMessage = "The strand is dying.";
 }
 
 enum class StrandPrivate::State
@@ -106,7 +108,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct, ExecutionOptio
     {
       if (_dying)
       {
-        cbStruct->promise.setError("the strand is dying");
+        cbStruct->promise.setError(dyingStrandMessage);
         qiLogDebug() << "Strand is dying on job id " << cbStruct->id;
         return false;
       }
@@ -302,11 +304,6 @@ Strand::~Strand()
     qiLogWarning() << "Error while joining tasks in Strand destruction. "
                       "Detail: " << *error;
   }
-}
-
-namespace
-{
-  static const auto dyingStrandMessage = "the strand is dying";
 }
 
 void Strand::join()

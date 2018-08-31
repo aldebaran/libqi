@@ -706,3 +706,14 @@ TEST(TestStrand, LastStrandedThenContinuationCalledWhenCanceled)
   EXPECT_EQ(expectedSequence, executionSequence);
   EXPECT_TRUE(canceledAsExpected);
 }
+
+TEST(TestStrand, JoinStrandEndsRunningAsyncFutureInError)
+{
+  qi::Strand strand;
+  qi::Promise<void> prom;
+  auto fut = strand.async([&]{ prom.future().wait(); });
+  strand.join();
+  EXPECT_TRUE(fut.hasError());
+  EXPECT_NE(std::string::npos, fut.error().find("strand is dying"));
+  prom.setValue(nullptr);
+}

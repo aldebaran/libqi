@@ -174,11 +174,16 @@ void callAndSet(qi::Promise<R> p, boost::function<R()> f)
   }
 }
 template <typename R>
-void checkCanceled(qi::Future<void> f, qi::Promise<R> p)
+void forwardError(qi::Future<void> f, qi::Promise<R> p)
 {
-  if (f.wait() == FutureState_Canceled)
-    p.setCanceled();
-  // Nothing to do for other states.
+  switch (f.wait())
+  {
+    case FutureState_Canceled:          p.setCanceled(); break;
+    case FutureState_FinishedWithError: p.setError(f.error()); break;
+    case FutureState_None: // Nothing to do for these states.
+    case FutureState_Running:
+    case FutureState_FinishedWithValue: break;
+  }
 }
 
 }
@@ -196,7 +201,7 @@ typename boost::disable_if<std::is_same<R, void>,
   promise.setup(
       boost::bind(&detail::futureCancelAdapter<void>,
                   boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
-  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
+  f.connect(boost::bind(&detail::forwardError<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
@@ -213,7 +218,7 @@ typename boost::disable_if<std::is_same<R, void>,
   promise.setup(
       boost::bind(&detail::futureCancelAdapter<void>,
                   boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
-  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
+  f.connect(boost::bind(&detail::forwardError<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
@@ -247,7 +252,7 @@ Future<R> ExecutionContext::asyncAt(F&& callback, qi::SteadyClockTimePoint tp, E
   qi::Future<void> f = asyncAtImpl(std::move(topost), tp, options);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
                             boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
-  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
+  f.connect(boost::bind(&detail::forwardError<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 
@@ -259,7 +264,7 @@ Future<R> ExecutionContext::asyncDelay(F&& callback, qi::Duration delay, Executi
   qi::Future<void> f = asyncDelayImpl(std::move(topost), delay, options);
   promise.setup(boost::bind(&detail::futureCancelAdapter<void>,
                             boost::weak_ptr<detail::FutureBaseTyped<void> >(f.impl())));
-  f.connect(boost::bind(&detail::checkCanceled<R>, _1, promise), FutureCallbackType_Sync);
+  f.connect(boost::bind(&detail::forwardError<R>, _1, promise), FutureCallbackType_Sync);
   return promise.future();
 }
 }
