@@ -37,6 +37,7 @@
 #include <qi/session.hpp>
 #include <testsession/testsession.hpp>
 #include <qi/messaging/gateway.hpp>
+#include <qi/os.hpp>
 
 const auto serviceWaitDefaultTimeout = qi::Seconds{ 1 };
 
@@ -96,7 +97,7 @@ public:
       return serviceDirectoryEndpoints().at(0);
 
     default:
-      throw std::runtime_error("Unmanaged Mode: " + std::to_string(static_cast<int>(_mode)));
+      throw std::runtime_error("Unmanaged Mode: " + qi::os::to_string(static_cast<int>(_mode)));
     }
 
   }
