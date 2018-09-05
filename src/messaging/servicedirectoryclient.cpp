@@ -23,13 +23,12 @@ namespace qi {
   ServiceDirectoryClient::StateData::operator=(StateData&& o)
   {
     sdSocket = ka::exchange(o.sdSocket, nullptr);
-    sdSocketDisconnectedSignalLink = ka::exchange(
-      o.sdSocketDisconnectedSignalLink, SignalBase::invalidSignalLink);
-    sdSocketSocketEventSignalLink = ka::exchange(
-      o.sdSocketSocketEventSignalLink, SignalBase::invalidSignalLink);
+    sdSocketDisconnectedSignalLink =
+      ka::exchange(o.sdSocketDisconnectedSignalLink, SignalBase::invalidSignalLink);
+    sdSocketSocketEventSignalLink =
+      ka::exchange(o.sdSocketSocketEventSignalLink, SignalBase::invalidSignalLink);
     addSignalLink = ka::exchange(o.addSignalLink, SignalBase::invalidSignalLink);
-    removeSignalLink = ka::exchange(
-      o.removeSignalLink, SignalBase::invalidSignalLink);
+    removeSignalLink = ka::exchange(o.removeSignalLink, SignalBase::invalidSignalLink);
     localSd = ka::exchange(o.localSd, false);
     return *this;
   }

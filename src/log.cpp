@@ -37,6 +37,8 @@
 #include <boost/lockfree/queue.hpp>
 #include <boost/function.hpp>
 #include <boost/predef.h>
+#include <boost/utility/string_ref.hpp>
+#include <boost/function_output_iterator.hpp>
 
 #ifdef WITH_SYSTEMD
 #include <qi/log/journaldloghandler.hpp>
@@ -102,7 +104,11 @@ namespace qi {
         logline << fct << "() ";
       if (context & qi::LogContextAttr_Return)
         logline << std::endl;
-      logline.write(msg, static_cast<std::streamsize>(qi::detail::rtrim(msg)));
+      if (msg)
+      {
+        boost::algorithm::trim_right_copy_if(std::ostream_iterator<char>(logline),
+                                             boost::string_ref(msg), &isNewLine);
+      }
       logline << std::endl;
 
       return logline.str();
@@ -179,10 +185,14 @@ namespace qi {
       csvline << ",";
 
       csvline << "\"";
-      std::string escapedMsg(msg);
-      boost::algorithm::replace_all(escapedMsg, "\"", "\"\"");
-      csvline.write(escapedMsg.c_str(),
-                    static_cast<std::streamsize>(qi::detail::rtrim(escapedMsg.c_str())));
+
+      if (msg)
+      {
+        std::string msgStr(msg);
+        boost::algorithm::replace_all(msgStr, "\"", "\"\"");
+        boost::algorithm::trim_right_copy_if(std::ostream_iterator<char>(csvline), msgStr,
+                                             &isNewLine);
+      }
       csvline << "\"" << std::endl;
 
       return csvline.str();
@@ -206,26 +216,9 @@ namespace qi {
       return ss.str();
     }
 
-    /* Emulate previous behavior that ensured a single newline was
-    * present at the end on message.
-    */
-    std::size_t rtrim(const char *msg)
+    bool isNewLine(char c)
     {
-      const auto size = strlen(msg);
-      if (size == 0)
-        return 0u;
-      auto lastCharIndex = size - 1;
-
-      if (msg[lastCharIndex] == '\r')
-        return size - 1u;
-      if (msg[lastCharIndex] == '\n')
-      {
-        if (lastCharIndex > 0 && msg[lastCharIndex - 1] == '\r')
-          return size - 2u;
-        else
-          return size - 1u;
-      }
-      return size;
+      return c == '\n' || c == '\r';
     }
   }
 

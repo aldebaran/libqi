@@ -158,13 +158,16 @@ TEST(TestProperty, customSetter)
 
 TEST(TestProperty, customSetterStranded)
 {
-  qi::Strand strand;
+  const auto strand = std::make_shared<qi::Strand>();
+  std::weak_ptr<qi::Strand> weakStrand = strand;
   qi::Property<int> property{ 12, qi::Property<int>::Getter{},
-                              [&](int& storage, const int& value) {
-                                return strand.async([&] {
-                                  storage = value;
-                                  return true;
-                                }).value();
+                              [=](int& storage, const int& value) {
+                                if (auto strand = weakStrand.lock())
+                                  return strand->async([&] {
+                                    storage = value;
+                                    return true;
+                                  }).value();
+                                return false;
                               } };
   const int expected = 42;
   property.set(expected);
