@@ -9,7 +9,7 @@
 #include <boost/function.hpp>
 #include <qi/log/journaldloghandler.hpp>
 #include <qi/log.hpp>
-
+#include <qi/os.hpp>
 // prevent sd_journal_send() from adding CODE_LINE, CODE_FILE, CODE_FUNC
 // automatically, because any log would seem to come from
 // journaldloghandler.cpp
@@ -49,12 +49,17 @@ namespace log
     BOOST_STATIC_CONSTEXPR auto FILE_PREFIX_LEN = sizeof("CODE_FILE=") - 1;
     char _fileBuffer[FILE_PREFIX_LEN + FILE_LEN + 1u];
     char _lineBuffer[32u];
+    // extraneous field to pass to journald.
+    // journald will ignore it if the field name is invalid.
+    // An empty field is invalid and will be ignored.
+    std::string _extraField;
   public:
 
-    JournaldLogHandler()
+    JournaldLogHandler(std::string extraField)
       : _fileBuffer{"CODE_FILE="}, // extra bytes are zero-initialized
-        _lineBuffer{"CODE_LINE="} // extra bytes are zero-initialized
-    {}
+        _lineBuffer{"CODE_LINE="}, // extra bytes are zero-initialized
+        _extraField(std::move(extraField)) {}
+
     /**
      * \brief Send logs messages to systemd
      * \param verb verbosity of the log message.
@@ -98,6 +103,7 @@ namespace log
                     "QI_CATEGORY=%s", category,
                     "PRIORITY=%i", priority,
                     "QI=1",
+                    _extraField.c_str(),
                     nullptr);
        if (i == 0)
           return;
@@ -108,6 +114,7 @@ namespace log
                                 "QI_CATEGORY=%s", category,
                                 "PRIORITY=%i", priority,
                                 "QI=1",
+                                _extraField.c_str(),
                                 nullptr);
         if (i == 0)
           return;
@@ -124,7 +131,8 @@ namespace log
 
   Handler makeJournaldLogHandler()
   {
-    return JournaldLogHandler();
+    const std::string field = qi::os::getenv("QI_LOG_EXTRA_JOURNALD_FIELD");
+    return JournaldLogHandler(field);
   }
 }
 }

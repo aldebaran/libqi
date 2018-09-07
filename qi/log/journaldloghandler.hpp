@@ -26,6 +26,7 @@ namespace log
      * - QI=1
      * - CODE_FILE, CODE_LINE, CODE_FUNC
      *   (only when NO_QI_LOG_DETAILED_CONTEXT is not defined)
+     * - the content of the QI_LOG_EXTRA_JOURNALD_FIELD environment variable.
      *
      * The returned handler is not thread-safe, which is fine: libqi does not
      * call its log handlers concurrently.
