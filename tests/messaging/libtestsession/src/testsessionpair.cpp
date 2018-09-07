@@ -6,8 +6,6 @@
 ** Copyright (C) 2012 Aldebaran Robotics
 */
 
-#include <qi/os.hpp>
-
 #include <testsession/testsession.hpp>
 #include <testsession/testsessionpair.hpp>
 
