@@ -78,6 +78,7 @@ namespace qi {
       BoundService& bs = it->second;
       si.setServiceId(bs.id);
       si.setName(bs.name);
+      si.setObjectUid(bs.serviceInfo.objectUid());
       _sdClient->updateServiceInfo(si);
     }
   }
@@ -148,6 +149,7 @@ namespace qi {
       si.setMachineId(qi::os::getMachineId());
       si.setEndpoints(endpoints);
       si.setSessionId(_id);
+      si.setObjectUid(obj.uid());
 
       int id = ++_registerServiceRequestIndex;
       {

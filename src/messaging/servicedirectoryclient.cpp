@@ -34,7 +34,7 @@ namespace qi {
   }
 
   ServiceDirectoryClient::ServiceDirectoryClient(bool enforceAuth)
-    : _remoteObject(new RemoteObject(qi::Message::Service_ServiceDirectory))
+    : _remoteObject(boost::make_shared<RemoteObject>(qi::Message::Service_ServiceDirectory))
     , _enforceAuth(enforceAuth)
   {
     _object = makeDynamicAnyObject(_remoteObject.get(), false);
