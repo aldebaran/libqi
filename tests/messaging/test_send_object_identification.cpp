@@ -3,11 +3,12 @@
 ** Copyright (C) 2018 Softbank Robotics Europe
 */
 
-#include <gtest/gtest.h>
+#include <thread>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <gtest/gtest.h>
 
 qiLogCategory("test");
 
@@ -29,7 +30,7 @@ struct dummy_t
 QI_REGISTER_OBJECT(dummy_t, one, identity);
 
 
-TEST(SendObject, IdentityOfRemoteObjects)
+TEST(SendObjectIdentity, IdentityOfRemoteObjects)
 {
   TestSessionPair p;
   p.server()->registerService("plop", boost::make_shared<dummy_t>());
@@ -37,7 +38,7 @@ TEST(SendObject, IdentityOfRemoteObjects)
   qi::DynamicObjectBuilder builder;
   auto o = builder.object();
 
-  qi::AnyObject remotePlop = p.client()->service("plop");
+  qi::AnyObject remotePlop = p.client()->service("plop").value();
   auto remoteObject = remotePlop.call<qi::AnyObject>("identity", o);
   EXPECT_EQ(o, remoteObject);
 
@@ -62,7 +63,7 @@ TEST(SendObjectIdentity, IdentityOfRemoteObjectsDifferentProcess)
 
   auto client = makeSession();
   client->connect(serviceUrl);
-  AnyObject service = client->service("PingPongService");
+  AnyObject service = client->service("PingPongService").value();
   AnyObject original{boost::make_shared<dummy_t>()};
 
   service.call<void>("give", original);
@@ -127,7 +128,7 @@ TEST(SendObjectIdentity, IdentityMaintainedBetweenSessions)
 
   qi::Session outterSession;
   outterSession.connect(sessionPair.endpointToServiceSource());
-  qi::AnyObject store_from_outter = outterSession.service("store");
+  qi::AnyObject store_from_outter = outterSession.service("store").value();
   qi::AnyObject object_from_outter_1 = store_from_outter.call<qi::AnyObject>("get");
   qi::AnyObject object_from_outter_2 = store_from_outter.call<qi::AnyObject>("get");
 
@@ -158,7 +159,7 @@ TEST(SendObjectIdentity, IdentityMaintainedBetweenSessionsWithRemote)
 
   auto client = makeSession();
   client->connect(serviceUrl);
-  AnyObject store_from_client = client->service("PingPongService");
+  AnyObject store_from_client = client->service("PingPongService").value();
 
   auto object = qi::AnyObject{ boost::make_shared<dummy_t>() };
   store_from_client.call<void>("give", object);
@@ -172,7 +173,7 @@ TEST(SendObjectIdentity, IdentityMaintainedBetweenSessionsWithRemote)
 
   Session outterSession;
   outterSession.connect(serviceUrl);
-  AnyObject store_from_outter = outterSession.service("PingPongService");
+  AnyObject store_from_outter = outterSession.service("PingPongService").value();
   AnyObject object_from_outter_1 = store_from_outter.call<AnyObject>("take");
   AnyObject object_from_outter_2 = store_from_outter.call<AnyObject>("take");
 
@@ -193,21 +194,21 @@ TEST(SendObjectIdentity, IdentityOfRemoteObjectsMoreIndirections)
   qi::AnyObject originalObject(boost::make_shared<dummy_t>());
   TestSessionPair pairA;
   pairA.server()->registerService("serviceA", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientA = pairA.client()->service("serviceA");
+  qi::AnyObject clientA = pairA.client()->service("serviceA").value();
   clientA.call<void>("set", originalObject);
   qi::AnyObject objA = clientA.call<qi::AnyObject>("get");
   EXPECT_EQ(originalObject, objA);
 
   TestSessionPair pairB;
   pairB.server()->registerService("serviceB", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientB = pairB.client()->service("serviceB");
+  qi::AnyObject clientB = pairB.client()->service("serviceB").value();
   clientB.call<void>("set", objA);
   qi::AnyObject objB = clientB.call<qi::AnyObject>("get");
   EXPECT_EQ(originalObject, objB);
 
   TestSessionPair pairC;
   pairC.server()->registerService("serviceC", boost::make_shared<ObjectStore>());
-  qi::AnyObject clientC = pairC.client()->service("serviceC");
+  qi::AnyObject clientC = pairC.client()->service("serviceC").value();
   clientC.call<void>("set", objB);
   qi::AnyObject objC = clientC.call<qi::AnyObject>("get");
   EXPECT_EQ(originalObject, objC);
@@ -346,7 +347,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyO
 
   AnyObject original{ boost::make_shared<SomeInterfaceImpl>() };
   sessions.server()->registerService("Store", boost::make_shared<ObjectStore>());
-  AnyObject store = sessions.client()->service("Store");
+  AnyObject store = sessions.client()->service("Store").value();
   store.call<void>("set", original);
 
   Object<SomeInterface> objectA = store.call<AnyObject>("get");
@@ -362,7 +363,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyO
 
   AnyObject original{ boost::make_shared<SomeInterfaceImpl>() };
   sessions.server()->registerService("Store", boost::make_shared<ObjectStore>());
-  AnyObject store = sessions.client()->service("Store");
+  AnyObject store = sessions.client()->service("Store").value();
   store.call<void>("set", original);
 
   Object<SomeInterface> objectA = store.call<Object<SomeInterface>>("get");
@@ -439,7 +440,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
 
   auto client = makeSession();
   client->connect(serviceUrl);
-  AnyObject service = client->service("PingPongService");
+  AnyObject service = client->service("PingPongService").value();
   Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
 
   service.call<void>("give", original);
@@ -465,7 +466,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
 
   auto client = makeSession();
   client->connect(serviceUrl);
-  AnyObject service = client->service("PingPongService");
+  AnyObject service = client->service("PingPongService").value();
   Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
 
   service.call<void>("give", original);
