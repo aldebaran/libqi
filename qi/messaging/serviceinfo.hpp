@@ -10,9 +10,12 @@
 #include <string>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include <qi/api.hpp>
 #include <qi/url.hpp>
 #include <qi/type/typeinterface.hpp>
+#include <qi/objectuid.hpp>
 
 namespace qi
 {
@@ -33,6 +36,7 @@ namespace qi
     void setEndpoints(const qi::UrlVector& endpoints);
     void addEndpoint(const qi::Url& endpoint);
     void setSessionId(const std::string& sessionId);
+    void setObjectUid(const boost::optional<ObjectUid>& newUid);
 
     const std::string& name() const;
     unsigned int serviceId() const;
@@ -40,6 +44,8 @@ namespace qi
     unsigned int processId() const;
     const qi::UrlVector& endpoints() const;
     const std::string& sessionId() const;
+
+    boost::optional<ObjectUid> objectUid() const;
 
     ServiceInfoPrivate* _p;
 

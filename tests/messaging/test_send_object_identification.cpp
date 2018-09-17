@@ -91,6 +91,17 @@ struct dummy_t
 
 QI_REGISTER_OBJECT(dummy_t, one, identity);
 
+TEST(SendObjectIdentity, IdentityPreservedInServiceDirectory)
+{
+  TestSessionPair sessions;
+
+  auto object = qi::AnyObject(boost::make_shared<dummy_t>());
+  sessions.server()->registerService("MyObject", object);
+
+  auto remoteObject = sessions.client()->service("MyObject").value();
+  EXPECT_EQ(object.uid(), remoteObject.uid());
+  EXPECT_EQ(object, remoteObject);
+}
 
 TEST(SendObjectIdentity, IdentityOfRemoteObjects)
 {

@@ -43,14 +43,17 @@ namespace qi {
     return mo;
   }
 
-  RemoteObject::RemoteObject(unsigned int service, qi::MessageSocketPtr socket)
+  RemoteObject::RemoteObject(unsigned int service, qi::MessageSocketPtr socket,
+    boost::optional<ObjectUid> uid)
     : ObjectHost(service)
     , _socket()
     , _service(service)
     , _object(1)
     , _linkMessageDispatcher(0)
-    , _self(makeDynamicAnyObject(this, false))
+    , _self(makeDynamicAnyObject(this, false, uid))
   {
+    setUid(_self.uid()); // Make sure this object's uid and _self's uid are the same.
+
     /* simple metaObject with only special methods. (<100)
      * Will be *replaced* by metaObject received from remote end, when
      * fetchMetaObject is invoked and retuns.
@@ -72,6 +75,7 @@ namespace qi {
     , _self(makeDynamicAnyObject(this, false))
   {
     QI_LOG_DEBUG_REMOTEOBJECT() << "Constructing a RemoteObject for socket " << socket;
+    setUid(_self.uid()); // Make sure this object's uid and _self's uid are the same.
     setMetaObject(metaObject);
     if (socket)
       setTransportSocket(socket);
