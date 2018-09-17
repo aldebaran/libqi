@@ -20,6 +20,7 @@ public:
   unsigned int processId;
   qi::UrlVector endpoints;
   std::string sessionId;
+  boost::optional<qi::ObjectUid> objectUid;
 };
 
 }

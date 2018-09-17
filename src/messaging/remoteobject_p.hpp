@@ -37,7 +37,8 @@ namespace qi {
   class RemoteObject : public qi::DynamicObject, public ObjectHost, public Trackable<RemoteObject> {
   public:
     RemoteObject();
-    RemoteObject(unsigned int service, qi::MessageSocketPtr socket = qi::MessageSocketPtr());
+    RemoteObject(unsigned int service, qi::MessageSocketPtr socket = qi::MessageSocketPtr(),
+      boost::optional<ObjectUid> uid = boost::none);
     //deprecated
     RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, qi::MessageSocketPtr socket = qi::MessageSocketPtr());
     ~RemoteObject();
@@ -88,6 +89,8 @@ namespace qi {
   private:
     static qi::Atomic<unsigned int> _nextId;
   };
+
+  using RemoteObjectPtr = boost::shared_ptr<RemoteObject>;
 
 }
 

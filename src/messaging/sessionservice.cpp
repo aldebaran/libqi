@@ -73,53 +73,45 @@ namespace qi {
       static_cast<RemoteObject*>(it->second.asGenericObject()->value)->close("Session closed");
   }
 
-  ServiceRequest *Session_Service::serviceRequest(long requestId)
+  ServiceRequest* Session_Service::serviceRequest(long requestId)
   {
     boost::recursive_mutex::scoped_lock sl(_requestsMutex);
     {
-      std::map<int, ServiceRequest*>::iterator it;
-
-      it = _requests.find(requestId);
+      auto it = _requests.find(requestId);
       if (it == _requests.end()) {
         qiLogVerbose() << "qi.session.service(): No matching request for id(" << requestId << ").";
-        return 0;
+        return nullptr;
       }
-      return it->second;
+      return it->second.get();
     }
-  }
-
-  static void deleteLater(qi::RemoteObject *remote, ServiceRequest   *sr) {
-    delete remote;
-    delete sr;
   }
 
   void Session_Service::removeRequest(long requestId)
   {
     boost::recursive_mutex::scoped_lock sl(_requestsMutex);
-    qi::RemoteObject *remote = nullptr;
-    ServiceRequest   *sr     = nullptr;
-    {
-      std::map<int, ServiceRequest*>::iterator it;
 
-      it = _requests.find(requestId);
-      if (it == _requests.end()) {
-        qiLogVerbose() << "qi.session.service(): No matching request for id(" << requestId << ").";
-        return;
-      }
-      if (it->second) {
-        remote = it->second->remoteObject;
-        it->second->remoteObject = 0;
-      }
-      sr = it->second;
-      it->second = 0;
-      _requests.erase(it);
+    auto it = _requests.find(requestId);
+    if (it == _requests.end()) {
+      qiLogVerbose() << "qi.session.service(): No matching request for id(" << requestId << ").";
+      return;
     }
+    auto sr = std::move(it->second);
+    _requests.erase(it);
+
     //we do not call delete on RemoteObject, because remoteObject->close disconnect onMessagePending,
     //which is the signal we are coming from.  (when called from onRemoteObjectComplete)
     //delete later as a workaround.
     //At this point the RemoteObject can be either in remote (RemoteObject*)
     //or in sr->promise (promise<AnyObject>), so async them both
-    qi::getEventLoop()->post(boost::bind(&deleteLater, remote, sr));
+    qi::Promise<void> postPromise;
+    auto fut = postPromise.future();
+    qi::getEventLoop()->post(boost::bind(
+      boost::function<void(const boost::shared_ptr<ServiceRequest>&)>{[=](const boost::shared_ptr<ServiceRequest>&){
+        fut.wait();
+      }},
+      boost::shared_ptr<ServiceRequest>(sr.release()))
+    );
+    postPromise.setValue(nullptr);
   }
 
   namespace session_service_private
@@ -220,7 +212,8 @@ namespace qi {
       {
         session_service_private::sendCapabilities(socket);
         qi::Future<void> metaObjFut;
-        sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
+        QI_ASSERT_NULL(sr->remoteObject);
+        sr->remoteObject.reset(new qi::RemoteObject(sr->serviceInfo.serviceId(), socket, sr->serviceInfo.objectUid()));
 
         // TODO 40203: check if it's possible that the following future is never set.
         metaObjFut = sr->remoteObject->fetchMetaObject();
@@ -256,7 +249,10 @@ namespace qi {
       qi::Future<void> metaObjFut;
       if (old)
         socket->socketEvent.disconnectAsync(*old);
-      sr->remoteObject = new qi::RemoteObject(sr->serviceId, socket);
+      QI_ASSERT_NULL(sr->remoteObject);
+
+      sr->remoteObject = boost::make_shared<RemoteObject>(sr->serviceInfo.serviceId(), socket, sr->serviceInfo.objectUid());
+
       //ask the remoteObject to fetch the metaObject
       metaObjFut = sr->remoteObject->fetchMetaObject();
       qiLogVerbose() << "Fetching metaobject (2) for requestId = " << requestId;
@@ -383,22 +379,21 @@ namespace qi {
 
     {
       boost::recursive_mutex::scoped_lock sl(_remoteObjectsMutex);
-      RemoteObjectMap::iterator it = _remoteObjects.find(sr->name);
+      RemoteObjectMap::iterator it = _remoteObjects.find(sr->serviceInfo.name());
       if (it != _remoteObjects.end()) {
         //another object have been registered before us, return it
         //the new socket will be closed when the request is deleted
-        qiLogVerbose() << "A request for the service " << sr->name << " have been discarded, "
+        qiLogVerbose() << "A request for the service " << sr->serviceInfo.name() << " have been discarded, "
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
       } else {
 
-        AnyObject o = makeDynamicAnyObject(sr->remoteObject);
+        AnyObject o = makeDynamicSharedAnyObject(sr->remoteObject.get(), sr->remoteObject);
         //register the remote object in the cache
 
         // If this throws, the promise will be set because of the `scoped` object.
-        addService(sr->name, o);
+        addService(sr->serviceInfo.name(), o);
         sr->promise.setValue(o);
-        sr->remoteObject = 0;
       }
     }
 
@@ -444,10 +439,9 @@ namespace qi {
 
     {
       boost::recursive_mutex::scoped_lock l(_requestsMutex);
-      std::map<int, ServiceRequest*>::const_iterator it;
-      for (it = _requests.begin(); it != _requests.end(); ++it)
+      for (auto it = _requests.begin(); it != _requests.end(); ++it)
       {
-        if (it->second->name == service)
+        if (it->second->serviceInfo.name() == service)
         {
           qiLogVerbose() << "Found service '" << service << "' in the pending service requests.";
           return it->second->promise.future();
@@ -464,7 +458,8 @@ namespace qi {
 
     {
       boost::recursive_mutex::scoped_lock l(_requestsMutex);
-      _requests[requestId] = rq;
+      QI_ASSERT_NULL(_requests[requestId]);
+      _requests[requestId].reset(rq);
     }
     rq->promise.setOnCancel(track([=](Promise<AnyObject>& p) mutable {
       removeRequest(requestId);
@@ -490,7 +485,7 @@ namespace qi {
           return;
         }
 
-        qiLogVerbose() << "Received answer from SD client for service '" << sr->name << "'. "
+        qiLogVerbose() << "Received answer from SD client for service '" << sr->serviceInfo.name() << "'. "
           "requestId = " << requestId;
         promise = sr->promise;
 
@@ -500,13 +495,13 @@ namespace qi {
           return;
         }
         const qi::ServiceInfo& si = fut.value();
-        sr->serviceId = si.serviceId();
+        sr->serviceInfo = si;
         if (_sdClient->isLocal())
         { // Wait! If sd is local, we necessarily have an open socket
           // on which service was registered, whose lifetime is bound
           // to the service
           // TODO 40203: Could this block forever?
-          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceId).value();
+          MessageSocketPtr s = _sdClient->_socketOfService(sr->serviceInfo.serviceId()).value();
 
           if (!s) // weird
             qiLogVerbose() << "_socketOfService returned 0";
@@ -525,7 +520,8 @@ namespace qi {
         //empty serviceInfo
         if (!si.endpoints().size()) {
           std::stringstream ss;
-          ss << "No endpoints returned for service:" << sr->name << " (id:" << sr->serviceId << ")";
+          ss << "No endpoints returned for service:" << sr->serviceInfo.name()
+             << " (id:" << sr->serviceInfo.serviceId() << ")";
           qiLogVerbose() << ss.str();
           setErrorAndRemoveRequest(*promise, ss.str(), requestId);
           return;
@@ -545,7 +541,8 @@ namespace qi {
           if (it == si.endpoints().end())
           {
             std::stringstream ss;
-            ss << "No " << protocol << " endpoint available for service:" << sr->name << " (id:" << sr->serviceId << ")";
+            ss << "No " << protocol << " endpoint available for service:" << sr->serviceInfo.name()
+               << " (id:" << sr->serviceInfo.serviceId() << ")";
             qiLogVerbose() << ss.str();
             setErrorAndRemoveRequest(*promise, ss.str(), requestId);
           }

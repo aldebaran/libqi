@@ -61,6 +61,11 @@ namespace qi
     _p->endpoints.push_back(endpoint);
   }
 
+  void ServiceInfo::setObjectUid(const boost::optional<ObjectUid>& newUid)
+  {
+    _p->objectUid = newUid;
+  }
+
   const std::string& ServiceInfo::name() const {
     return _p->name;
   }
@@ -84,6 +89,11 @@ namespace qi
   const std::string& ServiceInfo::sessionId() const {
     return _p->sessionId;
   }
+
+  boost::optional<ObjectUid> ServiceInfo::objectUid() const {
+    return _p->objectUid;
+  }
+
 
   ServiceInfoPrivate::ServiceInfoPrivate()
     : name()

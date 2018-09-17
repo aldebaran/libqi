@@ -104,7 +104,7 @@ namespace qi {
     };
 
     StateData _stateData; // protected by _mutex
-    std::unique_ptr<qi::RemoteObject> _remoteObject;
+    RemoteObjectPtr _remoteObject; // Must be shared to allow using weakPtr in other systems referring it.
     // _object is a remote object of serviceDirectory
     AnyObject _object;
     ClientAuthenticatorFactoryPtr _authFactory;

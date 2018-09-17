@@ -485,9 +485,13 @@ namespace qi
     else go.reset(new GenericObject(type, obj, obj->uid()));
 
     if (destroyObject || onDelete)
+    {
       return AnyObject(go.release(),
         boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
+    }
     else
+    {
       return AnyObject(go.release(), &AnyObject::deleteGenericObjectOnly);
+    }
   }
 }

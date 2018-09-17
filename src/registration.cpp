@@ -182,11 +182,38 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR_REGISTER(::qi::MetaObject,
   QI_STRUCT_HELPER("properties", propertyMap),
   QI_STRUCT_HELPER("description", description));
 
+namespace qi{
+namespace {
+
+  class ObjectUidTypeInterface : public RawTypeInterface
+  {
+  public:
+
+    std::pair<char*, size_t> get(void* storage) override
+    {
+      auto& uid = *static_cast<ObjectUid*>(Methods::ptrFromStorage(&storage));
+      return { reinterpret_cast<char*>(begin(uid)), size(uid) };
+    }
+
+    void set(void** storage, const char* ptr, size_t sz) override
+    {
+      auto& uid = *static_cast<ObjectUid*>(ptrFromStorage(storage));
+      std::copy(ptr, ptr + sz, begin(uid));
+    }
+    using Methods = DefaultTypeImplMethods<ObjectUid, TypeByPointerPOD<ObjectUid> >;
+    _QI_BOUNCE_TYPE_METHODS(Methods);
+  };
+
+}}
+
+QI_TYPE_REGISTER_CUSTOM(qi::ObjectUid, qi::ObjectUidTypeInterface);
+
 static qi::ServiceInfoPrivate* serviceInfoPrivate(qi::ServiceInfo* svcinfo) {
     return svcinfo->_p;
 }
 QI_EQUIVALENT_STRING_REGISTER(qi::Url, &qi::Url::str);
-QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints, sessionId);
+QI_TYPE_STRUCT_EXTENSION_ADDED_FIELDS(qi::ServiceInfoPrivate, "objectUid");
+QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints, sessionId, objectUid);
 QI_TYPE_REGISTER(::qi::ServiceInfoPrivate);
 
 QI_TYPE_STRUCT_BOUNCE_REGISTER(::qi::ServiceInfo, ::qi::ServiceInfoPrivate, serviceInfoPrivate);
