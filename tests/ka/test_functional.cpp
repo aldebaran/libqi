@@ -84,6 +84,15 @@ TEST(FunctionalPolymorphicConstantFunction, BasicVoid) {
   ASSERT_NO_THROW(f(1, 2.345, "abcd", true));
 }
 
+TEST(FunctionalPolymorphicConstantFunction, Retraction) {
+  using namespace ka;
+  constant_function_t<void> f;
+  auto g = retract(f);
+  ASSERT_EQ(f, g);
+  ASSERT_NO_THROW(f());
+  ASSERT_NO_THROW(g());
+}
+
 namespace {
   template<typename F>
   void testIdTransfo() {
@@ -294,6 +303,42 @@ TEST(FunctionalCompose, SeemsRetractionButNotQuite) {
   ASSERT_EQ(e0_t::b, ginv_f(e0_t::a));
   ASSERT_EQ(e0_t::a, ginv_f(e0_t::b));
   static_assert(!Equal<decltype(ginv_f), id_transfo_t>::value, "");
+}
+
+namespace {
+  struct plus_t {
+    float a;
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(plus_t, a)
+    float operator()(float b) const {
+      return a + b;
+    }
+    friend plus_t retract(plus_t const& x) {
+      return {-x.a};
+    }
+  };
+  struct times_t {
+    float a;
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(times_t, a)
+    float operator()(int b) const {
+      return a * b;
+    }
+    friend times_t retract(times_t const& x) {
+      return {1.f / x.a};
+    }
+  };
+}
+
+TEST(FunctionalCompose, RetractionOfComposition) {
+  using namespace ka;
+
+  auto incr = plus_t{1};
+  auto twice = times_t{2};
+
+  ASSERT_EQ(3, compose(incr, twice)(1)); // (1*2)+1
+  ASSERT_EQ(11, compose(incr, twice)(5)); // (5*2)+1
+
+  ASSERT_EQ(1, retract(compose(incr, twice))(3)); // (3-1)/2
+  ASSERT_EQ(5, retract(compose(incr, twice))(11)); // (11-1)/2
 }
 
 TEST(FunctionalCompose, Identity) {
@@ -541,6 +586,54 @@ TEST(FunctionalComposeAccu, ComposeAction) {
     a(s);
     ASSERT_EQ(std::string{"pipi"}, s);
   }
+}
+
+namespace {
+  struct plus_accu_t {
+    float a;
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(plus_accu_t, a)
+    void operator()(float& b) const {
+      b += a;
+    }
+    friend plus_accu_t retract(plus_accu_t const& x) {
+      return {-x.a};
+    }
+  };
+  struct times_accu_t {
+    float a;
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(times_accu_t, a)
+    void operator()(float& b) const {
+      b *= a;
+    }
+    friend times_accu_t retract(times_accu_t const& x) {
+      return {1.f / x.a};
+    }
+  };
+}
+
+TEST(FunctionalComposeAccu, RetractionOfComposition) {
+  using namespace ka;
+
+  auto incr = plus_accu_t{1.f};
+  auto twice = times_accu_t{2.f};
+  auto f = compose_accu(incr, twice);
+
+  float a = 0.f;
+  a = 1.f;
+  f(a); // (1*2)+1
+  ASSERT_EQ(3, a);
+
+  a = 5.f;
+  f(a); // (5*2)+1
+  ASSERT_EQ(11, a);
+
+  a = 3.f;
+  retract(f)(a); // (3-1)/2
+  ASSERT_EQ(1, a);
+
+  a = 11.f;
+  retract(f)(a); // (11-1)/2
+  ASSERT_EQ(5, a);
 }
 
 TEST(FunctionalComposeAccu, Identity) {

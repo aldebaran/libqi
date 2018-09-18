@@ -48,6 +48,13 @@ namespace ka {
 
   KA_DERIVE_CTOR_FUNCTION_TEMPLATE_VOID(constant_function)
 
+  /// This makes sense only when called with no argument, which means the
+  /// logical signature `void -> void`. In this case, `constant_function_t<void>`
+  /// is its own inverse.
+  inline auto retract(constant_function_t<void> x) -> decltype(x) {
+    return x;
+  }
+
   /// A polymorphic transformation that takes a value and returns it as-is.
   ///
   /// A transformation is a unary function from a type to itself.
@@ -385,6 +392,23 @@ namespace ka {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
   } // namespace functional_ops_accu
+
+  // model RetractableFunction composition_t<G, F>
+  //  if RetractableFunction(F) && RetractableFunction(G):
+    /// A composition can be interpreted as a sequence of two steps (say, `putSocks`
+    /// then `putShoes`). Retracting (i.e. undoing) this sequence means retracting the
+    /// second step (`removeShoes`), then the first (`removeSocks`).
+    template<typename G, typename F>
+    auto retract(composition_t<G, F> const& x) -> decltype(compose(retract(x.f), retract(x.g))) {
+      return compose(retract(x.f), retract(x.g));
+    }
+
+  // model IsomorphicAction composition_accu_t<G, F>:
+  //  if IsomorphicAction(F) && IsomorphicAction(G):
+    template<typename G, typename F>
+    auto retract(composition_accu_t<G, F> const& x) -> decltype(compose_accu(retract(x.f), retract(x.g))) {
+      return compose_accu(retract(x.f), retract(x.g));
+    }
 
   /// Function that transforms the codomain (return type) of the given procedure
   /// into an "enriched" type.
