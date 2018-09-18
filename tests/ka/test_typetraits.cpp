@@ -5,6 +5,7 @@
 #include <ka/macro.hpp>
 #include <string>
 #include <array>
+#include <iterator>
 #include <vector>
 #include <deque>
 #include <list>
@@ -702,4 +703,60 @@ TEST(TypeTraits, IsRetract) {
 
   static_assert(!IsRetract<f_t, g_inv_t>::value, "");
   static_assert(!IsRetract<g_inv_t, f_t>::value, "");
+}
+
+namespace my {
+
+struct iterator_t {};
+struct non_iterator_t {};
+
+template<typename T, typename = ka::EnableIfInputIterator<T>>
+iterator_t f(T);
+
+template<typename T, typename = ka::EnableIfNotInputIterator<T>>
+non_iterator_t f(T);
+
+} // namespace my
+
+TEST(TypeTraits, EnableIfInputIterator) {
+  using ka::Equal;
+  using my::iterator_t;
+  using my::non_iterator_t;
+
+  { // InputIterator
+    std::istream_iterator<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // ForwardIterator
+    std::forward_list<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x.begin()))>::value, "");
+  }
+  { // BidirectionalIterator
+    std::list<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x.begin()))>::value, "");
+  }
+  { // RandomAccessIterator (0)
+    std::vector<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x.begin()))>::value, "");
+  }
+  { // RandomAccessIterator (1)
+    int* x;
+    static_assert(Equal<iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // RandomAccessIterator (2)
+    int* x;
+    static_assert(Equal<iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // Non-iterator (0)
+    std::string x;
+    static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // Non-iterator (1)
+    std::vector<int> x;
+    static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // Non-iterator (2)
+    float x;
+    static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
+  }
 }

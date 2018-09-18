@@ -305,7 +305,7 @@ namespace ka
     /// Throws: `std::length_error` if `std::distance(i, j) > 1`
     ///
     /// InputIterator<T> I
-    template<typename I, typename = EnableIfIterator<I>>
+    template<typename I, typename = EnableIfInputIterator<I>>
     opt_t(I i, I const& j) {
       if (i == j) {
         return;
@@ -438,7 +438,7 @@ namespace ka
     /// Throws: `std::length_error` if `std::distance(i, j) > 1`
     ///
     /// InputIterator<T> I
-    template<typename I, typename = EnableIfIterator<I>>
+    template<typename I, typename = EnableIfInputIterator<I>>
     void assign(I i, I const& j) {
       if (i == j) {
         clear();
