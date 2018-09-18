@@ -163,7 +163,7 @@ namespace ka {
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// // `log_name` and `log_heat` take no input (void) and returns no ouput (void).
   /// auto log_name_then_heat = compose(log_heat, log_name);
-  /// auto fut = strand.async(log_name_then_heat);
+  /// auto fut = std::async(log_name_then_heat);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Remark: In the future, add a SFINAE guard if there is a name clash.
@@ -334,6 +334,26 @@ namespace ka {
     auto operator*(G&& g, F&& f) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
       return compose(fwd<G>(g), fwd<F>(f));
     }
+
+    /// Performs a function composition in reverse order of that of traditional
+    /// mathematical function composition, that is `f | g == g * f`, where `f`
+    /// is evaluated first, then `g`.
+    ///
+    /// The motivation for this operator is it can be easier to read in some
+    /// situations.
+    ///
+    /// Example: Composing in place
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// // `motor` takes a `string` and returns the properties of a motor.
+    /// // `heat` takes the properties of a motor and returns an `int`.
+    /// // `motor_names` is a container of string.
+    /// auto max_heat = std::max_element(motor_names.begin(), motor_names.end(),
+    ///   motor | heat); // `motor | heat` gets the motor, then its heat
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    template<typename F, typename G>
+    auto operator|(F&& f, G&& g) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
+      return compose(fwd<G>(g), fwd<F>(f));
+    }
   } // namespace functional_ops
 
   namespace functional_ops_accu {
@@ -355,6 +375,13 @@ namespace ka {
     /// ```
     template<typename G, typename F>
     auto operator*(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
+      return compose_accu(fwd<G>(g), fwd<F>(f));
+    }
+
+    /// Performs a accumulation composition in reverse order of that of traditional
+    /// mathematical function composition, that is `f | g == g * f`.
+    template<typename F, typename G>
+    auto operator|(F&& f, G&& g) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
   } // namespace functional_ops_accu

@@ -391,6 +391,31 @@ TEST(FunctionalCompose, Id) {
   ASSERT_EQ(gf0(0), gf1(0));
 }
 
+TEST(FunctionalCompose, OperatorPipe) {
+  using namespace ka;
+  using ka::functional_ops::operator|;
+  using std::string;
+
+  auto half = [](int x) {
+    return x / 2.f;
+  };
+  auto greater_1 = [](float x) {
+    return x > 1.f;
+  };
+  auto str = [](bool x) -> string {
+    return x ? "true" : "false";
+  };
+
+  {
+    auto f = half | greater_1 | str;
+    testComposeMulti(f);
+  }
+  {
+    auto const f = half | greater_1 | str;
+    testComposeMulti(f);
+  }
+}
+
 namespace {
   void remove_n(std::string& s, char c, int n) {
     ka::erase_if(s, [&](char x) {return x == c && --n >= 0;});
@@ -537,6 +562,31 @@ TEST(FunctionalComposeAccu, Identity) {
   f(e);
   _1(e);
 #endif
+}
+
+TEST(FunctionalComposeAccu, OperatorPipe) {
+  using namespace ka;
+  using ka::functional_ops_accu::operator|;
+
+  auto half = [](float& x) {
+    x /= 2.f;
+  };
+  auto clamp = [](float& x) {
+    if (x > 1.f) x = 1.f;
+    if (x < -1.f) x = -1.f;
+  };
+  auto abs = [](float& x) {
+    if (x < 0.f) x = -x;
+  };
+
+  {
+    auto f = half | clamp | abs;
+    testComposeAccuMulti(f);
+  }
+  {
+    auto const f = half | clamp | abs;
+    testComposeAccuMulti(f);
+  }
 }
 
 TEST(FunctionalComposeAccu, Simplification) {
