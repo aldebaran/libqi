@@ -73,11 +73,11 @@ TEST(Range, BoundedRangeHelperFunctionSequence) {
 
 TEST(Range, BoundedRangeHelperFunctionSequenceIncr) {
   using namespace ka;
-  using namespace functional_ops;
+  using functional_ops_accu::operator*;
   using C = std::array<int, 2>;
   C a {{4, 1}};
   incr_t incr;
-  auto rng = bounded_range(a, incr *= incr); // skip 'odd' iterators
+  auto rng = bounded_range(a, incr * incr); // skip 'odd' iterators
   EXPECT_FALSE(is_empty(rng));
   EXPECT_EQ(4, front(rng));
   pop(rng);

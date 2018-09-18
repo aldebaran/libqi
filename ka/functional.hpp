@@ -244,8 +244,8 @@ namespace ka {
   /// twice_of_incr(m); // Apply `incr`, then `twice`.
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
-  /// Remark: Operator `*=` is proposed as an opt-in alternative to
-  ///   `compose_accu` in the `functional_ops` namespace.
+  /// Remark: Operator `*` is proposed as an opt-in alternative to
+  ///   `compose_accu` in the `functional_ops_accu` namespace.
   ///
   /// Accumulation<T, Args...> G, Accumulation<T, Args...> F
   template<typename G, typename F>
@@ -334,23 +334,12 @@ namespace ka {
     auto operator*(G&& g, F&& f) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
       return compose(fwd<G>(g), fwd<F>(f));
     }
+  } // namespace functional_ops
 
+  namespace functional_ops_accu {
     /// Performs a composition of accumulation procedures.
     ///
     /// See `compose_accu()`.
-    ///
-    /// `*=` is used as a variant of `*` (the function composition operator).
-    /// The `=` sign is used to emphasize the notion of accumulation.
-    ///
-    /// This naming follows the fact that in the language, binary operations
-    /// typically have a semantically equivalent accumulation counterpart.
-    /// For example for a type `T`, `+: T x T -> T` is a binary operation and
-    /// has for counterpart the semantically equivalent accumulation
-    /// `+=: T& x T -> void`.
-    ///
-    /// So composing functions (i.e. regular procedures with signature
-    /// `A0 x A1 x ... -> B`) is done with `*` and composing accumulations (i.e.
-    /// procedures with signature `A0& x A1 x ... -> void)` is done with `*=`.
     ///
     /// Note: Symmetrically to `compose` with `id_transfo_t`, `compose_accu` with
     ///   `id_action_t` forms a category. Therefore, the same kind of invariants
@@ -360,15 +349,15 @@ namespace ka {
     /// // `a` is an arbitrary accumulation.
     /// id_action_t _1;
     ///
-    /// assert((a *= _1) == a);
-    /// assert((_1 *= a) == a);
-    /// assert((_1 *= _1) == _1);
+    /// assert((a * _1) == a);
+    /// assert((_1 * a) == a);
+    /// assert((_1 * _1) == _1);
     /// ```
     template<typename G, typename F>
-    auto operator*=(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
+    auto operator*(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
-  }
+  } // namespace functional_ops_accu
 
   /// Function that transforms the codomain (return type) of the given procedure
   /// into an "enriched" type.

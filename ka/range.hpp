@@ -104,7 +104,7 @@ namespace ka {
   ///   every two elements (dangerous: end iterator could be skipped over)
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// incr_t incr;
-  /// auto memory = find_best(bounded_range(memories, incr *= incr));
+  /// auto memory = find_best(bounded_range(memories, incr * incr));
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Regular T, Action<T> A
