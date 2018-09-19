@@ -441,7 +441,7 @@ namespace ka {
 /// concept Range(R) =
 ///     Regular(R)
 ///  && is_empty: R -> bool
-///  && pop: R -> void
+///  && pop: R& -> void
 ///  && pop is not necessarily regular
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// In this basic concept, you can "iterate" through the range but not
