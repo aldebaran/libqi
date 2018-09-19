@@ -263,15 +263,15 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_2(composition_accu_t, g, f)
   // Accumulation<T, Args...>:
     template<typename T, typename... Args>
-    void operator()(T& t, Args const&... args) {
+    auto operator()(T& t, Args const&... args) -> decltype(g(t, args...)) {
       f(t, args...);
-      g(t, args...);
+      return g(t, args...);
     }
 
     template<typename T, typename... Args>
-    void operator()(T& t, Args const&... args) const {
+    auto operator()(T& t, Args const&... args) const -> decltype(g(t, args...)){
       f(t, args...);
-      g(t, args...);
+      return g(t, args...);
     }
   // IsomorphismAccu (if `F` and `G` are):
     // TODO: Add it when switching to C++14.

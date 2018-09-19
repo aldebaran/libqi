@@ -814,6 +814,26 @@ TEST(FunctionalComposeAccu, Id) {
 }
 
 namespace {
+  struct unit_t {
+  };
+}
+
+TEST(FunctionalComposeAccu, NonVoidReturn) {
+  using namespace ka;
+
+  auto f = [](float& x) -> unit_t {
+    x /= 2.f;
+    return {};
+  };
+  auto g = [](float& x) -> unit_t {
+    x = -x;
+    return {};
+  };
+  float x = 3.f;
+  static_assert(Equal<unit_t, decltype(compose_accu(f, g)(x))>::value, "");
+}
+
+namespace {
   struct x_t {
     x_t() = default;
     explicit x_t(bool b) : b{ b } {}
