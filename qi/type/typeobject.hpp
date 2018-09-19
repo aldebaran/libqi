@@ -8,6 +8,7 @@
 #define _QI_TYPE_TYPEOBJECT_HPP_
 
 #include <limits>
+#include <cstdint>
 
 #include <qi/type/metaobject.hpp>
 #include <qi/future.hpp>

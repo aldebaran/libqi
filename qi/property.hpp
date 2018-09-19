@@ -239,7 +239,7 @@ namespace qi
              typename Enable = ka::EnableIf<
                std::is_constructible<Property<AnyValue>, Args&&...>::value>>
     GenericProperty(TypeInterface* type, Args&&... args)
-      : Property<AnyValue>{ ka::fwd<Args>(args)... }
+      : Property<AnyValue>(ka::fwd<Args>(args)...)
       , _type{ type }
     {
       // Initialize with default value for given type
