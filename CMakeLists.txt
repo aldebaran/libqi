@@ -406,6 +406,7 @@ set(KA_H
   ka/functor.hpp
   ka/functorcontainer.hpp
   ka/integersequence.hpp
+  ka/iterator.hpp
   ka/macro.hpp
   ka/macroregular.hpp
   ka/memory.hpp
