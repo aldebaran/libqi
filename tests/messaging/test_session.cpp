@@ -169,7 +169,7 @@ TEST(TestSession, TrivialDirectConnection)
   ASSERT_FALSE(session1->endpoints().empty());
 
   auto session2 = qi::makeSession();
-  ASSERT_TRUE(finishesWithValue(session2->connect(test::url(*session1)), willDoNothing(), qi::Seconds{1000}));
+  ASSERT_TRUE(finishesWithValue(session2->connect(test::url(*session1))));
   ASSERT_TRUE(session2->isConnected());
 }
 
