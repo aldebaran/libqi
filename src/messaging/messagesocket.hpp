@@ -2,6 +2,7 @@
 #ifndef _SRC_MESSAGESOCKET_HPP_
 #define _SRC_MESSAGESOCKET_HPP_
 
+# include <boost/asio/io_service.hpp>
 # include <boost/noncopyable.hpp>
 # include <boost/variant.hpp>
 # include <boost/optional.hpp>

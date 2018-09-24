@@ -10,14 +10,29 @@
 
 #include <boost/predef.h>
 
+
 #if BOOST_OS_WINDOWS
-#  ifndef NOMINMAX
-#    define NOMINMAX
-#  endif
+// We need to "scope" our usage of windows.h to avoid
+// clients to end up with issues at compile time.
+// TODO: remove all this when we switch totally to std::atomic
+# pragma push_macro("NOMINMAX")
+# pragma push_macro("WIN32_LEAN_AND_MEAN")
 #
-#  include <windows.h>
-#  include <intrin.h>
+# ifndef NOMINMAX
+#   define NOMINMAX // Deactivates min/max macros from windows.h
+# endif
+#
+# ifndef WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN // Deactivates unnecessary parts of windows.h
+# endif
+#
+# include <windows.h>
+# include <intrin.h>
+#
+# pragma pop_macro("WIN32_LEAN_AND_MEAN")
+# pragma pop_macro("NOMINMAX")
 #endif
+
 
 #include <atomic>
 #include <qi/config.hpp>

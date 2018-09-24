@@ -6,6 +6,7 @@
 #include <system_error>
 #include <memory>
 
+#include <boost/asio/io_service.hpp>
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/asio/steady_timer.hpp>
@@ -732,8 +733,4 @@ namespace qi {
     return _getNetwork(_networkEventLoop);
   }
 
-  boost::asio::io_service& getIoService()
-  {
-    return *(boost::asio::io_service*)getEventLoop()->nativeHandle();
-  }
 }

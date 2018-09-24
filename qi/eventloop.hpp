@@ -11,7 +11,6 @@
 #  pragma warning( disable: 4503 ) // decorated name length
 # endif
 
-# include <boost/asio/io_service.hpp>
 # include <boost/thread/synchronized_value.hpp>
 # include <boost/function.hpp>
 
@@ -192,12 +191,6 @@ namespace qi
    * \param nthread Set the minimum number of worker threads in the pool.
    */
   QI_API void startEventLoop(int nthread);
-
-  /**
-   * \brief Gets the io_service used by the global event loop.
-   * \return io_service used by the global event loop.
-   */
-  QI_API boost::asio::io_service& getIoService();
 
   namespace detail {
     /* when throw this thread will stop a thread of the eventloop
