@@ -41,7 +41,10 @@ namespace qi {
       boost::recursive_mutex::scoped_lock sigLock(mutex);
       SignalSubscriberMap::iterator it = subscriberMap.find(l);
       if (it == subscriberMap.end())
+      {
+        qiLogWarning() << "disconnect: No subscription found for SignalLink " << l << ".";
         return Future<bool>{false};
+      }
       subscriber = it->second;
       // Remove from map (but SignalSubscriber object still good)
       subscriberMap.erase(it);
