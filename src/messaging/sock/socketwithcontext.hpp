@@ -1,10 +1,10 @@
 #pragma once
 #ifndef _QI_SOCK_SOCKETWITHCONTEXT_HPP
 #define _QI_SOCK_SOCKETWITHCONTEXT_HPP
-#include <qi/messaging/sock/traits.hpp>
 #include <ka/src.hpp>
 #include <ka/mutablestore.hpp>
-#include <qi/messaging/sock/sslcontextptr.hpp>
+#include "traits.hpp"
+#include "sslcontextptr.hpp"
 
 namespace qi { namespace sock {
 

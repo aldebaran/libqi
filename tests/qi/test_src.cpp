@@ -3,7 +3,7 @@
 #include <ka/src.hpp>
 #include <qi/atomic.hpp>
 #include <qi/future.hpp>
-#include <qi/messaging/sock/option.hpp>
+#include <src/messaging/sock/option.hpp>
 
 TEST(Src, VariousTypes)
 {

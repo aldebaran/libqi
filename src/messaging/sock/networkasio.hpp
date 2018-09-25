@@ -4,8 +4,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/predef.h>
-#include <qi/messaging/sock/concept.hpp>
 #include <qi/eventloop.hpp>
+#include "concept.hpp"
 
 /// @file
 /// Contains the implementation of the Network concept for boost::asio.

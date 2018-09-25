@@ -12,19 +12,18 @@
 #include <boost/optional.hpp>
 #include <boost/predef.h>
 #include <boost/thread/synchronized_value.hpp>
-#include "message.hpp"
-#include <qi/url.hpp>
 #include <ka/typetraits.hpp>
 #include <ka/macroregular.hpp>
+#include <qi/url.hpp>
+#include "message.hpp"
 #include "messagedispatcher.hpp"
 #include "messagesocket.hpp"
-#include <qi/messaging/sock/disconnectedstate.hpp>
-#include <qi/messaging/sock/disconnectingstate.hpp>
-#include <qi/messaging/sock/connectingstate.hpp>
-#include <qi/messaging/sock/connectedstate.hpp>
-#include <qi/messaging/sock/macrolog.hpp>
-#include <qi/messaging/sock/networkasio.hpp>
-#include <qi/messaging/sock/sslcontextptr.hpp>
+#include "sock/disconnectedstate.hpp"
+#include "sock/disconnectingstate.hpp"
+#include "sock/connectingstate.hpp"
+#include "sock/connectedstate.hpp"
+#include "sock/macrolog.hpp"
+#include "sock/networkasio.hpp"
 
 /// @file
 /// Contains a socket to send and receive qi::Messages, and the types representing

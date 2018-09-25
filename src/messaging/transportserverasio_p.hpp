@@ -7,16 +7,16 @@
 #ifndef _SRC_TRANSPORTSERVERASIO_P_HPP_
 #define _SRC_TRANSPORTSERVERASIO_P_HPP_
 
-# include <boost/asio.hpp>
-# include <boost/asio/ssl.hpp>
+#include <boost/asio.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/thread/synchronized_value.hpp>
 #include <atomic>
 
 # include <qi/api.hpp>
 # include <qi/url.hpp>
-# include <qi/messaging/sock/networkasio.hpp>
-# include <qi/messaging/sock/traits.hpp>
-# include <qi/messaging/sock/socketptr.hpp>
+# include "sock/networkasio.hpp"
+# include "sock/traits.hpp"
+# include "sock/socketptr.hpp"
 # include "transportserver.hpp"
 
 namespace qi

@@ -2,10 +2,10 @@
 #include <thread>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/sock/accept.hpp>
-#include <qi/messaging/sock/connect.hpp>
-#include <qi/messaging/sock/networkasio.hpp>
-#include <qi/messaging/sock/sslcontextptr.hpp>
+#include <src/messaging/sock/accept.hpp>
+#include <src/messaging/sock/connect.hpp>
+#include <src/messaging/sock/networkasio.hpp>
+#include <src/messaging/sock/sslcontextptr.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include <qi/future.hpp>
 #include <ka/scoped.hpp>

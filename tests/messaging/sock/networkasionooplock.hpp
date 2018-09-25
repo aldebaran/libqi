@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _QI_TESTS_MESSAGING_NETWORKASIONOOPLOCK_HPP
 #define _QI_TESTS_MESSAGING_NETWORKASIONOOPLOCK_HPP
-#include <qi/messaging/sock/networkasio.hpp>
+#include <src/messaging/sock/networkasio.hpp>
 
 namespace qi { namespace sock {
   /// In unit tests, we want to perform a no-op lock.

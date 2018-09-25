@@ -2,9 +2,9 @@
 #ifndef _QI_SOCK_DISCONNECTINGSTATE_HPP
 #define _QI_SOCK_DISCONNECTINGSTATE_HPP
 #include <qi/future.hpp>
-#include <qi/messaging/sock/common.hpp>
-#include <qi/messaging/sock/macrolog.hpp>
-#include <qi/messaging/sock/traits.hpp>
+#include "common.hpp"
+#include "macrolog.hpp"
+#include "traits.hpp"
 
 namespace qi
 {

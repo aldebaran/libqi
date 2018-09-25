@@ -6,7 +6,7 @@
 #include "sock/networkcommon.hpp"
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <qi/messaging/sock/accept.hpp>
+#include <src/messaging/sock/accept.hpp>
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
 #include "tests/qi/testutils/testutils.hpp"

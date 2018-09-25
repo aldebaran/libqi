@@ -4,8 +4,8 @@
 #include <boost/optional.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
-#include <qi/messaging/sock/networkasio.hpp>
-#include <qi/messaging/sock/option.hpp>
+#include "sock/networkasio.hpp"
+#include "sock/option.hpp"
 
 #if BOOST_OS_WINDOWS
 # include <Winsock2.h> // needed by mstcpip.h

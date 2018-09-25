@@ -4,8 +4,8 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <qi/messaging/sock/traits.hpp>
 #include <ka/utility.hpp>
+#include "traits.hpp"
 
 /// @file
 /// Contains SSL context pointer traits and helper functions used in the sock namespace.

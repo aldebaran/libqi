@@ -6,23 +6,18 @@
 #include <cstring>
 #include <cstdlib>
 #include <queue>
-#include <qi/log.hpp>
 #include <cerrno>
-
 #include <boost/asio.hpp>
-
 #include <boost/lexical_cast.hpp>
-
 #include <ka/memory.hpp>
+#include <qi/log.hpp>
+#include <qi/eventloop.hpp>
 #include "transportserver.hpp"
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/sslcontextptr.hpp>
-
-#include <qi/eventloop.hpp>
-
 #include "transportserverasio_p.hpp"
+#include "sock/traits.hpp"
+#include "sock/sslcontextptr.hpp"
 
 qiLogCategory("qimessaging.transportserver");
 

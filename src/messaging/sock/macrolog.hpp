@@ -1,5 +1,5 @@
 #include <qi/log.hpp>
-#include <qi/messaging/sock/option.hpp>
+#include "option.hpp"
 
 #define QI_LOG_ERROR_SOCKET(SOCKET_PTR) qiLogError(sock::logCategory()) << (SOCKET_PTR) << ": "
 #define QI_LOG_WARNING_SOCKET(SOCKET_PTR) qiLogWarning(sock::logCategory()) << (SOCKET_PTR) << ": "

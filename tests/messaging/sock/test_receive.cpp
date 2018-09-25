@@ -7,14 +7,14 @@
 #include "src/messaging/transportserver.hpp"
 #include <qi/future.hpp>
 #include "src/messaging/message.hpp"
-#include <qi/messaging/sock/networkasio.hpp>
-#include <qi/messaging/sock/sslcontextptr.hpp>
+#include <src/messaging/sock/networkasio.hpp>
+#include <src/messaging/sock/sslcontextptr.hpp>
 #include "networkasionooplock.hpp"
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "networkcommon.hpp"
 #include "networkmock.hpp"
-#include <qi/messaging/sock/receive.hpp>
-#include <qi/messaging/sock/accept.hpp>
+#include <src/messaging/sock/receive.hpp>
+#include <src/messaging/sock/accept.hpp>
 
 static const qi::MilliSeconds defaultTimeout{500};
 static const std::chrono::milliseconds defaultPostPauseInMs{20};

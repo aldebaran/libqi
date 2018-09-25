@@ -4,16 +4,16 @@
 #include <memory>
 #include <utility>
 #include <boost/optional.hpp>
-#include <qi/atomic.hpp>
 #include <ka/functional.hpp>
-#include <qi/future.hpp>
-#include <qi/messaging/sock/common.hpp>
-#include <qi/messaging/sock/receive.hpp>
-#include <qi/messaging/sock/send.hpp>
-#include <qi/messaging/sock/traits.hpp>
 #include <ka/src.hpp>
-#include "src/messaging/message.hpp"
+#include <qi/atomic.hpp>
+#include <qi/future.hpp>
 #include <qi/url.hpp>
+#include "src/messaging/message.hpp"
+#include "common.hpp"
+#include "receive.hpp"
+#include "send.hpp"
+#include "traits.hpp"
 
 namespace qi
 {
