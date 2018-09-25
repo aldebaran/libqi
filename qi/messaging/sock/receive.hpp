@@ -379,7 +379,7 @@ namespace qi { namespace sock {
 //    KA_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuous, _msg)
   // Procedure:
     /// Mutable<SslSocket<N>> S,
-    /// Procedure<bool (ErrorCode<N>, const Message*)> Proc,
+    /// Procedure<bool (ErrorCode<N>, Message*)> Proc,
     /// Transformation<Procedure> F0,
     /// Transformation<Procedure<void (Args...)>> F1
     template<typename S, typename Proc, typename F0 = ka::id_transfo_t, typename F1 = ka::id_transfo_t>
@@ -395,7 +395,7 @@ namespace qi { namespace sock {
         // If we must continue receiving messages, this callback itself returns
         // a non-empty optional with a pointer to the memory where a new message
         // can be received.
-        [=](ErrorCode<N> erc, const Message* m) mutable -> boost::optional<Message*> {
+        [=](ErrorCode<N> erc, Message* m) mutable -> boost::optional<Message*> {
           if (onReceive(erc, m))
           {
             // Must continue.
@@ -431,7 +431,7 @@ namespace qi { namespace sock {
     KA_GENERATE_FRIEND_REGULAR_OPS_1(ReceiveMessageContinuousTrack, _receiveMsg)
   // Procedure:
     /// Mutable<<SslSocket<N>> S,
-    /// Procedure<bool (ErrorCode<N>, const Message*)> Proc
+    /// Procedure<bool (ErrorCode<N>, Message*)> Proc
     /// Transformation<Procedure<void (Args...)>> F
     template<typename S, typename Proc, typename F = ka::id_transfo_t>
     void operator()(const S& socket, SslEnabled ssl, size_t maxPayload,

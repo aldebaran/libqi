@@ -51,7 +51,7 @@ namespace qi {
     struct HandleMessage
     {
       boost::shared_ptr<TcpMessageSocket<N, S>> _tcpSocket;
-      bool operator()(const sock::ErrorCode<N>& erc, const Message* msg)
+      bool operator()(const sock::ErrorCode<N>& erc, Message* msg)
       {
         QI_LOG_DEBUG_SOCKET(_tcpSocket.get()) << "Message received "
                                               << ((!erc && msg) ? msg->id() : 0);
@@ -284,8 +284,8 @@ namespace qi {
 
     bool mustTreatAsServerAuthentication(const Message& msg) const;
     bool handleCapabilityMessage(const Message& msg);
-    bool handleNormalMessage(const Message& msg);
-    bool handleMessage(const Message& msg);
+    bool handleNormalMessage(Message& msg);
+    bool handleMessage(Message& msg);
 
     ConnectedState& asConnected(State& s)
     {
@@ -555,7 +555,7 @@ namespace qi {
   }
 
   template<typename N, typename S>
-  bool TcpMessageSocket<N, S>::handleNormalMessage(const Message& msg)
+  bool TcpMessageSocket<N, S>::handleNormalMessage(Message& msg)
   {
     messageReady(msg);
     socketEvent(SocketEventData(msg));
@@ -564,7 +564,7 @@ namespace qi {
   }
 
   template<typename N, typename S>
-  bool TcpMessageSocket<N, S>::handleMessage(const Message& msg)
+  bool TcpMessageSocket<N, S>::handleMessage(Message& msg)
   {
     bool success = false;
     if (mustTreatAsServerAuthentication(msg) || msg.type() == Message::Type_Capability)
