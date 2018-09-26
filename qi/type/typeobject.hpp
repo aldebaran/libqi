@@ -13,6 +13,7 @@
 #include <qi/type/metaobject.hpp>
 #include <qi/future.hpp>
 #include <qi/anyfunction.hpp>
+#include <qi/os.hpp>
 #include <qi/ptruid.hpp>
 
 namespace qi {
