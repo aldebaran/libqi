@@ -30,6 +30,12 @@ namespace qi
   class QI_API PropertyBase
   {
   public:
+    PropertyBase() = default;
+
+    // NonCopyable
+    PropertyBase(const PropertyBase&) = delete;
+    PropertyBase& operator=(const PropertyBase&) = delete;
+
     virtual ~PropertyBase() = default;
     virtual SignalBase* signal() = 0;
     virtual FutureSync<void> setValue(AutoAnyReference value) = 0;
@@ -231,28 +237,56 @@ namespace qi
   class QI_API GenericProperty : public Property<AnyValue>
   {
   public:
-    /// Constructs a GenericProperty with the given type. Forwards all other arguments to the
-    /// constructor of qi::Property<AnyValue>.
+    /// Constructs a property with a default value. The property type is the type of the given
+    /// value.
     ///
-    /// @see qi::Property<AnyValue>::Property
-    template<typename... Args,
-             typename Enable = ka::EnableIf<
-               std::is_constructible<Property<AnyValue>, Args&&...>::value>>
-    GenericProperty(TypeInterface* type, Args&&... args)
-      : Property<AnyValue>(ka::fwd<Args>(args)...)
-      , _type{ type }
+    /// This means that if the property is exposed, its signature will be the one of the type of the
+    /// value instead of `AnyValue`'s default signature (i.e. dynamic).
+    ///
+    /// All arguments are forwarded to the constructor of the base class.
+    /// @see qi::Property<AnyValue>::Property(AutoAnyReference, ...)
+    ///
+    /// Precondition: The value must have a valid type.
+    template<typename... Args>
+    explicit GenericProperty(const AutoAnyReference& defaultValue, Args&&... args)
+      : Property<AnyValue>(defaultValue, ka::fwd<Args>(args)...)
+      , _type{ defaultValue.type() }
     {
-      // Initialize with default value for given type
-      set(AnyValue(_type));
       _setSignature(makeTupleSignature({ _type }));
     }
 
-    GenericProperty& operator=(const AnyValue& v) { this->set(v); return *this; }
+    /// Constructs a property of the given type.
+    ///
+    /// This means that if the property is exposed, its signature will be the one of the type
+    /// instead of `AnyValue`'s default signature (i.e. dynamic).
+    ///
+    /// A default constructed value of the type and the rest of the arguments are forwarded to the
+    /// constructor of the base class.
+    /// @see qi::Property<AnyValue>::Property(AutoAnyReference, ...)
+    ///
+    /// Precondition: The type must be valid (not null).
+    template<typename... Args>
+    explicit GenericProperty(TypeInterface* type, Args&&... args)
+      : GenericProperty(AnyValue{ type }, ka::fwd<Args>(args)...)
+    {
+    }
 
-    FutureSync<void> setValue(AutoAnyReference value) override { return set(AnyValue(value, false, false));}
+    GenericProperty& operator=(const AnyValue& v)
+    {
+      this->set(v);
+      return *this;
+    }
+
+    FutureSync<void> setValue(AutoAnyReference value) override
+    {
+      return set(AnyValue(value, false, false));
+    }
+
     FutureSync<void> set(const AnyValue& v) override;
-    qi::Signature signature() const override {
-      return makeTupleSignature(std::vector<TypeInterface*>(&_type, &_type + 1));
+
+    qi::Signature signature() const override
+    {
+      return makeTupleSignature({ _type });
     }
 
   private:
