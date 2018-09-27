@@ -214,7 +214,7 @@ namespace qi {
 
     /// Returns `true` if we could ask to send the message.
     /// One failure case (return `false`) is when the socket is not connected.
-    bool send(const Message &msg) override;
+    bool send(Message msg) override;
 
     Status status() const override
     {
@@ -586,7 +586,7 @@ namespace qi {
   }
 
   template<typename N, typename S>
-  bool TcpMessageSocket<N, S>::send(const Message& msg)
+  bool TcpMessageSocket<N, S>::send(Message msg)
   {
     boost::recursive_mutex::scoped_lock lock(_stateMutex);
     if (getStatus() != Status::Connected)
@@ -596,7 +596,7 @@ namespace qi {
     }
     // NOTE: Should we specify an `onSent` callback and stop sending if an error
     // occurred?
-    asConnected(_state).send(msg, _ssl);
+    asConnected(_state).send(std::move(msg), _ssl);
     return true;
   }
 

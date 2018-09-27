@@ -195,7 +195,7 @@ namespace qi {
       msg.setType(Message::Type_Capability);
       msg.setService(Message::Service_Server);
       msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
-      sock->send(msg);
+      sock->send(std::move(msg));
     }
   } // service_directory_client_private
 
@@ -283,7 +283,7 @@ namespace qi {
     authMsg.setType(Message::Type_Call);
     authMsg.setValue(nextData, cmsig);
     authMsg.setFunction(Message::ServerFunction_Authenticate);
-    socket->send(authMsg);
+    socket->send(std::move(authMsg));
   }
 
   void ServiceDirectoryClient::onSocketConnected(MessageSocketPtr socket,
@@ -328,7 +328,7 @@ namespace qi {
     msgCapabilities.setService(Message::Service_Server);
     msgCapabilities.setType(Message::Type_Call);
     msgCapabilities.setValue(socketCaps, typeOf<CapabilityMap>()->signature());
-    socket->send(msgCapabilities);
+    socket->send(std::move(msgCapabilities));
   }
 
   //we ensure in that function that connect to all events are already setup when we said we are connect.
