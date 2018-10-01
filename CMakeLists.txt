@@ -96,6 +96,7 @@ set(QI_H qi/detail/async.hxx
          qi/log/tailfileloghandler.hpp
          qi/log.hpp
          qi/macro.hpp
+         qi/numeric.hpp
          qi/os.hpp
          qi/getenv.hpp
          qi/preproc.hpp

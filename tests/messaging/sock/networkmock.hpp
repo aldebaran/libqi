@@ -112,6 +112,7 @@ namespace mock
         std::string to_string() const {return _value;}
         KA_GENERATE_FRIEND_REGULAR_OPS_2(_address, _isV6, _value)
       } _addr;
+      _endpoint() = default;
       _address address() const {return _addr;}
       unsigned short port() const {return 0u;}
       struct protocol_t {};

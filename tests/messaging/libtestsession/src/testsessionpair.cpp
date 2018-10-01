@@ -39,7 +39,8 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
   if (gatewayMode)
   {
     _gw->attachToServiceDirectory(_sd->url()).wait();
-    _gw->listen(std::move(gwUrl));
+    auto listenStatus = _gw->listenAsync(std::move(gwUrl)).value();
+    QI_ASSERT_FALSE(listenStatus == qi::Gateway::ListenStatus::NotListening);
     qiLogInfo() << "Gateway listening on endpoint '" << _gw->endpoints()[0].str() << "'";
     endpoints = _gw->endpoints();
   }

@@ -34,7 +34,7 @@ SignalSpy::SignalSpy(qi::AnyObject& object, const std::string& signalOrPropertyN
         SrcFuture{} * stranded([this](qi::AnyReferenceVector anything) {
           return this->recordAnyCallback(anything);
         })
-    ));
+    )).value();
   _disconnect = [link, object]{ object.disconnect(link).value(); };
 }
 

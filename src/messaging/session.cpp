@@ -271,7 +271,7 @@ namespace qi {
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(addresses);
-    f.connect(&SessionPrivate::listenStandaloneCont, this, p, _1);
+    f.then(std::bind(&SessionPrivate::listenStandaloneCont, this, p, std::placeholders::_1));
     return p.future();
   }
 
@@ -405,11 +405,12 @@ namespace qi {
 
     // check if the service is already there *after* connecting to the signal,
     // to avoid a race.
+    auto privSession = _p.get(); //< raw pointer to a Trackable
     auto futureService = futureLink.andThen(track(
-          [this, servicename](qi::SignalLink) mutable
+          [privSession, servicename](qi::SignalLink) mutable
           {
-            return this->service(servicename).async();
-          }, _p.get())).unwrap();
+            return privSession->_serviceHandler.service(servicename, "");
+          }, privSession)).unwrap();
 
     futureService.connect(
           [promise](qi::Future<AnyObject> futureService) mutable
@@ -425,16 +426,16 @@ namespace qi {
           });
 
     // schedule some clean up
-    promise.future().connect(track(
-          [futureLink, this] (qi::Future<void>) mutable
+    promise.future().connect(
+          [futureLink, privSession] (qi::Future<void>) mutable
           {
             futureLink.cancel();
             futureLink.andThen(track(
-                  [this](qi::SignalLink link)
+                  [privSession](qi::SignalLink link)
                   {
-                    _p->_sdClient.serviceAdded.disconnectAsync(link);
-                  }, _p.get()));
-          }, _p.get()));
+                    privSession->_sdClient.serviceAdded.disconnectAsync(link);
+                  }, privSession));
+          });
     return promise.future();
   }
 }

@@ -109,9 +109,9 @@ namespace qi {
     ~BinaryEncoder();
 
     //write raw data without any formatting
-    int write(const char *str, size_t len);
+    std::streamoff write(const char *str, std::size_t len);
 
-    int write(const uint8_t* data, size_t size);
+    std::streamoff write(const uint8_t* data, std::size_t size);
     //Write the size as uint32_t, then the data
     void writeString(const char *str, size_t len);
     void write(bool      b);
@@ -140,9 +140,11 @@ namespace qi {
     template<typename T>
     void write(const T &v);
 
-    void beginList(qi::uint32_t size, const qi::Signature &elementSignature);
+    void beginList(std::uint32_t size, const qi::Signature &elementSignature);
     void endList();
-    void beginMap(qi::uint32_t size, const qi::Signature &keySignature, const qi::Signature &valueSignature);
+    void beginMap(std::uint32_t size,
+                  const qi::Signature& keySignature,
+                  const qi::Signature& valueSignature);
     void endMap();
     void beginTuple(const qi::Signature &signature);
     void endTuple();

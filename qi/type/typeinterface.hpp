@@ -67,7 +67,8 @@ namespace qi{
   /// Register 'typeimpl' in runtime type factory for 'type'.
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
-    static bool BOOST_PP_CAT(__qi_registration, __LINE__) = qi::registerType(typeid(type), new typeimpl)
+    static bool BOOST_PP_CAT(__qi_registration, __LINE__) QI_ATTR_UNUSED \
+      = qi::registerType(typeid(type), new typeimpl)
 
 
   class ListTypeInterface;

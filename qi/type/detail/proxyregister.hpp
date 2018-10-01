@@ -78,7 +78,7 @@ public:
      Proxy* ptr = toProxy(instance);
      return ptr->asObject().disconnect(linkId);
   }
-  const std::vector<std::pair<TypeInterface*, int> >& parentTypes() override
+  const std::vector<std::pair<TypeInterface*, std::ptrdiff_t> >& parentTypes() override
   {
     using ReturnType = typename std::decay<decltype(parentTypes())>::type;
     static ReturnType* parents = nullptr;
@@ -87,7 +87,7 @@ public:
         { qi::typeOf<InterfaceType>(), []{
             ProxyType* ptr = static_cast<ProxyType*>(reinterpret_cast<void*>(0x10000));
             InterfaceType* pptr = ptr;
-            intptr_t offset = reinterpret_cast<intptr_t>(pptr)-reinterpret_cast<intptr_t>(ptr);
+            std::ptrdiff_t offset = reinterpret_cast<intptr_t>(pptr)-reinterpret_cast<intptr_t>(ptr);
             return offset;
           }()
         }
@@ -160,16 +160,16 @@ bool registerProxyInterface()
 
 }
 
-#define QI_REGISTER_PROXY(Proxy)                           \
-  namespace {                                              \
-    static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) = \
-        ::qi::registerProxy<Proxy>();                      \
+#define QI_REGISTER_PROXY(Proxy)                                          \
+  namespace {                                                             \
+    static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) QI_ATTR_UNUSED = \
+        ::qi::registerProxy<Proxy>();                                     \
   }
 
-#define QI_REGISTER_PROXY_INTERFACE(Proxy, Interface)      \
-  namespace {                                              \
-    static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) = \
-        ::qi::registerProxyInterface<Proxy, Interface>();  \
+#define QI_REGISTER_PROXY_INTERFACE(Proxy, Interface)                     \
+  namespace {                                                             \
+    static bool BOOST_PP_CAT(_qi_register_proxy_, Proxy) QI_ATTR_UNUSED = \
+        ::qi::registerProxyInterface<Proxy, Interface>();                 \
   }
 
 #endif

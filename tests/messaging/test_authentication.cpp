@@ -255,6 +255,6 @@ TEST_F(TestAuthentication, ConnectionToServiceTest)
   client_->connect(sd_->url());
   ASSERT_TRUE(client_->isConnected());
 
-  qi::AnyObject myObj = client_->service("toto");
+  qi::AnyObject myObj = client_->service("toto").value();
   ASSERT_EQ(myObj.call<int>("toto", 44), 88);
 }

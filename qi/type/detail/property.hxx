@@ -9,6 +9,7 @@
 
 #include <boost/thread/locks.hpp>
 #include <qi/future.hpp>
+#include <qi/property.hpp>
 
 namespace qi
 {
@@ -33,6 +34,17 @@ namespace qi
   {
   }
 
+  template <typename T>
+  PropertyImpl<T>::PropertyImpl(ExecutionContext* execContext,
+                                Getter getter,
+                                Setter setter,
+                                SignalBase::OnSubscribers onsubscribe)
+    : SignalF<void(const T&)>(execContext, std::move(onsubscribe))
+    , _getter(std::move(getter))
+    , _setter(std::move(setter))
+  {
+  }
+
   template<typename T>
   PropertyImpl<T>::PropertyImpl(AutoAnyReference defaultValue,
     Getter getter, Setter setter,
@@ -41,6 +53,19 @@ namespace qi
   , _getter(std::move(getter))
   , _setter(std::move(setter))
   , _value(defaultValue.to<T>())
+  {
+  }
+
+  template <typename T>
+  PropertyImpl<T>::PropertyImpl(AutoAnyReference defaultValue,
+                                ExecutionContext* execContext,
+                                Getter getter,
+                                Setter setter,
+                                SignalBase::OnSubscribers onsubscribe)
+    : SignalF<void(const T&)>(execContext, std::move(onsubscribe))
+    , _getter(std::move(getter))
+    , _setter(std::move(setter))
+    , _value(defaultValue.to<T>())
   {
   }
 
@@ -96,30 +121,66 @@ namespace qi
     return FutureSync<void>(0);
   }
 
+  template<typename T>
+  Property<T>::~Property()
+  {
+    _tracked.destroy();
+    if (auto errorMsg = tryJoinStrandNoThrow())
+    {
+      qiLogError("qitype.property") << "Failed to join Property strand: '" << *errorMsg << "'.";
+    }
+    SignalBase::clearExecutionContext();
+  }
 
   template<typename T>
   FutureSync<T> Property<T>::get() const
   {
-    return _strand.async([&]{ return this->getImpl(); });
+    return strand().async(track([this]{ return this->getImpl(); }, &_tracked));
   }
 
   template<typename T>
   FutureSync<void> Property<T>::set(const T& v)
   {
-    return _strand.async([=]{ this->setImpl(v); });
+    return strand().async(track([this, v]{ this->setImpl(v); }, &_tracked));
   }
 
   template<typename T>
   FutureSync<AnyValue> Property<T>::value() const
   {
-    return _strand.async( [&]{ return AnyValue::from(this->getImpl()); });
+    return strand().async(track([this]{ return AnyValue::from(this->getImpl()); }, &_tracked));
   }
 
   template<typename T>
   FutureSync<void> Property<T>::setValue(AutoAnyReference value)
   {
     const auto v = value.to<T>();
-    return _strand.async([=]{ this->setImpl(v); });
+    return strand().async(track([this, v]{ this->setImpl(v); }, &_tracked));
+  }
+
+  template<typename T>
+  Strand& Property<T>::strand() const
+  {
+    struct Src : boost::static_visitor<Strand&>, ka::src_t {};
+    return boost::apply_visitor(Src{}, _strand);
+  }
+
+  template<typename T>
+  Strand::OptionalErrorMessage Property<T>::tryJoinStrandNoThrow() QI_NOEXCEPT(true)
+  {
+    struct JoinStrand : boost::static_visitor<Strand::OptionalErrorMessage>
+    {
+      Strand::OptionalErrorMessage operator()(Strand*) const
+      {
+        // Do nothing, we do not own the strand, we have no right to join it.
+        return {};
+      }
+
+      Strand::OptionalErrorMessage operator()(Strand& strand) const
+      {
+        return strand.join(std::nothrow);
+      }
+    };
+    return boost::apply_visitor(JoinStrand{}, _strand);
   }
 }
 

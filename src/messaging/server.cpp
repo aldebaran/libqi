@@ -210,6 +210,7 @@ namespace qi {
         socket->messageReady.disconnectAsync(*signalLink); // yet guarantees immediate disconnection
         connectMessageReady(socket);
         // no break, we know that authentication is done, send the response to the remote end
+        QI_FALLTHROUGH;
       case AuthProvider::State_Cont:
         if (*first)
         {

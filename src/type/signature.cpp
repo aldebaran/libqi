@@ -422,9 +422,8 @@ namespace qi {
       case qi::Signature::Type_Unknown:
       case qi::Signature::Type_None:
         return;
-        break;
       case qi::Signature::Type_List: {
-        int index_should_stop = _find_end(signature, index, '[', ']');
+        const auto index_should_stop = _find_end(signature, index, '[', ']');
         eatChildren(signature, index + 1, index_should_stop, 1);
         break;
       }
@@ -432,17 +431,17 @@ namespace qi {
       case qi::Signature::Type_VarArgs:
       case qi::Signature::Type_Optional:
       {
-        int index_should_stop = findNext(signature, index);
+        const auto index_should_stop = findNext(signature, index);
         eatChildren(signature, index + 1, index_should_stop, 1);
         break;
       }
       case qi::Signature::Type_Map: {
-        int index_should_stop = _find_end(signature, index, '{', '}');
+        const auto index_should_stop = _find_end(signature, index, '{', '}');
         eatChildren(signature, index + 1, index_should_stop, 2);
         break;
       }
       case qi::Signature::Type_Tuple: {
-        int index_should_stop = _find_end(signature, index, '(', ')');
+        const auto index_should_stop = _find_end(signature, index, '(', ')');
         eatChildren(signature, index + 1, index_should_stop);
         break;
       }

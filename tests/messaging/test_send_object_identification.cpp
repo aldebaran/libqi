@@ -372,6 +372,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyO
 
 struct SomeStore
 {
+  virtual ~SomeStore() = default;
   virtual qi::Object<SomeInterface> get() const = 0;
   virtual void set(qi::Object<SomeInterface> o) = 0;
 };

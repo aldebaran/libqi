@@ -89,18 +89,27 @@ namespace qi {
     Future<void> closeImpl(const std::string& reason, bool sendSignalDisconnected);
 
   private:
-    qi::MessageSocketPtr _sdSocket; // protected by _mutex
-    qi::SignalLink         _sdSocketDisconnectedSignalLink;
-    qi::SignalLink         _sdSocketSocketEventSignalLink;
+    struct StateData
+    {
+      StateData() = default;
+      StateData(StateData&& o);
+      StateData& operator=(StateData&& o);
+
+      MessageSocketPtr sdSocket;
+      SignalLink sdSocketDisconnectedSignalLink = SignalBase::invalidSignalLink;
+      SignalLink sdSocketSocketEventSignalLink = SignalBase::invalidSignalLink;
+      SignalLink addSignalLink = SignalBase::invalidSignalLink;
+      SignalLink removeSignalLink = SignalBase::invalidSignalLink;
+      bool localSd = false; // true if sd is local (no socket)
+    };
+
+    StateData _stateData; // protected by _mutex
     std::unique_ptr<qi::RemoteObject> _remoteObject;
     // _object is a remote object of serviceDirectory
-    qi::AnyObject          _object;
-    qi::SignalLink         _addSignalLink; // protected by _mutex
-    qi::SignalLink         _removeSignalLink; // protected by _mutex
+    AnyObject _object;
     ClientAuthenticatorFactoryPtr _authFactory;
+    bool _enforceAuth;
     mutable boost::mutex _mutex;
-    bool                   _localSd; // true if sd is local (no socket)
-    bool                   _enforceAuth;
   };
 }
 

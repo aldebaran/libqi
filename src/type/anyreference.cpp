@@ -390,7 +390,7 @@ namespace detail
     {
       std::vector<std::string>::const_iterator it = std::find(dstNames.begin(), dstNames.end(), srcNames[i]);
       if (it != dstNames.end())
-        fieldMap.push_back(it - dstNames.begin());
+        fieldMap.push_back(static_cast<int>(it - dstNames.begin()));
       else
       {
         fieldDrop[srcNames[i]] = AnyReference(srcTypes[i], tsrc->get(src->rawValue(), i));
@@ -894,8 +894,14 @@ namespace detail
       auto* pointeeValue = pointee.rawValue();
       QI_ASSERT_TRUE(pointeeValue);
       const PtrUid pointeeUid = pointeeType->ptrUid(pointeeValue);
+      AnyValue pointer{*this};
       AnyObject obj(new GenericObject(pointeeType, pointeeValue, pointeeUid),
-             boost::bind(&AnyObject::deleteGenericObjectOnlyAndKeep<AnyValue>, _1, AnyValue(*this)));
+              [pointer] (GenericObject *obj) mutable {
+                delete obj;
+                pointer.reset(); // reset explicitly because we don't want the pointer's
+                                 // lifetime be that of the deleter
+              });
+
       return UniqueAnyReference{ AnyReference::from(obj).clone() };
     }
 
@@ -950,7 +956,7 @@ namespace detail
       ObjectTypeInterface* osrc = static_cast<ObjectTypeInterface*>(_type);
       qiLogDebug() << "inheritance check "
         << osrc <<" " << (osrc?osrc->inherits(targetType):false);
-      int inheritOffset = 0;
+      std::ptrdiff_t inheritOffset = 0;
       if (osrc && (inheritOffset = osrc->inherits(targetType)) != ObjectTypeInterface::INHERITS_FAILED)
       {
         // We return a Value that point to the same data as this.

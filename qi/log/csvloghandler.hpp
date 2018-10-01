@@ -47,7 +47,8 @@ namespace log
     /**
      * \brief Write logs messages on a file.
      * \param verb verbosity of the log message.
-     * \param date date at which the log message was issued.
+     * \param date qi::Clock date at which the log message was issued.
+     * \param systemDate qi::SystemClock date at which the log message was issued.
      * \param category will be used in future for filtering
      * \param msg actual message to log.
      * \param file filename from which this log message was issued.

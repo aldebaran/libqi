@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
+#include <qi/numeric.hpp>
 #include "log_p.hpp"
 #include <qi/log/consoleloghandler.hpp>
 #include <boost/thread.hpp>
@@ -47,9 +48,9 @@ namespace log
     };
 #endif
 
-#ifdef _WIN32
-    enum ConsoleColor
+    enum ConsoleColor : char // explicitly char because the enum is later casted into char.
     {
+#ifdef _WIN32
       black = 0,
       darkblue,
       green,
@@ -65,11 +66,7 @@ namespace log
       magenta,
       yellow,
       white,
-      max_color,
-    };
 #else
-    enum ConsoleColor
-    {
       black = 0,
       red,
       green,
@@ -78,9 +75,9 @@ namespace log
       magenta,
       cyan,
       white,
+#endif
       max_color,
     };
-#endif
     static int InvertConsoleColor[max_color];
 
     PrivateConsoleLogHandler();
@@ -234,7 +231,7 @@ namespace log
       _p->_color = 1;
   }
 
-  int stringToColor(const char* str)
+  char stringToColor(const char* str)
   {
     int sum = 0;
     int i = 0;
@@ -242,10 +239,10 @@ namespace log
     {
       sum += str[i++];
     }
-    return sum % (qi::log::PrivateConsoleLogHandler::max_color - 1) + 1;
+    return static_cast<char>(sum % (qi::log::PrivateConsoleLogHandler::max_color - 1) + 1);
   }
 
-  int intToColor(int nbr)
+  char intToColor(int nbr)
   {
     return nbr % qi::log::PrivateConsoleLogHandler::max_color;
   }
@@ -285,9 +282,9 @@ namespace log
 
     if (context & qi::LogContextAttr_Tid)
     {
-      int tidColor = intToColor(qi::os::gettid());
+      const auto tidColor = intToColor(qi::os::gettid());
       textColorBG(tidColor);
-      textColorFG(InvertConsoleColor[tidColor]);
+      textColorFG(InvertConsoleColor[qi::numericConvert<std::size_t>(tidColor)]);
       printf("%s", qi::detail::tidToString().c_str());
       textColorAttr(reset);
       printf(" ");

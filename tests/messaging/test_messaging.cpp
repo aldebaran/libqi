@@ -8,7 +8,6 @@ std::string mirrorSdPath;
 
 int main(int argc, char **argv)
 {
-  srand(time(NULL));
 #if defined(__APPLE__) || defined(__linux__)
   setsid();
 #endif

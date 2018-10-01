@@ -14,11 +14,11 @@ int exchange(int& target, int value)
 }
 
 // wrap a call, waiting before, and notifying state
-void wrap(boost::function<void()> op, int msDelay, std::atomic<int>& notify)
+void wrap(boost::function<void()> op, qi::MilliSeconds delay, std::atomic<int>& notify)
 {
   notify = 1;
-  if (msDelay)
-    qi::os::msleep(msDelay);
+  if (delay != qi::MilliSeconds::zero())
+    boost::this_thread::sleep_for(delay);
   notify = 2;
   try {
     op();
@@ -126,12 +126,12 @@ TEST(TestBind, Trackable)
   {
     SetValue2 s1(v);
     boost::thread(wrap,
-      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 10),
-      0,
+      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, qi::MilliSeconds{100}, 10),
+      qi::MilliSeconds{ 0 },
       std::ref(notify));
     // wait enough for operation to start
     while (!notify)
-      qi::os::msleep(10);
+      std::this_thread::sleep_for(std::chrono::milliseconds{10});
     // exit scope, deleting s1, which should block until operation terminates
   }
   EXPECT_EQ(10, v);
@@ -141,12 +141,12 @@ TEST(TestBind, Trackable)
     notify = 0;
     SetValue2 s1(v);
     boost::thread(wrap,
-      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, 100, 11),
-      50,
+      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, qi::MilliSeconds{100}, 11),
+      qi::MilliSeconds{ 50 },
       std::ref(notify));
   }
   while (notify != 3)
-    qi::os::msleep(10);
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
   EXPECT_EQ(10, v); //call not made
 }
 

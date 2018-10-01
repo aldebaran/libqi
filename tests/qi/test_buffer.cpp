@@ -9,11 +9,13 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <random>
 #include <numeric> // std::iota
 
 #include <gtest/gtest.h>
 
 #include <qi/buffer.hpp>
+#include <qi/numeric.hpp>
 
 
 TEST(TestBuffer, TestReserveSpace)
@@ -24,15 +26,24 @@ TEST(TestBuffer, TestReserveSpace)
   void           *reservedSpace1;
   std::string     str("Oh man, this is a super config file, check it out !");
 
+  auto randEngine = [] {
+    std::random_device rd;
+    std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
+    return std::default_random_engine{ seq };
+  }();
+  std::uniform_int_distribution<> ucDistrib{
+    std::numeric_limits<unsigned char>::min(),
+    std::numeric_limits<unsigned char>::max()
+  };
+
   // let's put a string in buffer
   reservedSpace1 = buffer.reserve(150);
   //Oh wait it's a config file !
   ASSERT_TRUE(buffer.reserve(1024) != NULL);
 
   std::vector<unsigned char> image(fiveM);
-  srand(static_cast<unsigned int>(time(NULL)));
   for (int i = 0; i < fiveM; i++)
-    image[i] = static_cast<unsigned char>(rand() % 256);
+    image[i] = qi::numericConvert<unsigned char>(ucDistrib(randEngine));
 
   buffer.write(image.data(), fiveM);
   resultImage = (unsigned char*)buffer.data() + 150 + 1024;

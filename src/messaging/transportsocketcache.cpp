@@ -9,6 +9,7 @@
 #include <boost/range/algorithm/find_if.hpp>
 
 #include <qi/log.hpp>
+#include <qi/numeric.hpp>
 
 #include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
@@ -164,7 +165,7 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
     }
     // Otherwise, we keep track of all those URLs and assign them the same promise in our map.
     // They will all track the same connection.
-    couple->attemptCount = connectionCandidates.size();
+    couple->attemptCount = qi::numericConvert<int>(connectionCandidates.size());
     std::map<Url, ConnectionAttemptPtr>& urlMap = _connections[machineId];
     for (const auto& url: connectionCandidates)
     {
@@ -179,7 +180,8 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
       _allPendingConnections.push_back(socket);
       Future<void> sockFuture = socket->connect(url);
       qiLogDebug() << "Inserted [" << machineId << "][" << url.str() << "]";
-      sockFuture.connect(&TransportSocketCache::onSocketParallelConnectionAttempt, this, _1, socket, url, servInfo);
+      sockFuture.then(std::bind(&TransportSocketCache::onSocketParallelConnectionAttempt, this,
+                                std::placeholders::_1, socket, url, servInfo));
     }
   }
   return couple->promise.future();
@@ -200,7 +202,7 @@ FutureSync<void> TransportSocketCache::disconnect(MessageSocketPtr socket)
   barrier.addFuture(promiseSocketRemoved.future());
   barrier.addFuture(socket->disconnect());
   Promise<void> promise;
-  return barrier.future().then([=](const std::vector<Future<void>>& v) mutable {
+  return barrier.future().andThen([=](const std::vector<Future<void>>& v) mutable {
     const auto isInError = [](const Future<void>& f) {
       return f.hasError();
     };

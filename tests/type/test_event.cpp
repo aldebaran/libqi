@@ -42,7 +42,7 @@ TEST_F(ObjectEvent, Simple)
   ob.advertiseSignal<int>("fire");
   qi::AnyObject obj(ob.object());
   EXPECT_LE(1U, obj.metaObject().signalMap().size());
-  qi::SignalLink linkId = obj.connect("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1));
+  qi::SignalLink linkId = obj.connect("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1)).value();
   obj.post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
@@ -67,7 +67,7 @@ TEST_F(ObjectEvent, ConnectBind)
   ob.advertiseSignal<int>("fire");
   ob.advertiseSignal<int, int>("fire2");
   qi::AnyObject obj(ob.object());
-  qi::SignalLink link = obj.connect("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1));
+  qi::SignalLink link = obj.connect("fire", qi::bind<void(int)>(&ObjectEvent::onFire, this, _1)).value();
   obj.post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
@@ -80,7 +80,7 @@ TEST_F(ObjectEvent, ConnectBind)
   EXPECT_ANY_THROW(
     obj.connect("fire", boost::bind<void>(&readString, _1)).value()
   );
-  link = obj.connect("fire2", qi::bind<void(int, int)>(&ObjectEvent::onFire, this, _2));
+  link = obj.connect("fire2", qi::bind<void(int, int)>(&ObjectEvent::onFire, this, _2)).value();
   EXPECT_TRUE(link != 0);
   pPayload = qi::Promise<int>();
   obj.post("fire2", 40, 41);

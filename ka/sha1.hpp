@@ -77,7 +77,7 @@ namespace ka {
       if (!release) {
         // `SHA1_Final` both computes and frees the context.
         // Here we just want to free, but there's no other way...
-        SHA1_Final(sha1_digest_t{0}.data(), &x);
+        SHA1_Final(sha1_digest_t{{0}}.data(), &x);
       }
     });
     if (!detail::sha1_update(x, b, e, std::is_pointer<I>{})) {

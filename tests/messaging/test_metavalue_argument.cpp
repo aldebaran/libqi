@@ -65,9 +65,9 @@ protected:
     f = sclient->connect(sd->endpoints()[0]);
     f.wait(3000);
     ASSERT_TRUE(!f.hasError());
-    std::vector<qi::ServiceInfo> services = sclient->services();
+    std::vector<qi::ServiceInfo> services = sclient->services().value();
     EXPECT_EQ(2U, services.size());
-    oclient = sclient->service("coin");
+    oclient = sclient->service("coin").value();
   }
 
   void TearDown()

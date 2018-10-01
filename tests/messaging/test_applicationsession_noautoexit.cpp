@@ -8,6 +8,8 @@
 #include <gtest/gtest.h>
 
 #include <qi/applicationsession.hpp>
+#include <thread>
+#include <chrono>
 
 static bool _stopped = false;
 static qi::ApplicationSession* _app;
@@ -29,7 +31,7 @@ TEST(QiApplicationSessionNoAutoExit, defaultConnect)
 
   ASSERT_FALSE(_stopped);
   _sd->close();
-  qi::os::msleep(100);
+  std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
   ASSERT_FALSE(_stopped);
 }
 

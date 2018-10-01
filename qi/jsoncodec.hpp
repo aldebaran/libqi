@@ -13,10 +13,10 @@
 namespace qi {
 
   // Do not use enum here because we want to pipe those values and we don't want to cast them each time we pipe them
-  using JsonOption = int;
-  const unsigned int JsonOption_None = 0;
-  const unsigned int JsonOption_PrettyPrint = 1;
-  const unsigned int JsonOption_Expand = 2;
+  using JsonOption = unsigned int;
+  const JsonOption JsonOption_None = 0;
+  const JsonOption JsonOption_PrettyPrint = 1;
+  const JsonOption JsonOption_Expand = 2;
 
   /** @return the value encoded in JSON.
    * @param val Value to encode

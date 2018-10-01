@@ -110,7 +110,7 @@ public:
   void firstValue(Flag& val) const
   {
     // assert that the flag type has at least one value
-    ASSERT_GT(setOfFlag().size(), 0);
+    ASSERT_GT(setOfFlag().size(), 0u);
 
     val = *setOfFlag().begin();
   }
@@ -124,7 +124,7 @@ public:
 
   void twoFirstValues(Flag& first, Flag& second) const
   {
-    ASSERT_GE(setOfFlag().size(), 2);
+    ASSERT_GE(setOfFlag().size(), 2u);
 
     first = *setOfFlag().begin();
     second = *(++setOfFlag().begin());

@@ -108,7 +108,7 @@ TEST(TestTestSession, TestTestSessionOnly)
   ASSERT_TRUE(server.session()->registerService("test", obj).hasValue(4000));
 
   // #5 Get proxy on 'test' service.
-  qi::AnyObject proxy = client.session()->service("test");
+  qi::AnyObject proxy = client.session()->service("test").value();
   ASSERT_NE((void *) 0, proxy.asGenericObject());
 
   // #6 Make a call and assert result is 1.
@@ -144,8 +144,8 @@ TEST(TestTestSession, TestTestSessionPair)
   pDirect.server()->registerService("IncrDirect", obj);
 
   // #3 Get proxy on services.
-  qi::AnyObject proxyDirect = pDirect.client()->service("IncrDirect");
-  qi::AnyObject proxySD = pSD.server()->service("IncrSD");
+  qi::AnyObject proxyDirect = pDirect.client()->service("IncrDirect").value();
+  qi::AnyObject proxySD = pSD.server()->service("IncrSD").value();
 
   ASSERT_NE((void *) 0, proxyDirect.asGenericObject());
   ASSERT_NE((void *) 0, proxySD.asGenericObject());
@@ -171,14 +171,14 @@ TEST(TestTestSession, TestSameObject)
   qi::AnyObject obj(ob.object());
 
   // #2 Bind object on server session;
-  unsigned int id = p.server()->registerService("Incr", obj);
+  unsigned int id = p.server()->registerService("Incr", obj).value();
   ASSERT_NE((unsigned int) 0, id);
 
   // #3 Get proxy to Incr service.
   // #3.2 Assert that client and server are same object.
   ASSERT_EQ(p.client(), p.server());
 
-  qi::AnyObject proxy = p.client()->service("Incr");
+  qi::AnyObject proxy = p.client()->service("Incr").value();
   ASSERT_NE((void *) 0, proxy.asGenericObject());
 
   // #4 Call ++ method from Incr service.
@@ -202,7 +202,7 @@ TEST(TestTestSession, TestThroughSD)
   ASSERT_TRUE(p.server());
 
   // #2.2 Bind object to session.
-  unsigned int id = p.server()->registerService("Incr", obj);
+  unsigned int id = p.server()->registerService("Incr", obj).value();
   ASSERT_NE((unsigned int) 0, id);
 
   // #3.1 Get client session from TestSession.
@@ -212,7 +212,7 @@ TEST(TestTestSession, TestThroughSD)
   ASSERT_NE(p.server(), p.client());
 
   // #3.3 Get proxy on Incr service
-  qi::AnyObject proxy = p.client()->service("Incr");
+  qi::AnyObject proxy = p.client()->service("Incr").value();
   ASSERT_TRUE(proxy.asGenericObject());
 
   // #4 Call ++ method from Incr service.

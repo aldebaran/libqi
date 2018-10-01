@@ -43,7 +43,7 @@ TEST(TestPeriodicTask, FutureFuck)
 
 TEST(TestPeriodicTask, Basic)
 {
-  static const qi::MilliSeconds sleepDuration { 100 }; // big enough to not block the periodic task too much
+  static const std::chrono::milliseconds sleepDuration { 100 }; // big enough to not block the periodic task too much
   static const qi::MilliSeconds period{ 10 };
   static const int assertCount = 20;
   std::vector<bool> assertions;
@@ -62,7 +62,7 @@ TEST(TestPeriodicTask, Basic)
     });
     pt.start(false); // false = not immediately
     while (strand.async([&]{ return assertions.size(); }).value() < assertCount)
-      qi::sleepFor(sleepDuration);
+      std::this_thread::sleep_for(sleepDuration);
     pt.stop();
   }
   EXPECT_TRUE(boost::algorithm::all_of(assertions, ka::id_transfo_t{}))
@@ -74,10 +74,10 @@ TEST(TestPeriodicTask, Basic)
 TEST(TestPeriodicTask, Stop)
 {
   qi::PeriodicTask pt;
-  pt.setCallback(boost::bind(&qi::os::msleep, 500));
+  pt.setCallback([]{ std::this_thread::sleep_for(std::chrono::milliseconds{500}); });
   pt.setUsPeriod(10000000);
   pt.start();
-  qi::os::msleep(100); // wait for actual start
+  std::this_thread::sleep_for(std::chrono::milliseconds{100}); // wait for actual start
   qi::int64_t now = qi::os::ustime();
   pt.stop();
   EXPECT_LE(300000, qi::os::ustime() - now);
@@ -90,7 +90,7 @@ TEST(TestPeriodicTask, StopFromTask)
   pt.setCallback(boost::bind(&qi::PeriodicTask::stop, boost::ref(pt)));
   pt.setUsPeriod(10000000);
   pt.start();
-  qi::os::msleep(100); // wait for actual start
+  std::this_thread::sleep_for(std::chrono::milliseconds{100}); // wait for actual start
   qi::int64_t now = qi::os::ustime();
   pt.stop();
   EXPECT_GE(100000, qi::os::ustime() - now);
@@ -105,7 +105,7 @@ TEST(TestPeriodicTask, DeadLock)
     pt.setCallback(&inc, std::ref(a));
     pt.setUsPeriod(0);
     pt.start();
-    qi::os::msleep(i%20);
+    std::this_thread::sleep_for(std::chrono::milliseconds{i % 20}); // wait for actual start
     pt.stop();
   }
 }
@@ -132,7 +132,7 @@ static void loopTrigger(qi::PeriodicTask& pt)
   for (int i = 0; i < 1000; ++i)
   {
     pt.trigger();
-    qi::os::msleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds{1});
   }
 }
 
@@ -176,7 +176,7 @@ TEST(TestPeriodicTask, TriggerStartStop)
         break;
     }
     pt.start();
-    qi::os::msleep(10);
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
     pt.stop();
   }
 }

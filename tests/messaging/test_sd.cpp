@@ -75,7 +75,7 @@ TEST(ServiceDirectory, Republish)
 
   sd1->registerService("Serv", boost::make_shared<Serv>());
 
-  sd2->registerService("Serv", sd1->service("Serv"));
+  sd2->registerService("Serv", sd1->service("Serv").value());
 
   ASSERT_EQ(Serv::response, sd1->service("Serv").value().call<int>("f"));
   ASSERT_EQ(Serv::response, sd2->service("Serv").value().call<int>("f"));
@@ -170,12 +170,13 @@ TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnInt
 
 TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
 {
+  static const qi::MilliSeconds sleepDuration{ 50 };
   using test::ScopedProcess;
   ScopedProcess mainSd{simpleSdPath, {"--qi-listen-url=tcp://127.0.0.1:54321", "--qi-standalone"}};
   auto mainClient = qi::makeSession();
   for (int i = 0; i < 20; ++i)
   {
-    qi::os::msleep(50);
+    boost::this_thread::sleep_for(sleepDuration);
     try
     {
       mainClient->connect("tcp://127.0.0.1:54321");
@@ -193,7 +194,7 @@ TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
   ScopedProcess secondarySd{mirrorSdPath, {"--qi-url=tcp://127.0.0.1:54321", "--qi-listen-url=tcp://127.0.0.1:65432"}};
   for (int i = 0; i < 20; ++i)
   {
-    qi::os::msleep(50);
+    boost::this_thread::sleep_for(sleepDuration);
     try
     {
       secondaryClient->connect("tcp://127.0.0.1:65432");

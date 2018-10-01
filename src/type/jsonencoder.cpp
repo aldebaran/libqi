@@ -12,6 +12,7 @@
 #include <qi/jsoncodec.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/typedispatcher.hpp>
+#include <qi/numeric.hpp>
 
 qiLogCategory("qitype.jsonencoder");
 
@@ -80,13 +81,14 @@ namespace qi {
     for(Iter_type i = s.begin(); i != end; ++i)
     {
       const Char_type c(*i);
-      if(add_esc_char(c, result, jsonPrintOption))
+      if (qi::numericIsInRange<char>(c) &&
+          add_esc_char(static_cast<char>(c), result, jsonPrintOption))
         continue;
-      const wint_t unsigned_c(c);
+      const wint_t unsigned_c = qi::numericConvert<wint_t>(c);
 
       // 127 is the end of printable characters in ASCII table.
       if(iswprint(unsigned_c) && unsigned_c < 127)
-        result += c;
+        result += static_cast<char>(c);
       else
         result += non_printable_to_string(unsigned_c);
     }

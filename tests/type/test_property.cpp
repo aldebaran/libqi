@@ -5,6 +5,8 @@
 #include <gtest/gtest.h>
 #include <qi/property.hpp>
 #include <qi/signalspy.hpp>
+#include <thread>
+#include <chrono>
 
 qiLogCategory("qi.test.property");
 
@@ -14,7 +16,7 @@ namespace test
   void setDuringCreation()
   {
     PropertyType<int> prop(4);
-    qi::AnyValue val = prop.value();
+    qi::AnyValue val = prop.value().value();
     ASSERT_EQ(4, val.to<int>());
   }
 
@@ -24,8 +26,8 @@ namespace test
     PropertyType<int> prop(4);
     qi::SignalSpy spy(prop);
     prop.setValue(2);
-    qi::os::sleep(1);
-    qi::AnyValue val = prop.value();
+    std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+    qi::AnyValue val = prop.value().value();
     ASSERT_EQ(2, val.to<int>());
     ASSERT_EQ(1u, spy.recordCount());
   }
@@ -35,7 +37,7 @@ namespace test
   {
     PropertyType<int> k;
     k.set(42);
-    EXPECT_EQ(42, k.get());
+    EXPECT_EQ(42, k.get().value());
   }
 
 
@@ -62,7 +64,7 @@ namespace test
     k.set(42);
     qi::Future<int> result = object.future();
     EXPECT_EQ(42, result.value());
-    EXPECT_EQ(42, k.get());
+    EXPECT_EQ(42, k.get().value());
   }
 
   template< template< class ... > class PropertyType >
@@ -74,7 +76,7 @@ namespace test
     k = 42;
     qi::Future<int> result = object.future();
     EXPECT_EQ(42, result.value());
-    EXPECT_EQ(42, k.get());
+    EXPECT_EQ(42, k.get().value());
   }
 
 }
@@ -132,7 +134,7 @@ TEST(TestProperty, dispatchAssignedValue)
 
 TEST(TestProperty, customSetter)
 {
-  qi::Property<int> property{12, qi::Property<int>::Getter{}, [this](int& storage, const int& value)
+  qi::Property<int> property{12, qi::Property<int>::Getter{}, [](int& storage, const int& value)
   {
     storage = value;
     return true;
@@ -145,11 +147,13 @@ TEST(TestProperty, customSetter)
 TEST(TestProperty, customSetterStranded)
 {
   qi::Strand strand;
-  qi::Property<int> property{12, qi::Property<int>::Getter{}, strand.schedulerFor([this](int& storage, const int& value)
-  {
-    storage = value;
-    return true;
-  })};
+  qi::Property<int> property{ 12, qi::Property<int>::Getter{},
+                              [&](int& storage, const int& value) {
+                                return strand.async([&] {
+                                  storage = value;
+                                  return true;
+                                }).value();
+                              } };
   const int expected = 42;
   property.set(expected);
   EXPECT_EQ(expected, property.get().value());
@@ -158,7 +162,7 @@ TEST(TestProperty, customSetterStranded)
 TEST(TestProperty, customSetterReturningFalseFailsButDoesNotThrow)
 {
   const int initialValue = 12;
-  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [](int&, const int&)
   {
     return false;
   }};
@@ -172,11 +176,33 @@ using CustomException = std::exception;
 TEST(TestProperty, customSetterThrowIsTransmitted)
 {
   const int initialValue = 12;
-  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [](int&, const int&)->bool
   {
     throw CustomException{};
   }};
   const int newValue = 42;
   ASSERT_THROW(property.set(newValue), CustomException);
   EXPECT_EQ(initialValue, property.get().value());
+}
+
+TEST(TestProperty, WithStrandCallsGetterSetterFromIt)
+{
+  qi::Strand strand;
+  qi::Property<int> property{ 42, strand,
+                              [&](const int& v) {
+                                EXPECT_TRUE(strand.isInThisContext());
+                                return v;
+                              },
+                              [&](int& val, int newVal) {
+                                EXPECT_TRUE(strand.isInThisContext());
+                                val = newVal;
+                                return true;
+                              } };
+  auto newVal = 13;
+  EXPECT_NO_THROW(property.set(newVal).value());
+  EXPECT_EQ(newVal, property.get().value());
+
+  newVal = 8392;
+  EXPECT_NO_THROW(property.set(newVal).value());
+  EXPECT_EQ(newVal, property.get().value());
 }

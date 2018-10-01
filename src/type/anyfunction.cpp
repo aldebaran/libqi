@@ -8,6 +8,7 @@
 #include <qi/signature.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/anyobject.hpp>
+#include <qi/numeric.hpp>
 
 qiLogCategory("qitype.functiontype");
 
@@ -23,7 +24,7 @@ namespace qi
     return call(args);
   }
 
-  static void throwForInvalidConversion(
+  static BOOST_NORETURN void throwForInvalidConversion(
       size_t argNumber,
       const qi::Signature& argSignature,
       const qi::Signature& expectedArgSignature,
@@ -42,7 +43,7 @@ namespace qi
   {
     if (type == dynamicFunctionTypeInterface())
     {
-      DynamicFunction* f = (DynamicFunction*)value;
+      DynamicFunction* f = static_cast<DynamicFunction*>(value);
       if (!transform.dropFirst && !transform.prependValue)
         return (*f)(vargs);
       AnyReferenceVector args;
@@ -67,41 +68,43 @@ namespace qi
     * - drop first arg
     * - prepend an arg
     */
-    unsigned deltaCount = (transform.dropFirst? -1:0) + (transform.prependValue?1:0);
+    const auto deltaCount = (transform.dropFirst? -1:0) + (transform.prependValue?1:0);
     const std::vector<TypeInterface*>& target = type->argumentsType();
-    unsigned sz = vargs.size();
-    const AnyReference* args = sz > 0 ? &vargs[0] : 0;
+    auto sz = qi::numericConvert<int>(vargs.size());
+    const AnyReference* args = sz > 0 ? &vargs[0] : nullptr;
 
-    if (target.size() != sz + deltaCount)
+    // Cast the size of the vector of the target function argument types into int because we
+    // assume that the number of arguments cannot possibly be more than INT_MAX.
+    if (qi::numericConvert<int>(target.size()) != sz + deltaCount)
     {
       throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %1%, got %2%",
         target.size(), sz + deltaCount));
-      return AnyReference();
     }
     if (transform.dropFirst)
     {
       ++args;
       --sz;
     }
-    unsigned offset = transform.prependValue? 1:0;
+    auto offset = transform.prependValue? 1:0;
 
     boost::container::small_vector<detail::UniqueAnyReference, detail::maxAnyFunctionArgsCountHint>
         uniqueConvertedArgs;
-    uniqueConvertedArgs.reserve(sz);
+    uniqueConvertedArgs.reserve(qi::numericConvert<std::size_t>(sz));
     boost::container::small_vector<void*, detail::maxAnyFunctionArgsCountHint> callArgs;
-    callArgs.reserve(sz + offset);
+    callArgs.reserve(qi::numericConvert<std::size_t>(sz + offset));
 
     if (transform.prependValue)
       callArgs.push_back(transform.boundValue);
 
-    for (unsigned i=0; i<sz; ++i)
+    for (auto i = 0; i < sz; ++i)
     {
-      const unsigned ti = i + offset;
+      const auto ti = qi::numericConvert<std::size_t>(i + offset);
       auto& arg = args[i];
       auto* argType = arg.type();
 
       if (!argType) // invalid argument not wrapped into a dynamic AnyReference!
-        throwForInvalidConversion(i, arg.signature(), target[ti]->signature(),
+        throwForInvalidConversion(qi::numericConvert<std::size_t>(i), arg.signature(),
+                                  target[ti]->signature(),
                                   this->parametersSignature(this->transform.dropFirst));
 
       void* callArg = nullptr;
@@ -126,7 +129,8 @@ namespace qi
           }
 
           if (!v->type())
-            throwForInvalidConversion(i, arg.signature(true), target[ti]->signature(),
+            throwForInvalidConversion(qi::numericConvert<std::size_t>(i), arg.signature(true),
+                                      target[ti]->signature(),
                                       this->parametersSignature(this->transform.dropFirst));
         }
 
@@ -136,7 +140,7 @@ namespace qi
       callArgs.push_back(callArg);
     }
 
-    void* res = type->call(value, callArgs.data(), sz+offset);
+    void* res = type->call(value, callArgs.data(), qi::numericConvert<unsigned int>(sz + offset));
     return AnyReference(resultType(), res);
   }
 
@@ -176,7 +180,7 @@ namespace qi
 
       // do not access res[1], it might not exist and invalid access might be
       // detected by debug-mode stl
-      res.push_back(0);
+      res.push_back(nullptr);
       memmove(&res[0]+1, &res[0], (res.size()-1)*sizeof(TypeInterface*));
       res[0] = typeOf<AnyValue>();
     }
@@ -277,9 +281,9 @@ namespace qi
       if (!compatible)
       {
         qiLogError() << "convert: unknown type " << (*it).toString();
-        compatible = src[idx].type();
+        compatible = src[qi::numericConvert<std::size_t>(idx)].type();
       }
-      dst.push_back(src[idx].convertCopy(compatible));
+      dst.push_back(src[qi::numericConvert<std::size_t>(idx)].convertCopy(compatible));
     }
     return dst;
   }
@@ -297,12 +301,12 @@ namespace qi
     {
       _resultType = typeOf<AnyValue>();
     }
-    void* call(void* func, void** args, unsigned int argc) override
+    void* call(void* /*func*/, void** /*args*/, unsigned int /*argc*/) override
     {
       qiLogError() << "Dynamic function called without type information";
       return  nullptr;
     }
-    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>);
+    _QI_BOUNCE_TYPE_METHODS(DefaultTypeImplMethods<DynamicFunction>)
   };
 
   FunctionTypeInterface* dynamicFunctionTypeInterface()

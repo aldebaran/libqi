@@ -21,39 +21,13 @@ struct boost_error_t : boost::exception
   }
 };
 
-namespace
-{
-  const auto std_code = 55;
-  const auto boost_code = 56;
-  const auto unknown_code = 57;
-  const ka::exception_value<int> exception_code{std_code, boost_code, unknown_code};
-
-  template<typename T>
-  int code()
-  {
-    return unknown_code;
-  }
-
-  template<>
-  int code<std::runtime_error>()
-  {
-    return std_code;
-  }
-
-  template<>
-  int code<boost_error_t>()
-  {
-    return boost_code;
-  }
-}
-
 TEST(ExceptionLogError, Basic)
 {
   using namespace qi;
   using namespace ka;
   using namespace boost::algorithm;
   static const std::string prefix{"prefix"}, handlerName{"test"};
-  const std::array<const char*, 3> expected{"standard exception", "boost exception", "unknown exception"};
+  const std::array<const char*, 3> expected{{"standard exception", "boost exception", "unknown exception"}};
   int i = 0;
   log::addHandler(handlerName,
     [&](LogLevel, Clock::time_point, SystemClock::time_point, const char*, std::string msg, const char*, const char*, int) {

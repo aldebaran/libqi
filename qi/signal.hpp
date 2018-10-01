@@ -259,8 +259,11 @@ namespace qi {
    *
    * \includename{qi/signal.hpp}
    */
+QI_WARNING_PUSH()
+QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore linkId deprecation warnings
   class QI_API SignalSubscriber
   {
+QI_WARNING_POP()
   public:
     friend class FunctorCall;
     friend class ManageablePrivate;

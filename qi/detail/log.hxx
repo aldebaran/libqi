@@ -12,37 +12,37 @@
 #include <boost/noncopyable.hpp>
 #include <boost/preprocessor/cat.hpp>
 
-#if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#if defined(NO_QI_LOG_DETAILED_CONTEXT)
 #   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 #   define _qiLogDebug(...)      qi::log::LogStream(qi::LogLevel_Debug, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
-#if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#if defined(NO_QI_LOG_DETAILED_CONTEXT)
 # define _qiLogVerbose(...)      qi::log::LogStream(qi::LogLevel_Verbose, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define _qiLogVerbose(...)      qi::log::LogStream(qi::LogLevel_Verbose, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
-#if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#if defined(NO_QI_LOG_DETAILED_CONTEXT)
 # define _qiLogInfo(...)         qi::log::LogStream(qi::LogLevel_Info, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define _qiLogInfo(...)         qi::log::LogStream(qi::LogLevel_Info, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
-#if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#if defined(NO_QI_LOG_DETAILED_CONTEXT)
 # define _qiLogWarning(...)      qi::log::LogStream(qi::LogLevel_Warning, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define _qiLogWarning(...)      qi::log::LogStream(qi::LogLevel_Warning, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
-#if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#if defined(NO_QI_LOG_DETAILED_CONTEXT)
 # define _qiLogError(...)        qi::log::LogStream(qi::LogLevel_Error, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define _qiLogError(...)        qi::log::LogStream(qi::LogLevel_Error, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()
 #endif
 
-#if defined(NO_QI_LOG_DETAILED_CONTEXT) || defined(NDEBUG)
+#if defined(NO_QI_LOG_DETAILED_CONTEXT)
 # define _qiLogFatal(...)        qi::log::LogStream(qi::LogLevel_Fatal, "", __FUNCTION__, 0, __VA_ARGS__).self()
 #else
 # define _qiLogFatal(...)        qi::log::LogStream(qi::LogLevel_Fatal, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__).self()

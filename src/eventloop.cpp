@@ -10,6 +10,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/thread/synchronized_value.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/core/ignore_unused.hpp>
 
@@ -193,16 +194,16 @@ namespace qi {
   void EventLoopAsio::runPingLoop()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static const unsigned int msTimeout = qi::os::getEnvDefault(gPingTimeoutEnvVar, 500u);
-    static const unsigned int msGrace = qi::os::getEnvDefault(gGracePeriodEnvVar, 0u);
-    static const unsigned int maxTimeouts = qi::os::getEnvDefault(gMaxTimeoutsEnvVar, 20u);
+    static const auto timeoutDuration = MilliSeconds{ qi::os::getEnvDefault(gPingTimeoutEnvVar, 500u) };
+    static const auto graceDuration = MilliSeconds{ qi::os::getEnvDefault(gGracePeriodEnvVar, 0u) };
+    static const auto maxTimeouts = qi::os::getEnvDefault(gMaxTimeoutsEnvVar, 20u);
 
     unsigned int nbTimeout = 0;
     while (_work.load())
     {
       qiLogDebug() << "Ping";
       auto calling = asyncCall(Seconds{0}, []{});
-      auto callState = calling.waitFor(MilliSeconds{msTimeout});
+      auto callState = calling.waitFor(timeoutDuration);
       QI_ASSERT(callState != FutureState_None);
       if (callState == FutureState_Running)
       {
@@ -241,7 +242,7 @@ namespace qi {
           qiLogInfo() << _name << ": Spawning more threads (" << workerCount << ')';
           _workerThreads->launch(&EventLoopAsio::runWorkerLoop, this);
         }
-        qi::os::msleep(msGrace);
+        boost::this_thread::sleep_for(graceDuration);
       }
       else
       {
@@ -256,7 +257,7 @@ namespace qi {
         QI_ASSERT(callState == FutureState_FinishedWithValue);
         nbTimeout = 0;
         qiLogDebug() << "Ping ok";
-        qi::os::msleep(msTimeout);
+        boost::this_thread::sleep_for(timeoutDuration);
       }
     }
   }

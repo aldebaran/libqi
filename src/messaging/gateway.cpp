@@ -4,16 +4,20 @@
 */
 
 #include <qi/messaging/gateway.hpp>
+#include <qi/macro.hpp>
 
 namespace qi
 {
 
+QI_WARNING_PUSH()
+QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore connected deprecation warnings
 Gateway::Gateway(bool enforceAuth)
   : _proxy{ enforceAuth }
   , connected(_proxy.connected)
   , status(_proxy.status)
 {
 }
+QI_WARNING_POP()
 
 Gateway::~Gateway() = default;
 

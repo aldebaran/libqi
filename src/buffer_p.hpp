@@ -33,11 +33,11 @@ namespace qi
     friend bool operator==(const BufferPrivate& a, const BufferPrivate& b);
 
   public:
-    unsigned char*  _bigdata;
+    unsigned char*  _bigdata = nullptr;
     unsigned char   _data[STATIC_BLOCK] = {};
-    size_t          _cachedSubBufferTotalSize;
-    size_t          used; // size used
-    size_t          available; // total size of buffer
+    size_t          _cachedSubBufferTotalSize = 0u;
+    size_t          used = 0u; // size used
+    size_t          available = std::extent<decltype(_data)>::value; // total size of buffer
 
     std::vector<std::pair<size_t, Buffer> > _subBuffers;
   };

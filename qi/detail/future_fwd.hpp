@@ -108,19 +108,20 @@ namespace qi {
   };
 
   enum FutureTimeout {
-    FutureTimeout_Infinite = ((int) 0x7fffffff),
+    FutureTimeout_Infinite = INT_MAX, // TODO: replace by numeric_limits<int>::max() when we get
+                                      // rid of VS2013
     FutureTimeout_None     = 0,
   };
 
   namespace detail
   {
-    struct VisitTimeout : boost::static_visitor<int>
+    struct VisitTimeout : boost::static_visitor<MilliSeconds::rep>
     {
-      int operator()(MilliSeconds x) const {
+      MilliSeconds::rep operator()(MilliSeconds x) const {
         return x.count();
       }
-      int operator()(Infinity) const {
-        return int(FutureTimeout_Infinite);
+      MilliSeconds::rep operator()(Infinity) const {
+        return static_cast<MilliSeconds::rep>(FutureTimeout_Infinite);
       }
     };
   } // namespace detail
@@ -252,7 +253,7 @@ namespace qi {
 
     inline const ValueType& value(Either<MilliSeconds, Infinity> timeout) const
     {
-      return _p->value(visit(detail::VisitTimeout{}, timeout));
+      return _p->value(static_cast<int>(visit(detail::VisitTimeout{}, timeout)));
     }
 
     /**
@@ -261,7 +262,7 @@ namespace qi {
     ValueType valueCopy(Either<MilliSeconds, Infinity> timeout = Infinity{}) const
     {
       // Copy happens because of the return type.
-      return value(visit(detail::VisitTimeout{}, timeout));
+      return value(static_cast<int>(visit(detail::VisitTimeout{}, timeout)));
     }
 
     /**
@@ -743,6 +744,7 @@ namespace qi {
     boost::shared_ptr<const T> valueSharedPtr(int msecs = FutureTimeout_Infinite) const {
       _sync = false; return _future.valueSharedPtr(msecs);
     }
+    QI_API_DEPRECATED_MSG("Use either `then`, `andThen`, `value` or `wait` functions instead.")
     operator const typename Future<T>::ValueTypeCast&() const          { _sync = false; return _future.value(); }
     FutureState wait(int msecs = FutureTimeout_Infinite) const         { _sync = false; return _future.wait(msecs); }
     FutureState wait(qi::Duration duration) const                      { _sync = false; return _future.wait(duration); }

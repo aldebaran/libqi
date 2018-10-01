@@ -45,7 +45,7 @@ struct QI_API ObjectTypeData
   MethodMap methodMap;
 
   TypeInterface* classType;
-  std::vector<std::pair<TypeInterface*, int> > parentTypes;
+  std::vector<std::pair<TypeInterface*, std::ptrdiff_t> > parentTypes;
   ObjectThreadingModel threadingModel;
   qi::AnyFunction strandAccessor;
 };
@@ -73,7 +73,7 @@ public:
   qi::Future<AnyValue> property(void* instance, AnyObject context, unsigned int id) override;
   qi::Future<void> setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value) override;
 
-  const std::vector<std::pair<TypeInterface*, int> >& parentTypes() override;
+  const std::vector<std::pair<TypeInterface*, std::ptrdiff_t> >& parentTypes() override;
   void* initializeStorage(void*) override;
   void* ptrFromStorage(void**) override;
   void* clone(void* inst) override;

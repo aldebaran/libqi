@@ -28,6 +28,7 @@ qi_create_gmock(
   "test_future.cpp"
   "test_futuregroup.cpp"
   "test_locale.cpp"
+  "test_numeric.cpp"
   "test_macro.cpp"
   "test_mutablestore.cpp"
   "test_path_conf.cpp"

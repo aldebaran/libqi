@@ -15,7 +15,8 @@ qiLogCategory("qi.test_periodictask_kill_service");
 class TestPeriodicTaskKillService
 {
 public:
-  TestPeriodicTaskKillService(const qi::SessionPtr&)
+  TestPeriodicTaskKillService(qi::Application& app)
+    : _app(app)
   {
     _perTask.setPeriod(qi::MilliSeconds(100));
     _perTask.compensateCallbackTime(true);
@@ -33,12 +34,13 @@ public:
     qiLogInfo() << "STOP SERVICE - DONE";
     // If we didn't block, then we succeeded.
     // (necessary for test driver to know that it's a success)
-    std::exit(EXIT_SUCCESS);
+    _app.stop();
   }
 
   int dummy;
 
 private:
+  qi::Application& _app;
   qi::PeriodicTask _perTask;
 };
 QI_REGISTER_OBJECT(TestPeriodicTaskKillService, dummy)
@@ -69,7 +71,7 @@ int main(int argc, char** argv)
     app.startSession();
 
     auto session = app.session();
-    service = new TestPeriodicTaskKillService{ session };
+    service = new TestPeriodicTaskKillService{ app };
     session->registerService("TestPeriodicTaskKillService", service);
     promiseReady.setValue(nullptr);
     app.run();

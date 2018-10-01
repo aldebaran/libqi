@@ -12,6 +12,8 @@
 #include <testsession/testsessionpair.hpp>
 #include <qi/testutils/testutils.hpp>
 #include <condition_variable>
+#include <thread>
+#include <chrono>
 
 qiLogCategory("test");
 
@@ -32,7 +34,7 @@ TEST(SendObject, pass_obj)
   qi::SessionPtr s = p.server();
 
   s->loadService("naoqi.testanymodule.test");
-  qi::AnyObject o = s->service("test");
+  qi::AnyObject o = s->service("test").value();
 
   qiLogInfo() << "check first service" << std::endl;
   test_service(o);
@@ -43,7 +45,7 @@ TEST(SendObject, pass_obj)
 
   std::cout << "check second service" << std::endl;
   test_service(o2);
-  qi::AnyObject o3 = s->service("test_bis");
+  qi::AnyObject o3 = s->service("test_bis").value();
   test_service(o3);
 
   s->close();
@@ -56,11 +58,11 @@ TEST(SendObject, load_received_obj)
   qi::SessionPtr s = p.server();
 
   s->loadService("naoqi.testanymodule.test");
-  qi::AnyObject o = s->service("test");
+  qi::AnyObject o = s->service("test").value();
   test_service(o);
 
   s->registerService("test_bis", o);
-  qi::AnyObject o2 = s->service("test_bis");
+  qi::AnyObject o2 = s->service("test_bis").value();
   test_service(o2);
 
   s->close();
@@ -72,8 +74,8 @@ TEST(SendObject, unregister_obj)
 
   qi::SessionPtr s = p.server();
 
-  int index = s->loadService("naoqi.testanymodule.test");
-  qi::AnyObject o = s->service("test");
+  int index = s->loadService("naoqi.testanymodule.test").value();
+  qi::AnyObject o = s->service("test").value();
   test_service(o);
 
   s->unregisterService(index).wait();
@@ -153,7 +155,7 @@ TEST(SendObject, pass_obj_made_from_module)
   TestSessionPair p;
   p.server()->registerService("plop", boost::make_shared<ObjectEmitter>());
 
-  qi::AnyObject remotePlop = p.client()->service("plop");
+  qi::AnyObject remotePlop = p.client()->service("plop").value();
   qi::Promise<void> receivingObject;
   auto signalLink = remotePlop.connect(
         "onTruc", boost::function<void(qi::AnyObject)>([=](qi::AnyObject o) mutable
@@ -189,7 +191,7 @@ TEST(SendObject, pass_obj_made_from_module_to_an_obj_made_from_service)
   TestSessionPair p;
   p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
 
-  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory").value();
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
 
   qi::Promise<void> receivingObject;
@@ -209,7 +211,7 @@ TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_re
   TestSessionPair p;
   p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
 
-  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory").value();
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
 
   // create vector
@@ -229,7 +231,7 @@ TEST(SendObject, emitter_from_factory_transmits_objects_through_property_then_pi
   TestSessionPair p;
   p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
 
-  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory").value();
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
 
   // create vector
@@ -247,7 +249,7 @@ TEST(SendObject, object_emitter_service_transmits_objects_through_property_then_
 {
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
 
   // create vector
   std::vector<qi::AnyObject> vecObj{
@@ -265,7 +267,7 @@ TEST(SendObject, object_emitter_service_identities_then_ping_property)
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
 
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
 
   // create vector
   std::vector<qi::AnyObject> vecObj{
@@ -281,7 +283,7 @@ TEST(SendObject, object_emitter_service_identities_then_ping)
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
 
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
 
   // create vector
   std::vector<qi::AnyObject> vecObj{
@@ -296,7 +298,7 @@ TEST(SendObject, object_emitter_service_generate_objects_then_ping)
 {
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
   auto objects = emitter.call<std::vector<qi::AnyObject>>("generateObjects");
   ASSERT_EQ(qi::FutureState_FinishedWithValue, objects[0].async<void>("ping").wait(timeoutMs));
 }
@@ -306,7 +308,7 @@ TEST(SendObject, object_emitter_service_identity_then_ping)
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
 
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
   qi::AnyObject object{boost::make_shared<ObjectToPing>()};
 
   auto sameObject = emitter.call<qi::AnyObject>("identity", object);
@@ -318,7 +320,7 @@ TEST(SendObject, emitter_from_factory_transmits_single_object_through_property_t
   TestSessionPair p;
   p.server()->registerService("EmitterFactory", boost::make_shared<ObjectEmitterFactory>());
 
-  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory");
+  qi::AnyObject emitterFactory = p.client()->service("EmitterFactory").value();
   auto emitter = emitterFactory.call<qi::AnyObject>("makeObjectEmitter");
 
   // create vector
@@ -335,7 +337,7 @@ TEST(SendObject, object_emitter_service_transmits_single_object_through_property
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
 
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
   qi::AnyObject objToPing = boost::make_shared<ObjectToPing>();
 
   emitter.setProperty<qi::AnyObject>("object", objToPing);
@@ -347,7 +349,7 @@ TEST(SendObject, object_emitter_service_transmits_single_object_through_property
 {
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
 
   qi::AnyObject objToPing = boost::make_shared<ObjectToPing>();
   emitter.setProperty<qi::AnyObject>("object", objToPing);
@@ -359,7 +361,7 @@ TEST(SendObject, object_emitter_service_provides_single_object_through_property_
 {
   TestSessionPair p;
   p.server()->registerService("ObjectEmitter", boost::make_shared<ObjectEmitter>());
-  qi::AnyObject emitter = p.client()->service("ObjectEmitter");
+  qi::AnyObject emitter = p.client()->service("ObjectEmitter").value();
   auto objectStored = emitter.property<qi::AnyObject>("object").value();
   ASSERT_EQ(qi::FutureState_FinishedWithValue, objectStored.async<void>("ping").wait(timeoutMs));
 }
@@ -406,7 +408,7 @@ TEST(SendObject, reuse_object_taken_from_connect)
 {
   TestSessionPair p;
   p.server()->registerService("Actuation", boost::make_shared<Actuation>());
-  qi::AnyObject actuation = p.client()->service("Actuation");
+  qi::AnyObject actuation = p.client()->service("Actuation").value();
 
   qi::Promise<bool> pinged;
   actuation.connect("humanProperty",
@@ -426,7 +428,7 @@ TEST(SendObject, connect_to_object_taken_from_connect)
 {
   TestSessionPair p;
   p.server()->registerService("Actuation", boost::make_shared<Actuation>());
-  qi::AnyObject actuation = p.client()->service("Actuation");
+  qi::AnyObject actuation = p.client()->service("Actuation").value();
 
   qi::Promise<bool> pinged;
   qi::Promise<bool> named;
@@ -452,7 +454,7 @@ TEST(SendObject, make_frame)
 {
   TestSessionPair p;
   p.server()->registerService("Actuation", boost::make_shared<Actuation>());
-  qi::AnyObject actuation = p.client()->service("Actuation");
+  qi::AnyObject actuation = p.client()->service("Actuation").value();
 
   actuation.call<void>("set", boost::make_shared<Human>());
   auto humanReceived = actuation.call<qi::AnyObject>("get");
@@ -554,7 +556,7 @@ TEST(SendObject, give_and_take_object_function)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
-  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
+  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox").value();
   qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
   cookieBoxProxy.call<void>("give", cookie);
   qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
@@ -566,7 +568,7 @@ TEST(SendObject, give_and_take_object_property)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
-  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
+  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox").value();
   qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
   cookieBoxProxy.call<void>("give", cookie);
   qi::AnyObject takenCookie = cookieBoxProxy.call<qi::AnyObject>("take");
@@ -578,7 +580,7 @@ TEST(SendObject, give_and_take_object_signal)
 {
   TestSessionPair p;
   p.server()->registerService("CookieBox", boost::make_shared<CookieBox>());
-  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox");
+  qi::AnyObject cookieBoxProxy = p.client()->service("CookieBox").value();
   qi::AnyObject cookie = cookieBoxProxy.call<qi::AnyObject>("makeCookie", true);
   cookieBoxProxy.call<void>("give", cookie);
 
@@ -603,7 +605,7 @@ TEST(SendObject, two_client_objects_call_each_other_on_service_side)
   auto cookieFeeder = boost::make_shared<CookieMonsterFeeder>();
   p.server()->registerService("CookieMonsterFeeder", cookieFeeder);
 
-  qi::AnyObject cookieTransmitterRemote = p.client()->service("CookieMonsterFeeder");
+  qi::AnyObject cookieTransmitterRemote = p.client()->service("CookieMonsterFeeder").value();
   auto transmitting = cookieTransmitterRemote.async<void>(
         "feedMonster", boost::make_shared<Cookie>(false), boost::make_shared<CookieMonster>());
   ASSERT_EQ(qi::FutureState_FinishedWithValue, transmitting.wait(timeoutMs));
@@ -614,7 +616,7 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_disconnection)
   TestSessionPair p;
   auto cookieBox = boost::make_shared<CookieBox>();
   p.server()->registerService("CookieBox", cookieBox);
-  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox");
+  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox").value();
 
   qiLogInfo() << "Getting a cookie!";
   auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
@@ -626,11 +628,11 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_disconnection)
 
   // in this case, the references are only counted using the shared pointers
   if (p.mode() == TestMode::Mode_Direct)
-    ASSERT_FALSE(cookieLostSpy.waitUntil(1, timeout));
+    ASSERT_FALSE(cookieLostSpy.waitUntil(1, timeout).value());
 
   // In every other case, a remote object intervenes
   else
-    ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout));
+    ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout).value());
 }
 
 TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_unreference)
@@ -638,11 +640,11 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_unreference)
   TestSessionPair p;
   auto cookieBox = boost::make_shared<CookieBox>();
   p.server()->registerService("CookieBox", cookieBox);
-  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox");
+  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox").value();
   auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
   qi::SignalSpy cookieLostSpy{cookieBox->cookieLost};
   cookie.reset();
-  ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout));
+  ASSERT_TRUE(cookieLostSpy.waitUntil(1, timeout).value());
 }
 
 TEST(SendObject, eat_yourself)
@@ -650,7 +652,7 @@ TEST(SendObject, eat_yourself)
   TestSessionPair p;
   auto cookieBox = boost::make_shared<CookieBox>();
   p.server()->registerService("CookieBox", cookieBox);
-  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox");
+  qi::AnyObject cookieBoxRemote = p.client()->service("CookieBox").value();
   auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
   auto otherCookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
   auto eatOther = cookie.async<bool>("eatRival", otherCookie);
@@ -703,7 +705,7 @@ TEST(SendObject, sendOnClosedConnection)
   TestSessionPair p;
   p.server()->registerService("Focus", focus);
 
-  qi::AnyObject focusService = p.client()->service("Focus");
+  qi::AnyObject focusService = p.client()->service("Focus").value();
   auto future = focusService.async<qi::AnyObject>("take");
 
   p.client()->close().wait();
@@ -716,7 +718,7 @@ TEST(SendObject, sendOnClosedConnection)
   int i = 0;
   while (!focus->focusOwner.expired() && i < 2000)
   {
-    qi::sleepFor(qi::MilliSeconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     ++i;
   }
 
@@ -738,7 +740,7 @@ TEST(SendObject, PropertySetWithNullObjectNotifiesSubscribers)
 
   auto obj = boost::make_shared<ObjectWithObjProp>();
   server->registerService(serviceName, obj);
-  qi::AnyObject clientObj = p.client()->service(serviceName);
+  qi::AnyObject clientObj = p.client()->service(serviceName).value();
 
   qi::Promise<bool> prom;
   clientObj.connect("prop", [=](qi::Object<Cookie> obj) mutable {
