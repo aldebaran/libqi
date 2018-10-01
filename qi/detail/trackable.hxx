@@ -83,7 +83,7 @@ namespace qi
     template <typename T>
     T defaultConstruct()
     {
-      return {};
+      return T{}; // Default constructor might be explicit, so we are forced to call it explicitly.
     }
 
     template <>

@@ -5,8 +5,18 @@
 #include <gtest/gtest.h>
 #include <qi/property.hpp>
 #include <qi/signalspy.hpp>
+#include <boost/container/flat_map.hpp>
+#include <boost/container/flat_set.hpp>
+#include <boost/container/static_vector.hpp>
+#include <boost/container/stable_vector.hpp>
+#include <boost/container/small_vector.hpp>
 #include <thread>
 #include <chrono>
+#include <deque>
+#include <unordered_map>
+#include <unordered_set>
+#include <queue>
+#include <stack>
 
 qiLogCategory("qi.test.property");
 
@@ -205,4 +215,36 @@ TEST(TestProperty, WithStrandCallsGetterSetterFromIt)
   newVal = 8392;
   EXPECT_NO_THROW(property.set(newVal).value());
   EXPECT_EQ(newVal, property.get().value());
+}
+
+using Containers = testing::Types<
+  std::array<int, 2>,
+  std::vector<int>,
+  std::deque<int>,
+  std::forward_list<int>,
+  std::list<int>,
+  std::set<int>,
+  std::map<int, int>,
+  std::multiset<int>,
+  std::multimap<int, int>,
+  std::unordered_set<int>,
+  std::unordered_map<int, int>,
+  std::stack<int>,
+  std::queue<int>,
+  std::priority_queue<int>,
+  boost::container::flat_map<int, int>,
+  boost::container::flat_set<int>,
+  boost::container::static_vector<int, 2>,
+  boost::container::small_vector<int, 2>,
+  boost::container::stable_vector<int>
+>;
+
+template<typename T>
+struct TestPropertyWithContainerType : testing::Test {};
+TYPED_TEST_CASE(TestPropertyWithContainerType, Containers);
+
+TYPED_TEST(TestPropertyWithContainerType, CanBeInstanciatedWithContainer)
+{
+  qi::Property<TypeParam> p;
+  SUCCEED();
 }
