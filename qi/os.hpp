@@ -29,6 +29,34 @@
 #endif
 #endif
 
+// `PTRDIFF_MIN` and `PTRDIFF_MAX` may not be defined on some platforms (e.g.
+// android arm32). As a first step we define the values by hard-coding them, to
+// avoid relying on another constant. This guarantees that it will work whatever
+// the presence or absence of other constants (INT32_MAX, etc.).
+//
+// TODO: Remove this when alternatively
+//  - qibuild is modified to generate a libqi user CMakeLists.txt that defines
+//    correct constants (`#define __STDC_LIMIT_MACROS`)
+//  - Android NDK is upgraded to use at least Android API level 21.
+//
+// The following values are taken from the Android NDK file
+// 'platforms/android-21/arch-arm/usr/include/stdint.h'.
+#if !defined(PTRDIFF_MIN)
+#   if defined(__LP64__) && __LP64__
+#     define PTRDIFF_MIN -9223372036854775808LL
+#   else
+#     define PTRDIFF_MIN -2147483648
+#   endif
+#endif
+
+#if !defined(PTRDIFF_MAX)
+#   if defined(__LP64__) && __LP64__
+#     define PTRDIFF_MAX 9223372036854775807LL
+#   else
+#     define PTRDIFF_MAX 2147483647
+#   endif
+#endif
+
 struct stat;
 
 namespace qi {
@@ -654,28 +682,6 @@ namespace qi {
       return std::to_string(n);
 #endif
     }
-
-// `PTRDIFF_MIN` and `PTRDIFF_MAX` may not be defined on some platforms (e.g.
-// android arm32), therefore we define them here in terms of the corresponding
-// `INTxy_MIN` and `INTxy_MAX`.
-//
-// This approach is inspired by the bionic libc:
-// https://android.googlesource.com/platform/bionic/+/master/libc/include/stdint.h#217
-#if !defined(PTRDIFF_MIN)
-#   if defined(__LP64__) && __LP64__
-#     define PTRDIFF_MIN INT64_MIN
-#   else
-#     define PTRDIFF_MIN INT32_MIN
-#   endif
-#endif
-
-#if !defined(PTRDIFF_MAX)
-#   if defined(__LP64__) && __LP64__
-#     define PTRDIFF_MAX INT64_MAX
-#   else
-#     define PTRDIFF_MAX INT32_MAX
-#   endif
-#endif
   }
 }
 
