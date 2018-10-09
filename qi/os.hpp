@@ -654,6 +654,28 @@ namespace qi {
       return std::to_string(n);
 #endif
     }
+
+// `PTRDIFF_MIN` and `PTRDIFF_MAX` may not be defined on some platforms (e.g.
+// android arm32), therefore we define them here in terms of the corresponding
+// `INTxy_MIN` and `INTxy_MAX`.
+//
+// This approach is inspired by the bionic libc:
+// https://android.googlesource.com/platform/bionic/+/master/libc/include/stdint.h#217
+#if !defined(PTRDIFF_MIN)
+#   if defined(__LP64__) && __LP64__
+#     define PTRDIFF_MIN INT64_MIN
+#   else
+#     define PTRDIFF_MIN INT32_MIN
+#   endif
+#endif
+
+#if !defined(PTRDIFF_MAX)
+#   if defined(__LP64__) && __LP64__
+#     define PTRDIFF_MAX INT64_MAX
+#   else
+#     define PTRDIFF_MAX INT32_MAX
+#   endif
+#endif
   }
 }
 

@@ -221,6 +221,64 @@ TEST(TestSignal, FunctionDestroyedOnDisconnection)
 }
 
 
+TEST(TestSignal, DisconnectLinkRegistrationCheck)
+{
+  qi::Signal<void> signal1;
+  qi::SignalLink link1 = signal1.connect([]{});
+  { // Nominal case: registered link id
+    bool linkFoundAndDisconnected = signal1.disconnect(link1);
+    ASSERT_TRUE(linkFoundAndDisconnected);
+  }
+  { // Multiple attempts (link id already unregistered)
+    bool linkFoundAndDisconnected = signal1.disconnect(link1);
+    ASSERT_FALSE(linkFoundAndDisconnected);
+  }
+  { // Bad link id
+    qi::Signal<void> signal2;
+    bool linkFoundAndDisconnected = signal2.disconnect(link1);
+    ASSERT_FALSE(linkFoundAndDisconnected);
+  }
+}
+
+TEST(TestSignal, DisconnectLinkRegistrationCheckWarning)
+{
+  // Set up signals
+  qi::Signal<void> signal1, signal2;
+  qi::SignalLink link1 = signal1.connect([]{});
+
+  // Listen to log
+  // TODO: Add common test utility to expect a particular message of a given level.
+  // (See MockLogHandler in test_qilog.hpp.) Then use it here.
+  std::atomic<bool> warningRaised{false};
+  const auto logHandlerName = "check_signal_disconnect_warning";
+  qi::log::flush(); // previous messages
+
+  auto add = [&]() {
+    qi::log::addHandler(
+      logHandlerName,
+      [&warningRaised]( const qi::LogLevel level,
+                        const qi::Clock::time_point,
+                        const qi::SystemClock::time_point,
+                        const char* /*category*/, const char* message,
+                        const char* /*file*/, const char* /*function*/, int /*line*/)
+      {
+        if (level == qi::LogLevel_Warning
+          && std::string(message).find("No subscription found for SignalLink") != std::string::npos)
+        {
+          warningRaised = true;
+        }
+      },
+      qi::LogLevel_Warning);
+      return logHandlerName;
+  };
+  auto scopedLogHandler = ka::scoped(add(), &qi::log::removeHandler);
+
+  // Try to unsubscribe to the signal
+  signal2.disconnect(link1); // Bad link
+  qi::log::flush();
+  ASSERT_TRUE(warningRaised);
+}
+
 
 TEST(TestSignal, AutoDisconnect)
 {

@@ -44,7 +44,7 @@ std::string getstring()
 
 float getfloat()
 {
-  return 42.0;
+  return 42.0f;
 }
 
 void getvoid()
@@ -1657,7 +1657,7 @@ TEST(TestCall, MetaObjectCacheFailureWhenCallsInParallel)
       {
         memory.call<qi::AnyObject>("subscriber");
       }
-      catch (std::exception const &e)
+      catch (std::exception const &)
       {
         FAIL();
       }

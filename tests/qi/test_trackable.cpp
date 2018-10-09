@@ -125,3 +125,12 @@ TEST(FutureTrack, track_actor_build)
   auto f2 = qi::track(func, &stuff);
   (void) f2;
 }
+
+TEST(Trackable, CanTrackFunctionWithExplicitDefaultCtorReturnType)
+{
+  struct WithExplicitDefaultCtor { explicit WithExplicitDefaultCtor() = default; };
+  struct Tracker : qi::Trackable<Tracker> { using Trackable::destroy; };
+  Tracker tracker;
+  qi::track([]{ return WithExplicitDefaultCtor(); }, &tracker);
+  SUCCEED();
+}
