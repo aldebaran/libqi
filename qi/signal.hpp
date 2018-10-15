@@ -10,6 +10,7 @@
 #include <boost/function.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <qi/atomic.hpp>
+#include <qi/macro.hpp>
 
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
