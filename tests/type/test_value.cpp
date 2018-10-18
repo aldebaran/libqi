@@ -132,7 +132,7 @@ TEST(Value, InvalidReference)
   EXPECT_EQ(AnyReference{}, r);
 }
 
-TEST(Value, Basic)
+TEST(Value, Int)
 {
   AnyReference v;
   int twelve = 12;
@@ -142,13 +142,33 @@ TEST(Value, Basic)
   ASSERT_EQ(v.toInt(), 12);
   ASSERT_EQ(v.toFloat(), 12.0f);
   ASSERT_EQ(v.toDouble(), 12.0);
+}
+
+TEST(Value, Float)
+{
+  AnyReference v;
   double five = 5.0;
   v = AutoAnyReference(five);
   ASSERT_EQ(v.toInt(), 5);
   ASSERT_EQ(v.toFloat(), 5.0f);
   ASSERT_EQ(v.toDouble(), 5.0);
-  v = AutoAnyReference("foo");
-  ASSERT_EQ("foo", v.toString());
+}
+
+TEST(Value, String)
+{
+  AnyReference v;
+  auto foo = "foo";
+  v = AutoAnyReference(foo);
+  ASSERT_EQ(foo, v.toString());
+}
+
+TEST(Value, SizeThrowsOnIncorrectUsage)
+{
+  EXPECT_ANY_THROW(AnyValue{}.size());
+  EXPECT_ANY_THROW(AnyValue{}.asReference().size());
+  EXPECT_ANY_THROW(AnyReference(AutoAnyReference(12)).size());
+  EXPECT_ANY_THROW(AnyReference(AutoAnyReference(5.0)).size());
+  EXPECT_ANY_THROW(AnyReference(AutoAnyReference("foo")).size());
 }
 
 namespace {
