@@ -20,7 +20,7 @@ MockLogHandler::MockLogHandler(const std::string& name)
 }
 
 
-void MockLogHandler::operator()(qi::LogLevel,
+void MockLogHandler::operator()(qi::LogLevel level,
                                 qi::Clock::time_point,
                                 qi::SystemClock::time_point,
                                 const char* category,
@@ -34,4 +34,5 @@ void MockLogHandler::operator()(qi::LogLevel,
   if (catStrRef == "qi.log" || catStrRef == "qi.eventloop")
     return;
   this->log(message);
+  this->log(level, message);
 }

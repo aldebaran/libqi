@@ -1,12 +1,19 @@
+/*
+**  Copyright (C) 2018 Softbank Robotics Europe
+**  See COPYING for the license
+*/
+
+#include <gtest/gtest.h>
+
 #include <chrono>
 #include <future>
-/*
-** Copyright (C) 2014 Aldebaran
-*/
+#include <thread>
+#include <random>
+#include <boost/thread/mutex.hpp>
+
 #include <ka/errorhandling.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
-#include <boost/thread/mutex.hpp>
 #include <qi/os.hpp>
 #include <qi/strand.hpp>
 #include <qi/periodictask.hpp>
@@ -15,9 +22,8 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/testutils/testutils.hpp>
-#include <gtest/gtest.h>
-#include <thread>
-#include <random>
+
+#include "test_qilog.hpp"
 
 qiLogCategory("test");
 
@@ -118,6 +124,18 @@ TEST(TestStrand, StrandCancel)
   auto f = strand.asyncDelay([]{}, qi::Seconds(1000));
   f.cancel();
   ASSERT_EQ(qi::FutureState_Canceled, f.wait());
+}
+
+TEST(TestStrand, StrandLogOnUncaughtExceptionInPostedTask)
+{
+  MockLogHandler mockLogHandler("strand_post_error");
+
+  qi::Strand strand;
+
+  EXPECT_CALL(mockLogHandler, log(qi::LogLevel::LogLevel_Warning, testing::_));
+  strand.post([=]{ throw "lol"; });
+  strand.async([]{}).wait(); //Make sure to wait for the throwing task to be completely processed.
+  qi::log::flush();
 }
 
 TEST(TestStrand, StrandCancelScheduled)
