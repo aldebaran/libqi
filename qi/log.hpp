@@ -30,6 +30,8 @@
 # include <boost/exception/exception.hpp>
 # include <boost/exception/diagnostic_information.hpp>
 # include <ka/macroregular.hpp>
+# include <ka/typetraits.hpp>
+# include <ka/utility.hpp>
 
 
 /**
