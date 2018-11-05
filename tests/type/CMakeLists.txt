@@ -17,6 +17,7 @@ qi_create_gmock(
   "test_signature.cpp"
   "test_type.cpp"
   "test_value.cpp"
+  "test_optional.cpp"
 
   DEPENDS
   qi

@@ -48,6 +48,13 @@ namespace qi {
         && HasLessGuard<B>::value;
     };
 
+    // boost::optional<T> has a less operator if and only if T has a less operator.
+    template<typename T>
+    struct HasLess<boost::optional<T>>
+    {
+      static const bool value = HasLessGuard<T>::value;
+    };
+
     //boost::has_less fails for member function pointer, gard
     template<typename T, bool v>
     struct HasLessSwitch
@@ -77,12 +84,8 @@ namespace qi {
     };
 
 
-    template<typename T, bool b>
+    template<typename T, bool hasLessGuard>
     struct LessHelper
-    {};
-
-    template<typename T>
-    struct LessHelper<T, true>
     {
       bool operator()(T* a, T* b) { return *a<*b;}
     };
