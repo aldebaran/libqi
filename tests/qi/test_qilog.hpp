@@ -31,8 +31,7 @@ class MockLogHandler
 public:
   explicit MockLogHandler(const std::string& name);
 
-  MOCK_METHOD1(log, void(const char*));
-  MOCK_METHOD2(log, void(qi::LogLevel, const char*));
+  MOCK_METHOD3(log, void(qi::LogLevel, const char* /*category*/, const char* /*msg*/));
 
   void operator()(qi::LogLevel,
                   qi::Clock::time_point,

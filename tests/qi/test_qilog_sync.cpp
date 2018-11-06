@@ -22,7 +22,6 @@
 
 using namespace qi;
 using ::testing::_;
-using ::testing::StrictMock;
 using ::testing::Exactly;
 using ::testing::StrEq;
 
@@ -45,11 +44,11 @@ protected:
 
 TEST_F(SyncLog, logsync)
 {
-  StrictMock<MockLogHandler> handler("muffins");
+  MockLogHandler handler("muffins");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_)).Times(Exactly(1000));
+    EXPECT_CALL(handler, log(_, _, _)).Times(Exactly(1000));
     for (int i = 0; i < 1000; i++)
       qiLogFatal("core.log.test1", "%d\n", i);
   }
@@ -62,18 +61,18 @@ TEST_F(SyncLog, logsync)
 TEST_F(SyncLog, ifCorrectness)
 {
   qiLogCategory("test");
-  StrictMock<MockLogHandler> handler("cupcakes");
+  MockLogHandler handler("cupcakes");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     if (true)
       qiLogError("qi.test") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     if (true)
       qiLogErrorF("qi.test");
   }
@@ -125,91 +124,91 @@ TEST_F(SyncLog, formatting)
 {
   qiLogCategory("qi.test");
 
-  StrictMock<MockLogHandler> handler("brownies");
+  MockLogHandler handler("brownies");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin")));
     qiLogError("qi.test") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogError("qi.test") << "coin " << 42;
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin")));
     qiLogErrorF("coin");
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogErrorF("coin %s", 42);
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogErrorF("coin %s", "42");
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogError() << "coin " << 42;
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogError("qi.test", "coin 42");
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogError("qi.test", "coin %s", "42");
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42 42 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42 42 42")));
     qiLogError("qi.test", "coin %s %s %s", "42", 42, "42");
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogError("qi.test", "coin %s", 42);
   }
 
   // Test with invalid formats
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogErrorF("coin %s", 42, 51);
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("coin 42")));
+    EXPECT_CALL(handler, log(_, _, StrEq("coin 42")));
     qiLogErrorF("coin %s%s", 42);
   }
 }
 
 TEST_F(SyncLog, filteringChange)
 {
-  StrictMock<MockLogHandler> handler("set");
+  MockLogHandler handler("set");
 
   log::setLogLevel(LogLevel_Info);
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_)).Times(Exactly(2));
+    EXPECT_CALL(handler, log(_, _, _)).Times(Exactly(2));
     qiLogVerbose("init.test2") << "VLoL2"; // will not log, verbosity is info
     qiLogError("init.test2") << "ELoL2";
     qiLogWarning("init.test2") << "WLoL2";
@@ -221,60 +220,60 @@ TEST_F(SyncLog, filteringChange)
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogVerbose("init.test") << "VLoL"; // will log, filter has priority over global level
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.test") << "ELoL";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogWarning("init.test") << "WLoL";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogVerbose("init.test2") << "VLoL2";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.test2") << "ELoL2";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogWarning("init.test2") << "WLoL2";
   }
 }
 
 TEST_F(SyncLog, filtering)
 {
-  StrictMock<MockLogHandler> handler("set");
+  MockLogHandler handler("set");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("qi.test") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.yes") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("initglob.yes") << "coin";
   }
 
@@ -293,25 +292,25 @@ TEST_F(SyncLog, filtering)
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.yes") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.no") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("initglob.yes") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("initglob.no") << "coin";
   }
 
@@ -325,19 +324,19 @@ TEST_F(SyncLog, filtering)
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("qi.test") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.yes") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.no") << "coin";
   }
 
@@ -350,13 +349,13 @@ TEST_F(SyncLog, filtering)
   log::enableCategory("qi.test", handler.id);
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("qi.test") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogCategory("qi.test");
     qiLogErrorF("coin");
   }
@@ -367,7 +366,7 @@ TEST_F(SyncLog, filtering)
   log::setLogLevel(LogLevel_Silent, handler.id);
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_)); // enableCategory overrides setLogLevel
+    EXPECT_CALL(handler, log(_, _, _)); // enableCategory overrides setLogLevel
     qiLogError("qi.test") << "coin";
   }
 
@@ -378,39 +377,39 @@ TEST_F(SyncLog, filtering)
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.yes") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("init.no") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("initglob.yes") << "coin";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("initglob.no") << "coin";
   }
 }
 
 TEST_F(SyncLog, filteringPerHandler)
 {
-  StrictMock<MockLogHandler> handler1("set1");
-  StrictMock<MockLogHandler> handler2("set2");
+  MockLogHandler handler1("set1");
+  MockLogHandler handler2("set2");
 
   {
     const auto _u = scopeMockExpectations(handler1);
     const auto _u2 = scopeMockExpectations(handler2);
-    EXPECT_CALL(handler1, log(_));
-    EXPECT_CALL(handler2, log(_)); // both handlers log
+    EXPECT_CALL(handler1, log(_, _, _));
+    EXPECT_CALL(handler2, log(_, _, _)); // both handlers log
     qiLogError("qi.test") << "coin";
   }
 
@@ -418,7 +417,7 @@ TEST_F(SyncLog, filteringPerHandler)
   {
     const auto _u = scopeMockExpectations(handler1);
     const auto _u2 = scopeMockExpectations(handler2);
-    EXPECT_CALL(handler2, log(_)); // only handler 2 will log
+    EXPECT_CALL(handler2, log(_, _, _)); // only handler 2 will log
     qiLogError("qi.test") << "coin";
   }
 
@@ -433,7 +432,7 @@ TEST_F(SyncLog, filteringPerHandler)
   {
     const auto _u = scopeMockExpectations(handler1);
     const auto _u2 = scopeMockExpectations(handler2);
-    EXPECT_CALL(handler1, log(_)); // only handler 1 will log
+    EXPECT_CALL(handler1, log(_, _, _)); // only handler 1 will log
     qiLogError("qi.test") << "coin";
   }
 
@@ -448,7 +447,7 @@ TEST_F(SyncLog, filteringPerHandler)
   {
     const auto _u = scopeMockExpectations(handler1);
     const auto _u2 = scopeMockExpectations(handler2);
-    EXPECT_CALL(handler2, log(_)); // only handler 2 will log
+    EXPECT_CALL(handler2, log(_, _, _)); // only handler 2 will log
     qiLogError("qi.test") << "coin";
   }
 
@@ -456,7 +455,7 @@ TEST_F(SyncLog, filteringPerHandler)
   {
     const auto _u = scopeMockExpectations(handler1);
     const auto _u2 = scopeMockExpectations(handler2);
-    EXPECT_CALL(handler2, log(_)); // only handler 2 will log, addFilter overrides setLogLevel for handler1
+    EXPECT_CALL(handler2, log(_, _, _)); // only handler 2 will log, addFilter overrides setLogLevel for handler1
     qiLogError("qi.test") << "coin";
   }
 
@@ -464,19 +463,19 @@ TEST_F(SyncLog, filteringPerHandler)
   {
     const auto _u = scopeMockExpectations(handler1);
     const auto _u2 = scopeMockExpectations(handler2);
-    EXPECT_CALL(handler1, log(_));
-    EXPECT_CALL(handler2, log(_)); // both handlers log
+    EXPECT_CALL(handler1, log(_, _, _));
+    EXPECT_CALL(handler2, log(_, _, _)); // both handlers log
     qiLogError("qi.test") << "coin";
   }
 }
 
 TEST_F(SyncLog, globbing)
 {
-  StrictMock<MockLogHandler> handler("pudding");
+  MockLogHandler handler("pudding");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("qi.test") << "coin";
   }
 
@@ -490,7 +489,7 @@ TEST_F(SyncLog, globbing)
   log::addFilter("qi.test", LogLevel_Verbose, handler.id);
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("qi.test") << "coin";
   }
 
@@ -502,16 +501,16 @@ TEST_F(SyncLog, globbing)
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(_));
+    EXPECT_CALL(handler, log(_, _, _));
     qiLogError("qo.foo") << "coin";
   }
 }
 
 TEST_F(SyncLog, emptyLogWithCat)
 {
-  StrictMock<MockLogHandler> handler("cookies");
+  MockLogHandler handler("cookies");
 
-  EXPECT_CALL(handler, log(_)).Times(Exactly(3));
+  EXPECT_CALL(handler, log(_, _, _)).Times(Exactly(3));
   qiLogDebug("log.test1");   // will not log, default log level is info
   qiLogVerbose("log.test1"); // will not log, default log level is info
   qiLogInfo("log.test1");    // will not log, info is disabled
@@ -522,9 +521,9 @@ TEST_F(SyncLog, emptyLogWithCat)
 
 TEST_F(SyncLog, emptyLog)
 {
-  StrictMock<MockLogHandler> handler("cookies again");
+  MockLogHandler handler("cookies again");
 
-  EXPECT_CALL(handler, log(_)).Times(Exactly(3));
+  EXPECT_CALL(handler, log(_, _, _)).Times(Exactly(3));
   qiLogCategory("log.test2");
   qiLogDebug();   // will not log, default log level is info
   qiLogVerbose(); // will not log, default log level is info

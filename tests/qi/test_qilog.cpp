@@ -33,6 +33,5 @@ void MockLogHandler::operator()(qi::LogLevel level,
   // remove log from the logger itself and the eventloop
   if (catStrRef == "qi.log" || catStrRef == "qi.eventloop")
     return;
-  this->log(message);
-  this->log(level, message);
+  this->log(level, category, message);
 }

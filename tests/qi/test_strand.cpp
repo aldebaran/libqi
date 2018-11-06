@@ -132,7 +132,7 @@ TEST(TestStrand, StrandLogOnUncaughtExceptionInPostedTask)
 
   qi::Strand strand;
 
-  EXPECT_CALL(mockLogHandler, log(qi::LogLevel::LogLevel_Warning, testing::_));
+  EXPECT_CALL(mockLogHandler, log(qi::LogLevel::LogLevel_Warning, testing::_, testing::_));
   strand.post([=]{ throw "lol"; });
   strand.async([]{}).wait(); //Make sure to wait for the throwing task to be completely processed.
   qi::log::flush();
