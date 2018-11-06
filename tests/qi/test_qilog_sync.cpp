@@ -587,17 +587,17 @@ TEST_F(SyncLog, threadSafeness)
 
 TEST_F(SyncLog, wcharLiteral)
 {
-  StrictMock<MockLogHandler> handler("string beans");
+  MockLogHandler handler("string beans");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("hello")));
+    EXPECT_CALL(handler, log(_, _, StrEq("hello")));
     qiLogError("qi.test") << L"hello";
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("今日は")));
+    EXPECT_CALL(handler, log(_, _, StrEq("今日は")));
     qiLogError("qi.test") << L"今日は";
   }
 
@@ -605,26 +605,25 @@ TEST_F(SyncLog, wcharLiteral)
 
 TEST_F(SyncLog, wstring)
 {
-
-  StrictMock<MockLogHandler> handler("string beans");
+  MockLogHandler handler("string beans");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("hello")));
+    EXPECT_CALL(handler, log(_, _, StrEq("hello")));
     std::wstring ws = L"hello";
     qiLogError("qi.test") << ws;
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("hello")));
+    EXPECT_CALL(handler, log(_, _, StrEq("hello")));
     std::wstring ws = L"hello";
     qiLogError("qi.test") << std::move(ws);
   }
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("hello")));
+    EXPECT_CALL(handler, log(_, _, StrEq("hello")));
     const std::wstring ws = L"hello";
     qiLogError("qi.test") << ws;
   }
@@ -632,11 +631,11 @@ TEST_F(SyncLog, wstring)
 
 TEST_F(SyncLog, BFSPath)
 {
-  StrictMock<MockLogHandler> handler("string beans");
+  MockLogHandler handler("string beans");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("Not found: /dev/null")));
+    EXPECT_CALL(handler, log(_, _, StrEq("Not found: /dev/null")));
     qi::Path configPath("/dev/null");
     qiLogError("qi.test") << "Not found: " << configPath.bfsPath().native();
   }
@@ -644,11 +643,11 @@ TEST_F(SyncLog, BFSPath)
 
 TEST_F(SyncLog, wchar)
 {
-  StrictMock<MockLogHandler> handler("string beans");
+  MockLogHandler handler("string beans");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq("Hello")));
+    EXPECT_CALL(handler, log(_, _, StrEq("Hello")));
     wchar_t wc[32];
     wcscpy(wc, L"Hello");
     qiLogError("qi.test") << wc;
@@ -661,11 +660,11 @@ TEST_F(SyncLog, wchar)
 #if U8_STRING_LITERALS_OK
 TEST_F(SyncLog, u8Literals)
 {
-  StrictMock<MockLogHandler> handler("string beans");
+  MockLogHandler handler("string beans");
 
   {
     const auto _u = scopeMockExpectations(handler);
-    EXPECT_CALL(handler, log(StrEq(u8"\u4ECA\u65E5\u306F\u4E16\u754C")));
+    EXPECT_CALL(handler, log(_, _, StrEq(u8"\u4ECA\u65E5\u306F\u4E16\u754C")));
     qiLogError("qi.test") << u8"\u4ECA\u65E5\u306F\u4E16\u754C";
   }
 }
