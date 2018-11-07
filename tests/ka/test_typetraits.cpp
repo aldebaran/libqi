@@ -624,6 +624,23 @@ TEST(TypeTraits, Conjunction) {
   checkIntConstant<Conjunction<true_t, custom_true_t>, custom_true_t>();
 }
 
+TEST(TypeTraits, Disjunction) {
+  using namespace ka;
+  checkIntConstant<Disjunction<>, false_t>();
+  checkIntConstant<Disjunction<true_t>, true_t>();
+  checkIntConstant<Disjunction<false_t>, false_t>();
+  checkIntConstant<Disjunction<true_t, false_t>, true_t>();
+  checkIntConstant<Disjunction<false_t, true_t>, true_t>();
+  checkIntConstant<Disjunction<true_t, true_t>, true_t>();
+  checkIntConstant<Disjunction<custom_true_t>, custom_true_t>();
+  checkIntConstant<Disjunction<custom_false_t>, custom_false_t>();
+  checkIntConstant<Disjunction<custom_true_t, custom_false_t>, custom_true_t>();
+  checkIntConstant<Disjunction<custom_false_t, custom_true_t>, custom_true_t>();
+  checkIntConstant<Disjunction<false_t, custom_false_t>, custom_false_t>();
+  checkIntConstant<Disjunction<custom_true_t, custom_true_t>, custom_true_t>();
+  checkIntConstant<Disjunction<custom_true_t, true_t>, custom_true_t>();
+}
+
 namespace {
   struct without_op_star_t {
     int i;
