@@ -590,31 +590,38 @@ TEST(TypeTraits, Conditional) {
   static_assert(Equal<Conditional<false, int, float>, float>::value, "");
 }
 
-template<typename Conjunction, bool value, typename Base>
-void assertConjunction() {
-  static_assert(Conjunction::value == value, "");
-  static_assert(std::is_base_of<Base, Conjunction>::value, "");
-}
-
 struct custom_true_t  { static const bool value = true; };
 struct custom_false_t { static const bool value = false; };
 
-TEST(TypeTraits, Conjunction)
-{
+template<typename IntCst, typename Base>
+void checkIntConstant() {
+  static_assert(IntCst::value == Base::value, "");
+  static_assert(std::is_base_of<Base, IntCst>::value, "");
+}
+
+TEST(TypeTraits, Negation) {
   using namespace ka;
-  assertConjunction<Conjunction<>, true,  true_t>();
-  assertConjunction<Conjunction<true_t>, true,  true_t>();
-  assertConjunction<Conjunction<false_t>, false, false_t>();
-  assertConjunction<Conjunction<true_t, false_t>, false, false_t>();
-  assertConjunction<Conjunction<false_t, true_t>, false, false_t>();
-  assertConjunction<Conjunction<true_t, true_t>, true,  true_t>();
-  assertConjunction<Conjunction<custom_true_t>, true,  custom_true_t>();
-  assertConjunction<Conjunction<custom_false_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_true_t, custom_false_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_false_t, custom_true_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_false_t, false_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_true_t, custom_true_t>, true,  custom_true_t>();
-  assertConjunction<Conjunction<true_t, custom_true_t>, true,  custom_true_t>();
+  checkIntConstant<Negation<true_t>, false_t>();
+  checkIntConstant<Negation<false_t>, true_t>();
+  checkIntConstant<Negation<custom_true_t>, false_t>();
+  checkIntConstant<Negation<custom_false_t>, true_t>();
+}
+
+TEST(TypeTraits, Conjunction) {
+  using namespace ka;
+  checkIntConstant<Conjunction<>, true_t>();
+  checkIntConstant<Conjunction<true_t>, true_t>();
+  checkIntConstant<Conjunction<false_t>, false_t>();
+  checkIntConstant<Conjunction<true_t, false_t>, false_t>();
+  checkIntConstant<Conjunction<false_t, true_t>, false_t>();
+  checkIntConstant<Conjunction<true_t, true_t>, true_t>();
+  checkIntConstant<Conjunction<custom_true_t>, custom_true_t>();
+  checkIntConstant<Conjunction<custom_false_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_true_t, custom_false_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_false_t, custom_true_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_false_t, false_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_true_t, custom_true_t>, custom_true_t>();
+  checkIntConstant<Conjunction<true_t, custom_true_t>, custom_true_t>();
 }
 
 namespace {

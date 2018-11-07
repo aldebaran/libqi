@@ -364,6 +364,10 @@ namespace ka {
   template<bool B, typename T, typename F>
   using Conditional = typename std::conditional<B, T, F>::type;
 
+  /// Behave exactly as the std::negation of C++17 (except for the lack of `operator()`).
+  template<typename B>
+  struct Negation : std::integral_constant<bool, ! bool(B::value)> {};
+
   /// Behave exactly as the std::conjunction of C++17
   template<typename...> struct Conjunction : true_t {};
   template<typename B1> struct Conjunction<B1> : B1 {};
