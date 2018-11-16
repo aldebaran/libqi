@@ -40,6 +40,12 @@ namespace log
     return prio + 1;
   }
 
+  bool isAssignmentValid(const std::string &field)
+  {
+    const auto pos = field.find('=');
+    return (pos != 0) && (pos != std::string::npos);
+  }
+
   class JournaldLogHandler
   {
   private:
@@ -49,16 +55,59 @@ namespace log
     BOOST_STATIC_CONSTEXPR auto FILE_PREFIX_LEN = sizeof("CODE_FILE=") - 1;
     char _fileBuffer[FILE_PREFIX_LEN + FILE_LEN + 1u];
     char _lineBuffer[32u];
-    // extraneous field to pass to journald.
-    // journald will ignore it if the field name is invalid.
-    // An empty field is invalid and will be ignored.
+    // extraneous field to pass to journald, if not empty.
     std::string _extraField;
+    const char *_extraFormat;
   public:
 
-    JournaldLogHandler(std::string extraField)
+    // We'll use field with sd_journal_send as in:
+    //
+    // auto i = sd_journal_send(..., "%s", field.c_str(), nullptr);
+    //
+    // In this call, if field does not contain '=' or if it starts with '=',
+    // then sd_journal_send fails (i != 0).
+    // Otherwise, then the entry has the form of an
+    // assignment (name=value), and the call succeeds (ie i == 0).
+    // Yet, sd_journal_send might find the name invalid,
+    // in which case the invalid assignment is skipped.
+    // The other ones (MESSAGE, timestamps,...) are sent.
+    //
+    // Here are examples of inputs (tested on systemd 232):
+    //
+    //   ===================  =================  ==================
+    //   field                i == 0             assignment skipped
+    //   ===================  =================  ==================
+    //   ""                   false
+    //   "="                  false
+    //   "=bar"               false
+    //   "_=bar"              true               true
+    //   " =bar"              true               true
+    //   "_FOO=bar"           true               true
+    //   "Foo=bar"            true               true
+    //   "1_FOO=bar"          true               true
+    //   "FOO=bar"            true               false
+    //   "FOO="               true               false
+    //   "FOO_1=charge=10%!"  true               false
+    //   "FOO=%s"             true               false
+    //   ===================  =================  ==================
+    //
+    // Note:
+    //
+    // the form
+    //
+    //   auto i = sd_journal_send(..., "%s", field.c_str(), nullptr);
+    //
+    // is prefered over
+    //
+    //   auto i = sd_journal_send(..., field.c_str(), nullptr);
+    //
+    // because with the latter, a field with value "HELL=%s" would make
+    // the program crash.
+    JournaldLogHandler(std::string field)
       : _fileBuffer{"CODE_FILE="}, // extra bytes are zero-initialized
         _lineBuffer{"CODE_LINE="}, // extra bytes are zero-initialized
-        _extraField(std::move(extraField)) {}
+        _extraField(isAssignmentValid(field) ? std::move(field) :  ""),
+        _extraFormat(_extraField.empty() ? nullptr : "%s") {}
 
     /**
      * \brief Send logs messages to systemd
@@ -103,9 +152,10 @@ namespace log
                     "QI_CATEGORY=%s", category,
                     "PRIORITY=%i", priority,
                     "QI=1",
+                    _extraFormat,
                     _extraField.c_str(),
                     nullptr);
-       if (i == 0)
+        if (i == 0)
           return;
       }
       else
@@ -114,6 +164,7 @@ namespace log
                                 "QI_CATEGORY=%s", category,
                                 "PRIORITY=%i", priority,
                                 "QI=1",
+                                _extraFormat,
                                 _extraField.c_str(),
                                 nullptr);
         if (i == 0)
@@ -131,8 +182,7 @@ namespace log
 
   Handler makeJournaldLogHandler()
   {
-    const std::string field = qi::os::getenv("QI_LOG_EXTRA_JOURNALD_FIELD");
-    return JournaldLogHandler(field);
+    return JournaldLogHandler(qi::os::getenv("QI_LOG_EXTRA_JOURNALD_FIELD"));
   }
 }
 }
