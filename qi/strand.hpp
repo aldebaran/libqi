@@ -9,7 +9,11 @@
 
 #include <deque>
 #include <atomic>
+#include <memory>
+#include <ka/functional.hpp>
+#include <ka/mutablestore.hpp>
 #include <qi/assert.hpp>
+#include <qi/config.hpp>
 #include <qi/detail/executioncontext.hpp>
 #include <qi/detail/futureunwrap.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -37,7 +41,7 @@ namespace detail
 }
 
 // we use ExecutionContext's helpers in schedulerFor, we don't need to implement all the methods
-class StrandPrivate : public ExecutionContext, public boost::enable_shared_from_this<StrandPrivate>
+class QI_API StrandPrivate : public ExecutionContext, public boost::enable_shared_from_this<StrandPrivate>
 {
 public:
   enum class State;
@@ -55,8 +59,13 @@ public:
   boost::condition_variable_any _processFinished;
   bool _dying;
   Queue _queue;
+  class ScopedPromiseGroup;
+  std::shared_ptr<ScopedPromiseGroup> _deferredTasksFutures; // Shared to avoid including issues
 
   explicit StrandPrivate(qi::ExecutionContext& executor);
+  ~StrandPrivate();
+
+  void join();
 
   // Schedules the callback for execution. If the trigger date `tp` is in the past, executes the
   // callback immediately in the calling thread.
@@ -89,17 +98,19 @@ public:
 private:
   void stopProcess(boost::recursive_mutex::scoped_lock& lock,
                    bool finished);
+
+  bool joined = false;
+
+  template<class Task>
+  auto track(Task&& task)
+    // TODO: C++ >= 14 : Remove the following line.
+    -> decltype(ka::scope_lock_proc(ka::fwd<Task>(task), ka::mutable_store(weak_from_this())))
+  {
+    return ka::scope_lock_proc(ka::fwd<Task>(task), ka::mutable_store(weak_from_this()));
+  }
+
 };
 
-inline StrandPrivate::StrandPrivate(qi::ExecutionContext& executor)
-  : _executor(executor)
-  , _curId(0)
-  , _aliveCount(0)
-  , _processing(false)
-  , _processingThread(0)
-  , _dying(false)
-{
-}
 
 /** Class that schedules tasks sequentially
  *
@@ -120,6 +131,9 @@ public:
   Strand();
   /// Construct a strand that will schedule work on executionContext
   Strand(qi::ExecutionContext& executionContext);
+#ifdef QI_WITH_TESTS
+  Strand(boost::shared_ptr<StrandPrivate> impl);
+#endif
   /// Call detroy()
   ~Strand();
 
@@ -217,7 +231,7 @@ public:
       -> detail::Stranded<typename std::decay<F>::type>
   {
     return detail::Stranded<typename std::decay<F>::type>(std::forward<F>(func),
-                                                              _p,
+                                                              boost::atomic_load(&_p),
                                                               std::move(onFail),
                                                               options);
   }
@@ -230,7 +244,7 @@ public:
       -> detail::StrandedUnwrapped<typename std::decay<F>::type>
   {
     return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::forward<F>(func),
-                                                              _p,
+                                                              boost::atomic_load(&_p),
                                                               std::move(onFail),
                                                               options);
   }

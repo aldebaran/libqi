@@ -22,6 +22,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <qi/eventloop.hpp>
 
 #include "test_qilog.hpp"
 
@@ -44,7 +45,7 @@ TEST(TestStrand, StrandSimple)
 {
   boost::mutex mutex;
 
-  qi::Strand strand(*qi::getEventLoop());
+  qi::Strand strand{*qi::getEventLoop()};
   int i = 0;
   qi::Future<void> f1 = strand.async(boost::bind<void>(&setValueWait,
         boost::ref(mutex), std::chrono::milliseconds{ 100 }, boost::ref(i), 1));
@@ -119,7 +120,7 @@ TEST(TestStrand, StrandSchedulerForWithMoveOnlyArg)
 
 TEST(TestStrand, StrandCancel)
 {
-  qi::Strand strand(*qi::getEventLoop());
+  qi::Strand strand{*qi::getEventLoop()};
   // cancel before scheduling
   auto f = strand.asyncDelay([]{}, qi::Seconds(1000));
   f.cancel();
@@ -138,9 +139,22 @@ TEST(TestStrand, StrandLogOnUncaughtExceptionInPostedTask)
   qi::log::flush();
 }
 
+TEST(TestStrand, AsyncDelayThenDestroyIsSafe)
+{
+  auto future = []
+  {
+    qi::Strand strand;
+    return strand.asyncDelay([]{}, usualTimeout);
+  }();
+
+  ASSERT_TRUE(future.isValid());
+  const auto status = future.wait();
+  ASSERT_EQ(qi::FutureState_FinishedWithError, status);
+}
+
 TEST(TestStrand, StrandCancelScheduled)
 {
-  qi::Strand strand(*qi::getEventLoop());
+  qi::Strand strand;
   // cancel before scheduling
   qi::Promise<void> syncProm;
   auto syncFut = syncProm.future();
@@ -166,9 +180,9 @@ static const unsigned int STRAND_NB_TRIES = 100;
 TEST(TestStrand, AggressiveCancel)
 {
   boost::mutex mutex;
-  std::vector<qi::Future<void> > futures;
+  std::vector<qi::Future<void>> futures;
 
-  qi::Strand strand(*qi::getEventLoop());
+  qi::Strand strand;
   std::atomic<unsigned int> i(0);
   for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
   {
@@ -179,11 +193,11 @@ TEST(TestStrand, AggressiveCancel)
           boost::ref(mutex), std::chrono::milliseconds{50}, boost::ref(i)));
     futures.push_back(f1);
   }
-  for(qi::Future<void>& future: futures)
+  for(auto&& future: futures)
     future.cancel();
 
   unsigned int successCount = 0;
-  for(qi::Future<void>& future: futures)
+  for(auto&& future: futures)
   {
     if (future.wait() != qi::FutureState_Canceled)
       successCount++;
@@ -201,16 +215,19 @@ TEST(TestStrand, StrandDestruction)
 
   std::vector<qi::Future<void>> futures;
   {
-    qi::Strand strand(*qi::getEventLoop());
+    qi::Strand strand;
     futures.reserve(STRAND_NB_TRIES);
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
-      futures.push_back(strand.async(boost::bind<void>(&increment,
-              boost::ref(mutex), std::chrono::milliseconds{1}, boost::ref(i))));
+      futures.push_back(strand.async([&, j]{
+        increment(mutex, std::chrono::milliseconds{1}, i);
+      }));
     }
   }
   for (auto& future : futures)
+  {
     ASSERT_TRUE(future.isFinished());
+  }
 }
 
 TEST(TestStrand, StrandDestructionWithMethodAndConcurrency)
@@ -220,7 +237,7 @@ TEST(TestStrand, StrandDestructionWithMethodAndConcurrency)
   std::atomic<unsigned int> i(0);
 
   std::vector<qi::Future<void>> futures;
-  qi::Strand strand(*qi::getEventLoop());
+  qi::Strand strand;
   futures.reserve(STRAND_NB_TRIES);
   for (unsigned int j = 0; j < STRAND_NB_TRIES/4; ++j)
     futures.push_back(qi::getEventLoop()->async([&]{
@@ -250,7 +267,7 @@ TEST(TestStrand, StrandDestructionWithCancel)
   std::atomic<unsigned int> i(0);
 
   {
-    qi::Strand strand(*qi::getEventLoop());
+    qi::Strand strand;
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
       qi::Future<void> f1 = strand.async(boost::bind<void>(&increment,
@@ -276,16 +293,12 @@ TEST(TestStrand, StrandDestructionWithCancel)
   ASSERT_EQ(successCount, i);
 }
 
-static void deleteStrand(qi::Strand* strand)
-{
-  delete strand;
-}
 
 TEST(TestStrand, StrandDestructionBeforeEnd)
 {
   qi::Strand* strand = new qi::Strand(*qi::getEventLoop());
-  qi::Future<void> f = strand->async(boost::bind(deleteStrand, strand));
-  f.value();
+  qi::Future<void> f = strand->async([=]{ delete strand; });
+  f.wait();
 }
 
 TEST(TestStrand, StrandDestructionWithSchedulerFor)
@@ -509,7 +522,10 @@ TEST(TestStrand, AsyncWhileJoiningDoesNotDeadlock)
   qi::Strand strand;
   std::atomic<bool> called;
   called = false;
-  callLongCallbackWithDestructionHook(strand, [&strand, &called]{ strand.async([]{}); called = true; });
+  callLongCallbackWithDestructionHook(strand, [&]{
+    strand.async([]{});
+    called = true;
+  });
   strand.join();
   ASSERT_TRUE(called.load());
 }
@@ -558,11 +574,13 @@ TEST(TestStrand, JoinNoThrowOk)
 namespace
 {
   template<typename T>
-  struct TestStrand : qi::Strand
+  struct TestStrand : qi::StrandPrivate
   {
     T error;
 
-    TestStrand(const T& t) : error(t)
+    TestStrand(const T& t)
+      : StrandPrivate(*qi::getEventLoop())
+      , error(t)
     {
     }
 
@@ -591,8 +609,9 @@ TEST(TestStrand, JoinNoThrowStdException)
   using namespace qi;
   using E = std::runtime_error;
   const std::string errorMessage{"aha"};
-  TestStrand<E> strand{E{errorMessage}};
-  ASSERT_EQ(Strand::OptionalErrorMessage{errorMessage}, strand.join(std::nothrow));
+  Strand strand{ boost::make_shared<TestStrand<E>>(E{errorMessage}) };
+  auto maybeError = strand.join(std::nothrow);
+  ASSERT_EQ(Strand::OptionalErrorMessage{errorMessage}, maybeError);
 }
 
 TEST(TestStrand, JoinNoThrowBoostException)
@@ -600,8 +619,9 @@ TEST(TestStrand, JoinNoThrowBoostException)
   using namespace qi;
   using E = boost_error_t;
   E error{"oho"};
-  TestStrand<E> strand{error};
-  ASSERT_EQ(Strand::OptionalErrorMessage{boost::diagnostic_information(error)}, strand.join(std::nothrow));
+  Strand strand{ boost::make_shared<TestStrand<E>>(error) };
+  auto maybeError = strand.join(std::nothrow);
+  ASSERT_EQ(Strand::OptionalErrorMessage{boost::diagnostic_information(error)}, maybeError);
 }
 
 TEST(TestStrand, JoinNoThrowUnknownException)
@@ -609,8 +629,9 @@ TEST(TestStrand, JoinNoThrowUnknownException)
   using namespace qi;
   using E = int;
   E error{5};
-  TestStrand<E> strand{error};
-  ASSERT_EQ(Strand::OptionalErrorMessage{ka::exception_message::unknown_error()}, strand.join(std::nothrow));
+  Strand strand{ boost::make_shared<TestStrand<E>>(error) };
+  auto maybeError = strand.join(std::nothrow);
+  ASSERT_EQ(Strand::OptionalErrorMessage{ka::exception_message::unknown_error()}, maybeError);
 }
 
 TEST(TestStrand, build_schedulerFor)
