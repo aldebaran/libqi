@@ -40,12 +40,6 @@ namespace log
     return prio + 1;
   }
 
-  bool isAssignmentValid(const std::string &field)
-  {
-    const auto pos = field.find('=');
-    return (pos != 0) && (pos != std::string::npos);
-  }
-
   class JournaldLogHandler
   {
   private:
@@ -56,58 +50,23 @@ namespace log
     char _fileBuffer[FILE_PREFIX_LEN + FILE_LEN + 1u];
     char _lineBuffer[32u];
     // extraneous field to pass to journald, if not empty.
-    std::string _extraField;
-    const char *_extraFormat;
+    std::string _identifier;
+    const char *_format; // might be nullptr
   public:
 
-    // We'll use field with sd_journal_send as in:
+    // identifier: name to use as the SYSLOG_IDENTIFIER field value (aka syslog tag).
     //
-    // auto i = sd_journal_send(..., "%s", field.c_str(), nullptr);
+    // If identifier is not empty, it is passed to sd_journal_send
+    // as sd_journal_send(..., "SYSLOG_IDENTIFIER=%s", _identifier.c_str(), nullptr);
     //
-    // In this call, if field does not contain '=' or if it starts with '=',
-    // then sd_journal_send fails (i != 0).
-    // Otherwise, then the entry has the form of an
-    // assignment (name=value), and the call succeeds (ie i == 0).
-    // Yet, sd_journal_send might find the name invalid,
-    // in which case the invalid assignment is skipped.
-    // The other ones (MESSAGE, timestamps,...) are sent.
-    //
-    // Here are examples of inputs (tested on systemd 232):
-    //
-    //   ===================  =================  ==================
-    //   field                i == 0             assignment skipped
-    //   ===================  =================  ==================
-    //   ""                   false
-    //   "="                  false
-    //   "=bar"               false
-    //   "_=bar"              true               true
-    //   " =bar"              true               true
-    //   "_FOO=bar"           true               true
-    //   "Foo=bar"            true               true
-    //   "1_FOO=bar"          true               true
-    //   "FOO=bar"            true               false
-    //   "FOO="               true               false
-    //   "FOO_1=charge=10%!"  true               false
-    //   "FOO=%s"             true               false
-    //   ===================  =================  ==================
-    //
-    // Note:
-    //
-    // the form
-    //
-    //   auto i = sd_journal_send(..., "%s", field.c_str(), nullptr);
-    //
-    // is prefered over
-    //
-    //   auto i = sd_journal_send(..., field.c_str(), nullptr);
-    //
-    // because with the latter, a field with value "HELL=%s" would make
-    // the program crash.
-    JournaldLogHandler(std::string field)
+    // If identifier is empty, it is not passed to sd_journal_send, in order to
+    // let sd_journald_send set SYSLOG_IDENTIFIER itself.
+    JournaldLogHandler(std::string identifier)
       : _fileBuffer{"CODE_FILE="}, // extra bytes are zero-initialized
         _lineBuffer{"CODE_LINE="}, // extra bytes are zero-initialized
-        _extraField(isAssignmentValid(field) ? std::move(field) :  ""),
-        _extraFormat(_extraField.empty() ? nullptr : "%s") {}
+        _identifier(identifier),
+        _format(identifier.empty() ? nullptr : "SYSLOG_IDENTIFIER=%s") {
+    }
 
     /**
      * \brief Send logs messages to systemd
@@ -152,8 +111,7 @@ namespace log
                     "QI_CATEGORY=%s", category,
                     "PRIORITY=%i", priority,
                     "QI=1",
-                    _extraFormat,
-                    _extraField.c_str(),
+                    _format, _identifier.c_str(),
                     nullptr);
         if (i == 0)
           return;
@@ -164,8 +122,7 @@ namespace log
                                 "QI_CATEGORY=%s", category,
                                 "PRIORITY=%i", priority,
                                 "QI=1",
-                                _extraFormat,
-                                _extraField.c_str(),
+                                _format, _identifier.c_str(),
                                 nullptr);
         if (i == 0)
           return;
@@ -179,10 +136,9 @@ namespace log
     }
   };
 
-
   Handler makeJournaldLogHandler()
   {
-    return JournaldLogHandler(qi::os::getenv("QI_LOG_EXTRA_JOURNALD_FIELD"));
+    return JournaldLogHandler(qi::os::getenv("QI_SYSLOG_IDENTIFIER"));
   }
 }
 }
