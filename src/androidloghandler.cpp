@@ -6,17 +6,14 @@ namespace qi
 {
 namespace log
 {
-  AndroidLogHandler::AndroidLogHandler()
-  {}
-
-  void AndroidLogHandler::log(LogLevel verb,
-                              Clock::time_point,
-                              SystemClock::time_point,
-                              const char *category,
-                              const char *msg,
-                              const char *,
-                              const char *,
-                              int)
+  void androidLogHandler(LogLevel verb,
+                         Clock::time_point,
+                         SystemClock::time_point,
+                         const char *category,
+                         const char *msg,
+                         const char */*file*/,
+                         const char */*fct*/,
+                         int /*line*/)
   {
     int prio = ANDROID_LOG_DEFAULT;
     switch (verb)
@@ -32,6 +29,8 @@ namespace log
     }
     __android_log_write(prio, category, msg);
   }
+
+  Handler makeAndroidLogHandler() { return androidLogHandler; }
 
 } // namespace log
 } // namespace qi

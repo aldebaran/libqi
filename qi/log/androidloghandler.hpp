@@ -16,39 +16,11 @@ namespace log
 {
   /**
    * \includename{qi/log/androidloghandler.hpp}
-   * @brief The AndroidLogHandler class
+   * @brief create a log handler which redirect logs to android log system.
    *
-   * Redirect logs to android log system.
-   * Does nothing if used on a non Android device.
+   * Limitations: timestamps, file name, function name and line number are discarded.
    */
-  class AndroidLogHandler
-  {
-  public:
-    AndroidLogHandler();
-
-    AndroidLogHandler(const AndroidLogHandler&) = delete;
-    AndroidLogHandler& operator=(const AndroidLogHandler&) = delete;
-
-    /**
-     * \brief Prints a log message on the console.
-     * \param verb verbosity of the log message.
-     * \param date qi::Clock date at which the log message was issued.
-     * \param date qi::SystemClock date at which the log message was issued.
-     * \param category will be used in future for filtering
-     * \param msg actual message to log.
-     * \param file filename from which this log message was issued.
-     * \param fct function name from which this log message was issued.
-     * \param line line number in the issuer file.
-     */
-    void log(qi::LogLevel verb,
-             qi::Clock::time_point date,
-             qi::SystemClock::time_point systemDate,
-             const char* category,
-             const char* msg,
-             const char* file,
-             const char* fct,
-             int line);
-  };
+  Handler makeAndroidLogHandler();
 
 } // namespace log
 } // namespace qi

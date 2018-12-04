@@ -342,27 +342,16 @@ namespace qi {
     static volatile unsigned long LogPush = 0;
 
 #ifdef ANDROID
-    static AndroidLogHandler *_glAndroidLogHandler = nullptr;
-
     namespace detail {
       void createAndInstallDefaultHandler(qi::LogLevel verb)
       {
-        _glAndroidLogHandler = new AndroidLogHandler;
         addHandler("androidloghandler",
-                   boost::bind(&AndroidLogHandler::log,
-                               _glAndroidLogHandler,
-                               _1, _2, _3, _4, _5, _6, _7, _8),
+                   makeAndroidLogHandler(),
                    verb);
       }
 
       void destroyDefaultHandler()
-      {
-        if(_glAndroidLogHandler)
-        {
-          delete _glAndroidLogHandler;
-          _glAndroidLogHandler = nullptr;
-        }
-      }
+      {}
     } // namespace detail
 #else
 
