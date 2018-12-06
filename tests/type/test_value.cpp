@@ -916,6 +916,7 @@ struct ConvertWithTypes: ::testing::Test {
   boost::optional<std::string>,            \
   boost::optional<std::vector<int>>,       \
   boost::optional<std::map<int, int>>,     \
+  boost::optional<qi::Buffer>,             \
   boost::optional<Foo>
 using NonAnyReferenceTypes = testing::Types<QI_INTERNAL_NON_ANYREFERENCE_TYPES>;
 using Types = testing::Types<QI_INTERNAL_NON_ANYREFERENCE_TYPES, qi::AnyValue>;
@@ -1139,6 +1140,20 @@ TEST(Value, OptionalToOptional)
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("cupcakes", *v.toOptional<std::string>());
   EXPECT_EQ("cupcakes", *v.to<boost::optional<std::string>>());
+}
+
+TEST(Value, OptionalRawBuffer)
+{
+  const std::string data = "kikoolol";
+  qi::Buffer buffer;
+  buffer.write(data.c_str(), data.size() + 1);
+
+  AnyValue v{ make_optional<qi::Buffer>(buffer) };
+  ASSERT_TRUE(v.optionalHasValue());
+
+  auto readBuffer = v.toOptional<qi::Buffer>();
+  ASSERT_TRUE(readBuffer);
+  EXPECT_EQ(*readBuffer, buffer);
 }
 
 TEST(Value, OptionalAnyValue)
