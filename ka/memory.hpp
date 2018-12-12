@@ -38,6 +38,27 @@ namespace ka {
   boost::shared_ptr<T> scopelock(boost::weak_ptr<T> const& p) {
     return p.lock();
   }
+
+  namespace detail {
+  // Almost models `EmptyMutable` (but `empty()` doesn't affect all
+  // regular operations, since `std::unique_ptr` is not `Regular`).
+    template<typename T>
+    bool empty(std::unique_ptr<T> const& x) KA_NOEXCEPT(true) {
+      return !static_cast<bool>(x);
+    }
+
+  // model EmptyMutable std::shared_ptr<T>:
+    template<typename T>
+    bool empty(std::shared_ptr<T> const& x) KA_NOEXCEPT(true) {
+      return !static_cast<bool>(x);
+    }
+
+  // model EmptyMutable boost::shared_ptr<T>:
+    template<typename T>
+    bool empty(boost::shared_ptr<T> const& x) KA_NOEXCEPT(true) {
+      return !static_cast<bool>(x);
+    }
+  } // namespace detail
 } // namespace ka
 
 #endif // KA_MEMORY_HPP

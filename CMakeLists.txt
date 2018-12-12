@@ -394,6 +394,7 @@ set(KA_H
   ka/ark/mutable.hpp
   ka/concept.hpp
   ka/conceptpredicate.hpp
+  ka/empty.hpp
   ka/errorhandling.hpp
   ka/functional.hpp
   ka/integersequence.hpp
