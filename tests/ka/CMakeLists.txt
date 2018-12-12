@@ -4,6 +4,7 @@ qi_create_gmock(
     "ark/test_mutable.cpp"
     "test_algorithm.cpp"
     "test_conceptpredicate.cpp"
+    "test_empty.cpp"
     "test_errorhandling.cpp"
     "test_functional.cpp"
     "test_functional_common.hpp"

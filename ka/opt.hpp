@@ -649,6 +649,14 @@ namespace ka
   inline opt_t<void> opt() {
     return opt_t<void>{}.set();
   }
+
+  namespace detail {
+  // model EmptyMutable boost::optional<T>:
+    template<typename T> KA_CONSTEXPR
+    bool empty(boost::optional<T> const& t) {
+      return !static_cast<bool>(t);
+    }
+  } // namespace detail
 } // namespace ka
 
 #endif // KA_OPT_HPP
