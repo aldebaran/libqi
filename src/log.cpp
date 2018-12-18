@@ -412,64 +412,87 @@ namespace qi {
 
     static ConsoleLogHandler *_glConsoleLogHandler = nullptr;
 
+    namespace env {
+      namespace QI_DEFAULT_LOGHANDLER {
+        char const * const name = "QI_DEFAULT_LOGHANDLER";
+        namespace value {
+          char const * const none     = "none";
+          char const * const stdout   = "stdout";
+          char const * const logger   = "logger";
+          char const * const debugger = "debugger";
+        }
+      }
+    }
+
     namespace detail {
+
+      /// Creates and registers the default log handler according to QI_DEFAULT_LOGHANDLER
+      /// environment variable, libqi WITH_SYSTEMD build option and the target OS platform.
+
+      /// See documentation of the public function calling this private one: qi::log::init().
       void createAndInstallDefaultHandler(qi::LogLevel verb)
       {
-        const auto loggerHandler = "logger";
-        const auto stdoutHandler = "stdout";
-        const auto debuggerHandler = "debugger";
-        const auto noneHandler = "none";
-        auto handler = qi::os::getenv("QI_DEFAULT_LOGHANDLER");
+        using namespace qi::log::env;
+        auto handler = qi::os::getenv(QI_DEFAULT_LOGHANDLER::name);
         if (handler.empty())
         {
           handler =
 #if defined(ANDROID) || defined(WITH_SYSTEMD)
-              loggerHandler;
+              QI_DEFAULT_LOGHANDLER::value::logger;
 #else
-              stdoutHandler;
+              QI_DEFAULT_LOGHANDLER::value::stdout;
 #endif
         }
         const auto invalidId = static_cast<SubscriberId>(-1);
         auto id = invalidId;
-        if (handler == stdoutHandler){
-#ifndef ANDROID
+        QI_ASSERT(! handler.empty());
+        if (handler == QI_DEFAULT_LOGHANDLER::value::stdout){
           _glConsoleLogHandler = new ConsoleLogHandler;
           id = addHandler("consoleloghandler",
                           boost::bind(&ConsoleLogHandler::log,
                                       _glConsoleLogHandler,
                                       _1, _2, _3, _4, _5, _6, _7, _8),
                           verb);
-#endif
+          QI_ASSERT(id == 0 || id == invalidId);
         }
-        else if (handler == loggerHandler)
+        else if (handler == QI_DEFAULT_LOGHANDLER::value::logger)
         {
 #ifdef ANDROID
           id = addHandler("androidloghandler", makeAndroidLogHandler(), verb);
 #elif defined(WITH_SYSTEMD)
           id = addHandler("journaldloghandler", makeJournaldLogHandler(), verb);
 #endif
+          QI_ASSERT(id == 0 || id == invalidId);
         }
-        else if (handler == debuggerHandler)
+        else if (handler == QI_DEFAULT_LOGHANDLER::value::debugger)
         {
           auto h = makeWindowsDebuggerOutputLogHandler();
           if (h)
           {
             id = addHandler("winDebuggerOutputLogHandler", std::move(h), verb);
           }
+          QI_ASSERT(id == 0 || id == invalidId);
         }
-        QI_ASSERT(id == 0 || id == invalidId);
-        if (handler == noneHandler)
+        else if (handler == QI_DEFAULT_LOGHANDLER::value::none)
         {
           QI_ASSERT(id == invalidId);
         }
         else
         {
-          if (id == invalidId)
-          {
-            std::cerr << "qi.log: failed to register \"" << handler
-                      << "\" log handler. Log messages will be lost until a"
-                         " log handler is added.\n";
-          }
+          QI_ASSERT(id == invalidId);
+          std::cerr << "qi.log: bad value for " << QI_DEFAULT_LOGHANDLER::name
+                    << " environment variable: \"" << handler << "\"."
+                    << " Possible values are: \"\","
+                    << " \"" << QI_DEFAULT_LOGHANDLER::value::none     << "\","
+                    << " \"" << QI_DEFAULT_LOGHANDLER::value::stdout   << "\","
+                    << " \"" << QI_DEFAULT_LOGHANDLER::value::logger   << "\","
+                    << " \"" << QI_DEFAULT_LOGHANDLER::value::debugger << "\".\n";
+        }
+        if (id == invalidId)
+        {
+          std::cerr << "qi.log: failed to register \"" << handler
+                    << "\" log handler. Log messages will be lost until a"
+                       " log handler is added.\n";
         }
       }
 
