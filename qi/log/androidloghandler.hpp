@@ -9,6 +9,7 @@
 #define _QI_LOG_ANDROIDLOGHANDLER_HPP_
 
 #include <qi/log.hpp>
+#include <boost/function.hpp>
 
 namespace qi
 {

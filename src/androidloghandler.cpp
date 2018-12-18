@@ -6,13 +6,13 @@ namespace qi
 {
 namespace log
 {
-  void androidLogHandler(LogLevel verb,
+  void androidLogHandler(qi::LogLevel verb,
                          Clock::time_point,
                          SystemClock::time_point,
-                         const char *category,
-                         const char *msg,
-                         const char */*file*/,
-                         const char */*fct*/,
+                         const char* category,
+                         const char* msg,
+                         const char* /*file*/,
+                         const char* /*fct*/,
                          int /*line*/)
   {
     int prio = ANDROID_LOG_DEFAULT;
