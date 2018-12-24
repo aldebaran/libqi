@@ -298,7 +298,7 @@ namespace qi {
         QI_API extern char const * const name; // TODO: use constexpr after upgrading to c++17
         namespace value {
           QI_API extern char const * const none; // TODO: use constexpr after upgrading to c++17
-          QI_API extern char const * const stdout; // TODO: use constexpr after upgrading to c++17
+          QI_API extern char const * const stdOut; // TODO: use constexpr after upgrading to c++17
           QI_API extern char const * const logger; // TODO: use constexpr after upgrading to c++17
           QI_API extern char const * const debugger; // TODO: use constexpr after upgrading to c++17
         }

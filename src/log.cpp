@@ -417,7 +417,7 @@ namespace qi {
         char const * const name = "QI_DEFAULT_LOGHANDLER";
         namespace value {
           char const * const none     = "none";
-          char const * const stdout   = "stdout";
+          char const * const stdOut   = "stdout";
           char const * const logger   = "logger";
           char const * const debugger = "debugger";
         }
@@ -440,13 +440,13 @@ namespace qi {
 #if defined(ANDROID) || defined(WITH_SYSTEMD)
               QI_DEFAULT_LOGHANDLER::value::logger;
 #else
-              QI_DEFAULT_LOGHANDLER::value::stdout;
+              QI_DEFAULT_LOGHANDLER::value::stdOut;
 #endif
         }
         const auto invalidId = static_cast<SubscriberId>(-1);
         auto id = invalidId;
         QI_ASSERT(! handler.empty());
-        if (handler == QI_DEFAULT_LOGHANDLER::value::stdout){
+        if (handler == QI_DEFAULT_LOGHANDLER::value::stdOut){
           _glConsoleLogHandler = new ConsoleLogHandler;
           id = addHandler("consoleloghandler",
                           boost::bind(&ConsoleLogHandler::log,
@@ -484,7 +484,7 @@ namespace qi {
                     << " environment variable: \"" << handler << "\"."
                     << " Possible values are: \"\","
                     << " \"" << QI_DEFAULT_LOGHANDLER::value::none     << "\","
-                    << " \"" << QI_DEFAULT_LOGHANDLER::value::stdout   << "\","
+                    << " \"" << QI_DEFAULT_LOGHANDLER::value::stdOut   << "\","
                     << " \"" << QI_DEFAULT_LOGHANDLER::value::logger   << "\","
                     << " \"" << QI_DEFAULT_LOGHANDLER::value::debugger << "\".\n";
         }
