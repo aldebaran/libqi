@@ -774,7 +774,6 @@ namespace qi {
     {
       QI_ONCE(doInit(verb));
 
-      setLogLevel(verb);
       setContext(ctx);
 
       setSynchronousLog(synchronous);
