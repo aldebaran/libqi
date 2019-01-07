@@ -17,6 +17,12 @@ TEST(Empty, Pointer) {
   ASSERT_FALSE(ka::empty(p1));
 }
 
+TEST(Empty, InitializerList) {
+  ASSERT_TRUE(ka::empty(std::initializer_list<int>{}));
+  ASSERT_FALSE(ka::empty(std::initializer_list<int>{1}));
+  ASSERT_FALSE(ka::empty(std::initializer_list<int>{1, 2}));
+}
+
 TEST(Empty, BoostOptional) {
   ASSERT_TRUE(ka::empty(boost::optional<int>{}));
   ASSERT_FALSE(ka::empty(boost::optional<int>{5}));
