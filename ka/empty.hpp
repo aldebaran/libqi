@@ -1,6 +1,7 @@
 #ifndef KA_EMPTY_HPP
 #define KA_EMPTY_HPP
 #pragma once
+#include <initializer_list>
 #include "macro.hpp"
 #include "macroregular.hpp"
 #include "utility.hpp"
@@ -10,6 +11,7 @@
 ///
 /// - raw pointers (a pointer is 'empty' if it is null)
 /// - std::unique_ptr, std::shared_ptr, boost::shared_ptr (in `memory.hpp`)
+/// - std::initializer_list
 /// - boost::optional (in `opt.hpp`)
 /// - any type that defines a member function `empty` (in this case `ka::empty`
 ///   simply forwards to the member function).
@@ -40,6 +42,14 @@ namespace detail {
   bool empty(std::nullptr_t) KA_NOEXCEPT(true) {
     return true;
   }
+
+// MSVC already defines `std::empty(std::initializer_list<T>)`.
+#if !BOOST_COMP_MSVC
+  template<typename T> KA_CONSTEXPR
+  bool empty(std::initializer_list<T> x) KA_NOEXCEPT(true) {
+    return x.size() == 0;
+  }
+#endif
 
   // Dispatches to the member function if possible.
   // Note: Do not remove the trailing return type as it is needed for SFINAE.
