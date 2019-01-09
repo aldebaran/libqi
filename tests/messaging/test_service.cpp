@@ -246,9 +246,10 @@ TEST(QiService, ClassProperty)
 
   // test event
   qi::Atomic<int> hit{0};
-  f.prop.connect(boost::bind(&inc, &hit, _1));
-  obj.connect("offset", boost::bind(&inc, &hit,_1));
-  client.connect("offset", boost::bind(&inc, &hit,_1));
+  boost::function<void(int)> incHit = boost::bind(&inc, &hit,_1);
+  f.prop.connect(incHit);
+  obj.connect("offset", incHit);
+  client.connect("offset", incHit);
   f.prop.set(1);
   PERSIST_ASSERT(, (hit.load()) == 3, std::chrono::milliseconds{5});
   client.setProperty("offset", 2);
@@ -289,10 +290,11 @@ TEST(QiService, GenericProperty)
 
   // test event
   qi::Atomic<int> hit;
+  boost::function<void(int)> incHit = boost::bind(&inc, &hit, _1);
   qiLogVerbose() << "Connecting to signal";
-  ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect((boost::function<void(int)>)boost::bind(&inc, &hit, _1)));
-  ASSERT_NE(qi::SignalBase::invalidSignalLink, obj.connect("offset", boost::bind(&inc, &hit, _1)).value());
-  ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", boost::bind(&inc, &hit, _1)).value());
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, prop->signal()->connect(incHit));
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, obj.connect("offset", incHit).value());
+  ASSERT_NE(qi::SignalBase::invalidSignalLink, client.connect("offset", incHit).value());
   qiLogVerbose() << "Triggering prop set";
   prop->setValue(1);
   PERSIST(, (hit.load()) == 3, std::chrono::milliseconds{500});

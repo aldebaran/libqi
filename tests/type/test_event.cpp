@@ -78,7 +78,7 @@ TEST_F(ObjectEvent, ConnectBind)
   );
   // Argument type mismatch
   EXPECT_ANY_THROW(
-    obj.connect("fire", boost::bind<void>(&readString, _1)).value()
+    obj.connect("fire", boost::function<void(const std::string&)>(boost::bind<void>(&readString, _1))).value()
   );
   link = obj.connect("fire2", qi::bind<void(int, int)>(&ObjectEvent::onFire, this, _2)).value();
   EXPECT_TRUE(link != 0);

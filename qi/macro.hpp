@@ -279,6 +279,29 @@ namespace qi {
 #define QI_UNUSED(x)
 
 /**
+ * This macro prevents the compiler from emitting warning when a variable is defined but not used.
+ *
+ * Note: You may not use this macro to declare that a function parameters is unused. For such uses,
+ * see QI_UNUSED.
+ *
+ * \verbatim
+ * Example:
+ *
+ * .. code-block:: cpp
+ *
+ *     void foo(std::vector<int> vec)
+ *     {
+ *       auto size = vec.size();
+ *       // QI_ASSERT expands to nothing if debug informations are disabled in the compilation
+ *       // configuration, which would make the `size` variable unused.
+ *       QI_IGNORE_UNUSED(size);
+ *       QI_ASSERT(size > 2);
+ *     }
+ * \endverbatim
+ */
+#define QI_IGNORE_UNUSED(x) (void)x
+
+/**
  * \def QI_UNIQ_DEF(A)
  * \brief A macro to append the line number of the parent macro usage, to define a
  *        function in or a variable and avoid name collision.

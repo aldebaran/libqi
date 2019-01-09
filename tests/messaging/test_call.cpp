@@ -680,7 +680,9 @@ TEST(TestCall, TestObjectPassingReverse)
 
   qi::Promise<int> value;
   // We connect a method client-side
-  proxy.connect("makeObjectCallEvent", boost::bind(&onMakeObjectCall, _1, _2, _3, value)).wait(usualTimeout);
+  boost::function<void(qi::AnyObject, const std::string&, int)> makeObjectCallEvent =
+    boost::bind(&onMakeObjectCall, _1, _2, _3, value);
+  proxy.connect("makeObjectCallEvent", makeObjectCallEvent).wait(usualTimeout);
   // And emit server-side, this is the reverse of a method call
   obj.post("makeObjectCallEvent", unregisteredObj, "add", 41);
   /* This is what happens:

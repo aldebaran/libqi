@@ -312,7 +312,7 @@ namespace qi
 
       while (i < buffer.size()) {
         if (i % 16 == 0) stream << std::hex << std::setfill('0') << std::setw(8) << i << ": ";
-        stream << std::setw(2) << (const unsigned int) data[i];
+        stream << std::setw(2) << static_cast<unsigned int>(data[i]);
         i++;
         if (i % 2 == 0) stream << ' ';
         if (i % 16 == 0)

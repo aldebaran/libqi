@@ -85,10 +85,10 @@ TEST(Sha1, DigestRegular) {
   sha1_digest_t begin {{}};
   sha1_digest_t end {{}};
   const std::size_t N = 5;
-  for (auto i = 0; i != N; ++i) end[i] = 10;
+  for (auto i = 0u; i != N; ++i) end[i] = 10;
   ASSERT_TRUE(is_regular(bounded_range(begin, end,
     [=](sha1_digest_t& d) {
-      for (auto i = 0; i != N; ++i) ++d[i];
+      for (auto i = 0u; i != N; ++i) ++d[i];
     }
   )));
 }

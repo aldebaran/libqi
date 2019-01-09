@@ -367,7 +367,9 @@ namespace qi
     if (_init)
       throw std::runtime_error("Already initialised");
     _init = true;
-    _server->addObject(1, _serviceBoundObject);
+    const bool success = _server->addObject(1, _serviceBoundObject);
+    QI_IGNORE_UNUSED(success);
+    QI_ASSERT_TRUE(success);
 
     std::ostringstream messInfo;
     messInfo << "ServiceDirectory listener created on";
