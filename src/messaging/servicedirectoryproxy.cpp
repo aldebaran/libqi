@@ -748,7 +748,7 @@ void ServiceDirectoryProxy::Impl::unmirrorServiceToSDUnsync(const std::string& s
     const auto localId = serviceIndexIt->second.localId;
     qiLogVerbose() << "Unmirroring service '" << serviceName << "' to service directory, (#"
                    << localId << ").";
-    _sdClient->unregisterService(remoteId).value();
+    _sdClient->unregisterService(serviceIndexIt->second.remoteId).value();
     qiLogVerbose() << "Unmirrored service '" << serviceName << "' to service directory, (#"
                    << localId << ").";
   }
