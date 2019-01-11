@@ -1169,17 +1169,17 @@ TEST(TestCall, DISABLED_Statistics)
 {
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
-  const auto mid = gob.advertiseMethod("sleep", [](qi::MilliSeconds dura) {
-    boost::this_thread::sleep_for(dura);
+  const auto mid = gob.advertiseMethod("msleep", [](long long ms) {
+    boost::this_thread::sleep_for(qi::MilliSeconds(ms));
   });
   qi::AnyObject srv = gob.object();
   p.server()->registerService("sleep", srv);
   qi::AnyObject obj = p.client()->service("sleep").value();
-  obj.call<void>("sleep", 10);
+  obj.call<void>("msleep", 10);
   EXPECT_TRUE(obj.stats().empty());
   obj.call<void>("enableStats", true);
-  obj.call<void>("sleep", 10);
-  obj.call<void>("sleep", 100);
+  obj.call<void>("msleep", 10);
+  obj.call<void>("msleep", 100);
   qi::ObjectStatistics stats = obj.call<qi::ObjectStatistics>("stats");
   EXPECT_EQ(1u, stats.size());
   qi::MethodStatistics m = stats[mid];
@@ -1188,14 +1188,14 @@ TEST(TestCall, DISABLED_Statistics)
   EXPECT_GT(0.05, std::abs(m.wall().minValue() - 0.010));
   EXPECT_GT(0.05, std::abs(m.wall().maxValue() - 0.100));
   obj.call<void>("clearStats");
-  obj.call<void>("sleep", 0);
+  obj.call<void>("msleep", 0);
   stats = obj.call<qi::ObjectStatistics>("stats");
   m = stats[mid];
   EXPECT_EQ(1u, m.count());
   obj.call<void>("enableStats", false);
   obj.call<void>("clearStats");
   EXPECT_TRUE(!obj.call<bool>("isStatsEnabled"));
-  obj.call<void>("sleep", 0);
+  obj.call<void>("msleep", 0);
   stats = obj.call<qi::ObjectStatistics>("stats");
   EXPECT_TRUE(stats.empty());
 }
