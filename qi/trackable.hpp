@@ -56,7 +56,7 @@ namespace qi
      *         a call to destroy will block()
      *
      */
-    boost::weak_ptr<T>   weakPtr();
+    boost::weak_ptr<T> weakPtr() const;
 
     /**
      * Blocks until destroy() is called and all shared_ptr built from weak_ptr()

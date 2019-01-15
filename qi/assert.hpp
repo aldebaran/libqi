@@ -28,9 +28,11 @@
 #   endif
 # endif
 
-# define QI_ASSERT_TRUE( expr__ ) QI_ASSERT( expr__ )
-# define QI_ASSERT_FALSE( expr__ ) QI_ASSERT( !(expr__) )
-# define QI_ASSERT_UNREACHABLE() QI_ASSERT( false )
+# define QI_ASSERT_TRUE( expr__ )       QI_ASSERT( expr__ )
+# define QI_ASSERT_FALSE( expr__ )      QI_ASSERT( !(expr__) )
+# define QI_ASSERT_UNREACHABLE()        QI_ASSERT( false )
+# define QI_ASSERT_NULL( expr__ )       QI_ASSERT_TRUE( expr__ == nullptr )
+# define QI_ASSERT_NOT_NULL( expr__ )   QI_ASSERT_TRUE( expr__ != nullptr )
 
 /// If the expression is false, return false.
 /// Designed to be used in a boolean function where all conditions must be true

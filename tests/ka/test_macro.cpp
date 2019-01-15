@@ -133,3 +133,19 @@ TEST(Macro, KaDeriveCtorFunctionTemplateVoid) {
   ASSERT_EQ(stuff5_explicit_t<int>{a}, stuff5_explicit(a));
   ASSERT_EQ(stuff5_explicit_t<void>{}, stuff5_explicit());
 }
+
+namespace {
+  struct X {
+    KA_CONSTEXPR
+    int f(int i) const {
+      return i;
+    }
+  };
+}
+
+TEST(Macro, KaConstexpr) {
+  ASSERT_EQ(X{}.f(5), 5);
+#ifndef BOOST_NO_CXX11_CONSTEXPR
+  static_assert(X{}.f(5) == 5, "");
+#endif
+}

@@ -49,16 +49,24 @@ namespace log
     BOOST_STATIC_CONSTEXPR auto FILE_PREFIX_LEN = sizeof("CODE_FILE=") - 1;
     char _fileBuffer[FILE_PREFIX_LEN + FILE_LEN + 1u];
     char _lineBuffer[32u];
-    // extraneous field to pass to journald.
-    // journald will ignore it if the field name is invalid.
-    // An empty field is invalid and will be ignored.
-    std::string _extraField;
+    // extraneous field to pass to journald, if not empty.
+    std::string _identifier;
+    const char *_format; // might be nullptr
   public:
 
-    JournaldLogHandler(std::string extraField)
+    // identifier: name to use as the SYSLOG_IDENTIFIER field value (aka syslog tag).
+    //
+    // If identifier is not empty, it is passed to sd_journal_send
+    // as sd_journal_send(..., "SYSLOG_IDENTIFIER=%s", _identifier.c_str(), nullptr);
+    //
+    // If identifier is empty, it is not passed to sd_journal_send, in order to
+    // let sd_journald_send set SYSLOG_IDENTIFIER itself.
+    JournaldLogHandler(std::string identifier)
       : _fileBuffer{"CODE_FILE="}, // extra bytes are zero-initialized
         _lineBuffer{"CODE_LINE="}, // extra bytes are zero-initialized
-        _extraField(std::move(extraField)) {}
+        _identifier(identifier),
+        _format(identifier.empty() ? nullptr : "SYSLOG_IDENTIFIER=%s") {
+    }
 
     /**
      * \brief Send logs messages to systemd
@@ -103,9 +111,9 @@ namespace log
                     "QI_CATEGORY=%s", category,
                     "PRIORITY=%i", priority,
                     "QI=1",
-                    _extraField.c_str(),
+                    _format, _identifier.c_str(),
                     nullptr);
-       if (i == 0)
+        if (i == 0)
           return;
       }
       else
@@ -114,7 +122,7 @@ namespace log
                                 "QI_CATEGORY=%s", category,
                                 "PRIORITY=%i", priority,
                                 "QI=1",
-                                _extraField.c_str(),
+                                _format, _identifier.c_str(),
                                 nullptr);
         if (i == 0)
           return;
@@ -128,11 +136,9 @@ namespace log
     }
   };
 
-
   Handler makeJournaldLogHandler()
   {
-    const std::string field = qi::os::getenv("QI_LOG_EXTRA_JOURNALD_FIELD");
-    return JournaldLogHandler(field);
+    return JournaldLogHandler(qi::os::getenv("QI_SYSLOG_IDENTIFIER"));
   }
 }
 }

@@ -370,7 +370,12 @@ static void updateDisconnectInfos(C& disconnectInfos, const MessageSocketPtr& so
   });
   if (it == disconnectInfos.end())
   {
-    qiLogWarning() << "Disconnected socket not found in disconnect infos.";
+    // We should not fall into this if statement, but due to the racy nature of
+    // the disconnection, it does indeed occur. Fixing this would be
+    // a significant rearchitecture, and we choose for now to lower the log
+    // level because there does not seem to be any other side effect besides the
+    // warning.
+    qiLogVerbose() << "Disconnected socket not found in disconnect infos.";
     return;
   }
   auto promise = (*it).promiseSocketRemoved;

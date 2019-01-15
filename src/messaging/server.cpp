@@ -90,7 +90,7 @@ namespace qi {
       msg.setType(Message::Type_Capability);
       msg.setService(Message::Service_Server);
       msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
-      sock->send(msg);
+      sock->send(std::move(msg));
     }
   } // server_private
 
@@ -219,7 +219,7 @@ namespace qi {
         }
         reply.setValue(authResult, cmsig);
         reply.setType(Message::Type_Reply);
-        socket->send(reply);
+        socket->send(std::move(reply));
         break;
       case AuthProvider::State_Error:
       default:
@@ -234,7 +234,7 @@ namespace qi {
           reply.setType(Message::Type_Error);
           reply.setError(builder.str());
           qiLogVerbose() << builder.str();
-          socket->send(reply);
+          socket->send(std::move(reply));
           socket->disconnect().async();
         }
     }
@@ -259,7 +259,7 @@ namespace qi {
     reply.setValue(authResult, cmsig);
     reply.setType(Message::Type_Reply);
     reply.setFunction(msg.function());
-    socket->send(reply);
+    socket->send(std::move(reply));
   }
 
   /* We handle the case when the message we receive is not an authentication message, yet the server enforces authentication.
@@ -277,7 +277,7 @@ namespace qi {
       "), received service #" << msg.service() << ", type #" << msg.type() << ", action #" << msg.function();
     reply.setType(Message::Type_Error);
     reply.setError(err.str());
-    socket->send(reply);
+    socket->send(std::move(reply));
     socket->disconnect().async();
     qiLogWarning() << err.str();
   }
@@ -316,15 +316,15 @@ namespace qi {
             || msg.type() == Message::Type_Canceled)
           return;
         // ... but only if the object id is >main
-        qi::Message       retval(Message::Type_Error, msg.address());
+        qi::Message retval(Message::Type_Error, msg.address());
         std::stringstream ss;
         ss << "can't find service, address: " << msg.address();
         retval.setError(ss.str());
-        socket->send(retval);
+        socket->send(std::move(retval));
         qiLogError() << "Can't find service: " << msg.service() << " on " << msg.address();
         return;
       }
-      obj            = it->second;
+      obj = it->second;
     }
     // We were called from the thread pool: synchronous call is ok
     //qi::getEventLoop()->post(boost::bind<void>(&BoundObject::onMessage, obj, msg, socket));

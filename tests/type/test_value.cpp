@@ -900,23 +900,27 @@ struct ConvertWithTypes: ::testing::Test {
   using Type = T;
 };
 
-using Types = ::testing::Types<int,
-                               float,
-                               double,
-                               std::string,
-                               std::vector<int>,
-                               std::map<int, int>,
-                               Foo,
-                               Foo*,
-                               void*,
-                               qi::AnyValue,
-                               qi::AnyObject,
-                               boost::optional<int>,
-                               boost::optional<double>,
-                               boost::optional<std::string>,
-                               boost::optional<std::vector<int>>,
-                               boost::optional<std::map<int, int>>,
-                               boost::optional<Foo>>;
+#define QI_INTERNAL_NON_ANYREFERENCE_TYPES \
+  int,                                     \
+  float,                                   \
+  double,                                  \
+  std::string,                             \
+  std::vector<int>,                        \
+  std::map<int, int>,                      \
+  Foo,                                     \
+  Foo*,                                    \
+  void*,                                   \
+  qi::AnyObject,                           \
+  boost::optional<int>,                    \
+  boost::optional<double>,                 \
+  boost::optional<std::string>,            \
+  boost::optional<std::vector<int>>,       \
+  boost::optional<std::map<int, int>>,     \
+  boost::optional<qi::Buffer>,             \
+  boost::optional<Foo>
+using NonAnyReferenceTypes = testing::Types<QI_INTERNAL_NON_ANYREFERENCE_TYPES>;
+using Types = testing::Types<QI_INTERNAL_NON_ANYREFERENCE_TYPES, qi::AnyValue>;
+#undef QI_INTERNAL_NON_ANYREFERENCE_TYPES
 
 TYPED_TEST_CASE(ConvertWithTypes, Types);
 
@@ -1138,6 +1142,20 @@ TEST(Value, OptionalToOptional)
   EXPECT_EQ("cupcakes", *v.to<boost::optional<std::string>>());
 }
 
+TEST(Value, OptionalRawBuffer)
+{
+  const std::string data = "kikoolol";
+  qi::Buffer buffer;
+  buffer.write(data.c_str(), data.size() + 1);
+
+  AnyValue v{ make_optional<qi::Buffer>(buffer) };
+  ASSERT_TRUE(v.optionalHasValue());
+
+  auto readBuffer = v.toOptional<qi::Buffer>();
+  ASSERT_TRUE(readBuffer);
+  EXPECT_EQ(*readBuffer, buffer);
+}
+
 TEST(Value, OptionalAnyValue)
 {
   AnyValue v{ boost::optional<AnyValue>() };
@@ -1151,4 +1169,54 @@ TEST(Value, OptionalAnyValue)
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(42329, v.toOptional<AnyValue>()->to<int>());
   EXPECT_ANY_THROW(v.toOptional<std::string>());
+}
+
+class TypeParameterizedAutoAnyReference : public ::testing::TestWithParam<TypeInterface*> {};
+INSTANTIATE_TEST_CASE_P(
+    MostCommonInterfaces,
+    TypeParameterizedAutoAnyReference,
+    ::testing::Values(
+      makeTypeOfKind(TypeKind_Void),
+      makeTypeOfKind(TypeKind_Int),
+      makeTypeOfKind(TypeKind_Float),
+      makeTypeOfKind(TypeKind_String),
+      makeTypeOfKind(TypeKind_Object),
+      typeOf<AnyValue>(),
+      makeListType(typeOf<AnyValue>()),
+      makeMapType(typeOf<AnyValue>(), typeOf<AnyValue>()),
+      makeTupleType({ typeOf<AnyValue>() }),
+      makeOptionalType(typeOf<AnyValue>())
+   )
+);
+
+TEST_P(TypeParameterizedAutoAnyReference, AutoAnyReferenceFromAnyReferenceSharesItsType)
+{
+  const auto itf = GetParam();
+
+  { // From AnyReference
+    AnyReference ref{ itf };
+    AutoAnyReference autoRef{ ref };
+    EXPECT_EQ(itf->kind(), autoRef.kind());
+  }
+  { // From AnyValue
+    AnyValue value{ itf };
+    AutoAnyReference autoRef{ value };
+    EXPECT_EQ(itf->kind(), autoRef.kind());
+  }
+  { // From AutoAnyReference
+    AnyReference ref{ itf };
+    AutoAnyReference autoRef{ ref };
+    AutoAnyReference autoAutoRef{ autoRef };
+    EXPECT_EQ(itf->kind(), autoAutoRef.kind());
+  }
+}
+
+template<typename T>
+class TypedAutoAnyReference : public ::testing::Test {};
+TYPED_TEST_CASE(TypedAutoAnyReference, NonAnyReferenceTypes);
+
+TYPED_TEST(TypedAutoAnyReference, AutoAnyReferenceFromValueSharesItsType)
+{
+  AutoAnyReference autoRef{ TypeParam{} };
+  EXPECT_EQ(typeOf<TypeParam>()->kind(), autoRef.kind());
 }

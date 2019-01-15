@@ -25,11 +25,6 @@
 #  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 # endif
 
-namespace boost {
-  namespace asio {
-    class io_service;
-}}
-
 namespace qi
 {
   template<typename T> class Future;
@@ -196,12 +191,6 @@ namespace qi
    * \param nthread Set the minimum number of worker threads in the pool.
    */
   QI_API void startEventLoop(int nthread);
-
-  /**
-   * \brief Gets the io_service used by the global event loop.
-   * \return io_service used by the global event loop.
-   */
-  QI_API boost::asio::io_service& getIoService();
 
   namespace detail {
     /* when throw this thread will stop a thread of the eventloop

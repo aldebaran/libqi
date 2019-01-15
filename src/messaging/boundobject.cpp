@@ -76,7 +76,7 @@ namespace qi {
     msg.setFunction(event);
     msg.setType(Message::Type_Event);
     msg.setObject(object);
-    client->send(msg);
+    client->send(std::move(msg));
     return AnyReference();
   }
 
@@ -653,7 +653,7 @@ namespace qi {
       ret.setType(qi::Message::Type_Error);
       ret.setError("Unknown error caught while forwarding the answer");
     }
-    if (!socket->send(ret))
+    if (!socket->send(std::move(ret)))
     {
       // TODO: if `convertAndSetValue` transfers ownership of `val` in the object host,
       // `val.destroy()` below won't be enough. Check if it's necessary to destroy
@@ -742,7 +742,7 @@ namespace qi {
       }
     }
     _removeCachedFuture(kit, socket, replyaddr.messageId);
-    if (!socket->send(ret))
+    if (!socket->send(std::move(ret)))
     {
       // TODO: Check if `val` must be destroyed here. Take into account the potential
       // transfer ownership to the object host.

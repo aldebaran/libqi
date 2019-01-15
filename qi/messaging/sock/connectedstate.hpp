@@ -295,7 +295,7 @@ namespace qi
           // is valid only until this callback ends. After that, the underlying
           // memory is typically reused, so the upper layer must not store the
           // message pointer (it can copy the message though).
-          [=](sock::ErrorCode<N> e, const Message* msg) mutable { // onReceived
+          [=](sock::ErrorCode<N> e, Message* msg) mutable { // onReceived
             // If we're not shutting down, we inform the upper layer that we
             // received a message. In return, it decides if we must continue
             // receiving messages.

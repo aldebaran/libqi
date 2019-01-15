@@ -2,6 +2,7 @@
 #ifndef _SRC_MESSAGESOCKET_HPP_
 #define _SRC_MESSAGESOCKET_HPP_
 
+# include <boost/asio/io_service.hpp>
 # include <boost/noncopyable.hpp>
 # include <boost/variant.hpp>
 # include <boost/optional.hpp>
@@ -71,7 +72,7 @@ namespace qi
     virtual qi::FutureSync<void> connect(const qi::Url &url) = 0;
     virtual qi::FutureSync<void> disconnect()                = 0;
 
-    virtual bool send(const qi::Message &msg)                = 0;
+    virtual bool send(qi::Message msg) = 0;
 
     /// Start reading if is not already reading.
     /// Must be called once if the socket is obtained through TransportServer::newConnection()

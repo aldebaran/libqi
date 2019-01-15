@@ -345,7 +345,8 @@ namespace qi {
     msg.setFunction(method);
 
     //error will come back as a error message
-    if (!sock->isConnected() || !sock->send(msg)) {
+    const auto msgId = msg.id();
+    if (!sock->isConnected() || !sock->send(std::move(msg))) {
       qi::MetaMethod*   meth = metaObject().method(method);
       std::stringstream ss;
       if (meth) {
@@ -362,11 +363,11 @@ namespace qi {
         qiLogError() << ss.str();
       }
       out.setError(ss.str());
-      qiLogDebug() << "Removing promise id:" << msg.id();
-      _promises->erase(msg.id());
+      qiLogDebug() << "Removing promise id:" << msgId;
+      _promises->erase(msgId);
     }
     else
-      out.setOnCancel(qi::bind(&RemoteObject::onFutureCancelled, this, msg.id()));
+      out.setOnCancel(qi::bind(&RemoteObject::onFutureCancelled, this, msgId));
     return out.future();
   }
 
@@ -391,7 +392,7 @@ namespace qi {
     cancelMessage.setType(Message::Type_Cancel);
     cancelMessage.setValue(AnyReference::from(originalMessageId), "I");
     cancelMessage.setObject(_object);
-    sock->send(cancelMessage);
+    sock->send(std::move(cancelMessage));
   }
 
   void RemoteObject::metaPost(AnyObject, unsigned int event, const qi::GenericFunctionParameters &in)
@@ -432,7 +433,7 @@ namespace qi {
     msg.setService(_service);
     msg.setObject(_object);
     msg.setFunction(event);
-    if (!sock || !sock->send(msg)) {
+    if (!sock || !sock->send(std::move(msg))) {
       qiLogVerbose() << "error while emitting event";
       return;
     }

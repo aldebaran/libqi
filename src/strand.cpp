@@ -1,5 +1,5 @@
 /*
-**  Copyright (C) 2012 Aldebaran Robotics
+**  Copyright (C) 2018 Softbank Robotics Europe
 **  See COPYING for the license
 */
 #include <atomic>
@@ -407,7 +407,16 @@ void Strand::postImpl(boost::function<void()> callback, ExecutionOptions options
 {
   auto prv = boost::atomic_load(&_p);
   if (prv)
-    prv->enqueue(prv->createCallback(std::move(callback), options), options);
+  {
+    // As no future will be returned, we need to at least log the user if a problem occured.
+    prv->enqueue(prv->createCallback([=] {
+      auto errorLogger = ka::compose([](const std::string& msg) {
+        qiLogWarning() << "Uncaught error in task posted in a strand: " << msg;
+      }, ka::exception_message{});
+
+      ka::invoke_catch(std::move(errorLogger), callback);
+    }, options), options);
+  }
 }
 
 Future<void> Strand::defer(const boost::function<void ()>& cb, MicroSeconds delay, ExecutionOptions options)

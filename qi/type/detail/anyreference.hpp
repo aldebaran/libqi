@@ -420,10 +420,14 @@ public:
     : AnyReference(self)
   {}
 
-  template<typename T>
+  template<typename T,
+           // Disable this constructor if T inherits AnyReferenceBase to avoid it being greedy.
+           // It also handles cases where T inherits from either AutoAnyReference or AnyReference
+           // because both of these types inherit AnyReferenceBase.
+           typename = ka::EnableIfNotBaseOf<detail::AnyReferenceBase, T>>
   AutoAnyReference(const T& ptr)
   {
-    *(AnyReference*)this = AnyReference::from(ptr);
+    *static_cast<AnyReference*>(this) = AnyReference::from(ptr);
   }
 };
 

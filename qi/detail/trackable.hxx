@@ -73,7 +73,7 @@ namespace qi
   }
 
   template<typename T>
-  inline boost::weak_ptr<T> Trackable<T>::weakPtr()
+  inline boost::weak_ptr<T> Trackable<T>::weakPtr() const
   {
     return boost::weak_ptr<T>(_ptr);
   }

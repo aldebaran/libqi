@@ -130,7 +130,7 @@ namespace qi {
       msg.setType(Message::Type_Capability);
       msg.setService(Message::Service_Server);
       msg.setValue(sock->localCapabilities(), typeOf<CapabilityMap>()->signature());
-      sock->send(msg);
+      sock->send(std::move(msg));
     }
   } // session_service_private
 
@@ -274,7 +274,7 @@ namespace qi {
     authMsg.setType(Message::Type_Call);
     authMsg.setValue(nextData, cmsig);
     authMsg.setFunction(Message::ServerFunction_Authenticate);
-    socket->send(authMsg);
+    socket->send(std::move(authMsg));
   }
 
   void Session_Service::onTransportSocketResult(qi::Future<MessageSocketPtr> value, long requestId)
@@ -358,7 +358,7 @@ namespace qi {
     }
     socketCaps.insert(authCaps.begin(), authCaps.end());
     msgCapabilities.setValue(socketCaps, typeOf<CapabilityMap>()->signature());
-    socket->send(msgCapabilities);
+    socket->send(std::move(msgCapabilities));
   }
 
   void Session_Service::onRemoteObjectComplete(qi::Future<void> future, long requestId) {
