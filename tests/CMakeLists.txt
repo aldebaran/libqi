@@ -6,6 +6,7 @@ endif()
 add_definitions(-DQI_IS_TEST)
 
 include_directories(".")
+
 qi_create_lib(qitestutils
   STATIC NO_INSTALL
   SRC
@@ -14,6 +15,7 @@ qi_create_lib(qitestutils
     "qi/testutils/mockutils.hpp"
   DEPENDS qi gmock
 )
+
 qi_stage_lib(qitestutils)
 
 add_subdirectory("qi")

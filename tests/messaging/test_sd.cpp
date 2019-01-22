@@ -205,8 +205,8 @@ TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
       qiLogInfo() << "Secondary Service Directory is not ready yet (" << e.what() << ")";
     }
   }
-  secondaryClient->waitForService("Service").value(200);
-  auto service = secondaryClient->service("Service").value(200);
+  secondaryClient->waitForService("Service").value(2000);
+  auto service = secondaryClient->service("Service").value(2000);
   ASSERT_EQ(Serv::response, service.call<int>("f"));
 }
 
@@ -265,7 +265,7 @@ TEST(ServiceDirectory, NoThreadSpawnOnClientClose)
   qiLogVerbose() << "Waiting for objects destruction";
   for (auto& future : futures)
   {
-    ASSERT_TRUE(test::finishesWithValue(future));
+    ASSERT_TRUE(test::finishesWithValue(future, test::detail::DoNothing{}));
   }
 }
 

@@ -63,7 +63,7 @@ namespace test
     return testing::AssertionSuccess();
   }
 
-  static const auto defaultFutureWaitDuration = qi::Seconds{ 3 };
+  static const auto defaultFutureWaitDuration = qi::Seconds{ 5 };
 
   namespace detail
   {

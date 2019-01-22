@@ -2,8 +2,11 @@
 **
 ** Copyright (C) 2018 Softbank Robotics Europe
 */
+#include <condition_variable>
+#include <thread>
+#include <chrono>
+#include <boost/thread/synchronized_value.hpp>
 
-#include <gtest/gtest.h>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
@@ -11,9 +14,9 @@
 #include <qi/anymodule.hpp>
 #include <testsession/testsessionpair.hpp>
 #include <qi/testutils/testutils.hpp>
-#include <condition_variable>
-#include <thread>
-#include <chrono>
+#include "remoteperformanceservice.hpp"
+
+#include <gtest/gtest.h>
 
 qiLogCategory("test");
 
@@ -89,7 +92,6 @@ class SubObjectToPing
 public:
   void subping() { qiLogInfo() << "subping !"; }
 };
-
 QI_REGISTER_OBJECT(SubObjectToPing, subping)
 
 class ObjectToPing
@@ -99,7 +101,6 @@ public:
   void ping() { qiLogInfo() << "ping !" << std::endl; }
   qi::Property<qi::AnyObject> propToPing;
 };
-
 QI_REGISTER_OBJECT(ObjectToPing, ping, propToPing)
 
 class ObjectEmitter
@@ -752,3 +753,368 @@ TEST(SendObject, PropertySetWithNullObjectNotifiesSubscribers)
   ASSERT_TRUE(test::finishesWithValue(fut));
   ASSERT_FALSE(fut.value());
 }
+
+
+struct MyObject {
+  int foo() {
+    return 42;
+  }
+
+  qi::Property<int> bar{ 42 };
+
+  qi::Future<void> triggerError()
+  {
+    return qi::makeFutureError<void>("Expected error for test");
+  }
+
+  qi::Future<void> triggerCancelAndWait(qi::AnyObject obj)
+  {
+    obj.call<void>("cancel");
+    obj.call<void>("wait");
+    return qi::Future<void>{nullptr};
+  }
+
+  qi::Promise<void> promise;
+};
+QI_REGISTER_OBJECT(MyObject, foo, bar, triggerError, triggerCancelAndWait)
+
+namespace {
+
+
+  struct AlwaysTheSameObject
+  {
+    qi::AnyObject object = boost::make_shared<MyObject>();
+
+    qi::AnyObject operator()() const
+    {
+      return object;
+    }
+  };
+
+  struct AlwaysADifferentObject
+  {
+    qi::AnyObject operator()() const
+    {
+      return boost::make_shared<MyObject>();
+    }
+  };
+
+  template<class ObjectFactory, class... ArgGenerators>
+  void testCallDurationIndependentFromRemoteObjectsCount(qi::SessionPtr clientSession,
+    const std::string& operationName, const std::string& memberName,
+    qi::AnyObject myObject, ObjectFactory objectFactory, ArgGenerators&&... argGens)
+  {
+    /* 1. Send an object to be stored in a remote service.
+       2. Measure the duration A of some call+response of a function/property/signal of that object,
+          from the remote service's point of view.
+       3. Remove the stored object.
+       4. Send a lot of objects to be stored in the remote service.
+       5. Measure the duration B of some call+response of a function/property/signal of
+          a randomly selected object stored in the service, from the remote service's point of view.
+       6. Remove all stored objects.
+       7. Send an object to be stored in the remote service.
+       8. Measure the duration C of some call+response of a function/property/signal of that object,
+          from the remote service's point of view.
+          This measure is done to make sure that it's only the number of remote objects that impacts
+          the durations. In particular we check that removing remote objects has no effects on
+          measured durations.
+       9. Checks that A, B and C are of the same order of magnitude (no great variations).
+    */
+
+    qi::AnyObject s = clientSession->service("RemotePerformanceService").value();
+
+    using nanosecs = RemotePerformanceService::nanosecs;
+
+    if(!myObject)
+      myObject = boost::make_shared<MyObject>();
+
+    qiLogInfo() << "==== myObject = { " << myObject.uid() << "} ====";
+    s.call<void>("setObject", myObject);
+    const auto test1_ns = s.call<std::vector<nanosecs>>(operationName, memberName, argGens()...);
+
+    const int remoteObjectsCount = 200;
+    qiLogInfo() << "Sending " << remoteObjectsCount << " Objects ...";
+    std::vector<qi::AnyObject> objectList{myObject};
+    objectList.reserve(remoteObjectsCount);
+    for(int i = 0; i < remoteObjectsCount; i++)
+    {
+      objectList.emplace_back(objectFactory());
+    }
+    s.call<void>("setObjectList", objectList);
+    qiLogInfo() << "Sending " << remoteObjectsCount << " Objects - DONE";
+    const auto test2_ns = s.call<std::vector<nanosecs>>(operationName, memberName, argGens()...);
+
+    qiLogInfo() << "Clearing " << remoteObjectsCount << " Objects ...";
+    s.call<void>("clear");
+    objectList.clear();
+    qiLogInfo() << "Clearing " << remoteObjectsCount << " Objects - DONE";
+    s.call<void>("setObject", myObject);
+    const auto test3_ns = s.call<std::vector<nanosecs>>(operationName, memberName, argGens()...);
+
+    using namespace std::chrono;
+
+    static const auto asMillisecsInt = [](nanosecs value) {
+      return duration_cast<milliseconds>(nanoseconds{ value }).count();
+    };
+
+    static const auto ratioAsPercent = [](nanosecs a, nanosecs b) {
+      return ((static_cast<double>(a) / static_cast<double>(b)) - 1.0) * 100.0;
+    };
+
+#if defined(NDEBUG)
+    static const std::int64_t tolerableVariationFactor = 2;
+#else
+    static const std::int64_t tolerableVariationFactor = 10;
+#endif
+
+    static const auto smallestPossibleMeasure = nanosecs{1}; // To avoid comparing with 0.
+    const auto referenceMeasure = *std::max_element(test1_ns.begin(), test1_ns.end());
+    const auto highestTolerableCallTime = std::max(referenceMeasure * tolerableVariationFactor, smallestPossibleMeasure);
+    const auto highestTolerableCallTimeMs = asMillisecsInt(highestTolerableCallTime);
+
+    const auto testMeasures = [&](const std::vector<nanosecs>& measures, std::string message) {
+      int idx = 0;
+      for (auto&& measure : measures)
+      {
+        EXPECT_LE(measure, highestTolerableCallTime) << message
+          << ": Measure " << idx << " : "
+          << asMillisecsInt(measure) << " ms / "
+          << highestTolerableCallTimeMs << " ms"
+          << " which is " << std::setw(6) << std::setprecision(3)
+          << ratioAsPercent(measure, highestTolerableCallTime) << "% greater duration than tolerable.";
+        ++idx;
+      }
+    };
+
+    testMeasures(test2_ns, "With a lot of remote objects");
+    testMeasures(test3_ns, "After having cleared remote objects");
+  }
+
+
+  template< class ObjectFactory, class... ArgGenerators>
+  void operationDurationIndependentFromRemoteObjectsCount(const std::string& operationName, const std::string& memberName,
+    ObjectFactory objectFactory, qi::AnyObject myObject, ArgGenerators&&... argGens)
+  {
+    TestSessionPair sessions;
+
+    qi::AnyObject myService = boost::make_shared<RemotePerformanceService>();
+    sessions.server()->registerService("RemotePerformanceService", myService);
+
+    testCallDurationIndependentFromRemoteObjectsCount(sessions.client(),
+      operationName, memberName, myObject, objectFactory, std::forward<ArgGenerators>(argGens)...);
+  }
+
+  // TODO: remove this overload once Clang on MacOSX is upgraded and handle variadic template arguments after a default argument.
+  template< class ObjectFactory, class... ArgGenerators>
+  void operationDurationIndependentFromRemoteObjectsCount(const std::string& operationName, const std::string& memberName,
+    ObjectFactory&& objectFactory)
+  {
+    operationDurationIndependentFromRemoteObjectsCount(operationName, memberName, std::forward<ObjectFactory>(objectFactory), {});
+  }
+
+  template< class ObjectFactory, class... ArgGenerators>
+  void remoteProcessOperationDurationIndependentFromRemoteObjectsCount(const std::string& operationName, const std::string& memberName,
+    ObjectFactory objectFactory, qi::AnyObject myObject, ArgGenerators&&... argGens)
+  {
+    using namespace qi;
+
+    const Url serviceUrl{ "tcp://127.0.0.1:54321" };
+    test::ScopedProcess _{ path::findBin("remoteserviceowner"),
+    { "--qi-standalone", "--qi-listen-url=" + serviceUrl.str() }
+    };
+
+    auto client = makeSession();
+    client->connect(serviceUrl);
+
+    testCallDurationIndependentFromRemoteObjectsCount(client,
+      operationName, memberName, myObject, objectFactory, std::forward<ArgGenerators>(argGens)...);
+
+  }
+
+  // TODO: remove this overload once Clang on MacOSX is upgraded and handle variadic template arguments after a default argument.
+  template< class ObjectFactory, class... ArgGenerators>
+  void remoteProcessOperationDurationIndependentFromRemoteObjectsCount(const std::string& operationName, const std::string& memberName,
+    ObjectFactory&& objectFactory)
+  {
+    remoteProcessOperationDurationIndependentFromRemoteObjectsCount(operationName, memberName, std::forward<ObjectFactory>(objectFactory), {});
+  }
+
+  qi::AnyObject makePropertyConnectedObject(const std::string& propertyName)
+  {
+    qi::AnyObject object = boost::make_shared<MyObject>();
+
+    const int arbitrary_callback_count = 4;
+    for (int i = 0; i < arbitrary_callback_count; ++i)
+    {
+      object.connect(propertyName, [propertyName](int value) {
+        qiLogInfo() << "Property '" << propertyName << "' set to '" << value;
+      });
+    }
+
+    return object;
+  }
+
+
+}
+
+TEST(SendObjectCall, callDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "foo", AlwaysTheSameObject{});
+}
+
+TEST(SendObjectCall, remoteProcessCallDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "foo", AlwaysTheSameObject{});
+
+}
+
+TEST(SendObjectCall, getPropertyDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureGetPropertyDuration", "bar", AlwaysTheSameObject{});
+}
+
+TEST(SendObjectCall, remoteProcessGetPropertyDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureGetPropertyDuration", "bar", AlwaysTheSameObject{});
+
+}
+
+TEST(SendObjectCall, setPropertyDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureSetPropertyDuration",
+    "bar", AlwaysTheSameObject{}, makePropertyConnectedObject("bar"));
+}
+
+TEST(SendObjectCall, remoteProcessSetPropertyDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureSetPropertyDuration",
+    "bar", AlwaysTheSameObject{}, makePropertyConnectedObject("bar"));
+
+}
+
+
+TEST(SendObjectCall, callDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "foo", AlwaysADifferentObject{});
+}
+
+TEST(SendObjectCall, remoteProcessCallDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "foo", AlwaysADifferentObject{});
+
+}
+
+TEST(SendObjectCall, getPropertyDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureGetPropertyDuration", "bar", AlwaysADifferentObject{});
+}
+
+TEST(SendObjectCall, remoteProcessGetPropertyDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureGetPropertyDuration", "bar", AlwaysADifferentObject{});
+
+}
+
+TEST(SendObjectCall, setPropertyDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureSetPropertyDuration",
+    "bar", AlwaysADifferentObject{}, makePropertyConnectedObject("bar"));
+}
+
+TEST(SendObjectCall, remoteProcessSetPropertyDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureSetPropertyDuration",
+    "bar", AlwaysADifferentObject{}, makePropertyConnectedObject("bar"));
+
+}
+
+
+
+TEST(SendObjectCall, callErrorDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "triggerError", AlwaysTheSameObject{});
+}
+
+TEST(SendObjectCall, remoteProcessCallErrorDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "triggerError", AlwaysTheSameObject{});
+
+}
+
+TEST(SendObjectCall, callErrorDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "triggerError", AlwaysADifferentObject{});
+}
+
+TEST(SendObjectCall, remoteProcessCallErrorDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureCallDuration", "triggerError", AlwaysADifferentObject{});
+
+}
+
+
+
+using  RemoteFuture = qi::Future<void>;
+
+class CancelablePromiseGenerator
+{
+  boost::synchronized_value<std::vector<qi::Promise<void>>> promises;
+public:
+
+  qi::AnyObject operator()()
+  {
+    qi::Promise<void> cancelablePromise{ [](qi::Promise<void>& p) { p.setCanceled(); } };
+    promises->push_back(cancelablePromise);
+    return boost::make_shared<RemoteFuture>(cancelablePromise.future());
+  }
+
+};
+
+
+
+TEST(SendObjectCall, cancelDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureCallDurationArgument", "triggerCancelAndWait",
+    AlwaysTheSameObject{}, {}, CancelablePromiseGenerator{});
+}
+
+TEST(SendObjectCall, remoteProcessCancelDurationIndependentFromRemoteObjectsCountSameObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureCallDurationArgument", "triggerCancelAndWait",
+    AlwaysTheSameObject{}, {}, CancelablePromiseGenerator{});
+
+}
+
+TEST(SendObjectCall, cancelDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  operationDurationIndependentFromRemoteObjectsCount("measureCallDurationArgument", "triggerCancelAndWait",
+    AlwaysADifferentObject{}, {}, CancelablePromiseGenerator{});
+}
+
+TEST(SendObjectCall, remoteProcessCancelDurationIndependentFromRemoteObjectsCountDifferentObject)
+{
+  qiLogInfo() << "===== TEST " << typeid(this).name();
+  remoteProcessOperationDurationIndependentFromRemoteObjectsCount("measureCallDurationArgument", "triggerCancelAndWait",
+    AlwaysADifferentObject{}, {}, CancelablePromiseGenerator{});
+
+}
+

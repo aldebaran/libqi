@@ -28,7 +28,7 @@ struct MyStruct {
   std::string titi;
 };
 
-qi::Seconds callTimeout{5};
+qi::Seconds callTimeout{10};
 qi::Seconds unitTimeout{15};
 
 QI_TYPE_STRUCT(MyStruct, i, j, titi);

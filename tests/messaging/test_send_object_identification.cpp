@@ -15,6 +15,68 @@ qiLogCategory("test");
 static const int timeoutMs = 300;
 static const qi::Duration timeout = qi::MilliSeconds(timeoutMs);
 
+namespace {
+
+  struct NewObject
+  {
+    template<class ObjectType, class T>
+    ObjectType make(qi::SessionPtr) const
+    {
+      return ObjectType(boost::make_shared<T>());
+    }
+  };
+
+
+
+  template<class ObjectFactory>
+  struct AsService
+  {
+    ObjectFactory factory;
+
+    template<class ObjectType, class T>
+    auto make(qi::SessionPtr session) const
+      -> decltype(factory.template make<ObjectType, T>(session))
+    {
+      ObjectType object = factory.template make<ObjectType, T>(session);
+
+      static std::atomic<int> next_id{ 0 };
+      const auto serviceName = "ServiceObject_" + qi::os::to_string(next_id++);
+
+      session->registerService(serviceName, object);
+      auto serviceObject = session->service(serviceName).value();
+
+      return serviceObject;
+    }
+  };
+
+  template<class ObjectType, class T, class ObjectFactory>
+  ObjectType makeObject(ObjectFactory& objectFactory, qi::SessionPtr session)
+  {
+    return objectFactory.template make<ObjectType, T>(session);
+  }
+
+  template<class ObjectFactory>
+  class SendObjectIdentityFactoryType : public ::testing::Test
+  {
+  public:
+    ObjectFactory factory;
+  };
+
+  template<class ObjectFactory>
+  class SendObjectIdentityInterfaceProxyFactoryType
+    : public SendObjectIdentityFactoryType<ObjectFactory>
+  {
+  };
+
+  using FactoryTypes = ::testing::Types< NewObject
+                                       , AsService<NewObject>
+                                       >;
+
+  TYPED_TEST_CASE(SendObjectIdentityFactoryType, FactoryTypes);
+  TYPED_TEST_CASE(SendObjectIdentityInterfaceProxyFactoryType, FactoryTypes);
+
+}
+
 
 static int next_dummy_id = 0;
 struct dummy_t
@@ -51,8 +113,7 @@ TEST(SendObjectIdentity, IdentityOfRemoteObjects)
   EXPECT_NE(remoteObject2, o);
 }
 
-
-TEST(SendObjectIdentity, IdentityOfRemoteObjectsDifferentProcess)
+TYPED_TEST(SendObjectIdentityFactoryType, IdentityOfRemoteObjectsDifferentProcess)
 {
   using namespace qi;
 
@@ -64,7 +125,7 @@ TEST(SendObjectIdentity, IdentityOfRemoteObjectsDifferentProcess)
   auto client = makeSession();
   client->connect(serviceUrl);
   AnyObject service = client->service("PingPongService").value();
-  AnyObject original{boost::make_shared<dummy_t>()};
+  auto original = makeObject<AnyObject, dummy_t>(this->factory, client);
 
   service.call<void>("give", original);
   AnyObject copy0 = service.call<AnyObject>("take");
@@ -95,13 +156,13 @@ public:
 
 QI_REGISTER_OBJECT(ObjectStore, get, set);
 
-TEST(SendObjectIdentity, IdentityMaintainedBetweenSessions)
+TYPED_TEST(SendObjectIdentityFactoryType, IdentityMaintainedBetweenSessions)
 {
   TestSessionPair sessionPair;
   auto original_store = boost::make_shared<ObjectStore>();
   sessionPair.server()->registerService("store", original_store);
 
-  auto object = qi::AnyObject{boost::make_shared<dummy_t>()};
+  auto object = makeObject<qi::AnyObject, dummy_t>(this->factory, sessionPair.server());
   original_store->set(object);
 
   auto store_from_server = sessionPair.server()->service("store").value();
@@ -148,7 +209,7 @@ TEST(SendObjectIdentity, IdentityMaintainedBetweenSessions)
 
 }
 
-TEST(SendObjectIdentity, IdentityMaintainedBetweenSessionsWithRemote)
+TYPED_TEST(SendObjectIdentityFactoryType, IdentityMaintainedBetweenSessionsWithRemote)
 {
   using namespace qi;
 
@@ -161,7 +222,7 @@ TEST(SendObjectIdentity, IdentityMaintainedBetweenSessionsWithRemote)
   client->connect(serviceUrl);
   AnyObject store_from_client = client->service("PingPongService").value();
 
-  auto object = qi::AnyObject{ boost::make_shared<dummy_t>() };
+  auto object = makeObject<AnyObject, dummy_t>(this->factory, client);
   store_from_client.call<void>("give", object);
 
   AnyObject object_from_client_1 = store_from_client.call<AnyObject>("take");
@@ -189,10 +250,10 @@ TEST(SendObjectIdentity, IdentityMaintainedBetweenSessionsWithRemote)
 }
 
 
-TEST(SendObjectIdentity, IdentityOfRemoteObjectsMoreIndirections)
+TYPED_TEST(SendObjectIdentityFactoryType, IdentityOfRemoteObjectsMoreIndirections)
 {
-  qi::AnyObject originalObject(boost::make_shared<dummy_t>());
   TestSessionPair pairA;
+  auto originalObject = makeObject<qi::AnyObject, dummy_t>(this->factory, pairA.server());
   pairA.server()->registerService("serviceA", boost::make_shared<ObjectStore>());
   qi::AnyObject clientA = pairA.client()->service("serviceA").value();
   clientA.call<void>("set", originalObject);
@@ -281,7 +342,7 @@ QI_REGISTER_OBJECT(SomeInterfaceImplNoInheritance, get)
 QI_REGISTER_IMPLEMENTATION_H(SomeInterface, SomeInterfaceImplNoInheritance)
 
 
-TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObject)
+TEST(SendObjectIdentityInterfaceProxy, IdentityDependsOnObjectAddressWithAnyObject)
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImpl>();
@@ -294,7 +355,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObj
   EXPECT_EQ(a->get(), b->get());
 }
 
-TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObjectT)
+TEST(SendObjectIdentityInterfaceProxy, IdentityDependsOnObjectAddressWithObjectT)
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImpl>();
@@ -309,7 +370,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObject
 
 
 
-TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObjectNoInheritance)
+TEST(SendObjectIdentityInterfaceProxy, IdentityDependsOnObjectAddressWithAnyObjectNoInheritance)
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
@@ -323,7 +384,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObj
   EXPECT_EQ(a->get(), b->get());
 }
 
-TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObjectTNoInheritance)
+TEST(SendObjectIdentityInterfaceProxy, IdentityDependsOnObjectAddressWithObjectTNoInheritance)
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
@@ -339,13 +400,13 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObject
 
 
 
-TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingAnyObject)
+TYPED_TEST(SendObjectIdentityInterfaceProxyFactoryType, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingAnyObject)
 {
   using namespace qi;
 
   TestSessionPair sessions;
 
-  AnyObject original{ boost::make_shared<SomeInterfaceImpl>() };
+  auto original = makeObject<qi::AnyObject, SomeInterfaceImpl>(this->factory, sessions.server());
   sessions.server()->registerService("Store", boost::make_shared<ObjectStore>());
   AnyObject store = sessions.client()->service("Store").value();
   store.call<void>("set", original);
@@ -355,13 +416,13 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyO
 
 }
 
-TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingObjectT)
+TYPED_TEST(SendObjectIdentityInterfaceProxyFactoryType, IdentityIsMaintainedWhenSentToRemoteAnyObjectStoreRetrievingObjectT)
 {
   using namespace qi;
 
   TestSessionPair sessions;
 
-  AnyObject original{ boost::make_shared<SomeInterfaceImpl>() };
+  auto original = makeObject<qi::AnyObject, SomeInterfaceImpl>(this->factory, sessions.server());
   sessions.server()->registerService("Store", boost::make_shared<ObjectStore>());
   AnyObject store = sessions.client()->service("Store").value();
   store.call<void>("set", original);
@@ -411,13 +472,23 @@ public:
 };
 QI_REGISTER_OBJECT(SomeStoreImpl, get, set);
 
-TEST(SomeInterface, IdentityIsMaintainedWhenSentToInterfaceSpecializedStoreRetrievingAnyObject)
+namespace
+{
+  template<class ObjectFactory>
+  class SomeInterfaceFactoryType
+    : public SendObjectIdentityFactoryType<ObjectFactory>
+  {
+  };
+  TYPED_TEST_CASE(SomeInterfaceFactoryType, FactoryTypes);
+}
+
+TYPED_TEST(SomeInterfaceFactoryType, IdentityIsMaintainedWhenSentToInterfaceSpecializedStoreRetrievingAnyObject)
 {
   using namespace qi;
 
   TestSessionPair sessions;
 
-  Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
+  auto original = makeObject<Object<SomeInterface>, SomeInterfaceImpl>(this->factory, sessions.server());
   sessions.server()->registerService("Store", boost::make_shared<SomeStoreImpl>());
   Object<SomeStore> store = sessions.client()->service("Store");
   store->set(original);
@@ -427,9 +498,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToInterfaceSpecializedStoreRetri
 
 }
 
-
-
-TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRetrievingAnyObject)
+TYPED_TEST(SomeInterfaceFactoryType, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRetrievingAnyObject)
 {
   using namespace qi;
 
@@ -441,7 +510,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
   auto client = makeSession();
   client->connect(serviceUrl);
   AnyObject service = client->service("PingPongService").value();
-  Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
+  auto original = makeObject<Object<SomeInterface>, SomeInterfaceImpl>(this->factory, client);
 
   service.call<void>("give", original);
   AnyObject copy0 = service.call<AnyObject>("take");
@@ -455,7 +524,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
 
 
 
-TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRetrievingObjectT)
+TYPED_TEST(SomeInterfaceFactoryType, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRetrievingObjectT)
 {
   using namespace qi;
 
@@ -467,7 +536,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
   auto client = makeSession();
   client->connect(serviceUrl);
   AnyObject service = client->service("PingPongService").value();
-  Object<SomeInterface> original{ boost::make_shared<SomeInterfaceImpl>() };
+  auto original = makeObject<Object<SomeInterface>, SomeInterfaceImpl>(this->factory, client);
 
   service.call<void>("give", original);
   Object<SomeInterface> copy0 = service.call<Object<SomeInterface>>("take");
