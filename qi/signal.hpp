@@ -291,6 +291,9 @@ QI_WARNING_POP()
      */
     void call(const GenericFunctionParameters& args, MetaCallType callType);
 
+    void call(const std::shared_ptr<GenericFunctionParameters>& args,
+      MetaCallType callType);
+
     SignalSubscriber setCallType(MetaCallType ct);
 
     /// @return the identifier of the subscription (aka link)
@@ -306,6 +309,15 @@ QI_WARNING_POP()
     std::shared_ptr<SignalSubscriberPrivate> _p;
 
     void callImpl(const GenericFunctionParameters& args);
+
+    boost::optional<ExecutionContext*> executionContextFor(MetaCallType callType) const;
+
+    // Call the subscriber with the given arguments, which can be passed by
+    // value or by pointer (any `Readable` will do).
+    //
+    // (GenericFunctionParameters || Readable<GenericFunctionParameters>) Args
+    template<typename Args>
+    void callWithValueOrPtr(const Args& args, MetaCallType callType);
 
   public:
     QI_API_DEPRECATED_MSG("please use link() instead or cast to qi::SignalLink")

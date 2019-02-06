@@ -15,6 +15,7 @@
 #include <qi/assert.hpp>
 #include <qi/numeric.hpp>
 #include <ka/algorithm.hpp>
+#include <ka/src.hpp>
 
 #include "signal_p.hpp"
 
@@ -196,6 +197,20 @@ QI_WARNING_POP()
     _p->onSubscribers = onSubscribers;
   }
 
+  namespace {
+    template<typename Params>
+    void callSubscribersImpl(const SignalBase& x, SignalSubscriberMap& subscribers,
+                             const Params& params, MetaCallType callType)
+    {
+      for (auto& i: subscribers)
+      {
+        qiLogDebug() << &x << " Invoking signal subscriber";
+        SignalSubscriber s = i.second; // holds the subscription alive
+        s.call(params, callType);
+      }
+    }
+  } // namespace
+
   void SignalBase::callSubscribers(const GenericFunctionParameters& params, MetaCallType callType)
   {
     MetaCallType mct = callType;
@@ -210,11 +225,33 @@ QI_WARNING_POP()
       copy = _p->subscriberMap;
     }
     qiLogDebug() << this << " Invoking signal subscribers: " << copy.size();
-    for (auto& i: copy)
+
+    // If any subscriber is going to use an execution context, it's going to
+    // need a copy of the arguments, so that it can post a task to the execution
+    // context. We want to avoid each such subscriber making its own copy,
+    // because it would be inefficient. We therefore detect here if a copy is
+    // needed, and if so make this copy once for all.
+
+    using V = SignalSubscriberMap::value_type;
+    const bool mustCopyParams = std::any_of(copy.begin(), copy.end(), [mct](const V& v) {
+      const SignalSubscriber& s = v.second;
+      return static_cast<bool>(s.executionContextFor(mct)); // Has a context.
+    });
+
+    if (mustCopyParams)
     {
-      qiLogDebug() << this << " Invoking signal subscriber";
-      SignalSubscriber s = i.second; // holds the subscription alive
-      s.call(params, mct);
+      std::shared_ptr<GenericFunctionParameters> paramsCopy{
+        new auto(params.copy()),
+        [](GenericFunctionParameters* object) {
+          object->destroy(); // see GenericFunctionParameters::copy() for details
+          delete object;
+        }
+      };
+      callSubscribersImpl(*this, copy, std::move(paramsCopy), mct);
+    }
+    else
+    {
+      callSubscribersImpl(*this, copy, params, mct);
     }
     qiLogDebug() << this << " done invoking signal subscribers";
   }
@@ -256,47 +293,50 @@ QI_WARNING_POP()
     }
   }
 
-  void SignalSubscriber::call(const GenericFunctionParameters& args, MetaCallType callType)
+  boost::optional<ExecutionContext*> SignalSubscriber::executionContextFor(MetaCallType callType) const
   {
-    // this is held alive by caller
+    if (!_p->handler)
+    {
+      return {};
+    }
+    bool async = true;
+    if (_p->threadingModel != MetaCallType_Auto)
+    {
+      async = (_p->threadingModel == MetaCallType_Queued);
+    }
+    else if (callType != MetaCallType_Auto)
+    {
+      async = (callType == MetaCallType_Queued);
+    }
+
+    ExecutionContext* executionContext = _p->executionContext;
+    if (executionContext == nullptr && !async)
+    {
+      return {};
+    }
+    return {executionContext != nullptr ? executionContext : getEventLoop()};
+  }
+
+  template<typename Args>
+  void SignalSubscriber::callWithValueOrPtr(const Args& args, MetaCallType callType)
+  {
     if (_p->handler)
     {
-      bool async = true;
-      if (_p->threadingModel != MetaCallType_Auto)
-        async = (_p->threadingModel == MetaCallType_Queued);
-      else if (callType != MetaCallType_Auto)
-        async = (callType == MetaCallType_Queued);
-
-      qiLogDebug() << "subscriber call async=" << async <<" ct " << callType <<" tm " << _p->threadingModel;
-      ExecutionContext* executionContext = _p->executionContext;
-      if (executionContext || async)
+      if (auto maybeExec = executionContextFor(callType))
       {
-        // We will check enabled when we will be scheduled in the target
-        // thread, and we hold this SignalSubscriber alive, so no need to
-        // explicitly track the asynccall
-
-        // courtesy-check of el, but it should be kept alive longuer than us
-        if (!executionContext)
+        ExecutionContext* executionContext = maybeExec.value();
+        if (executionContext == nullptr)
         {
-          executionContext = getEventLoop();
-          if (!executionContext) // this is an assert basicaly, no sense trying to do something clever.
-            throw std::runtime_error("Event loop was destroyed");
+          throw std::runtime_error("Event loop was destroyed");
         }
-
         auto subscriberCopy = *this;
-        std::shared_ptr<GenericFunctionParameters> argsCopy{ new auto(args.copy()), [](GenericFunctionParameters* object) {
-          object->destroy(); // see GenericFunctionParameters::copy() for details
-          delete object;
-        } };
-
-        executionContext->post([subscriberCopy, argsCopy] () mutable{
-          subscriberCopy.callImpl(*argsCopy);
+        executionContext->post([subscriberCopy, args] () mutable {
+          subscriberCopy.callImpl(ka::src(args));
         });
-
       }
       else
       {
-        callImpl(args);
+        callImpl(ka::src(args));
       }
     }
     else if (_p->target)
@@ -306,15 +346,29 @@ QI_WARNING_POP()
       {
         if (_p->enabled)
         {
-          // see above
           auto sbp = _p->source.lock();
           if (sbp)
+          {
             sbp->disconnect(_p->linkId).wait();
+          }
         }
       }
-      else // no need to keep anything locked, whatever happens this is not used
-        lockedTarget.metaPost(_p->method, args);
+      else // No need to keep anything locked, whatever happens this is not used.
+      {
+        lockedTarget.metaPost(_p->method, ka::src(args));
+      }
     }
+  }
+
+  void SignalSubscriber::call(const GenericFunctionParameters& args, MetaCallType callType)
+  {
+    callWithValueOrPtr(args, callType);
+  }
+
+  void SignalSubscriber::call(const std::shared_ptr<GenericFunctionParameters>& args,
+      MetaCallType callType)
+  {
+    callWithValueOrPtr(args, callType);
   }
 
   SignalSubscriber SignalSubscriber::setCallType(MetaCallType ct)
