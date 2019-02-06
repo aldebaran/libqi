@@ -7,7 +7,6 @@
 #include <qi/os.hpp>
 
 #include <boost/thread.hpp>
-#include <boost/pool/singleton_pool.hpp>
 
 qiLogCategory("qi.future");
 
@@ -16,8 +15,6 @@ namespace qi {
   namespace detail {
     class FutureBasePrivate {
     public:
-      void* operator new(size_t);
-      void operator delete(void*);
       FutureBasePrivate();
 
       // Disable copy
@@ -30,19 +27,6 @@ namespace qi {
       std::atomic<FutureState> _state;
       std::atomic<bool> _cancelRequested;
     };
-
-    struct FutureBasePrivatePoolTag { };
-    using futurebase_pool = boost::singleton_pool<FutureBasePrivatePoolTag, sizeof(FutureBasePrivate)>;
-
-    void* FutureBasePrivate::operator new(size_t sz)
-    {
-      return futurebase_pool::malloc();
-    }
-
-    void FutureBasePrivate::operator delete(void* ptr)
-    {
-      futurebase_pool::free(ptr);
-    }
 
     FutureBasePrivate::FutureBasePrivate()
       : _cond(),
