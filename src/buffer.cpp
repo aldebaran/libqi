@@ -13,7 +13,6 @@
 #include <iomanip>
 #include <ctype.h>
 
-#include <boost/pool/singleton_pool.hpp>
 #include <boost/make_shared.hpp>
 
 #include "buffer_p.hpp"
@@ -74,20 +73,6 @@ namespace qi
       ::memcpy(_data, b._data, b.used);
     }
     return *this;
-  }
-
-  struct MyPoolTag { };
-  using buffer_pool = boost::singleton_pool<MyPoolTag, sizeof(BufferPrivate)>;
-
-  void* BufferPrivate::operator new(size_t sz)
-  {
-    QI_ASSERT(sz == sizeof(BufferPrivate));
-    return buffer_pool::malloc();
-  }
-
-  void BufferPrivate::operator delete(void* ptr)
-  {
-    buffer_pool::free(ptr);
   }
 
   boost::optional<size_t> BufferPrivate::indexOfSubBuffer(size_t offset) const

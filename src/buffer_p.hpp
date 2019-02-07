@@ -23,8 +23,6 @@ namespace qi
     BufferPrivate();
     BufferPrivate(const BufferPrivate&);
     ~BufferPrivate();
-    void* operator new(size_t);
-    void operator delete(void*);
     BufferPrivate& operator=(const BufferPrivate&);
     unsigned char* data();
     const unsigned char* data() const;
