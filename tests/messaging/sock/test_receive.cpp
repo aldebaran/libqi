@@ -15,6 +15,7 @@
 #include "networkmock.hpp"
 #include <src/messaging/sock/receive.hpp>
 #include <src/messaging/sock/accept.hpp>
+#include <qi/testutils/testutils.hpp>
 
 static const qi::MilliSeconds defaultTimeout{500};
 static const std::chrono::milliseconds defaultPostPauseInMs{20};
@@ -518,7 +519,7 @@ TEST(NetReceiveMessage, Asio)
   sendMessage<N>(promiseConnect.future().value(), &msgSend, noMoreMessage, SslEnabled{false});
 
   // Wait the client to receive it.
-  ASSERT_TRUE(promiseReceive.future().waitFor(defaultTimeout)); // milliseconds.
+  ASSERT_TRUE(test::finishesWithValue(promiseReceive.future(), test::willDoNothing(), defaultTimeout));
   ASSERT_EQ(msgAddress, msgReceived.address());
   ASSERT_EQ(bufSend.totalSize(), msgReceived.buffer().totalSize());
   ASSERT_TRUE(std::equal((char*)bufSend.data(), (char*)bufSend.data() + bufSend.size(), (char*)msgReceived.buffer().data()));
