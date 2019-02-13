@@ -169,7 +169,9 @@ namespace qi {
           // Remove top-level tuple
           //sig = sig.substr(1, sig.length()-2);
           //TODO: Optimise
-          AnyReference value = msg.value((msg.flags()&Message::TypeFlag_DynamicPayload)? "m":sig, sock);
+          AnyValue value(msg.value((msg.flags() & Message::TypeFlag_DynamicPayload) ? "m" : sig,
+                                   sock),
+                         false /* copy */, true /* delete */);
 
           {
             GenericFunctionParameters args;
@@ -180,7 +182,6 @@ namespace qi {
             qiLogDebug() << "Triggering local event listeners with args : " << args.size();
             sb->trigger(args);
           }
-          value.destroy();
         }
         catch (const std::exception& e)
         {
@@ -237,11 +238,12 @@ namespace qi {
            return;
         }
         try {
-          qi::AnyReference val = msg.value(
-            (msg.flags() & Message::TypeFlag_DynamicPayload) ?
-              "m" : mm->returnSignature(),
-            sock);
-          promise.setValue(val);
+          AnyValue value(msg.value((msg.flags() & Message::TypeFlag_DynamicPayload) ?
+                                     "m" :
+                                     mm->returnSignature(),
+                                   sock),
+                         false /* copy */, true /* delete */);
+          promise.setValue(value.release());
         } catch (std::runtime_error &err) {
           promise.setError(err.what());
         }
@@ -253,8 +255,8 @@ namespace qi {
       case qi::Message::Type_Error: {
         try {
           static std::string sigerr("m");
-          qi::AnyReference gvp = msg.value(sigerr, sock).content();
-          std::string err = gvp.asString();
+          AnyValue value(msg.value(sigerr, sock), false /* copy */, true /* delete */);
+          std::string err = value.content().asString();
           qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
           promise.setError(err);
         } catch (std::runtime_error &e) {
