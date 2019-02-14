@@ -228,11 +228,9 @@ namespace qi {
       return;
     }
 
-    AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
-    CapabilityMap authData = cmref.to<CapabilityMap>();
+    CapabilityMap authData = msg.value(typeOf<CapabilityMap>()->signature(), socket).to<CapabilityMap>();
 
     CapabilityMap::iterator authStateIt = authData.find(AuthProvider::State_Key);
-    cmref.destroy();
 
     if (authStateIt == authData.end() || authStateIt->second.to<unsigned int>() < AuthProvider::State_Error
         || authStateIt->second.to<unsigned int>() > AuthProvider::State_Done)

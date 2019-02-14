@@ -298,7 +298,7 @@ namespace qi {
     }
 
     ///@return signature, set by setParameters() or setSignature()
-    QI_API AnyReference value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
+    QI_API AnyValue value(const Signature &signature, const qi::MessageSocketPtr &socket) const;
 
     QI_API void setValue(const AutoAnyReference& value,
                   const Signature& signature,

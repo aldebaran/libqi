@@ -535,18 +535,18 @@ namespace qi {
   template<typename N, typename S>
   bool TcpMessageSocket<N, S>::handleCapabilityMessage(const Message& msg)
   {
-    AnyReference cmRef;
     try
     {
-      cmRef = msg.value(typeOf<CapabilityMap>()->signature(), shared_from_this());
-      CapabilityMap cm = cmRef.to<CapabilityMap>();
-      cmRef.destroy();
+      CapabilityMap cm;
+      {
+        AnyValue v{msg.value(typeOf<CapabilityMap>()->signature(), shared_from_this())};
+        cm = v.to<CapabilityMap>();
+      }
       boost::mutex::scoped_lock lock(_contextMutex);
       _remoteCapabilityMap.insert(cm.begin(), cm.end());
     }
     catch (const std::runtime_error& e)
     {
-      cmRef.destroy();
       QI_LOG_ERROR_SOCKET(this) << "Ill-formed capabilities message: " << e.what();
       return false;
     }

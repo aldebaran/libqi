@@ -174,8 +174,7 @@ namespace qi {
           //sig = sig.substr(1, sig.length()-2);
           //TODO: Optimise
           AnyValue value(msg.value((msg.flags() & Message::TypeFlag_DynamicPayload) ? "m" : sig,
-                                   sock),
-                         false /* copy */, true /* delete */);
+                                   sock));
 
           {
             GenericFunctionParameters args;
@@ -245,8 +244,7 @@ namespace qi {
           AnyValue value(msg.value((msg.flags() & Message::TypeFlag_DynamicPayload) ?
                                      "m" :
                                      mm->returnSignature(),
-                                   sock),
-                         false /* copy */, true /* delete */);
+                                   sock));
           promise.setValue(value.release());
         } catch (std::runtime_error &err) {
           promise.setError(err.what());
@@ -259,8 +257,7 @@ namespace qi {
       case qi::Message::Type_Error: {
         try {
           static std::string sigerr("m");
-          AnyValue value(msg.value(sigerr, sock), false /* copy */, true /* delete */);
-          std::string err = value.content().asString();
+          const std::string err = msg.value(sigerr, sock).content().asString();
           qiLogVerbose() << "Received error message"  << msg.address() << ":" << err;
           promise.setError(err);
         } catch (std::runtime_error &e) {
