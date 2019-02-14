@@ -292,9 +292,7 @@ namespace qi {
       }
       else if (msg.type() == qi::Message::Type_Cancel)
       {
-        AnyReference ref = msg.value("I", socket);
-        unsigned int origMsgId = ref.to<unsigned int>();
-        ref.destroy();
+        unsigned int origMsgId = msg.value("I", socket).to<unsigned int>();
         cancelCall(socket, msg, origMsgId);
         return;
       }
@@ -304,7 +302,7 @@ namespace qi {
         return;
       }
 
-      AnyReference value;
+      AnyReference ref;
       if (msg.flags() & Message::TypeFlag_DynamicPayload)
         sigparam = "m";
       // ReturnType flag appends a signature to the payload
@@ -315,27 +313,40 @@ namespace qi {
         originalSignature = sigparam;
         sigparam = "(" + sigparam.toString() + "s)";
       }
-      value = msg.value(sigparam, socket);
+      // Since the following code does some AnyReference juggling (assignment
+      // with its own sub-parts), it is simpler here to directly manipulate an
+      // AnyReference and achieve exception-safety through a scoped, than using
+      // an AnyValue.
+      bool mustDestroyRef = true;
+      ref = msg.value(sigparam, socket).release();
+      auto guard = ka::scoped([&]() {
+        if (mustDestroyRef)
+        {
+          ref.destroy();
+        }
+      });
       std::string returnSignature;
       if (hasReturnType)
       {
-        returnSignature = value[1].to<std::string>();
-        value[1].destroy();
-        value = value[0];
+        returnSignature = ref[1].to<std::string>();
+        ref[1].destroy();
+        ref = ref[0];
         sigparam = originalSignature;
       }
       if (sigparam == "m")
       {
         // received dynamically typed argument pack, unwrap
-        AnyValue* content = value.ptr<AnyValue>();
-        // steal it
+        AnyValue* content = ref.ptr<AnyValue>();
+        // steal it (`release` doesn't throw).
         AnyReference pContent = content->release();
 
         // free the object content
-        value.destroy();
-        value = pContent;
+        mustDestroyRef = false; // If next line throws, don't redestroy.
+        ref.destroy();
+        ref = pContent;
+        mustDestroyRef = true; // Reactivate destroy on scope exit.
       }
-      mfp = value.asTupleValuePtr();
+      mfp = ref.asTupleValuePtr();
       /* Because of 'global' _currentSocket, we cannot support parallel
       * executions at this point.
       * Both on self, and on obj which can use currentSocket() too.
@@ -391,7 +402,6 @@ namespace qi {
         qiLogError() << "unknown request of type " << (int)msg.type() << " on service: " << msg.address();
       }
       //########################
-      value.destroy();
     } catch (const std::runtime_error &e) {
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
