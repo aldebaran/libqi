@@ -577,8 +577,7 @@ namespace qi {
      */
     class QI_API ScopedThreadName {
     public:
-      ScopedThreadName(const std::string& newName) {
-        _oldName = currentThreadName();
+      ScopedThreadName(const std::string& newName) : _oldName(currentThreadName()) {
         setCurrentThreadName(newName);
       };
       ~ScopedThreadName() {

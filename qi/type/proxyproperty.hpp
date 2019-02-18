@@ -84,7 +84,7 @@ namespace qi
       link = object->connect(propertyName,
           SignalSubscriber(
             AnyFunction::fromDynamicFunction(boost::bind(&ThisProxyType::bounceEvent, this, _1))
-            ));
+            )).value();
     }
     else
     {
