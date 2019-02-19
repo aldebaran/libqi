@@ -183,3 +183,65 @@ TEST(EventLoopAsio, CannotGoAboveMaximumThreadCount)
   // We must have reached the maximum thread count.
   ASSERT_EQ(maxThreadCount, *(e-1));
 }
+
+// We check that the eventloop gets bigger when overloaded, then shrinks when
+// idle.
+TEST(EventLoopAsio, DynamicShrinking)
+{
+  using namespace qi;
+  const int minThreadCount = 2;
+  const int maxThreadCount = 8;
+  const int threadCount = 4;
+  const bool spawnOnOverload = true;
+  EventLoopAsio ev{threadCount, minThreadCount, maxThreadCount, "youp", spawnOnOverload};
+
+  // We're going to keep track of the thread counts.
+  std::vector<int> threadCounts{threadCount};
+
+  // Spam the eventloop until the thread count goes up to the maximum.
+  while (ev.workerCount() != maxThreadCount)
+  {
+    ev.asyncCall(Duration{0}, []() {
+      std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+  }
+
+  auto pushIfDistinctThreadCount = [&threadCounts](EventLoopAsio const& ev) {
+    const auto n = ev.workerCount();
+    if (n != threadCounts.back())
+    {
+      threadCounts.push_back(n);
+    }
+  };
+
+  // Wait until the thread count goes back down to the minimum, recording the
+  // distinct thread counts.
+  while (ev.workerCount() != minThreadCount)
+  {
+    pushIfDistinctThreadCount(ev);
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+  }
+  pushIfDistinctThreadCount(ev);
+
+  // Check that the recorded distinct thread counts strictly increase, then
+  // strictly decrease.
+  auto b = threadCounts.begin();
+  auto e = threadCounts.end();
+
+  // [b, i) is the increasing sub-range.
+  auto i = std::is_sorted_until(b, e);
+
+  // i must be in (b, e-1), i.e. sub-ranges must not be empty.
+  ASSERT_LT(b, i);
+  ASSERT_LT(i, e);
+
+  // We must have peaked at the maximum thread count.
+  ASSERT_EQ(maxThreadCount, *(i-1));
+
+  // [i, e) must decrease.
+  ASSERT_TRUE(std::is_sorted(i, e, std::greater<int>{}));
+
+  // We must have gone down to the minimum thread count.
+  ASSERT_EQ(minThreadCount, *(e-1));
+}

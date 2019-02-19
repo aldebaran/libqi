@@ -14,6 +14,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/range/algorithm/count_if.hpp>
 
 #include <ka/memory.hpp>
 #include <ka/scoped.hpp>
@@ -36,10 +37,31 @@
 qiLogCategory("qi.eventloop");
 
 namespace qi {
-
+  /// Component responsible for maintaining a container of threads.
+  ///
+  /// Threads that have finished are marked as inactive, and are later joined
+  /// and overwritten when new threads must be created.
   class EventLoopAsio::WorkerThreadPool
   {
-    using Container = std::vector<std::thread>;
+    // A thread associated to bookkeeping data:
+    // - the last date it has run some work
+    // - if it is currently active or not
+    struct ThreadData
+    {
+      using Clock = SteadyClock;
+
+      std::thread thread;
+      Clock::time_point lastWorkDate = Clock::now();
+      bool active = true;
+
+      explicit ThreadData(std::thread t) : thread(std::move(t))
+      {
+      }
+    };
+
+    // TODO: Perform measurements to see if a more specific data structure would
+    // get better performances.
+    using Container = std::vector<ThreadData>;
 
   public:
     ~WorkerThreadPool() { joinAll(); }
@@ -49,20 +71,55 @@ namespace qi {
     template<class Func, class... Args>
     void launch(Func&& func, Args&&... args)
     {
-      _workers->emplace_back(std::forward<Func>(func), std::forward<Args>(args)...);
+      using ka::fwd;
+      launchN(1, fwd<Func>(func), fwd<Args>(args)...);
     }
 
     // Launches 'count' new worker threads which will each run the function 'func(args)'.
     // Both the function func and the arguments args will be copied for each call.
     // Note: It is undefined behavior to call this method while joinAll is also being called.
+    //
+    // Algorithm:
+    //  - launch as many threads as possible in "inactive slots" (threads that
+    //      have finished their work)
+    //  - launch the remaining threads in new slots
+    //
+    // Note: The thread container itself is never shrunk.
     template<class Func, class... Args>
-    void launchN(int count, Func&& func, Args&&... args)
+    void launchN(int launchCount, Func&& func, Args&&... args)
     {
       auto syncedWorkers = _workers.synchronize();
-      syncedWorkers->reserve(syncedWorkers->size() + static_cast<Container::size_type>(count));
-      for (int i = 0; i < count; ++i)
+      auto& workers = *syncedWorkers;
+      auto b = workers.begin();
+      const auto e = workers.end();
+      while (launchCount != 0)
       {
-        syncedWorkers->emplace_back(func, args...);
+        b = findInactive(b, e);
+        if (b == e)
+        {
+          // No more inactive slots: push new threads.
+          // `insert(pos, count, value)` cannot be used because `std::thread` is
+          // not copyable.
+          workers.reserve(static_cast<Container::size_type>(launchCount));
+          while (launchCount != 0)
+          {
+            workers.emplace_back(std::thread{func, args...});
+            --launchCount;
+          }
+          QI_ASSERT(launchCount == 0); // Postcondition.
+        }
+        else
+        {
+          // Inactive slot found. Join if possible and overwrite with a new thread.
+          ThreadData& t = *b;
+          if (t.thread.joinable())
+          {
+            t.thread.join();
+          }
+          t = ThreadData{std::thread{func, args...}};
+          ++b;
+          --launchCount;
+        }
       }
     }
 
@@ -82,13 +139,13 @@ namespace qi {
         swap(*syncedWorkers, workers);
       }
 
-      for (auto& worker : workers)
+      for (auto& worker: workers)
       {
-        if (worker.joinable())
+        if (worker.thread.joinable())
         {
           try
           {
-            worker.join();
+            worker.thread.join();
           }
           catch (const std::exception& ex)
           {
@@ -110,10 +167,97 @@ namespace qi {
       return isWorker(*_workers, id);
     }
 
+    std::size_t activeWorkerCount() const
+    {
+      return activeWorkerCountUnsync(*_workers.synchronize());
+    }
+
+    void setInactive(const std::thread::id& id)
+    {
+      visitThreadDataUnsync(*_workers.synchronize(), id, [](ThreadData& t) {
+        t.active = false;
+      });
+    }
+
+    // A thread must terminate if it has been idle for too long, provided the
+    // minimum number of threads has not been reached.
+    bool mustTerminate(const std::thread::id& id, MilliSeconds maxIdleDuration,
+      unsigned int minThreadCount) const
+    {
+      qiLogDebug() << "mustTerminate(" << id << ", " << maxIdleDuration.count() << " ms, " << minThreadCount << ")";
+      auto syncedWorkers = _workers.synchronize();
+      const auto& workers = *syncedWorkers;
+
+      const bool threadIdleTooLong = ThreadData::Clock::now() -
+        lastWorkDateUnsync(id, workers) > maxIdleDuration;
+
+      return threadIdleTooLong && activeWorkerCountUnsync(workers) > minThreadCount;
+    }
+
+    void updateLastWorkDate(const std::thread::id& id)
+    {
+      auto syncedWorkers = _workers.synchronize();
+      visitThreadDataUnsync(*syncedWorkers, id, [](ThreadData& t) {
+        t.lastWorkDate = ThreadData::Clock::now();
+      });
+    }
+
   private:
     static bool isWorker(const Container& workers, std::thread::id id)
     {
-      return boost::algorithm::any_of(workers, [&](const std::thread& t) { return t.get_id() == id; });
+      return boost::algorithm::any_of(workers, [&](const ThreadData& t) {
+        return t.thread.get_id() == id;
+      });
+    }
+
+    static std::size_t activeWorkerCountUnsync(const Container& workers)
+    {
+      return boost::range::count_if(workers, [](const ThreadData& t) {
+        return t.active;
+      });
+    }
+
+    /// Precondition: readableBoundedRange(b, e)
+    ///
+    /// Iterator<ThreadData> I
+    template<typename I>
+    static I findInactive(I b, I e)
+    {
+      return std::find_if(b, e, [](const ThreadData& t) {
+        return !t.active;
+      });
+    }
+
+    // Applies a procedure on the `ThreadData` with the given thread id.
+    //
+    // Throws `std::runtime_error` if the thread id is not found.
+    //
+    // Sequence<ThreadData> S,
+    // Procedure<_ (ThreadData)> Proc
+    template<typename S, typename Proc>
+    static auto visitThreadDataUnsync(S&& workers, const std::thread::id& id, Proc proc)
+      -> decltype(proc(*begin(workers)))
+    {
+      auto b = begin(workers);
+      const auto e = end(workers);
+      b = std::find_if(b, e, [=](const ThreadData& t) {
+        return t.thread.get_id() == id;
+      });
+      if (b == e)
+      {
+        std::ostringstream ss;
+        ss << "WorkerThreadPool::visitThreadDataUnsync: thread id not found. id = " << id;
+        throw std::runtime_error(ss.str());
+      }
+      return proc(*b);
+    }
+
+    static ThreadData::Clock::time_point lastWorkDateUnsync(const std::thread::id& id,
+        const Container& workers)
+    {
+      return visitThreadDataUnsync(workers, id, [](const ThreadData& t) {
+        return t.lastWorkDate;
+      });
     }
 
     boost::synchronized_value<Container> _workers;
@@ -123,20 +267,29 @@ namespace qi {
 
   static std::atomic<uint64_t> gTaskId{0};
   static const auto gThreadCountEnvVar = "QI_EVENTLOOP_THREAD_COUNT";
-  static const auto gMaxThreadsEnvVar  = "QI_EVENTLOOP_MAX_THREADS";
+  static const auto gMinThreadsEnvVar = "QI_EVENTLOOP_MIN_THREADS";
+  static const auto gMaxThreadsEnvVar = "QI_EVENTLOOP_MAX_THREADS";
   static const auto gPingTimeoutEnvVar = "QI_EVENTLOOP_PING_TIMEOUT";
   static const auto gGracePeriodEnvVar = "QI_EVENTLOOP_GRACE_PERIOD";
   static const auto gMaxTimeoutsEnvVar = "QI_EVENTLOOP_MAX_TIMEOUTS";
+  static const auto gThreadMaxIdleDurationMsEnvVar = "QI_EVENTLOOP_THREAD_MAX_IDLE_DURATION";
   const char* const EventLoopAsio::defaultName = "MainEventLoop";
 
-  EventLoopAsio::EventLoopAsio(int threadCount, std::string name, bool spawnOnOverload)
+  EventLoopAsio::EventLoopAsio(int threadCount, int minThreadCount, int maxThreadCount,
+                               std::string name, bool spawnOnOverload)
     : EventLoopPrivate(std::move(name))
     , _work(nullptr)
-    , _maxThreads(0)
+    , _minThreads(minThreadCount)
+    , _maxThreads(maxThreadCount)
     , _workerThreads(new WorkerThreadPool())
     , _spawnOnOverload(spawnOnOverload)
   {
     start(threadCount);
+  }
+
+  EventLoopAsio::EventLoopAsio(int threadCount, std::string name, bool spawnOnOverload)
+    : EventLoopAsio(threadCount, -1, 0, std::move(name), spawnOnOverload)
+  {
   }
 
   void EventLoopAsio::start(int threadCount)
@@ -149,14 +302,69 @@ namespace qi {
 
     if (threadCount <= 0)
     {
-      threadCount =
-          qi::os::getEnvDefault(gThreadCountEnvVar, std::max(static_cast<int>(std::thread::hardware_concurrency()), 3));
+      threadCount = qi::os::getEnvDefault(
+        gThreadCountEnvVar,
+        std::max(static_cast<int>(std::thread::hardware_concurrency()), 3));
     }
 
     _io.reset();
     delete _work.exchange(new boost::asio::io_service::work(_io));
 
-    _maxThreads = qi::os::getEnvDefault(gMaxThreadsEnvVar, 150);
+    auto min = _minThreads.load();
+    auto max = _maxThreads.load();
+
+    qiLogVerbose() << "start: thread count limits: initial (minimum, maximum) "
+      "before any adjustment = " << "(" << min << ", " << max << ")";
+
+    if (min < 0)
+    {
+      min = qi::os::getEnvDefault(gMinThreadsEnvVar,
+        static_cast<int>(std::thread::hardware_concurrency()));
+      qiLogVerbose() << "start: thread count limits: min <- " << min 
+        << " (read from environment variable " << gMinThreadsEnvVar << ","
+        << " with default " << std::thread::hardware_concurrency() << ")";
+    }
+
+    if (max <= 0)
+    {
+      const int defaultMax = 150;
+      max = qi::os::getEnvDefault(gMaxThreadsEnvVar, defaultMax);
+      qiLogVerbose() << "start: thread count limits: max <- " << max 
+        << " (read from environment variable " << gMaxThreadsEnvVar << ","
+        << " with default " << defaultMax << ")";
+    }
+
+    if (max < min)
+    {
+      qiLogWarning() << "start: thread count limits: max (=" << max << ") < min (=" << min << ")";
+      min = max;
+      qiLogWarning() << "start: thread count limits: min / max adjustment: "
+        << "min <- max <- " << min;
+    }
+
+    qiLogVerbose() << "start: thread count limits: final (minimum, maximum) after "
+      << "potential adjustment = (" << min << ", " << max << ")";
+
+    setMinThreads(min);
+    setMaxThreads(max);
+
+    if (threadCount < min)
+    {
+      qiLogWarning() << "start: thread limits: thread count (=" << threadCount << ") < min (=" << min << ")";
+      threadCount = min;
+      qiLogWarning() << "start: thread limits: thread count adjustment: thread count = min = " << min;
+    }
+
+    if (threadCount > max)
+    {
+      qiLogWarning() << "start: thread limits: thread count (=" << threadCount << ") > max (=" << max << ")";
+      threadCount = max;
+      qiLogWarning() << "start: thread limits: thread count adjustment: thread count = max = " << max;
+    }
+
+    qiLogVerbose() << "start: number of threads that will be launched = " << threadCount
+      << " (between (min, max) = (" << min << ", " << max << "))";
+
     _workerThreads->launchN(threadCount, &EventLoopAsio::runWorkerLoop, this);
     if (_spawnOnOverload)
     {
@@ -192,23 +400,66 @@ namespace qi {
     join();
   }
 
+  MilliSeconds EventLoopAsio::maxIdleDuration() const
+  {
+    static const MilliSeconds d{
+      os::getEnvDefault(gThreadMaxIdleDurationMsEnvVar, 5000u)};
+    return d;
+  }
+
+  // The thread running this function is responsible for:
+  // - creating threads in case of contention
+  // - destroying threads that have been idle for too long
+  //
+  // # Thread creation
+  //
+  // The detection of contention is done by launching a task and looking if it
+  // has been run before a given duration. If the duration has been exceeded, a
+  // new thread is spawned (a questionable legacy behavior...) under a maximum
+  // limit. If this maximum limit is reached too many times, an
+  // "emergency callback" is called.
+  //
+  // # Thread destruction
+  //
+  // Each thread is associated to the last date it has run a task. A task is
+  // periodically launched by the "ping loop" to test the contention. This task
+  // also checks how long the thread has been idle (the running of this
+  // monitoring task does not count as real work). If the maximum idle duration
+  // has been exceeded, a specific exception is thrown causing the worker to
+  // stop.
+  //
+  // Note: On a lower-level side, it is the worker thread pool
+  // (`WorkerThreadPool`) that is responsible for the management of the
+  // container of threads.
   void EventLoopAsio::runPingLoop()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
     const auto timeoutDuration = MilliSeconds{ qi::os::getEnvDefault(gPingTimeoutEnvVar, 500u) };
     const auto graceDuration = MilliSeconds{ qi::os::getEnvDefault(gGracePeriodEnvVar, 0u) };
     const auto maxTimeouts = qi::os::getEnvDefault(gMaxTimeoutsEnvVar, 20u);
+    const auto maxIdle = maxIdleDuration();
 
     unsigned int nbTimeout = 0;
     while (_work.load())
     {
       qiLogDebug() << "Ping";
-      auto calling = asyncCall(Seconds{0}, []{});
+      auto calling = asyncCallInternal(Seconds{0},
+        [this, maxIdle]() {
+          // TODO: check that the eventloop cannot be dead by this point.
+          if (_workerThreads->mustTerminate(
+                std::this_thread::get_id(), maxIdle, _minThreads.load()))
+          {
+            throw detail::TerminateThread{};
+          }
+        },
+        defaultExecutionOptions(),
+        UpdateLastWorkDate{false} // the "ping task" doesn't count as real work.
+      );
       auto callState = calling.waitFor(timeoutDuration);
       QI_ASSERT(callState != FutureState_None);
       if (callState == FutureState_Running)
       {
-        const auto workerCount = static_cast<int>(_workerThreads->size());
+        const auto workerCount = static_cast<int>(_workerThreads->activeWorkerCount());
         const auto maxThreads = _maxThreads.load();
         if (maxThreads && workerCount >= maxThreads) // we count in nThreads
         {
@@ -257,7 +508,12 @@ namespace qi {
           break;
         }
 
-        QI_ASSERT(callState == FutureState_FinishedWithValue);
+        const bool idleThreadHasTerminated =
+             callState == FutureState_FinishedWithError
+          && calling.error() == detail::TerminateThread::message();
+
+        QI_IGNORE_UNUSED(idleThreadHasTerminated);
+        QI_ASSERT(callState == FutureState_FinishedWithValue || idleThreadHasTerminated);
         nbTimeout = 0;
         qiLogDebug() << "Ping ok";
         boost::this_thread::sleep_for(timeoutDuration);
@@ -267,7 +523,8 @@ namespace qi {
 
   void EventLoopAsio::runWorkerLoop()
   {
-    qiLogDebug() << this << "run starting from pool";
+    qiLogDebug() << this << ": run starting from pool "
+      "(workerCount = " << _workerThreads->activeWorkerCount() << ")";
     qi::os::setCurrentThreadName(_name);
 
     while (true) {
@@ -277,6 +534,9 @@ namespace qi {
         //the handler finished by himself. just quit.
         break;
       } catch(const detail::TerminateThread& /* e */) {
+        _workerThreads->setInactive(std::this_thread::get_id());
+        qiLogVerbose() << _name << ": Terminated idle thread "
+          "(new worker count = " << _workerThreads->activeWorkerCount() << ')';
         break;
       } catch(const std::exception& e) {
         qiLogWarning() << "Error caught in eventloop(" << _name << ").async: " << e.what();
@@ -310,7 +570,7 @@ namespace qi {
   /// Destructible D
   template <typename D>
   void EventLoopAsio::invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p,
-                                   const boost::system::error_code& erc, D countTask)
+                                   const boost::system::error_code& erc, D countTask, UpdateLastWorkDate update)
   {
     boost::ignore_unused(id, countTask);
     if (!erc)
@@ -326,6 +586,7 @@ namespace qi {
       }
       catch (const detail::TerminateThread& /* e */)
       {
+        p.setError(detail::TerminateThread::message());
         throw;
       }
       catch (const std::exception& ex)
@@ -343,6 +604,10 @@ namespace qi {
     {
       tracepoint(qi_qi, eventloop_task_cancel, id);
       p.setCanceled();
+    }
+    if (src(update))
+    {
+      _workerThreads->updateLastWorkDate(std::this_thread::get_id());
     }
   }
 
@@ -365,7 +630,8 @@ namespace qi {
       tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
 
       auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
-      _io.post([=] { invoke_maybe(cb, id, Promise<void>{}, erc, countTotalTask); });
+      _io.post([=] { invoke_maybe(cb, id, Promise<void>{}, erc, countTotalTask,
+                                  UpdateLastWorkDate{true}); });
     }
     else
     {
@@ -394,6 +660,13 @@ namespace qi {
   qi::Future<void> EventLoopAsio::asyncCall(qi::Duration delay,
       boost::function<void ()> cb, ExecutionOptions options)
   {
+    return asyncCallInternal(delay, std::move(cb), options, UpdateLastWorkDate{true});
+  }
+
+  qi::Future<void> EventLoopAsio::asyncCallInternal(
+    qi::Duration delay, boost::function<void ()> cb, ExecutionOptions options,
+    UpdateLastWorkDate update)
+  {
     static boost::system::error_code erc;
 
     if (!_work.load())
@@ -409,11 +682,13 @@ namespace qi {
       boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(boost::ref(_io));
       timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
       auto prom = detail::makeCancelingPromise(options, boost::bind(&boost::asio::steady_timer::cancel, timer));
-      timer->async_wait([=](const boost::system::error_code& erc) { invoke_maybe(cb, id, prom, erc, countTotalTask); });
+      timer->async_wait([=](const boost::system::error_code& erc) {
+        invoke_maybe(cb, id, prom, erc, countTotalTask, update);
+      });
       return prom.future();
     }
     Promise<void> prom;
-    _io.post([=] { invoke_maybe(cb, id, prom, erc, countTotalTask); });
+    _io.post([=] { invoke_maybe(cb, id, prom, erc, countTotalTask, update); });
     return prom.future();
   }
 
@@ -432,6 +707,13 @@ namespace qi {
   qi::Future<void> EventLoopAsio::asyncCall(qi::SteadyClockTimePoint timepoint,
       boost::function<void ()> cb, ExecutionOptions options)
   {
+    return asyncCallInternal(timepoint, std::move(cb), options, UpdateLastWorkDate{true});
+  }
+
+  qi::Future<void> EventLoopAsio::asyncCallInternal(
+    qi::SteadyClockTimePoint timepoint, boost::function<void ()> cb,
+    ExecutionOptions options, UpdateLastWorkDate update)
+  {
     if (!_work.load())
       return qi::makeFutureError<void>("Schedule attempt on destroyed thread pool");
 
@@ -443,8 +725,15 @@ namespace qi {
     boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(boost::ref(_io));
     timer->expires_at(timepoint);
     auto prom = detail::makeCancelingPromise(options, boost::bind(&SteadyTimer::cancel, timer));
-    timer->async_wait([=](const boost::system::error_code& erc) { invoke_maybe(cb, id, prom, erc, countTotalTask); });
+    timer->async_wait([=](const boost::system::error_code& erc) {
+      invoke_maybe(cb, id, prom, erc, countTotalTask, update);
+    });
     return prom.future();
+  }
+
+  void EventLoopAsio::setMinThreads(unsigned int min)
+  {
+    _minThreads = static_cast<int>(min);
   }
 
   void EventLoopAsio::setMaxThreads(unsigned int max)
@@ -459,11 +748,18 @@ namespace qi {
 
   int EventLoopAsio::workerCount() const
   {
-    return _workerThreads->size();
+    return _workerThreads->activeWorkerCount();
   }
 
   EventLoop::EventLoop(std::string name, int nthreads, bool spawnOnOverload)
     : _p(std::make_shared<EventLoopAsio>(nthreads, name, spawnOnOverload))
+    , _name(name)
+  {
+  }
+
+  EventLoop::EventLoop(std::string name, int nthreads, int minThreads, int maxThreads,
+    bool spawnOnOverload)
+    : _p(std::make_shared<EventLoopAsio>(nthreads, minThreads, maxThreads, name, spawnOnOverload))
     , _name(name)
   {
   }
@@ -588,6 +884,13 @@ namespace qi {
     });
   }
 
+  void EventLoop::setMinThreads(unsigned int min)
+  {
+    return safeCall(_p, [=](const ImplPtr& impl){
+      return impl->setMinThreads(min);
+    });
+  }
+
   void EventLoop::setMaxThreads(unsigned int max)
   {
     return safeCall(_p, [=](const ImplPtr& impl){
@@ -688,8 +991,9 @@ namespace qi {
   {
     // The initialisation is protected by a mutex,
     // We then use an atomic to prevent having a mutex on a fastpath.
-    EventLoop* _getInternal(EventLoop* &ctx, int nthreads, const std::string& name,
-      bool spawnOnOverload, boost::mutex& mutex, std::atomic<int>& init)
+    EventLoop* _getInternal(EventLoop* &ctx, int nthreads,
+      const std::string& name, bool spawnOnOverload, boost::mutex& mutex,
+      std::atomic<int>& init, int minThreads, int maxThreads)
     {
       if (init.load())
         return ctx;
@@ -702,7 +1006,8 @@ namespace qi {
           {
             qiLogVerbose() << "Creating event loop while no qi::Application() is running";
           }
-          ctx = new EventLoop(name, nthreads, spawnOnOverload); // TODO: use make_unique once we can use C++14
+          // TODO: use make_unique once we can use C++14
+          ctx = new EventLoop(name, nthreads, minThreads, maxThreads, spawnOnOverload);
           Application::atExit(boost::bind(&eventloop_stop, boost::ref(ctx)));
         }
       }
@@ -715,14 +1020,17 @@ namespace qi {
   {
     static boost::mutex mutex;
     static std::atomic<int> init(0);
-    return _getInternal(ctx, nthreads, EventLoopAsio::defaultName, true, mutex, init);
+    // We do not decide here the min thread count, nor the max thread count.
+    // Let the defaults be used (hence, min = -1, max = 0)
+    return _getInternal(ctx, nthreads, EventLoopAsio::defaultName, true, mutex, init, -1, 0);
   }
 
   static EventLoop* _getNetwork(EventLoop* &ctx)
   {
     static boost::mutex mutex;
     static std::atomic<int> init(0);
-    return _getInternal(ctx, 1, "EventLoopNetwork", false, mutex, init);
+    // This eventloop has only one thread (hence, min thread count = max thread count = 1).
+    return _getInternal(ctx, 1, "EventLoopNetwork", false, mutex, init, 1, 1);
   }
 
   void startEventLoop(int nthread)

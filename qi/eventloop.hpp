@@ -40,12 +40,24 @@ namespace qi
     /**
      * \brief Creates a group of threads running event loops.
      * \param name Name of the event loop to create.
-     * \param nthreads Number of threads. If lower or equal to 0, the event loop will use in order:
+     * \param nthreads Initial number of threads. If lower or equal to 0, the
+     *   event loop will use in order:
      *   - the value of the environment variable QI_EVENTLOOP_THREAD_COUNT if it's set,
      *   - the value returned by std::thread::hardware_concurrency() if it's greater than 3,
      *   - the fixed value of 3.
      */
     explicit EventLoop(std::string name = "eventloop", int nthreads = 0, bool spawnOnOverload = true);
+
+    /**
+     * \see EventLoop(std::string, int, bool)
+     *
+     * \note When the eventloop is starting, the number of threads may be adjusted
+     *    to ensure that the minimum is below or equal to the maximum, and that
+     *    the number of threads to start is between the minimum and the maximum
+     *    included.
+     */
+    EventLoop(std::string name, int nthreads, int minThreads, int maxThreads,
+              bool spawnOnOverload);
 
     /// \brief Default destructor.
     ~EventLoop();
@@ -83,6 +95,14 @@ namespace qi
      * \note It is safe to call this method concurrently.
      */
     void setEmergencyCallback(boost::function<void()> cb);
+
+    /**
+     * \brief Sets the minimum number of threads in the pool.
+     * \note It is safe to call this method concurrently.
+     * \note It will be effectively taken into account the next time the
+     *       "ping task" is run (see environment variable `QI_EVENTLOOP_PING_TIMEOUT`).
+     */
+    void setMinThreads(unsigned int min);
 
     /**
      * \brief Sets the maximum number of threads in the pool.
@@ -193,9 +213,18 @@ namespace qi
   QI_API void startEventLoop(int nthread);
 
   namespace detail {
-    /* when throw this thread will stop a thread of the eventloop
-     */
-    class TerminateThread {
+    // The eventloop uses this exception to make workers terminate.
+    // One reason can be the worker has been idle for too long.
+    struct TerminateThread : std::exception
+    {
+      static const char* message()
+      {
+        return "Terminated";
+      }
+      const char* what() const KA_NOEXCEPT(true) override
+      {
+        return message();
+      }
     };
   }
 }
