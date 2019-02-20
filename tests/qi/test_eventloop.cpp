@@ -2,6 +2,7 @@
 #include <mutex>
 #include <gtest/gtest.h>
 #include <qi/eventloop.hpp>
+#include <src/eventloop_p.hpp>
 #include "test_future.hpp"
 
 int ping(int v)
@@ -109,4 +110,76 @@ TEST(EventLoop, asyncFast)
     qi::Future<int> f = el->async(get42);
     f.wait();
   }
+}
+
+// Algorithm:
+//  1) Set the eventloop maximum number of tries after max thread count
+//      has been reached.
+//  2) Register a callback that will be run when this maximum number of
+//      timeouts has been reached, and that will raise a flag.
+//  3) Spam the eventloop until the flag is raised, and record the distinct
+//      successive thread counts.
+//  4) Check that the thread count has raised up to the max.
+TEST(EventLoopAsio, CannotGoAboveMaximumThreadCount)
+{
+  using namespace qi;
+  const int maxThreadCount = 8;
+  const int threadCount = 4;
+  const bool spawnOnOverload = true;
+
+  // 1) Set max tries and create eventloop
+  // It's ugly to set the value via an environment variable, but the current API
+  // doesn't allow to do it another way.
+  const std::string oldMaxTimeouts = os::getenv("QI_EVENTLOOP_MAX_TIMEOUTS");
+  os::setenv("QI_EVENTLOOP_MAX_TIMEOUTS", "1");
+  auto _ = ka::scoped([&]() {
+    os::setenv("QI_EVENTLOOP_MAX_TIMEOUTS", oldMaxTimeouts.c_str());
+  });
+  EventLoopAsio ev{threadCount, "youp", spawnOnOverload};
+  ev.setMaxThreads(maxThreadCount);
+
+  // 2) Register callback
+  std::atomic<bool> emergencyCalled{false};
+  ev._emergencyCallback = [&]() {
+    emergencyCalled.store(true);
+  };
+
+  // 3) Spam eventloop and record distinct thread counts
+  // We're going to keep track of the thread counts.
+  std::vector<int> threadCounts{threadCount};
+
+  auto postTask = [](EventLoopAsio& ev) {
+    ev.asyncCall(Duration{0}, []() {
+      std::this_thread::sleep_for(std::chrono::milliseconds{100});
+    });
+  };
+
+  auto pushIfDistinctThreadCount = [&threadCounts](const EventLoopAsio& ev) {
+    const auto n = ev.workerCount();
+    if (n != threadCounts.back())
+    {
+      threadCounts.push_back(n);
+    }
+  };
+
+  // Spam the eventloop until the thread count goes up to the maximum.
+  while (!emergencyCalled.load())
+  {
+    postTask(ev);
+    pushIfDistinctThreadCount(ev);
+    std::this_thread::sleep_for(std::chrono::milliseconds{10});
+  }
+
+  // 4) Check that the thread counts have gone up to the max
+  auto b = threadCounts.begin();
+  auto e = threadCounts.end();
+
+  // The range must not be empty.
+  ASSERT_NE(b, e);
+
+  // The thread counts must have gone up.
+  ASSERT_TRUE(std::is_sorted(b, e));
+
+  // We must have reached the maximum thread count.
+  ASSERT_EQ(maxThreadCount, *(e-1));
 }

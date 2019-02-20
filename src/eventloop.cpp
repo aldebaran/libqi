@@ -195,9 +195,9 @@ namespace qi {
   void EventLoopAsio::runPingLoop()
   {
     qi::os::setCurrentThreadName("EvLoop.mon");
-    static const auto timeoutDuration = MilliSeconds{ qi::os::getEnvDefault(gPingTimeoutEnvVar, 500u) };
-    static const auto graceDuration = MilliSeconds{ qi::os::getEnvDefault(gGracePeriodEnvVar, 0u) };
-    static const auto maxTimeouts = qi::os::getEnvDefault(gMaxTimeoutsEnvVar, 20u);
+    const auto timeoutDuration = MilliSeconds{ qi::os::getEnvDefault(gPingTimeoutEnvVar, 500u) };
+    const auto graceDuration = MilliSeconds{ qi::os::getEnvDefault(gGracePeriodEnvVar, 0u) };
+    const auto maxTimeouts = qi::os::getEnvDefault(gMaxTimeoutsEnvVar, 20u);
 
     unsigned int nbTimeout = 0;
     while (_work.load())
@@ -210,11 +210,12 @@ namespace qi {
       {
         const auto workerCount = static_cast<int>(_workerThreads->size());
         const auto maxThreads = _maxThreads.load();
-        if (maxThreads && workerCount > maxThreads) // we count in nThreads
+        if (maxThreads && workerCount >= maxThreads) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Threadpool " << _name << " limit reached (" << nbTimeout
-                      << " timeouts, number of tasks: " << _totalTask.load()
+          qiLogInfo() << "Threadpool " << _name << " limit reached ("
+                      << nbTimeout << " timeouts / " << maxTimeouts << " max"
+                      << ", number of tasks: " << _totalTask.load()
                       << ", number of active tasks: " << _activeTask.load()
                       << ", number of threads: " << workerCount
                       << ", maximum number of threads: " << maxThreads << ")";
@@ -240,7 +241,8 @@ namespace qi {
         }
         else
         {
-          qiLogInfo() << _name << ": Spawning more threads (" << workerCount << ')';
+          qiLogInfo() << _name << ": Spawning more threads (old -> new: "
+                      << workerCount << " -> " << (workerCount + 1) << ")";
           _workerThreads->launch(&EventLoopAsio::runWorkerLoop, this);
         }
         boost::this_thread::sleep_for(graceDuration);
@@ -453,6 +455,11 @@ namespace qi {
   void* EventLoopAsio::nativeHandle()
   {
     return static_cast<void*>(&_io);
+  }
+
+  int EventLoopAsio::workerCount() const
+  {
+    return _workerThreads->size();
   }
 
   EventLoop::EventLoop(std::string name, int nthreads, bool spawnOnOverload)

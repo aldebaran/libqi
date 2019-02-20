@@ -10,6 +10,7 @@
 #include <atomic>
 #include <thread>
 #include <boost/asio.hpp>
+#include <qi/api.hpp>
 #include <qi/eventloop.hpp>
 #include <boost/thread/synchronized_value.hpp>
 
@@ -35,7 +36,7 @@ namespace qi {
     Stream* sd;
   };
 
-  class EventLoopPrivate
+  class QI_API_TESTONLY EventLoopPrivate
   {
   public:
     EventLoopPrivate(std::string name) : _name(std::move(name)) {}
@@ -55,7 +56,7 @@ namespace qi {
     const std::string _name;
   };
 
-  class EventLoopAsio final: public EventLoopPrivate
+  class QI_API_TESTONLY EventLoopAsio final: public EventLoopPrivate
   {
   public:
     static const char* const defaultName;
@@ -78,6 +79,7 @@ namespace qi {
         const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions()) override;
     void* nativeHandle() override;
     void setMaxThreads(unsigned int max) override;
+    int workerCount() const;
 
   private:
     /// Destructible D
