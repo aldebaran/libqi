@@ -55,7 +55,7 @@ namespace qi
 
     explicit MessageSocket(qi::EventLoop* eventLoop = qi::getNetworkEventLoop())
       : _eventLoop(eventLoop)
-      , _dispatcher{ &_signalsStrand }
+      , _dispatcher{ _signalsStrand }
       // connected is the only signal to be synchronous, because it will always be the first signal
       // emitted (so no other asynchronous signal emission will overlap with it) and it's not
       // emitted from the network event loop worker
@@ -87,8 +87,8 @@ namespace qi
 
     static const unsigned int ALL_OBJECTS = (unsigned int)-1;
 
-    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
-      return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
+    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, MessageDispatcher::MessageHandler fun) {
+      return _dispatcher.messagePendingConnect(serviceId, objectId, std::move(fun));
     }
 
     void messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {

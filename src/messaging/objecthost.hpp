@@ -31,7 +31,7 @@ namespace qi
   public:
     ObjectHost(unsigned int service);
     virtual ~ObjectHost();
-    void onMessage(const qi::Message &msg, MessageSocketPtr socket);
+    DispatchStatus onMessage(const qi::Message &msg, MessageSocketPtr socket);
     unsigned int addObject(BoundAnyObject obj, StreamContext* remoteReferencer, unsigned int objId = 0);
     Future<void> removeObject(unsigned int id, Future<void> fut = Future<void>{nullptr});
     void removeRemoteReferences(MessageSocketPtr socket);

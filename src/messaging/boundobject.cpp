@@ -227,8 +227,9 @@ namespace qi {
     value.destroy();
   }
 
-  void ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket) {
+  DispatchStatus ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket) {
     boost::mutex::scoped_lock lock(_callMutex);
+    bool exceptionWasThrown = false;
     try {
       if (msg.version() > Message::Header::currentVersion())
       {
@@ -237,7 +238,7 @@ namespace qi {
            << "remote end doesn't support binary protocol v" << msg.version();
         serverResultAdapter(qi::makeFutureError<AnyReference>(ss.str()), Signature(),
                             _gethost(), socket, msg.address(), Signature(), CancelableKitWeak());
-        return;
+        return DispatchStatus::MessageHandled_WithError;
       }
 
       qiLogDebug() << this << "(" << service() << '/' << _objectId << ") msg " << msg.address() << " " << msg.buffer().size();
@@ -245,8 +246,7 @@ namespace qi {
       if (msg.object() > _objectId)
       {
         qiLogDebug() << "Passing message to children";
-        ObjectHost::onMessage(msg, socket);
-        return;
+        return ObjectHost::onMessage(msg, socket);
       }
 
       qi::AnyObject    obj;
@@ -286,7 +286,7 @@ namespace qi {
             sigparam = mm->parametersSignature();
           else {
             qiLogError() << "No such signal/method on event message " << msg.address();
-            return;
+            return DispatchStatus::MessageHandled_WithError;
           }
         }
       }
@@ -294,12 +294,12 @@ namespace qi {
       {
         unsigned int origMsgId = msg.value("I", socket).to<unsigned int>();
         cancelCall(socket, msg, origMsgId);
-        return;
+        return DispatchStatus::MessageHandled;
       }
       else
       {
         qiLogError() << "Unexpected message type " << msg.type() << " on " << msg.address();
-        return;
+        return DispatchStatus::MessageNotHandled;
       }
 
       AnyReference ref;
@@ -403,6 +403,7 @@ namespace qi {
       }
       //########################
     } catch (const std::runtime_error &e) {
+      exceptionWasThrown = true;
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError(e.what());
@@ -410,6 +411,7 @@ namespace qi {
                             CancelableKitWeak(_cancelables));
       }
     } catch (...) {
+      exceptionWasThrown = true;
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError("Unknown error catch");
@@ -417,6 +419,11 @@ namespace qi {
                             CancelableKitWeak(_cancelables));
       }
     }
+
+    if (!exceptionWasThrown)
+      return DispatchStatus::MessageHandled;
+    else
+      return DispatchStatus::MessageHandled_WithError;
   }
 
   void ServiceBoundObject::cancelCall(MessageSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)

@@ -8,8 +8,8 @@
 #define _SRC_MESSAGEDISPATCHER_HPP_
 
 #include <qi/anyobject.hpp>
-#include <qi/signal.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/container/flat_map.hpp>
 #include "message.hpp"
 
 namespace qi {
@@ -28,7 +28,9 @@ namespace qi {
    */
   class MessageDispatcher {
   public:
-    MessageDispatcher(ExecutionContext* execContext = nullptr);
+    using MessageHandler = std::function<DispatchStatus (const Message&)>;
+
+    MessageDispatcher(ExecutionContext& execContext);
 
     //internal: called by Socket to tell the class that we sent a message
     void sent(const qi::Message& msg);
@@ -37,18 +39,19 @@ namespace qi {
     void cleanPendingMessages();
 
     static const unsigned int ALL_OBJECTS;
-    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
+    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, MessageHandler fun);
     void           messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId);
 
   public:
     using Target = std::pair<unsigned int, unsigned int>;
-    using OnMessageSignal = Signal<const qi::Message&>;
-    // use shared-ptr on signal so that we may hold it without holding the map lock
-    using SignalMap = std::map<Target, boost::shared_ptr<OnMessageSignal> >;
-    using MessageSentMap = std::map<unsigned int, MessageAddress>;
+    using MessageHandlerList = boost::container::flat_map<SignalLink, MessageHandler>;
 
-    ExecutionContext*      _execContext;
+    using SignalMap = boost::container::flat_map<Target, MessageHandlerList>;
+    using MessageSentMap = boost::container::flat_map<unsigned int, MessageAddress>;
+
+    ExecutionContext&      _execContext;
     SignalMap              _signalMap;
+    SignalLink             _nextSignalLink = 0;
     boost::recursive_mutex _signalMapMutex;
 
     MessageSentMap         _messageSent;

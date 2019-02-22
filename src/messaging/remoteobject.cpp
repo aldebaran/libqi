@@ -99,7 +99,7 @@ namespace qi {
       // to a 'parent' object.
       _linkMessageDispatcher = socket->messagePendingConnect(_service,
         MessageSocket::ALL_OBJECTS,
-        track(boost::bind<void>(&RemoteObject::onMessagePending, this, _1), this));
+        track(boost::bind(&RemoteObject::onMessagePending, this, _1), this));
       _linkDisconnected = socket->disconnected.connect(
           track([=](const std::string& reason) { onSocketDisconnected(reason); }, this));
     }
@@ -136,7 +136,7 @@ namespace qi {
   }
 
   //should be done in the object thread
-  void RemoteObject::onMessagePending(const qi::Message &msg)
+  DispatchStatus RemoteObject::onMessagePending(const qi::Message &msg)
   {
     MessageSocketPtr sock = *_socket;
     qiLogDebug() << this << "(" << _service << '/' << _object << ") msg " << msg.address() << " " << msg.buffer().size();
@@ -145,14 +145,14 @@ namespace qi {
       qiLogDebug() << "Passing message " << msg.address() << " to host ";
       if (sock)
       {
-        ObjectHost::onMessage(msg, sock);
+        return ObjectHost::onMessage(msg, sock);
       }
+      return DispatchStatus::MessageNotHandled;
     };
 
     if (msg.object() != _object)
     {
-      passToHost();
-      return;
+      return passToHost();
     }
 
     if (msg.type() == qi::Message::Type_Event) {
@@ -192,7 +192,7 @@ namespace qi {
         qiLogWarning() << "Event message on unknown signal " << msg.event();
         qiLogDebug() << metaObject().signalMap().size();
       }
-      return;
+      return DispatchStatus::MessageHandled_WithError;
     }
 
 
@@ -201,8 +201,7 @@ namespace qi {
       && msg.type() != qi::Message::Type_Canceled) {
       qiLogError() << "Message " << msg.address() << " type not handled: " << msg.type();
 
-      passToHost();
-      return;
+      return passToHost();
     }
 
     qi::Promise<AnyReference> promise;
@@ -216,7 +215,7 @@ namespace qi {
       } else  {
         qiLogError() << "no promise found for req id:" << msg.id()
                      << "  obj: " << msg.service() << "  func: " << msg.function() << " type: " << Message::typeToString(msg.type());
-        return;
+        return DispatchStatus::MessageHandled_WithError;
       }
     }
 
@@ -224,7 +223,7 @@ namespace qi {
       case qi::Message::Type_Canceled: {
         qiLogDebug() << "Message " << msg.address() << " has been cancelled.";
         promise.setCanceled();
-        return;
+        return DispatchStatus::MessageHandled;
       }
       case qi::Message::Type_Reply: {
         // Get call signature
@@ -234,7 +233,7 @@ namespace qi {
           qiLogError() << "Result for unknown function "
            << msg.function();
            promise.setError("Result for unknown function");
-           return;
+           return DispatchStatus::MessageHandled_WithError;
         }
         try {
           AnyValue value(msg.value((msg.flags() & Message::TypeFlag_DynamicPayload) ?
@@ -244,10 +243,11 @@ namespace qi {
           promise.setValue(value.release());
         } catch (std::runtime_error &err) {
           promise.setError(err.what());
+          return DispatchStatus::MessageHandled_WithError;
         }
 
         qiLogDebug() << "Message " << msg.address() << " passed to promise";
-        return;
+        return DispatchStatus::MessageHandled;
       }
 
       case qi::Message::Type_Error: {
@@ -259,12 +259,13 @@ namespace qi {
         } catch (std::runtime_error &e) {
           //houston we have an error about the error..
           promise.setError(e.what());
+          return DispatchStatus::MessageHandled_WithError;
         }
-        return;
+        return DispatchStatus::MessageHandled;
       }
       default:
         //not possible
-        return;
+        return DispatchStatus::MessageNotHandled;
     }
   }
 

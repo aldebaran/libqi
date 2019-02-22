@@ -55,7 +55,7 @@ namespace qi {
 
   protected:
     //TransportSocket.messagePending
-    void onMessagePending(const qi::Message &msg);
+    DispatchStatus onMessagePending(const qi::Message &msg);
     //TransportSocket.disconnected
     void onSocketDisconnected(std::string error);
 

@@ -58,16 +58,16 @@ BoundAnyObject ObjectHost::recursiveFindObject(uint32_t objectId)
   return {};
 }
 
-void ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr socket)
+DispatchStatus ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr socket)
 {
   BoundAnyObject obj{recursiveFindObject(msg.object())};
   if (!obj)
   {
     // Should we treat this as an error ? Returning without error is the
     // legacy behavior.
-    return;
+    return DispatchStatus::MessageNotHandled;
   }
-  obj->onMessage(msg, socket);
+  auto dispatchStatus = obj->onMessage(msg, socket);
 
   // Because of potential dependencies between the object's destruction
   // and the networking resources, we transfer the object's destruction
@@ -77,6 +77,8 @@ void ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr socket)
   qi::async([obj, destructFuture] { destructFuture.wait(); });
   obj = {};
   destructPromise.setValue(nullptr);
+
+  return dispatchStatus;
 }
 
 unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef, unsigned int id)
