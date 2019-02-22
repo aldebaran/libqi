@@ -11,6 +11,8 @@
 
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
+#include <ka/macro.hpp>
+#include <ka/utility.hpp>
 #include <qi/type/detail/anyiterator.hpp>
 #include <qi/type/detail/anyreference.hpp>
 
@@ -113,6 +115,12 @@ inline AnyValue::AnyValue(const AnyValue& b)
   *this = b;
 }
 
+inline AnyValue::AnyValue(AnyValue&& b) KA_NOEXCEPT(true)
+: AnyReferenceBase(std::move(b))
+, _allocated(ka::exchange(b._allocated, false))
+{
+}
+
 inline AnyValue::AnyValue(qi::TypeInterface *type)
   : AnyReferenceBase(type)
   , _allocated(true)
@@ -146,6 +154,17 @@ inline AnyValue& AnyValue::operator=(const AnyValue& b)
   return *this;
 }
 
+inline AnyValue& AnyValue::operator=(AnyValue&& b)
+{
+  if (&b == this)
+    return *this;
+
+  resetUnsafe();
+  static_cast<AnyReferenceBase&>(*this) = std::move(b);
+  _allocated = ka::exchange(b._allocated, false);
+  return *this;
+}
+
 inline AnyValue& AnyValue::operator=(const AnyReference& b)
 {
   reset(b, true, true);
@@ -166,12 +185,17 @@ inline void AnyValue::reset(const AnyReference& b, bool copy, bool free)
     *(AnyReferenceBase*)this = clone();
 }
 
-inline void AnyValue::reset()
+inline void AnyValue::resetUnsafe()
 {
   if (_allocated)
     AnyReferenceBase::destroy();
-  _type = 0;
-  _value = 0;
+}
+
+inline void AnyValue::reset()
+{
+  resetUnsafe();
+  _type = nullptr;
+  _value = nullptr;
 }
 
 inline void AnyValue::reset(qi::TypeInterface *ttype)

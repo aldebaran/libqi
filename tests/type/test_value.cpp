@@ -5,9 +5,13 @@
 
 
 #include <map>
+#include <functional>
+#include <tuple>
 #include <gtest/gtest.h>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
+#include <ka/functional.hpp>
+#include <ka/testutils.hpp>
 #include <qi/application.hpp>
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobjectbuilder.hpp>
@@ -144,6 +148,136 @@ TEST(Value, Basic)
   ASSERT_EQ(v.toDouble(), 5.0);
   v = AutoAnyReference("foo");
   ASSERT_EQ("foo", v.toString());
+}
+
+namespace {
+  using InstrumentedReg = ka::instrumented_regular_t<
+    int,
+    std::function<void (ka::regular_op_t)>
+  >;
+} // namespace
+
+QI_TYPE_STRUCT_REGISTER(InstrumentedReg, value);
+
+TEST(ValueCounts, CopyCopiesUnderlyingValue)
+{
+  using std::get;
+  ka::regular_counters_t counters{};
+  InstrumentedReg original;
+  init_with_counters(&original, 5, &counters);
+
+  AnyValue v0 = AnyValue::from(original);
+  ASSERT_EQ(original, v0.as<InstrumentedReg>());
+
+  // Check that a copy causes the copy count to be incremented by 1.
+  ka::reset(counters);
+  AnyValue v1{v0};
+  EXPECT_EQ(1, counters[ka::regular_op_copy]);
+  EXPECT_EQ(0, counters[ka::regular_op_move]);
+  EXPECT_EQ(0, counters[ka::regular_op_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_move_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_destroy]);
+  EXPECT_EQ(original, v0.as<InstrumentedReg>());
+  EXPECT_EQ(original, v1.as<InstrumentedReg>());
+}
+
+TEST(ValueCounts, AssignCopiesUnderlyingValue)
+{
+  using std::get;
+  ka::regular_counters_t counters{};
+  InstrumentedReg original;
+  init_with_counters(&original, 6, &counters);
+
+  AnyValue v0 = AnyValue::from(original);
+  ASSERT_EQ(original, v0.as<InstrumentedReg>());
+
+  // Check that an assignment causes the copy count to be incremented by 1
+  // (it seems it would make more sense to call the assignment operator of the
+  // contained value, but this is the current behavior).
+  ka::reset(counters);
+  AnyValue v1;
+  v1 = v0;
+  EXPECT_EQ(1, counters[ka::regular_op_copy]);
+  EXPECT_EQ(0, counters[ka::regular_op_move]);
+  EXPECT_EQ(0, counters[ka::regular_op_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_move_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_destroy]);
+  EXPECT_EQ(original, v0.as<InstrumentedReg>());
+  EXPECT_EQ(original, v1.as<InstrumentedReg>());
+}
+
+TEST(ValueCounts, MoveDoesNotAffectUnderlyingValue)
+{
+  using std::get;
+  ka::regular_counters_t counters{};
+  InstrumentedReg original;
+  init_with_counters(&original, 7, &counters);
+
+  AnyValue v0 = AnyValue::from(original);
+  ASSERT_EQ(original, v0.as<InstrumentedReg>());
+
+  auto* type0 = v0.type();
+  auto* raw0 = v0.rawValue();
+
+  // Check that a move does not perform any regular operation on the contained
+  // value. This is because, internally, `AnyValue` copies pointers only.
+  ka::reset(counters);
+  AnyValue v1{std::move(v0)};
+  EXPECT_EQ(0, counters[ka::regular_op_copy]);
+  EXPECT_EQ(0, counters[ka::regular_op_move]);
+  EXPECT_EQ(0, counters[ka::regular_op_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_move_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_destroy]);
+  EXPECT_EQ(original, v1.as<InstrumentedReg>());
+
+  // The new instance has the right value.
+  ASSERT_EQ(original, v1.as<InstrumentedReg>());
+
+  // It has the original instance resources.
+  ASSERT_EQ(type0, v1.type());
+  ASSERT_EQ(raw0, v1.rawValue());
+
+  // And the original instance resources have been nullified.
+  ASSERT_EQ(nullptr, v0.type());
+  ASSERT_EQ(nullptr, v0.rawValue());
+}
+
+TEST(ValueCounts, MoveAssignDoesNotAffectUnderlyingValue)
+{
+  using std::get;
+  ka::regular_counters_t counters{};
+  InstrumentedReg original;
+  init_with_counters(&original, 8, &counters);
+
+  AnyValue v0 = AnyValue::from(original);
+  ASSERT_EQ(original, v0.as<InstrumentedReg>());
+
+  auto* type0 = v0.type();
+  auto* raw0 = v0.rawValue();
+
+  // Check that a move assignment does not perform any regular operation on the
+  // contained value. This is because, internally, `AnyValue` copies pointers
+  // only.
+  ka::reset(counters);
+  AnyValue v1;
+  v1 = std::move(v0);
+  EXPECT_EQ(0, counters[ka::regular_op_copy]);
+  EXPECT_EQ(0, counters[ka::regular_op_move]);
+  EXPECT_EQ(0, counters[ka::regular_op_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_move_assign]);
+  EXPECT_EQ(0, counters[ka::regular_op_destroy]);
+  EXPECT_EQ(original, v1.as<InstrumentedReg>());
+
+  // The new instance has the right value.
+  ASSERT_EQ(original, v1.as<InstrumentedReg>());
+
+  // It has the original instance resources.
+  ASSERT_EQ(type0, v1.type());
+  ASSERT_EQ(raw0, v1.rawValue());
+
+  // And the original instance resources have been nullified.
+  ASSERT_EQ(nullptr, v0.type());
+  ASSERT_EQ(nullptr, v0.rawValue());
 }
 
 TEST(Value, Map)
