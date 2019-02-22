@@ -491,6 +491,37 @@ namespace ka {
 ///     ReadableForwardRange(R)
 ///  && (forall r in R where front(r) is defined) front(r) = x establishes front(r) == x
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+///
+/// ## Empty
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Empty(T) =
+///     Regular(T)
+///  && ka::empty: T -> bool
+///  && (forall t in T) !ka::empty(t) implies regular operations are defined
+///       (copy, assignment, equality, etc.)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+///
+///
+/// ## EmptyProcedure
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept EmptyProcedure(T) =
+///     Empty(T)
+///  && Procedure(T)
+///  && (forall t in T) !ka::empty(t) implies procedure call is defined
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Typical models are: `std::function`, `boost::function`
+///
+///
+/// ## EmptyMutable
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept EmptyMutable(T) =
+///     Empty(T)
+///  && Mutable(T)
+///  && (forall t in T) !ka::empty(t) implies mutable operations are defined
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Typical models are: pointers, `std::shared_ptr`, `boost::shared_ptr`
+///
 namespace concept { // To allow doc tools to extract this documentation.
 }
 } // namespace ka
