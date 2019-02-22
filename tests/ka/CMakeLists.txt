@@ -19,6 +19,7 @@ qi_create_gmock(
     "test_scoped.cpp"
     "test_sha1.cpp"
     "test_src.cpp"
+    "test_testutils.cpp"
     "test_typetraits.cpp"
     "test_utility.cpp"
   DEPENDS
