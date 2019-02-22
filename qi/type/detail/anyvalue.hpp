@@ -7,6 +7,8 @@
 #ifndef _QITYPE_DETAIL_ANYVALUE_HPP_
 #define _QITYPE_DETAIL_ANYVALUE_HPP_
 
+#include <ka/macro.hpp>
+
 namespace qi {
 
   /** Represent any value supported by the typesystem.
@@ -26,6 +28,7 @@ namespace qi {
      */
     AnyValue();
     AnyValue(const AnyValue& b);
+    AnyValue(AnyValue&& b) KA_NOEXCEPT(true);
     explicit AnyValue(const AnyReference& b, bool copy, bool free);
     explicit AnyValue(const AutoAnyReference& b);
     explicit AnyValue(qi::TypeInterface *type);
@@ -72,6 +75,7 @@ namespace qi {
     ~AnyValue();
     AnyValue& operator=(const AnyReference& b);
     AnyValue& operator=(const AnyValue& b);
+    AnyValue& operator=(AnyValue&& b);
 
     void reset();
     void reset(qi::TypeInterface *type);
@@ -97,6 +101,11 @@ namespace qi {
     }
 
   private:
+    // It is "unsafe" because it invalidates internal pointers without
+    // nullifying them. Caller is expected to set them afterwards to valid
+    // values.
+    void resetUnsafe();
+
     //hide AnyReference::destroy
     //simply assign an empty AnyValue.
     void destroy() { return detail::AnyReferenceBase::destroy(); }
