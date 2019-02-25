@@ -30,7 +30,7 @@ namespace qi { namespace sock {
     {
       return *static_cast<io_service_type*>(getNetworkEventLoop()->nativeHandle());
     }
-    static auto sslVerifyNone() -> decltype(boost::asio::ssl::verify_none)
+    static boost::asio::ssl::verify_mode sslVerifyNone()
     {
       return boost::asio::ssl::verify_none;
     }
