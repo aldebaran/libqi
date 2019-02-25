@@ -37,8 +37,8 @@ namespace qi
     template<typename T>
     struct TypeTraitCreate<T, false>
     {
-      static void* create() { typeFail(typeid(T).name(), "default constructor"); return 0;}
-      static void createInPlace(void* ptr) {typeFail(typeid( T).name(), "default constructor");}
+      static void* create() { typeFail(qi::typeId<T>().name(), "default constructor"); return 0;}
+      static void createInPlace(void* ptr) {typeFail(qi::typeId<T>().name(), "default constructor");}
     };
 
     template<typename T, bool b>
@@ -53,9 +53,9 @@ namespace qi
     struct TypeTraitCopy<T, false>
     {
       template<typename T1, typename T2>
-      static void copy(const T1& d, const T2&s) {typeFail(typeid(T).name(), "copy operator");}
-      static void* clone(void* src) { typeFail(typeid(T).name(), "clone"); return 0;}
-      static void cloneInPlace(void* ptr, void* src) { typeFail(typeid(T).name(), "clone");}
+      static void copy(const T1& d, const T2&s) {typeFail(qi::typeId<T>().name(), "copy operator");}
+      static void* clone(void* src) { typeFail(qi::typeId<T>().name(), "clone"); return 0;}
+      static void cloneInPlace(void* ptr, void* src) { typeFail(qi::typeId<T>().name(), "clone");}
     };
 
     template<typename T, bool b>
@@ -68,7 +68,7 @@ namespace qi
     struct TypeTraitDestroy<T, false>
     {
       template<typename U>
-      static void destroy(const U& ptr) {typeFail(typeid(T).name(), "destructor");}
+      static void destroy(const U& ptr) {typeFail(qi::typeId<T>().name(), "destructor");}
     };
 
     /* Use a two-stage override mechanism.
@@ -153,7 +153,7 @@ namespace qi
       // in your code.
       void* res = Manager::create();
       if (!res)
-        qiLogError("qitype.bypointer") << "initializeStorage error on " << typeid(T).name();
+        qiLogError("qitype.bypointer") << "initializeStorage error on " << qi::typeId<T>().name();
       return res;
     }
 
@@ -244,7 +244,7 @@ namespace qi
     {
       static TypeInfo* result = 0;
       if (!result)
-        result = new TypeInfo(typeid(T));
+        result = new TypeInfo(qi::typeId<T>());
       return *result;
     }
 
@@ -309,7 +309,7 @@ namespace qi
   public:
     const TypeInfo& info() override
     {
-      static TypeInfo result = TypeInfo(typeid(void));
+      static TypeInfo result = TypeInfo(qi::typeId<void>());
       return result;
     }
     // do not return 0 everywhere and provide a correct impl
