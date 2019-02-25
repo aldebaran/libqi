@@ -16,7 +16,7 @@ namespace qi {
 
 #define INTEGRAL_TYPE(t) \
 static bool BOOST_PP_CAT(unused_ , __LINE__) QI_ATTR_UNUSED \
-  = registerType(typeid(t), new IntTypeInterfaceImpl<t>());
+  = registerType(qi::typeId<t>(), new IntTypeInterfaceImpl<t>());
 
 /** Integral types.
  * Since long is neither int32 nor uint32 on 32 bit platforms,
@@ -45,7 +45,7 @@ namespace qi {
 
 #define FLOAT_TYPE(t) \
 static bool BOOST_PP_CAT(unused_ , __LINE__) QI_ATTR_UNUSED \
-  = registerType(typeid(t), new FloatTypeInterfaceImpl<t>());
+  = registerType(qi::typeId<t>(), new FloatTypeInterfaceImpl<t>());
 
 FLOAT_TYPE(float);
 FLOAT_TYPE(double);

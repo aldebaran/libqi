@@ -152,7 +152,7 @@ bool registerProxyInterface()
   qiLogVerbose("qitype.type") << "ProxyInterface registration " << typeOf<Interface>()->infoString();
   // Runtime-register TypeInterface for Proxy, using ProxyInterface with
   // proper static_cast (from Proxy template to qi::Proxy) helper.
-  registerType(typeid(Proxy), detail::makeProxyInterface<Interface, Proxy>());
+  registerType(qi::typeId<Proxy>(), detail::makeProxyInterface<Interface, Proxy>());
   detail::ProxyGeneratorMap& map = detail::proxyGeneratorMap();
   map[typeOf<Interface>()->info()] = boost::function<AnyReference(AnyObject)>(&detail::makeProxy<Proxy>);
   return true;

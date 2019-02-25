@@ -5,6 +5,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/core/typeinfo.hpp>
 
 #include <qi/type/typeinterface.hpp>
 #include <qi/signature.hpp>
@@ -23,69 +24,50 @@ namespace qi {
 
 
   TypeInfo::TypeInfo()
-  : stdInfo(0)
   {}
 
-  TypeInfo::TypeInfo(const std::type_info& info)
-  : stdInfo(&info)
+  TypeInfo::TypeInfo(const TypeIndex& index)
+  : typeIndex(index)
   {
   }
 
   TypeInfo::TypeInfo(const std::string& str)
-  : stdInfo(0), customInfo(str)
+  : customInfo(str)
   {
 
   }
 
   std::string TypeInfo::asString() const
   {
-    if (stdInfo)
-      return stdInfo->name();
+    if (typeIndex)
+      return typeIndex->name();
     else
       return customInfo;
   }
 
   std::string TypeInfo::asDemangledString() const
   {
-#ifdef __GNUC__
-    if (stdInfo) {
-      std::string tmp;
-      int status;
-      char *demangled = abi::__cxa_demangle(stdInfo->name(), NULL, NULL, &status);
-      if (status == 0) {
-        tmp = demangled;
-        free(demangled);
-        return tmp;
-      } else {
-        return stdInfo->name();
-      }
-    } else {
+    if (typeIndex)
+      return typeIndex->pretty_name();
+    else
       return customInfo;
-    }
-#else
-    return asString();
-#endif
   }
 
   const char* TypeInfo::asCString() const
   {
-    if (stdInfo)
-      return stdInfo->name();
+    if (typeIndex)
+      return typeIndex->name();
     else
       return customInfo.c_str();
   }
 
   bool TypeInfo::operator==(const TypeInfo& b) const
   {
-    if (!! stdInfo != !! b.stdInfo)
+    if (typeIndex.is_initialized() != b.typeIndex.is_initialized())
       return false;
-    if (stdInfo)
-#ifdef __APPLE__
-      // on osx, non-exported typeinfos do not compare equal between libraries
-      return strcmp(stdInfo->name(), b.stdInfo->name()) == 0;
-#else
-      return *stdInfo == *b.stdInfo;
-#endif
+
+    if (typeIndex)
+      return *typeIndex == *b.typeIndex;
     else
       return customInfo == b.customInfo;
   }
@@ -97,20 +79,13 @@ namespace qi {
 
   bool TypeInfo::operator< (const TypeInfo& b) const
   {
-    if (!! stdInfo != !! b.stdInfo)
-      return stdInfo != 0;
+    if (typeIndex.is_initialized() != b.typeIndex.is_initialized())
+      return !! typeIndex;
+
+    if (typeIndex)
+      return *typeIndex < *b.typeIndex;
     else
-    {
-      if (stdInfo)
-#ifdef __APPLE__
-        // on osx, non-exported typeinfos do not compare equal between libraries
-        return strcmp(stdInfo->name(), b.stdInfo->name()) < 0;
-#else
-        return (*stdInfo).before(*b.stdInfo) != 0;
-#endif
-      else
-        return customInfo < b.customInfo;
-    }
+      return customInfo < b.customInfo;
   }
 
   using TypeFactory = std::map<TypeInfo, TypeInterface*>;
@@ -129,7 +104,7 @@ namespace qi {
     return *res;
   }
 
-  QI_API TypeInterface* getType(const std::type_info& type)
+  QI_API TypeInterface* getType(const TypeIndex& typeId)
   {
     static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
@@ -138,17 +113,17 @@ namespace qi {
 
     // We create-if-not-exist on purpose: to detect access that occur before
     // registration
-    TypeInterface* result = typeFactory()[TypeInfo(type)];
+    TypeInterface* result = typeFactory()[TypeInfo(typeId)];
     if (result || !fallback)
       return result;
-    result = fallbackTypeFactory()[type.name()];
+    result = fallbackTypeFactory()[typeId.name()];
     if (result)
-      qiLogError("qitype.type") << "RTTI failure for " << type.name();
+      qiLogError("qitype.type") << "RTTI failure for " << typeId.name();
     return result;
   }
 
   /// Type factory setter
-  QI_API bool registerType(const std::type_info& typeId, TypeInterface* type)
+  QI_API bool registerType(const TypeIndex& typeId, TypeInterface* type)
   {
     qiLogCategory("qitype.type"); // method can be called at static init
     qiLogDebug() << "registerType "  << typeId.name() << " "

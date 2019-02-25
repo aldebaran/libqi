@@ -210,7 +210,7 @@ static bool BOOST_PP_CAT(__qi_registration, __LINE__) QI_ATTR_UNUSED = [] \
   static bool BOOST_PP_CAT(__qi_registration_func, __LINE__)()                                             \
   {                                                                                                        \
     qi::detail::ForceProxyInclusion<parent>().dummyCall();                                                 \
-    qi::registerType(typeid(name), qi::typeOf<parent>());                                                  \
+    qi::registerType(qi::typeId<name>(), qi::typeOf<parent>());                                                  \
     name* ptr = static_cast<name*>(reinterpret_cast<void*>(0x10000));                                      \
     parent* pptr = ptr;                                                                                    \
     intptr_t offset = reinterpret_cast<intptr_t>(pptr) - reinterpret_cast<intptr_t>(ptr);                  \
@@ -240,7 +240,7 @@ static bool BOOST_PP_CAT(__qi_registration, __LINE__) QI_ATTR_UNUSED = [] \
     TypeOfTemplateImpl()                                                           \
     {                                                                              \
       /* early self registering to avoid recursive init */                         \
-      ::qi::registerType(typeid(name<T>), this);                                   \
+      ::qi::registerType(qi::typeId<name<T>>(), this);                                   \
       ObjectTypeBuilder<name<T> > b(false);                                        \
       b.setThreadingModel(model);                                                  \
       QI_VAARGS_APPLY(__QI_REGISTER_ELEMENT, name<T>, __VA_ARGS__)                 \
@@ -295,7 +295,7 @@ public:
   TypeOfTemplateFutImpl()
   {
     /* early self registering to avoid recursive init */
-    ::qi::registerType(typeid(FutT<T>), this);
+    ::qi::registerType(qi::typeId<FutT<T>>(), this);
     ObjectTypeBuilder<FutT<T> > b(false);
     b.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
 #define ADVERTISE(meth) \

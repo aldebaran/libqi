@@ -7,7 +7,8 @@
 #ifndef _QITYPE_DETAIL_TYPEINTERFACE_HPP_
 #define _QITYPE_DETAIL_TYPEINTERFACE_HPP_
 
-#include <typeinfo>
+#include <boost/optional.hpp>
+#include <boost/type_index.hpp>
 #include <string>
 #include <qi/api.hpp>
 #include <qi/signature.hpp>
@@ -26,6 +27,17 @@
 
 namespace qi {
 
+  using TypeIndex = boost::typeindex::type_index;
+
+  template<typename T>
+  TypeIndex typeId() {
+    return boost::typeindex::type_id<T>();
+  }
+
+  template<typename T>
+  TypeIndex typeIdRuntime(const T& val) {
+    return boost::typeindex::type_id_runtime(val);
+  }
 
   /** This class is used to uniquely identify a type.
    *
@@ -34,8 +46,8 @@ namespace qi {
   {
   public:
     TypeInfo();
-    /// Construct a TypeInfo from a std::type_info
-    TypeInfo(const std::type_info& info);
+    /// Construct a TypeInfo from a TypeIndex
+    TypeInfo(const TypeIndex& index);
     /// Contruct a TypeInfo from a custom string.
     TypeInfo(const std::string& ti);
 
@@ -50,7 +62,7 @@ namespace qi {
     bool operator<(const TypeInfo& b) const;
 
   private:
-    const std::type_info* stdInfo;
+    boost::optional<TypeIndex> typeIndex;
     // C4251
     std::string           customInfo;
   };
@@ -181,10 +193,10 @@ namespace qi {
   };
 
   /// Runtime Type factory getter. Used by typeOf<T>()
-  QI_API TypeInterface*  getType(const std::type_info& type);
+  QI_API TypeInterface*  getType(const TypeIndex& typeId);
 
   /// Runtime Type factory setter.
-  QI_API bool registerType(const std::type_info& typeId, TypeInterface* type);
+  QI_API bool registerType(const TypeIndex& typeId, TypeInterface* type);
 
   /** Get type from a type. Will return a static TypeImpl<T> if T is not registered
    */

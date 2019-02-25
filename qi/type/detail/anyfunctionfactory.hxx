@@ -373,7 +373,7 @@ namespace qi
       : refMask(refMask)
     {
 #ifdef QITYPE_TRACK_FUNCTIONTYPE_INSTANCES
-      detail::functionTypeTrack(typeid(S).name());
+      detail::functionTypeTrack(qi::typeId<S>().name());
 #endif
     }
     void* call(void* storage, void** args, unsigned int argc) override
@@ -449,7 +449,7 @@ namespace qi
         qiLogCategory("qitype.functiontypefactory");
         if (boost::is_reference<T>::value && !boost::is_const<
             typename boost::remove_reference<T>::type>::value)
-          qiLogWarning() << "Function argument is a non-const reference: " << typeid(T).name();
+          qiLogWarning() << "Function argument is a non-const reference: " << qi::typeId<T>().name();
       }
     };
     template<typename T> struct remove_constptr
