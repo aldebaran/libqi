@@ -366,8 +366,8 @@ TEST(Optional, ContainerNonVoidEmpty) {
     O const& c = a;
     ASSERT_EQ(c.begin(), c.end()); // begin, end
     ASSERT_EQ(c.cbegin(), c.cend()); // cbegin, cend
-    ASSERT_EQ(c.size(), 0); // size
-    ASSERT_EQ(c.max_size(), 1); // max_size
+    ASSERT_EQ(c.size(), 0u); // size
+    ASSERT_EQ(c.max_size(), 1u); // max_size
     ASSERT_TRUE(c.empty()); // empty
   }
   a.set(1);
@@ -382,8 +382,8 @@ TEST(Optional, ContainerNonVoidEmpty) {
     ASSERT_FALSE(c != d); // inequality
     ASSERT_EQ(c.begin() + 1, c.end());
     ASSERT_EQ(c.cbegin() + 1, c.cend());
-    ASSERT_EQ(c.size(), 1);
-    ASSERT_EQ(c.max_size(), 1);
+    ASSERT_EQ(c.size(), 1u);
+    ASSERT_EQ(c.max_size(), 1u);
     ASSERT_FALSE(c.empty());
   }
 }
@@ -400,10 +400,10 @@ TEST(Optional, ContainerNonVoidNonEmpty) {
     O const& d = b;
     ASSERT_TRUE(c.empty());
     ASSERT_TRUE(d.empty());
-    ASSERT_EQ(c.size(), 0);
-    ASSERT_EQ(d.size(), 0);
-    ASSERT_EQ(c.max_size(), 1);
-    ASSERT_EQ(d.max_size(), 1);
+    ASSERT_EQ(c.size(), 0u);
+    ASSERT_EQ(d.size(), 0u);
+    ASSERT_EQ(c.max_size(), 1u);
+    ASSERT_EQ(d.max_size(), 1u);
   }
   a.set(x);
   b.set(j);
@@ -421,8 +421,8 @@ TEST(Optional, ContainerNonVoidNonEmpty) {
     ASSERT_EQ(*d.cbegin(), j);
     ASSERT_EQ(c.cbegin() + 1, c.cend());
     ASSERT_EQ(d.cbegin() + 1, d.cend());
-    ASSERT_EQ(c.size(), 1);
-    ASSERT_EQ(d.size(), 1);
+    ASSERT_EQ(c.size(), 1u);
+    ASSERT_EQ(d.size(), 1u);
     ASSERT_FALSE(c.empty());
     ASSERT_FALSE(d.empty());
   }
@@ -441,21 +441,21 @@ TEST(Optional, ContainerVoid) {
   static_assert(Equal<std::size_t, O::size_type>::value, "");
   O a;
   O b;
-  ASSERT_EQ(a.size(), 0);
-  ASSERT_EQ(b.size(), 0);
+  ASSERT_EQ(a.size(), 0u);
+  ASSERT_EQ(b.size(), 0u);
   ASSERT_TRUE(a.empty());
   ASSERT_TRUE(b.empty());
-  ASSERT_EQ(a.max_size(), 1);
-  ASSERT_EQ(b.max_size(), 1);
+  ASSERT_EQ(a.max_size(), 1u);
+  ASSERT_EQ(b.max_size(), 1u);
   a.set();
   b.set();
   ASSERT_EQ(a, b);
-  ASSERT_EQ(a.size(), 1);
-  ASSERT_EQ(b.size(), 1);
+  ASSERT_EQ(a.size(), 1u);
+  ASSERT_EQ(b.size(), 1u);
   ASSERT_FALSE(a.empty());
   ASSERT_FALSE(b.empty());
-  ASSERT_EQ(a.max_size(), 1);
-  ASSERT_EQ(b.max_size(), 1);
+  ASSERT_EQ(a.max_size(), 1u);
+  ASSERT_EQ(b.max_size(), 1u);
   a = b;
   ASSERT_EQ(a, b);
 }
