@@ -51,11 +51,11 @@ public:
     return ptr->asObject().metaObject();
   }
 
-  PtrUid ptrUid(void* instance) const override
+  ObjectUid uid(void* instance) const override
   {
     QI_ASSERT_TRUE(instance);
     Proxy* ptr = toProxy(instance);
-    return ptr->asObject().ptrUid();
+    return ptr->asObject().uid();
   }
 
   qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override

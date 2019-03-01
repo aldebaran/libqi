@@ -223,7 +223,7 @@ TEST(SendObjectIdentity, IdentityOfRemoteObjectsMoreIndirections)
 // The proxy type will be instantiated when receiving an object of the
 // interface type. The real implementation can be any type compatible
 // with the interface type.
-// Here we want to make sure that the ptruid of the real implementation
+// Here we want to make sure that the uid of the real implementation
 // object is propagated to all its proxies in all kinds of situations
 // so that it is always possible to identify if a proxy is actually representing
 // the same implementation object.
@@ -285,11 +285,11 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObj
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImpl>();
-  const PtrUid ptruid = os::ptrUid(realObject.get());
+  const ObjectUid uid = os::ptrUid(realObject.get());
   Object<SomeInterface> a{ AnyObject{ realObject } };
   Object<SomeInterface> b{ AnyObject{ realObject } };
 
-  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(uid, a.uid());
   EXPECT_EQ(a, b);
   EXPECT_EQ(a->get(), b->get());
 }
@@ -298,11 +298,11 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObject
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImpl>();
-  const PtrUid ptruid = os::ptrUid(realObject.get());
+  const ObjectUid uid = os::ptrUid(realObject.get());
   Object<SomeInterface> a{ realObject };
   Object<SomeInterface> b{ realObject };
 
-  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(uid, a.uid());
   EXPECT_EQ(a, b);
   EXPECT_EQ(a->get(), b->get());
 }
@@ -313,12 +313,12 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithAnyObj
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
-  const PtrUid ptruid = os::ptrUid(realObject.get());
+  const ObjectUid uid = os::ptrUid(realObject.get());
   // Object constructor implicitely instanciates SomeInterfaceLocalSync<shared_ptr<SomeInterfaceImplNoInheritance>>
   Object<SomeInterface> a{ AnyObject{ realObject } };
   Object<SomeInterface> b{ AnyObject{ realObject } };
 
-  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(uid, a.uid());
   EXPECT_EQ(a, b);
   EXPECT_EQ(a->get(), b->get());
 }
@@ -327,12 +327,12 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityDependsOnObjectAddressWithObject
 {
   using namespace qi;
   auto realObject = boost::make_shared<SomeInterfaceImplNoInheritance>();
-  const PtrUid ptruid = os::ptrUid(realObject.get());
+  const ObjectUid uid = os::ptrUid(realObject.get());
   // Object constructor implicitely instanciates SomeInterfaceLocalSync<shared_ptr<SomeInterfaceImplNoInheritance>>
   Object<SomeInterface> a{ realObject };
   Object<SomeInterface> b{ realObject };
 
-  EXPECT_EQ(ptruid, a.ptrUid());
+  EXPECT_EQ(uid, a.uid());
   EXPECT_EQ(a, b);
   EXPECT_EQ(a->get(), b->get());
 }
@@ -351,7 +351,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyO
   store.call<void>("set", original);
 
   Object<SomeInterface> objectA = store.call<AnyObject>("get");
-  EXPECT_EQ(original, objectA) << "original ptruid: {" << original.ptrUid() << "}; objectA ptruid: {" << objectA.ptrUid() << "};";
+  EXPECT_EQ(original, objectA) << "original uid: {" << original.uid() << "}; objectA uid: {" << objectA.uid() << "};";
 
 }
 
@@ -367,7 +367,7 @@ TEST(SendObjectIdentity_InterfaceProxy, IdentityIsMaintainedWhenSentToRemoteAnyO
   store.call<void>("set", original);
 
   Object<SomeInterface> objectA = store.call<Object<SomeInterface>>("get");
-  EXPECT_EQ(original, objectA) << "original ptruid: {" << original.ptrUid() <<"}; vs objectA ptruid: {" << objectA.ptrUid() << "};";
+  EXPECT_EQ(original, objectA) << "original uid: {" << original.uid() <<"}; vs objectA uid: {" << objectA.uid() << "};";
 
 }
 
@@ -423,7 +423,7 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToInterfaceSpecializedStoreRetri
   store->set(original);
 
   Object<SomeInterface> objectA = store->get();
-  EXPECT_EQ(original, objectA) << "original ptruid: {" << original.ptrUid() << "}; vs objectA ptruid: {" << objectA.ptrUid() << "};";
+  EXPECT_EQ(original, objectA) << "original uid: {" << original.uid() << "}; vs objectA uid: {" << objectA.uid() << "};";
 
 }
 
@@ -445,12 +445,12 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
 
   service.call<void>("give", original);
   AnyObject copy0 = service.call<AnyObject>("take");
-  EXPECT_EQ(copy0, original) << "copy0 ptruid: {" << copy0.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+  EXPECT_EQ(copy0, original) << "copy0 uid: {" << copy0.uid() << "}; vs original uid: {" << original.uid() << "};";
 
   service.call<void>("give", copy0);
   AnyObject copy1 = service.call<AnyObject>("take");
-  EXPECT_EQ(copy1, copy0) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs copy0 ptruid: {" << copy0.ptrUid() << "};";
-  EXPECT_EQ(copy1, original) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+  EXPECT_EQ(copy1, copy0) << "copy1 uid: {" << copy1.uid() << "}; vs copy0 uid: {" << copy0.uid() << "};";
+  EXPECT_EQ(copy1, original) << "copy1 uid: {" << copy1.uid() << "}; vs original uid: {" << original.uid() << "};";
 }
 
 
@@ -471,12 +471,12 @@ TEST(SomeInterface, IdentityIsMaintainedWhenSentToRemoteProcessAnyObjectStoreRet
 
   service.call<void>("give", original);
   Object<SomeInterface> copy0 = service.call<Object<SomeInterface>>("take");
-  EXPECT_EQ(copy0, original) << "copy0 ptruid: {" << copy0.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+  EXPECT_EQ(copy0, original) << "copy0 uid: {" << copy0.uid() << "}; vs original uid: {" << original.uid() << "};";
 
   service.call<void>("give", copy0);
   Object<SomeInterface> copy1 = service.call<Object<SomeInterface>>("take");
-  EXPECT_EQ(copy1, copy0) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs copy0 ptruid: {" << copy0.ptrUid() << "};";
-  EXPECT_EQ(copy1, original) << "copy1 ptruid: {" << copy1.ptrUid() << "}; vs original ptruid: {" << original.ptrUid() << "};";
+  EXPECT_EQ(copy1, copy0) << "copy1 uid: {" << copy1.uid() << "}; vs copy0 uid: {" << copy0.uid() << "};";
+  EXPECT_EQ(copy1, original) << "copy1 uid: {" << copy1.uid() << "}; vs original uid: {" << original.uid() << "};";
 }
 
 ////////

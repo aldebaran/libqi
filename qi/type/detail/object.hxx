@@ -18,7 +18,7 @@
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/type/metaobject.hpp>
-#include <qi/ptruid.hpp>
+#include <qi/objectuid.hpp>
 
 // Visual defines interface...
 #ifdef interface
@@ -288,9 +288,12 @@ public:
   friend KA_GENERATE_REGULAR_OP_LESS_OR_EQUAL(Object)
   friend KA_GENERATE_REGULAR_OP_GREATER_OR_EQUAL(Object)
 
-  /// The PtrUid of the pointer used to initially create the object.
-  /// Won't change if the object travels through the network.
-  PtrUid ptrUid() const;
+  /// The unique identifier of the object qi::Object's instance is refering to.
+  /// Won't change if that instance travels through the network.
+  ObjectUid uid() const;
+
+  QI_API_DEPRECATED_MSG("Use qi::Object::uid() instead.")
+  PtrUid ptrUid() const { return uid(); }
 
   boost::shared_ptr<T> asSharedPtr();
 
@@ -441,10 +444,10 @@ namespace detail
   ManagedObjectPtr managedObjectFromSharedPtr(
       ObjectTypeInterface* oit,
       boost::shared_ptr<T> other,
-      const boost::optional<PtrUid>& maybePtrUid = boost::none)
+      const boost::optional<ObjectUid>& maybeUid = boost::none)
   {
     return ManagedObjectPtr(
-            new GenericObject(oit, other.get(), maybePtrUid),
+            new GenericObject(oit, other.get(), maybeUid),
             [other](GenericObject* object) mutable {
               other.reset();
               delete object;
@@ -503,10 +506,10 @@ namespace detail
       std::true_type)
   {
     using SyncProxyType = typename InterfaceImplTraits<From>::SyncType;
-    // We want the ptrUid value to match the real impl object, not the proxy object we are using here.
-    const auto realImplPtrUid = os::ptrUid(other.get());
+    // We want the uid value to match the real impl object, not the proxy object we are using here.
+    const auto realImplUid = os::ptrUid(other.get());
     auto localProxy = boost::make_shared<SyncProxyType>(other);
-    return managedObjectFromSharedPtr(qi::Object<To>::interface(), std::move(localProxy), realImplPtrUid);
+    return managedObjectFromSharedPtr(qi::Object<To>::interface(), std::move(localProxy), realImplUid);
   }
 }
 
@@ -561,14 +564,14 @@ template<typename T> inline void Object<T>::init(detail::ManagedObjectPtr obj)
 
 /// Compares identities, not values.
 ///
-/// The ptrUid identifies the pointer initially used to create the Object. Thus,
+/// The uid identifies the pointer initially used to create the Object. Thus,
 /// if an object crosses the network boundaries, its (local) memory address will
-/// change but the ptrUid will be the same.
+/// change but the uid will be the same.
 template<typename T, typename U>
 bool operator==(const Object<T>& a, const Object<U>& b)
 {
   QI_ASSERT(a.asGenericObject() && b.asGenericObject());
-  return a.asGenericObject()->ptrUid == b.asGenericObject()->ptrUid;
+  return a.asGenericObject()->uid == b.asGenericObject()->uid;
 }
 
 template<typename T, typename U>
@@ -581,7 +584,7 @@ template<typename T>
 bool operator<(const Object<T>& a, const Object<T>& b)
 {
   QI_ASSERT(a.asGenericObject() && b.asGenericObject());
-  return a.asGenericObject()->ptrUid < b.asGenericObject()->ptrUid;
+  return a.asGenericObject()->uid < b.asGenericObject()->uid;
 }
 
 template<typename T>
@@ -624,10 +627,10 @@ template<typename T> void Object<T>::checkT()
     throw std::runtime_error(std::string() + "Object does not have interface " + typeOf<T>()->infoString());
   }
 }
-template<typename T> PtrUid Object<T>::ptrUid() const
+template<typename T> ObjectUid Object<T>::uid() const
 {
   QI_ASSERT(_obj);
-  return _obj->ptrUid;
+  return _obj->uid;
 }
 template<typename T> T& Object<T>::asT() const
 {
@@ -688,14 +691,14 @@ template class QI_API Object<Empty>;
 
 namespace std
 {
-  /// The hash of an object is the hash of its PtrUid.
+  /// The hash of an object is the hash of its ObjectUid.
   template<typename T>
   struct hash<qi::Object<T>>
   {
     std::size_t operator()(const qi::Object<T>& o) const
     {
       QI_ASSERT(o.asGenericObject());
-      return hash<qi::PtrUid>{}(o.asGenericObject()->ptrUid);
+      return hash<qi::ObjectUid>{}(o.asGenericObject()->uid);
     }
   };
 } // namespace std

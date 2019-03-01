@@ -537,11 +537,11 @@ namespace qi {
 
         if (streamContext->sharedCapability<bool>(capabilityname::objectPtrUid, false))
         {
-          // We serialize the PtrUid because, on the receiver side once
+          // We serialize the ObjectUid because, on the receiver side once
           // deserialized, a new local object will be created.
-          // The PtrUid is the only way to retain the identity of the object.
-          const auto ptruid = *osi.objectPtrUid;
-          out.write(begin(ptruid), size(ptruid));
+          // The ObjectUid is the only way to retain the identity of the object.
+          const auto uid = *osi.objectUid;
+          out.write(begin(uid), size(uid));
         }
       }
 
@@ -742,9 +742,9 @@ namespace qi {
         in.read(osi.objectId);
         if (streamContext->sharedCapability<bool>(capabilityname::objectPtrUid, false))
         {
-          PtrUid ptruid;
-          in.read(begin(ptruid), size(ptruid));
-          osi.objectPtrUid = ptruid;
+          ObjectUid uid;
+          in.read(begin(uid), size(uid));
+          osi.objectUid = uid;
         }
         if (!osi.transmitMetaObject)
           osi.metaObject = streamContext->receiveCacheGet(osi.metaObjectCachedId);

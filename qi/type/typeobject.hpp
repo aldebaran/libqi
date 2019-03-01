@@ -14,7 +14,7 @@
 #include <qi/future.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/os.hpp>
-#include <qi/ptruid.hpp>
+#include <qi/objectuid.hpp>
 
 namespace qi {
 
@@ -49,7 +49,7 @@ namespace qi {
   {
   public:
     virtual const MetaObject& metaObject(void* instance) = 0;
-    virtual PtrUid ptrUid(void* instance) const = 0;
+    virtual ObjectUid uid(void* instance) const = 0;
     virtual qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto, Signature returnSig = Signature())=0;
     virtual void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params)=0;
     virtual qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)=0;
