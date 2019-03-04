@@ -109,19 +109,17 @@ public:
     for (const std::string& url : listenUrls)
       _listenUrls.push_back(specifyUrl(Url(url), config.defaultListenUrl()));
 
-    if (!_listenUrls.empty())
-    {
-      qiLogDebug() << "Listen url specified: "
-                   << boost::algorithm::join(listenUrls, ", ")
-                   << ", now defaulting missing url parts with "
-                   << config.defaultListenUrl().str();
+    QI_ASSERT_FALSE(_listenUrls.empty());
+    qiLogDebug() << "Listen url specified: {"
+                 << boost::algorithm::join(listenUrls, ", ")
+                 << "}, now defaulting missing url parts with "
+                 << config.defaultListenUrl().str();
 
 
-      std::ostringstream ssListenUrl;
-      for (const auto& url : _listenUrls)
-        ssListenUrl << " " << url.str();
-      qiLogDebug() << "Listen url are now:" << ssListenUrl.str();
-    }
+    std::ostringstream ssListenUrl;
+    for (const auto& url : _listenUrls)
+      ssListenUrl << " " << url.str();
+    qiLogDebug() << "Listen url are now:" << ssListenUrl.str();
   }
 
   virtual ~ApplicationSessionPrivate()
