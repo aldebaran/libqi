@@ -728,13 +728,21 @@ TEST(TestStrand, LastStrandedThenContinuationCalledWhenCanceled)
   EXPECT_TRUE(canceledAsExpected);
 }
 
-TEST(TestStrand, JoinStrandEndsRunningAsyncFutureInError)
+TEST(TestStrand, JoinStrandEndsScheduledTaskInError)
 {
   qi::Strand strand;
-  qi::Promise<void> prom;
-  auto fut = strand.async([&]{ prom.future().wait(); });
+  qi::Promise<void> startJoinProm;
+
+  // Block the strand by executing the task in it.
+  strand.post([&]{
+    // The strand is blocked by the current task, the deferred task cannot execute yet.
+    auto deferredTaskFut = strand.defer([]{});
+    // Trigger the join, it must set the deferred task result future in error before waiting for the
+    // current task to finish.
+    startJoinProm.setValue(nullptr);
+    EXPECT_TRUE(deferredTaskFut.hasError());
+    EXPECT_NE(std::string::npos, deferredTaskFut.error().find("strand is dying"));
+  });
+  startJoinProm.future().wait();
   strand.join();
-  EXPECT_TRUE(fut.hasError());
-  EXPECT_NE(std::string::npos, fut.error().find("strand is dying"));
-  prom.setValue(nullptr);
 }

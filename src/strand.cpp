@@ -175,9 +175,6 @@ void StrandPrivate::join()
   qiLogDebug() << "Strand joining (" << this << ") -> Joining starts : processing=" << _processing
     << ", size=" << _aliveCount << ")";
 
-  qiLogDebug() << "Strand joining (" << this << ") -> waiting for currently executing task to finish...";
-  _processFinished.wait(lock, [&]{ return !_processing; });
-
   qiLogDebug() << "Strand joining (" << this << ") -> clearing scheduled tasks...";
   for (auto&& task : _queue)
   {
@@ -197,6 +194,9 @@ void StrandPrivate::join()
 
   qiLogDebug() << "Strand joining (" << this << ") -> clearing deferred tasks...";
   _deferredTasksFutures.reset();
+
+  qiLogDebug() << "Strand joining (" << this << ") -> waiting for currently executing task to finish...";
+  _processFinished.wait(lock, [&]{ return !_processing; });
 
   qiLogDebug() << "Strand joining (" << this << ") -> DONE";
   joined = true;
