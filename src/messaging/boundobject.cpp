@@ -46,7 +46,7 @@ namespace qi {
         if (valid)
         {
           qiLogDebug() << "forwardEvent success " << res[0].type()->infoString();
-          msg.setValues(res, "m", context, client.get());
+          msg.setValues(res, "m", context, client);
           msg.addFlags(Message::TypeFlag_DynamicPayload);
           res.destroy();
           processed = true;
@@ -60,7 +60,7 @@ namespace qi {
     if (!processed)
     {
       try {
-        msg.setValues(params, sig, context, client.get());
+        msg.setValues(params, sig, context, client);
       }
       catch (const std::exception& e)
       {
@@ -69,7 +69,7 @@ namespace qi {
           throw e;
         // Delegate conversion to the remote end.
         msg.addFlags(Message::TypeFlag_DynamicPayload);
-        msg.setValues(params, "m", context, client.get());
+        msg.setValues(params, "m", context, client);
       }
     }
     msg.setService(service);
@@ -227,7 +227,8 @@ namespace qi {
     value.destroy();
   }
 
-  DispatchStatus ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket) {
+  DispatchStatus ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket)
+  {
     boost::mutex::scoped_lock lock(_callMutex);
     bool exceptionWasThrown = false;
     try {
@@ -497,16 +498,16 @@ namespace qi {
     }
   }
 
-  void ServiceBoundObject::onSocketDisconnected(MessageSocketPtr client, std::string error)
+  void ServiceBoundObject::onSocketDisconnected(MessageSocketPtr socket, std::string error)
   {
     // Disconnect event links set for this client.
     if (_onSocketDisconnectedCallback)
-      _onSocketDisconnectedCallback(client, error);
+      _onSocketDisconnectedCallback(socket, error);
     {
       boost::mutex::scoped_lock lock(_cancelables->guard);
-      _cancelables->map.erase(client);
+      _cancelables->map.erase(socket);
     }
-    BySocketServiceSignalLinks::iterator it = _links.find(client);
+    BySocketServiceSignalLinks::iterator it = _links.find(socket);
     if (it != _links.end())
     {
       for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
@@ -516,7 +517,7 @@ namespace qi {
       }
       _links.erase(it);
     }
-    removeRemoteReferences(client);
+    removeRemoteReferences(socket);
   }
 
   qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct) {
@@ -589,7 +590,7 @@ namespace qi {
   // if 'val' is a qi::Object<> its ownership will be given to the 'host' object
   static inline void convertAndSetValue(Message& ret, AnyReference val,
     const Signature& targetSignature, boost::weak_ptr<ObjectHost> host,
-    MessageSocket* socket, const Signature& forcedSignature)
+    MessageSocketPtr socket, const Signature& forcedSignature)
   {
     if (!val.isValid())
       throw std::runtime_error(invalidValueError);
@@ -659,7 +660,7 @@ namespace qi {
           value = AnyValue(qi::typeOf<void>());
         else
           value = ao->call<AnyValue>("value", 0);
-        convertAndSetValue(ret, value.asReference(), targetSignature, host, socket.get(), forcedReturnSignature);
+        convertAndSetValue(ret, value.asReference(), targetSignature, host, socket, forcedReturnSignature);
       }
     } catch (const std::exception &e) {
       //be more than safe. we always want to nack the client in case of error
@@ -745,7 +746,7 @@ namespace qi {
         }
         else
         {
-          convertAndSetValue(ret, val, targetSignature, host, socket.get(), forcedReturnSignature);
+          convertAndSetValue(ret, val, targetSignature, host, socket, forcedReturnSignature);
           future.setOnDestroyed(&destroyAbstractFuture);
         }
       } catch (const std::exception &e) {

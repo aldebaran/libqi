@@ -12,6 +12,7 @@
 # include <qi/eventloop.hpp>
 # include <qi/signal.hpp>
 # include <qi/binarycodec.hpp>
+# include <qi/messaging/messagesocket_fwd.hpp>
 # include <string>
 # include "messagedispatcher.hpp"
 # include "streamcontext.hpp"
@@ -112,7 +113,6 @@ namespace qi
     qi::Signal<SocketEventData>  socketEvent;
   };
 
-  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getNetworkEventLoop());
 }
 

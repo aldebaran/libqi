@@ -11,6 +11,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobject.hpp>
 #include <qi/signal.hpp>
+#include <qi/messaging/messagesocket_fwd.hpp>
 
 #include "messagedispatcher.hpp"
 #include "objecthost.hpp"
@@ -21,7 +22,6 @@
 
 namespace qi {
 
-  class MessageSocket;
   class ServerClient;
 
   struct RemoteSignalLinks {

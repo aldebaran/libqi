@@ -81,14 +81,14 @@ DispatchStatus ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr so
   return dispatchStatus;
 }
 
-unsigned int ObjectHost::addObject(BoundAnyObject obj, StreamContext* remoteRef, unsigned int id)
+unsigned int ObjectHost::addObject(BoundAnyObject obj, MessageSocketPtr socket, unsigned int id)
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
   if (!id)
     id = nextId();
   QI_ASSERT(_objectMap.find(id) == _objectMap.end());
   _objectMap[id] = obj;
-  _remoteReferences[remoteRef].push_back(id);
+  _remoteReferences[socket.get()].push_back(id);
   return id;
 }
 

@@ -17,6 +17,7 @@
 #include <qi/types.hpp>
 #include <ka/macroregular.hpp>
 #include <qi/assert.hpp>
+#include <qi/messaging/messagesocket_fwd.hpp>
 #include <ka/scoped.hpp>
 #include <boost/weak_ptr.hpp>
 
@@ -52,8 +53,6 @@ namespace qi {
   /** \class qi::Message
     * This class represent a network message
     */
-  class MessageSocket;
-  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   class ObjectHost;
 
   class Message
@@ -302,23 +301,18 @@ namespace qi {
 
     QI_API void setValue(const AutoAnyReference& value,
                   const Signature& signature,
-                  boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                  StreamContext* streamContext = 0);
+                  boost::weak_ptr<ObjectHost> context = {},
+                  MessageSocketPtr socket = {});
 
     QI_API void setValues(const std::vector<qi::AnyReference>& values,
-                   boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                   StreamContext* streamContext = 0);
+                   boost::weak_ptr<ObjectHost> context = {},
+                   MessageSocketPtr socket = {});
 
     /// Convert values to \p targetSignature and assign to payload.
     QI_API void setValues(const std::vector<qi::AnyReference>& values,
                    const qi::Signature& targetSignature,
-                   boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                   StreamContext* streamContext = 0);
-
-    /// Append additional data to payload
-    QI_API void appendValue(const AutoAnyReference& value,
-                     boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                     StreamContext* streamContext = 0);
+                   boost::weak_ptr<ObjectHost> context = {},
+                   MessageSocketPtr socket = {});
 
     MessageAddress address() const
     {
@@ -341,11 +335,11 @@ namespace qi {
 
     void encodeBinary(const qi::AutoAnyReference& ref,
                       SerializeObjectCallback onObject,
-                      StreamContext* sctx)
+                      MessageSocketPtr socket)
     {
       auto updateHeaderSize =
           ka::scoped([&] { _header.size = static_cast<qi::uint32_t>(_buffer.totalSize()); });
-      qi::encodeBinary(&_buffer, ref, onObject, sctx);
+      qi::encodeBinary(&_buffer, ref, onObject, socket);
     }
   };
 

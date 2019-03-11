@@ -23,7 +23,6 @@ namespace qi
 {
   class Message;
   class BoundObject;
-  class StreamContext;
   using BoundAnyObject = boost::shared_ptr<BoundObject>;
 
   class ObjectHost
@@ -32,7 +31,7 @@ namespace qi
     ObjectHost(unsigned int service);
     virtual ~ObjectHost();
     DispatchStatus onMessage(const qi::Message &msg, MessageSocketPtr socket);
-    unsigned int addObject(BoundAnyObject obj, StreamContext* remoteReferencer, unsigned int objId = 0);
+    unsigned int addObject(BoundAnyObject obj, MessageSocketPtr socket, unsigned int objId = 0);
     Future<void> removeObject(unsigned int id, Future<void> fut = Future<void>{nullptr});
     void removeRemoteReferences(MessageSocketPtr socket);
     unsigned int service() { return _service;}
