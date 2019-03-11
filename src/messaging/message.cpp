@@ -219,15 +219,14 @@ namespace qi
       }
 
       const unsigned int oid = host->nextId();
-      ServiceBoundObject* sbo =
-          new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
-      boost::shared_ptr<BoundObject> bo(sbo);
+      auto bo =
+        boost::make_shared<BoundObject>(sid, oid, object, MetaCallType_Queued, true, context);
       host->addObject(bo, socket, oid);
       qiLogDebug() << "Hooking " << oid <<" on " << host.get();
-      qiLogDebug() << "sbo " << sbo << "obj " << object.asGenericObject();
-      // Transmit the metaObject augmented by ServiceBoundObject.
+      qiLogDebug() << "BoundObject " << bo << " obj " << object.asGenericObject();
+      // Transmit the metaObject augmented by BoundObject.
       ObjectSerializationInfo res;
-      res.metaObject = sbo->metaObject(oid);
+      res.metaObject = bo->metaObject(oid);
       res.serviceId = sid;
       res.objectId = oid;
       res.objectUid = object.uid();

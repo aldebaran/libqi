@@ -397,7 +397,7 @@ namespace qi {
       p.setError(f.error());
     else
     {
-      _sdClient.setServiceDirectory(boost::static_pointer_cast<ServiceBoundObject>(_sd._serviceBoundObject)->object());
+      _sdClient.setServiceDirectory(_sd._serviceBoundObject->object());
       // _sdClient will trigger its connected, which will trigger our connected
 
       p.setValue(0);

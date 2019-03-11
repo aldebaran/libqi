@@ -44,44 +44,36 @@ namespace qi {
     unsigned int event;
   };
 
-  class BoundObject {
-  public:
-    //Server Interface
-    virtual ~BoundObject() {}
-    virtual DispatchStatus onMessage(const qi::Message &msg, MessageSocketPtr socket) = 0;
-    virtual void onSocketDisconnected(qi::MessageSocketPtr socket, std::string error) = 0;
-  };
-
   //Bound Object, represent an object bound on a server
   // this is not an object..
-  class ServiceBoundObject
-    : public BoundObject
-    , public ObjectHost
+  class BoundObject
+    : public ObjectHost
     , boost::noncopyable
-    , public Trackable<ServiceBoundObject> {
-
+  {
   public:
     // TODO: once VS2013 build farm is fixed, replaced the following constructors by this one.
-    //ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
-                       //qi::AnyObject obj,
-                       //qi::MetaCallType mct = qi::MetaCallType_Queued,
-                       //bool bindTerminate = false,
-                       //boost::optional<boost::weak_ptr<ObjectHost>> owner = {});
+    //BoundObject(unsigned int serviceId, unsigned int objectId,
+                  //qi::AnyObject obj,
+                  //qi::MetaCallType mct = qi::MetaCallType_Queued,
+                  //bool bindTerminate = false,
+                  //boost::optional<boost::weak_ptr<ObjectHost>> owner = {});
 
-    ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
-                       qi::AnyObject obj,
-                       qi::MetaCallType mct,
-                       bool bindTerminatee,
-                       boost::optional<boost::weak_ptr<ObjectHost>> owner);
+    BoundObject(unsigned int serviceId,
+                unsigned int objectId,
+                qi::AnyObject obj,
+                qi::MetaCallType mct,
+                bool bindTerminatee,
+                boost::optional<boost::weak_ptr<ObjectHost>> owner);
 
-    ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
-                      qi::AnyObject obj,
-                      qi::MetaCallType mct = qi::MetaCallType_Queued,
-                      bool bindTerminate = false)
-      : ServiceBoundObject(serviceId, objectId, obj, mct, bindTerminate, {})
+    BoundObject(unsigned int serviceId,
+                unsigned int objectId,
+                qi::AnyObject obj,
+                qi::MetaCallType mct = qi::MetaCallType_Queued,
+                bool bindTerminate = false)
+      : BoundObject(serviceId, objectId, obj, mct, bindTerminate, {})
     {}
 
-    virtual ~ServiceBoundObject();
+    virtual ~BoundObject();
 
     unsigned int nextId() { return ++_nextId; }
 
@@ -115,9 +107,8 @@ namespace qi {
 
     inline AnyObject object() { return _object;}
   public:
-    //BoundObject Interface
-    DispatchStatus onMessage(const qi::Message &msg, MessageSocketPtr socket) override;
-    void onSocketDisconnected(qi::MessageSocketPtr socket, std::string error) override;
+    DispatchStatus onMessage(const qi::Message &msg, MessageSocketPtr socket);
+    void onSocketDisconnected(qi::MessageSocketPtr socket, std::string error);
 
     using MessageId = unsigned int;
     void cancelCall(MessageSocketPtr origSocket, const Message& cancelMessage, MessageId origMsgId);
@@ -130,9 +121,12 @@ namespace qi {
     CancelableKitPtr _cancelables;
     using CancelableKitWeak = boost::weak_ptr<CancelableKit>;
 
-    qi::AnyObject createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate = false);
+    qi::AnyObject createBoundObjectType(BoundObject *self, bool bindTerminate = false);
 
-    inline boost::weak_ptr<ObjectHost> _gethost() { return _owner ? *_owner : weakPtr(); }
+    inline boost::weak_ptr<ObjectHost> _gethost()
+    {
+      return _owner ? *_owner : asHostWeakPtr();
+    }
     static void _removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id);
     static void serverResultAdapterNext(AnyReference val, Signature targetSignature,
                                         boost::weak_ptr<ObjectHost> host,
@@ -165,15 +159,27 @@ namespace qi {
     mutable boost::recursive_mutex           _mutex;
     boost::function<void (MessageSocketPtr, std::string)> _onSocketDisconnectedCallback;
 
+    struct Tracker : public Trackable<Tracker> { using Trackable::destroy; };
+    Tracker _tracker;
+
+    boost::weak_ptr<ObjectHost> asHostWeakPtr()
+    {
+      // We guarantee this bound object is valid for the entirety of its tracker's lifetime, so
+      // that its own lifetime can be bound to it.
+      // Therefore it is valid to use the aliasing constructor of shared_ptr to transform a
+      // shared_ptr of the tracker to a shared_ptr of its bound object.
+      return boost::shared_ptr<ObjectHost>(_tracker.weakPtr().lock(), this);
+    }
+
     static qi::Atomic<unsigned int> _nextId;
 
     friend class ::qi::ObjectHost;
     friend class ::qi::ServiceDirectory;
   };
 
-  using BoundAnyObject = boost::shared_ptr<BoundObject>;
-
-  qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct = qi::MetaCallType_Auto);
+  qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId,
+                                               qi::AnyObject object,
+                                               qi::MetaCallType mct = qi::MetaCallType_Auto);
 
 }
 

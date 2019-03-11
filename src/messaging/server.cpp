@@ -38,18 +38,18 @@ namespace qi {
   {
     if (!obj)
       return false;
-    BoundAnyObject bop = makeServiceBoundAnyObject(id, obj, _defaultCallType);
+    BoundObjectPtr bop = makeServiceBoundObjectPtr(id, obj, _defaultCallType);
     return addObject(id, bop);
   }
 
-  bool Server::addObject(unsigned int id, qi::BoundAnyObject obj)
+  bool Server::addObject(unsigned int id, qi::BoundObjectPtr obj)
   {
     if (!obj)
       return false;
     //register into _boundObjects
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      BoundAnyObjectMap::iterator it;
+      BoundObjectPtrMap::iterator it;
       it = _boundObjects.find(id);
       if (it != _boundObjects.end()) {
         return false;
@@ -62,10 +62,10 @@ namespace qi {
 
   bool Server::removeObject(unsigned int idx)
   {
-    BoundAnyObject removedObject;
+    BoundObjectPtr removedObject;
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      BoundAnyObjectMap::iterator it;
+      BoundObjectPtrMap::iterator it;
       it = _boundObjects.find(idx);
       if (it == _boundObjects.end()) {
         return false;
@@ -297,10 +297,10 @@ namespace qi {
 
 
   void Server::onMessageReady(const qi::Message &msg, MessageSocketPtr socket) {
-    qi::BoundAnyObject obj;
+    qi::BoundObjectPtr obj;
     {
       boost::mutex::scoped_lock sl(_boundObjectsMutex);
-      BoundAnyObjectMap::iterator it;
+      BoundObjectPtrMap::iterator it;
 
       it = _boundObjects.find(msg.service());
       if (it == _boundObjects.end())
@@ -386,11 +386,11 @@ namespace qi {
         return;
       }
 
-      BoundAnyObjectMap::iterator it;
+      BoundObjectPtrMap::iterator it;
       {
         boost::mutex::scoped_lock sl(_boundObjectsMutex);
         for (it = _boundObjects.begin(); it != _boundObjects.end(); ++it) {
-          BoundAnyObject o = it->second;
+          BoundObjectPtr o = it->second;
           try
           {
             o->onSocketDisconnected(socket, error);

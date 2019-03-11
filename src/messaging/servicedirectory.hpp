@@ -36,7 +36,7 @@ namespace qi
     void                     updateServiceInfo(const ServiceInfo &svcinfo);
     std::string              machineId();
     qi::MessageSocketPtr   _socketOfService(unsigned int id);
-    void                     _setServiceBoundObject(boost::shared_ptr<ServiceBoundObject> sbo);
+    void                     _setServiceBoundObject(BoundObjectPtr bo);
 
     qi::Signal<unsigned int, std::string>  serviceAdded;
     qi::Signal<unsigned int, std::string>  serviceRemoved;
@@ -48,7 +48,7 @@ namespace qi
     std::map<MessageSocketPtr, std::vector<unsigned int> >  socketToIdx;
     std::map<unsigned int, MessageSocketPtr>                idxToSocket;
     unsigned int                                              servicesCount;
-    boost::weak_ptr<ServiceBoundObject>                       serviceBoundObject;
+    boost::weak_ptr<BoundObject>                              serviceBoundObject;
     /* Our methods can be invoked from remote, and from socket callbacks,
     * so thread-safety is required.
     */
@@ -69,7 +69,7 @@ namespace qi
   private:
     friend class SessionPrivate;
     ObjectRegistrar*             _server;
-    BoundAnyObject               _serviceBoundObject;
+    BoundObjectPtr               _serviceBoundObject;
     ServiceDirectory*            _sdObject;
     bool                         _init;
   }; // !ServiceDirectory

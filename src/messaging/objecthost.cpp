@@ -27,7 +27,7 @@ ObjectHost::ObjectHost(unsigned int service)
    map.clear();
  }
 
-BoundAnyObject ObjectHost::recursiveFindObject(uint32_t objectId)
+BoundObjectPtr ObjectHost::recursiveFindObject(uint32_t objectId)
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
   auto it = _objectMap.find(objectId);
@@ -57,10 +57,9 @@ BoundAnyObject ObjectHost::recursiveFindObject(uint32_t objectId)
   }
   return {};
 }
-
 DispatchStatus ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr socket)
 {
-  BoundAnyObject obj{recursiveFindObject(msg.object())};
+  BoundObjectPtr obj{recursiveFindObject(msg.object())};
   if (!obj)
   {
     // Should we treat this as an error ? Returning without error is the
@@ -81,7 +80,7 @@ DispatchStatus ObjectHost::onMessage(const qi::Message &msg, MessageSocketPtr so
   return dispatchStatus;
 }
 
-unsigned int ObjectHost::addObject(BoundAnyObject obj, MessageSocketPtr socket, unsigned int id)
+unsigned int ObjectHost::addObject(BoundObjectPtr obj, MessageSocketPtr socket, unsigned int id)
 {
   boost::recursive_mutex::scoped_lock lock(_mutex);
   if (!id)
@@ -150,7 +149,7 @@ Future<void> ObjectHost::removeObject(unsigned int id, Future<void> fut)
     // Because of potential dependencies between the object's destruction
     // and the networking resources, we transfer the object's destruction
     // responsability to another thread.
-    const auto resetter = PointerDeferredResetHack<BoundAnyObject>(std::move(obj));
+    const auto resetter = PointerDeferredResetHack<BoundObjectPtr>(std::move(obj));
     fut = fut.then([resetter](Future<void> f) {
       if (f.hasError())
         qiLogWarning() << "Object destruction failed: " << f.error();
@@ -166,9 +165,9 @@ void ObjectHost::clear()
   boost::recursive_mutex::scoped_lock lock(_mutex);
   for (ObjectMap::iterator it = _objectMap.begin(); it != _objectMap.end(); ++it)
   {
-    ServiceBoundObject* sbo = dynamic_cast<ServiceBoundObject*>(it->second.get());
-    if (sbo && sbo->_owner)
-      sbo->_owner.reset();
+    BoundObject* bo = dynamic_cast<BoundObject*>(it->second.get());
+    if (bo && bo->_owner)
+      bo->_owner.reset();
   }
   _objectMap.clear();
 }

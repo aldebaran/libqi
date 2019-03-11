@@ -615,7 +615,8 @@ namespace qi {
     friend class detail::AddUnwrap<T>;
 
   private:
-    friend class ServiceBoundObject;
+    friend class BoundObject;
+
     // Private forward impl to then
     template <typename R, typename AF>
     Future<R> andThenRImpl(FutureCallbackType type, AF&& func);

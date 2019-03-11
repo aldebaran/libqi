@@ -23,7 +23,8 @@ namespace qi
 {
   class Message;
   class BoundObject;
-  using BoundAnyObject = boost::shared_ptr<BoundObject>;
+
+  using BoundObjectPtr = boost::shared_ptr<BoundObject>;
 
   class ObjectHost
   {
@@ -31,12 +32,12 @@ namespace qi
     ObjectHost(unsigned int service);
     virtual ~ObjectHost();
     DispatchStatus onMessage(const qi::Message &msg, MessageSocketPtr socket);
-    unsigned int addObject(BoundAnyObject obj, MessageSocketPtr socket, unsigned int objId = 0);
+    unsigned int addObject(BoundObjectPtr obj, MessageSocketPtr socket, unsigned int objId = 0);
     Future<void> removeObject(unsigned int id, Future<void> fut = Future<void>{nullptr});
     void removeRemoteReferences(MessageSocketPtr socket);
     unsigned int service() { return _service;}
     virtual unsigned int nextId() = 0;
-    using ObjectMap = std::map<unsigned int, BoundAnyObject>;
+    using ObjectMap = std::map<unsigned int, BoundObjectPtr>;
     const ObjectMap& objects() const { return _objectMap; }
   protected:
     void clear();
@@ -45,7 +46,7 @@ namespace qi
     /// then returned via a signal, and finally used to make a call, it is possible that the
     /// destination of the call (the "service") does not know directly the called object, but instead one of its
     /// (ObjectHost) children knows it.
-    BoundAnyObject recursiveFindObject(uint32_t objectId);
+    BoundObjectPtr recursiveFindObject(uint32_t objectId);
     using RemoteReferencesMap = std::map<StreamContext*, std::vector<unsigned int>>;
     boost::recursive_mutex    _mutex;
     unsigned int    _service;
