@@ -187,8 +187,10 @@ namespace qi {
       {
         qiLogVerbose() << "Can't find name associated to id:" << idx;
       }
-      Server::removeObject(idx);
     }
+
+    Server::removeObject(idx);
+
     if (!name.empty())
     {
       boost::mutex::scoped_lock sl(_serviceNameToIndexMutex);
