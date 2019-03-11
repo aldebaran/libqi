@@ -96,7 +96,7 @@ namespace qi
     // rebind onSubscribe since link changed
     SignalBase::setOnSubscribers(boost::bind(&ThisProxyType::onSubscribe, this, _1,
       object, propertyName, link));
-    return Future<void>{0};
+    return Future<void>{nullptr};
   }
 
   template<typename T, template< class...> class PropertyType>
