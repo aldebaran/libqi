@@ -124,6 +124,14 @@ private:
  */
 class QI_API Strand : public ExecutionContext, private boost::noncopyable
 {
+// This constructor may be used by tests to instrument the behavior of the strand more finely, but
+// it is not meant to be directly usable by clients of the class. Therefore we only make it public
+// when compiling libqi tests.
+#ifdef QI_IS_TEST
+public:
+#endif
+  Strand(boost::shared_ptr<StrandPrivate> impl);
+
 public:
   using OptionalErrorMessage = boost::optional<std::string>;
 
@@ -131,9 +139,7 @@ public:
   Strand();
   /// Construct a strand that will schedule work on executionContext
   Strand(qi::ExecutionContext& executionContext);
-#ifdef QI_WITH_TESTS
-  Strand(boost::shared_ptr<StrandPrivate> impl);
-#endif
+
   /// Call detroy()
   ~Strand();
 

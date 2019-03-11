@@ -447,13 +447,11 @@ bool StrandPrivate::isInThisContext() const
   return _processingThread == qi::os::gettid();
 }
 
-#ifdef QI_WITH_TESTS
 Strand::Strand(boost::shared_ptr<StrandPrivate> impl)
   : _p(std::move(impl))
 {
   QI_ASSERT_NOT_NULL(_p);
 }
-#endif
 
 Strand::Strand()
   : Strand(boost::make_shared<StrandPrivate>(*qi::getEventLoop()))
