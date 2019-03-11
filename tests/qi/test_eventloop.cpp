@@ -123,6 +123,7 @@ TEST(EventLoop, asyncFast)
 TEST(EventLoopAsio, CannotGoAboveMaximumThreadCount)
 {
   using namespace qi;
+  const int minThreadCount = 1;
   const int maxThreadCount = 8;
   const int threadCount = 4;
   const bool spawnOnOverload = true;
@@ -135,8 +136,7 @@ TEST(EventLoopAsio, CannotGoAboveMaximumThreadCount)
   auto _ = ka::scoped([&]() {
     os::setenv("QI_EVENTLOOP_MAX_TIMEOUTS", oldMaxTimeouts.c_str());
   });
-  EventLoopAsio ev{threadCount, "youp", spawnOnOverload};
-  ev.setMaxThreads(maxThreadCount);
+  EventLoopAsio ev{threadCount, minThreadCount, maxThreadCount, "youp", spawnOnOverload};
 
   // 2) Register callback
   std::atomic<bool> emergencyCalled{false};
