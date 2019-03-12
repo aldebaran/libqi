@@ -320,7 +320,7 @@ namespace qi {
     {
       min = qi::os::getEnvDefault(gMinThreadsEnvVar,
         static_cast<int>(std::thread::hardware_concurrency()));
-      qiLogVerbose() << "start: thread count limits: min <- " << min 
+      qiLogVerbose() << "start: thread count limits: min <- " << min
         << " (read from environment variable " << gMinThreadsEnvVar << ","
         << " with default " << std::thread::hardware_concurrency() << ")";
     }
@@ -329,7 +329,7 @@ namespace qi {
     {
       const int defaultMax = 150;
       max = qi::os::getEnvDefault(gMaxThreadsEnvVar, defaultMax);
-      qiLogVerbose() << "start: thread count limits: max <- " << max 
+      qiLogVerbose() << "start: thread count limits: max <- " << max
         << " (read from environment variable " << gMaxThreadsEnvVar << ","
         << " with default " << defaultMax << ")";
     }
@@ -492,9 +492,32 @@ namespace qi {
         }
         else
         {
+          const auto nextWorkerCount = workerCount + 1;
           qiLogInfo() << _name << ": Spawning more threads (old -> new: "
-                      << workerCount << " -> " << (workerCount + 1) << ")";
-          _workerThreads->launch(&EventLoopAsio::runWorkerLoop, this);
+                      << workerCount << " -> " << nextWorkerCount << ")";
+
+          try
+          {
+            _workerThreads->launch(&EventLoopAsio::runWorkerLoop, this);
+          }
+          catch (const std::system_error& ex)
+          {
+            // TODO: report some system info about memory usage etc. in this case.
+            // One of the possible reason to fail here is that there is no memory available.
+            qiLogWarning() << _name << ": Spawning thread " << nextWorkerCount
+              << " failed with system error "<< ex.code() << " : " << ex.what();
+          }
+          catch (const std::exception& ex)
+          {
+            qiLogWarning() << _name << ": Spawning thread " << nextWorkerCount
+              << " failed with error: " << ex.what();
+          }
+          catch (...)
+          {
+            qiLogWarning() << _name << ": Spawning thread " << nextWorkerCount
+              << " failed with unknown error.";
+          }
+
         }
         boost::this_thread::sleep_for(graceDuration);
       }
