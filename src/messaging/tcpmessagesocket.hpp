@@ -343,7 +343,7 @@ namespace qi {
     }
   }
 
-  size_t getMaxPayloadFromEnv(size_t defaultValue = 50000000);
+  size_t getMaxPayloadFromEnv(size_t defaultValue = 5e9);
 
   /// Start receiving messages. Also allows to send messages.
   ///
