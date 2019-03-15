@@ -65,7 +65,7 @@ public:
   explicit StrandPrivate(qi::ExecutionContext& executor);
   ~StrandPrivate();
 
-  void join();
+  void join() QI_NOEXCEPT(true);
 
   // Schedules the callback for execution. If the trigger date `tp` is in the past, executes the
   // callback immediately in the calling thread.
@@ -124,14 +124,6 @@ private:
  */
 class QI_API Strand : public ExecutionContext, private boost::noncopyable
 {
-// This constructor may be used by tests to instrument the behavior of the strand more finely, but
-// it is not meant to be directly usable by clients of the class. Therefore we only make it public
-// when compiling libqi tests.
-#ifdef QI_IS_TEST
-public:
-#endif
-  Strand(boost::shared_ptr<StrandPrivate> impl);
-
 public:
   using OptionalErrorMessage = boost::optional<std::string>;
 
@@ -149,10 +141,16 @@ public:
    * on. A strand can't be reused after it has been join()ed.
    *
    * It is safe to call this method concurrently with other methods. All the returned futures will be set to error.
+   * @Note: Under extreme circumstances such as system memory exhaustion, this
+   *        method could still throw a `std::bad_alloc` exception, thus causing a call
+   *        to `std::terminate` because of the `noexcept` specifier. This behavior is
+   *        considered acceptable.
    */
-  void join();
+  void join() QI_NOEXCEPT(true);
 
   /** Joins the strand.
+   *
+   * @deprecated Use join() which is currently noexcept.
    *
    * This version catches any exception and returns its message.
    * This version must be preferred in destructors to prevent abort.
@@ -168,6 +166,7 @@ public:
    * }
    * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    */
+  QI_API_DEPRECATED_MSG(Use 'join()' instead)
   OptionalErrorMessage join(std::nothrow_t) QI_NOEXCEPT(true);
 
   // DEPRECATED

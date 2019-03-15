@@ -221,7 +221,7 @@ namespace qi
     mutable Tracked _tracked;
 
     Strand& strand() const;
-    Strand::OptionalErrorMessage tryJoinStrandNoThrow() QI_NOEXCEPT(true);
+    void joinStrand() QI_NOEXCEPT(true);
 
     // TODO:
     // Right now, mutable_store_t stores the Mutable first (the pointer in this case) which

@@ -152,7 +152,7 @@ StrandPrivate::~StrandPrivate() {
   }
 }
 
-void StrandPrivate::join()
+void StrandPrivate::join() QI_NOEXCEPT(true)
 {
   if (joined)
   {
@@ -447,33 +447,23 @@ bool StrandPrivate::isInThisContext() const
   return _processingThread == qi::os::gettid();
 }
 
-Strand::Strand(boost::shared_ptr<StrandPrivate> impl)
-  : _p(std::move(impl))
-{
-  QI_ASSERT_NOT_NULL(_p);
-}
-
 Strand::Strand()
-  : Strand(boost::make_shared<StrandPrivate>(*qi::getEventLoop()))
+  : _p(boost::make_shared<StrandPrivate>(*qi::getEventLoop()))
 {
   qiLogDebug() << this << " new strand";
 }
 
 Strand::Strand(qi::ExecutionContext& eventloop)
-  : Strand(boost::make_shared<StrandPrivate>(eventloop))
+  : _p(boost::make_shared<StrandPrivate>(eventloop))
 {
 }
 
 Strand::~Strand()
 {
-  if (const auto error = join(std::nothrow))
-  {
-    qiLogWarning() << "Error while joining tasks in Strand destruction. "
-                      "Detail: " << *error;
-  }
+  join();
 }
 
-void Strand::join()
+void Strand::join() QI_NOEXCEPT(true)
 {
   // keep it alive until we unlock the mutex
   auto pimpl = boost::atomic_exchange(&_p, {});
