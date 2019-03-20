@@ -86,13 +86,17 @@ namespace qi
 
     bool isConnected() const;
 
-    static const unsigned int ALL_OBJECTS = (unsigned int)-1;
-
-    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, MessageDispatcher::MessageHandler fun) {
+    qi::SignalLink messagePendingConnect(unsigned int serviceId,
+                                         unsigned int objectId,
+                                         MessageDispatcher::MessageHandler fun) noexcept
+    {
       return _dispatcher.messagePendingConnect(serviceId, objectId, std::move(fun));
     }
 
-    void messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
+    void messagePendingDisconnect(unsigned int serviceId,
+                                  unsigned int objectId,
+                                  qi::SignalLink linkId) noexcept
+    {
       _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
@@ -113,7 +117,44 @@ namespace qi
     qi::Signal<SocketEventData>  socketEvent;
   };
 
+  using MessageSocketWeakPtr = boost::weak_ptr<MessageSocket>;
   MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getNetworkEventLoop());
+
+  /// A connection to the message dispatch of a socket that acts as a RAII helper to connect and
+  /// disconnect the object as a message handler. Instances do not own their underlying socket.
+  class MessageDispatchConnection
+  {
+  public:
+  // MoveOnly:
+    MessageDispatchConnection(const MessageDispatchConnection&) = delete;
+    MessageDispatchConnection& operator=(const MessageDispatchConnection&) = delete;
+
+    MessageDispatchConnection(MessageDispatchConnection&&);
+    MessageDispatchConnection& operator=(MessageDispatchConnection&&);
+
+  // MessageDispatchConnection:
+    MessageDispatchConnection() noexcept;
+
+    /// @throws A `std::invalid_argument` exception if the socket pointer is null.
+    MessageDispatchConnection(MessageSocketPtr socket,
+                              MessageDispatcher::RecipientId recipientId,
+                              MessageDispatcher::MessageHandler handler);
+    ~MessageDispatchConnection();
+
+    MessageSocketPtr socket() const noexcept { return _socket.lock(); }
+
+    MessageDispatcher::RecipientId recipientId() const noexcept { return _recipientId; }
+
+  private:
+    void reset();
+
+    static MessageDispatcher::RecipientId defaultRecipientId() noexcept;
+
+    MessageSocketWeakPtr _socket;
+    MessageDispatcher::RecipientId _recipientId = defaultRecipientId();
+    SignalLink _messageDispatcherLink = SignalBase::invalidSignalLink;
+  };
+
 }
 
 #endif  // _SRC_MESSAGESOCKET_HPP_

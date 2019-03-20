@@ -83,7 +83,7 @@ namespace qi
       qiLogWarning() << "Destroying while connected services remain";
   }
 
-  void ServiceDirectory::onSocketDisconnected(MessageSocketPtr socket, std::string error)
+  void ServiceDirectory::removeClientSocket(MessageSocketPtr socket)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
     // clean from idxToSocket
@@ -449,7 +449,7 @@ namespace qi
   void ServiceDirectory::_setServiceBoundObject(boost::shared_ptr<BoundObject> bo)
   {
     serviceBoundObject = bo;
-    bo->_onSocketDisconnectedCallback = boost::bind(&ServiceDirectory::onSocketDisconnected, this, _1, _2);
+    bo->setOnSocketUnbound(boost::bind(&ServiceDirectory::removeClientSocket, this, _1));
   }
 
 } // !qi

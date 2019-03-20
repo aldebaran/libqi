@@ -8,8 +8,10 @@
 #define _SRC_MESSAGEDISPATCHER_HPP_
 
 #include <qi/anyobject.hpp>
-#include <boost/thread/mutex.hpp>
+
+#include <boost/thread/synchronized_value.hpp>
 #include <boost/container/flat_map.hpp>
+
 #include "message.hpp"
 
 namespace qi {
@@ -26,38 +28,50 @@ namespace qi {
    *
    * TODO: handle timeout on request taking too long to complete
    */
-  class MessageDispatcher {
+  class MessageDispatcher
+  {
   public:
     using MessageHandler = std::function<DispatchStatus (const Message&)>;
 
     MessageDispatcher(ExecutionContext& execContext);
 
-    //internal: called by Socket to tell the class that we sent a message
-    void sent(const qi::Message& msg);
-    //internal: called by Socket to tell the class a message have been receive
-    void dispatch(const qi::Message& msg);
-    void cleanPendingMessages();
+    Future<bool> dispatch(qi::Message& msg);
 
-    static const unsigned int ALL_OBJECTS;
-    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, MessageHandler fun);
-    void           messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId);
+    qi::SignalLink messagePendingConnect(unsigned int serviceId,
+                                         unsigned int objectId,
+                                         MessageHandler fun) noexcept;
+
+    /// @invariant
+    ///   `d.messagePendingDisconnect(sid, oid, d.messagePendingConnect(sid, oid, _)) == true`
+    bool messagePendingDisconnect(unsigned int serviceId,
+                                  unsigned int objectId,
+                                  qi::SignalLink linkId) noexcept;
 
   public:
-    using Target = std::pair<unsigned int, unsigned int>;
+    struct RecipientId
+    {
+      unsigned int serviceId;
+      unsigned int objectId;
+      KA_GENERATE_FRIEND_REGULAR_OPS_2(RecipientId, serviceId, objectId)
+    };
+
+    ExecutionContext& _execContext;
+
     using MessageHandlerList = boost::container::flat_map<SignalLink, MessageHandler>;
+    using RecipientMessageHandlerMap = boost::container::flat_map<RecipientId, MessageHandlerList>;
 
-    using SignalMap = boost::container::flat_map<Target, MessageHandlerList>;
-    using MessageSentMap = boost::container::flat_map<unsigned int, MessageAddress>;
+    // Mutable state of the object.
+    struct State
+    {
+      RecipientMessageHandlerMap recipients;
+      SignalLink nextSignalLink = 0;
+    };
+    using SyncState =  boost::synchronized_value<State>;
+    SyncState _state;
 
-    ExecutionContext&      _execContext;
-    SignalMap              _signalMap;
-    SignalLink             _nextSignalLink = 0;
-    boost::recursive_mutex _signalMapMutex;
-
-    MessageSentMap         _messageSent;
-    boost::mutex           _messageSentMutex;
+  private:
+    static bool tryDispatch(const MessageHandlerList& handlers, const Message& msg);
   };
-
 }
 
 #endif  // _SRC_MESSAGEDISPATCHER_HPP_

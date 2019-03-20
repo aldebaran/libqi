@@ -350,6 +350,11 @@ namespace qi {
     return os;
   }
 
+  inline std::ostream& operator<<(std::ostream& os, const qi::Message::Type& type)
+  {
+    return os << Message::typeToString(type);
+  }
+
   QI_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
 
 

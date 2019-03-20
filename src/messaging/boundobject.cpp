@@ -9,11 +9,18 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 
-qiLogCategory("qimessaging.boundobject");
+const auto logCategory = "qimessaging.boundobject";
+qiLogCategory(logCategory);
 
 const auto invalidValueError = "The value is invalid.";
 
-namespace qi {
+// Helper for debug logs of the class. Can only be called from non static member functions of
+// `qi::BoundObject`.
+#define QI_LOG_DEBUG_BOUNDOBJECT() \
+  qiLogDebug() << this << " (service=" << _serviceId << ", object=" << _objectId << ") - "
+
+namespace qi
+{
 
   static AnyReference forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int object,
@@ -102,6 +109,7 @@ namespace qi {
     , _owner(owner)
   {
     _self = createBoundObjectType(this, bindTerminate);
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Constructing a BoundObject";
   }
 
   BoundObject::~BoundObject()
@@ -109,7 +117,6 @@ namespace qi {
     _tracker.destroy();
     _cancelables.reset();
     ObjectHost::clear();
-    _object.reset();
   }
 
   qi::AnyObject BoundObject::createBoundObjectType(BoundObject *self, bool bindTerminate) {
@@ -156,7 +163,8 @@ namespace qi {
     auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
     linkEntry = RemoteSignalLink(linking, eventId);
     return linking.andThen([=](SignalLink linkId) mutable {
-      qiLogDebug() << "BoundObject rl " << remoteSignalLinkId << " ll " << linkId;
+      QI_LOG_DEBUG_BOUNDOBJECT() << "Registered event remote_signal_link=" << remoteSignalLinkId
+                                 << " local_link=" << linkId;
       return linkId;
     });
   }
@@ -172,7 +180,8 @@ namespace qi {
     auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
     linkEntry = RemoteSignalLink(linking, eventId);
     return linking.andThen([=](SignalLink linkId) mutable {
-      qiLogDebug() << "BoundObject rl " << remoteSignalLinkId << " ll " << linkId;
+      QI_LOG_DEBUG_BOUNDOBJECT() << "Registered event remote_signal_link=" << remoteSignalLinkId
+                                 << " local_link=" << linkId;
       return linkId;
     });
   }
@@ -208,13 +217,13 @@ namespace qi {
 
   void BoundObject::terminate(unsigned int)
   {
-    qiLogDebug() << "terminate() received";
+    QI_LOG_DEBUG_BOUNDOBJECT() << "terminate() received";
     if (_owner)
     {
       if (boost::shared_ptr<ObjectHost> owner = _owner->lock())
         owner->removeObject(_objectId);
       else
-        qiLogDebug() << "terminate() received an object with an expired owner";
+        QI_LOG_DEBUG_BOUNDOBJECT() << "terminate() received an object with an expired owner";
     }
     else
       qiLogWarning() << "terminate() received on object without an owner";
@@ -225,9 +234,9 @@ namespace qi {
     value.destroy();
   }
 
-  DispatchStatus BoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket)
+  DispatchStatus BoundObject::onMessage(const qi::Message& msg, MessageSocketPtr socket)
   {
-    boost::mutex::scoped_lock lock(_callMutex);
+    boost::recursive_mutex::scoped_lock lock(_callMutex);
     bool exceptionWasThrown = false;
     try {
       if (msg.version() > Message::Header::currentVersion())
@@ -240,14 +249,11 @@ namespace qi {
         return DispatchStatus::MessageHandled_WithError;
       }
 
-      qiLogDebug() << this << "(" << service() << '/' << _objectId << ") msg " << msg.address() << " " << msg.buffer().size();
+      QI_LOG_DEBUG_BOUNDOBJECT() << "msg " << msg.address()
+                                 << " type=" << msg.type()
+                                 << ", size=" << msg.buffer().size();
 
-      if (msg.object() > _objectId)
-      {
-        qiLogDebug() << "Passing message to children";
-        return ObjectHost::onMessage(msg, socket);
-      }
-
+      QI_ASSERT_TRUE(msg.object() == _objectId);
       qi::AnyObject    obj;
       unsigned int     funcId;
       //choose between special function (on BoundObject) or normal calls
@@ -297,7 +303,8 @@ namespace qi {
       }
       else
       {
-        qiLogError() << "Unexpected message type " << msg.type() << " on " << msg.address();
+        qiLogError() << "Unexpected message type " << Message::typeToString(msg.type()) << " ("
+                     << msg.type() << ") on " << msg.address();
         return DispatchStatus::MessageNotHandled;
       }
 
@@ -375,7 +382,8 @@ namespace qi {
         qi::Future<AnyReference> fut = obj.metaCall(funcId, mfp, callType, sig);
         AtomicIntPtr cancelRequested = boost::make_shared<Atomic<int> >(0);
         {
-          qiLogDebug() << this << " Registering future for " << socket.get() << ", message:" << msg.id();
+          QI_LOG_DEBUG_BOUNDOBJECT()
+            << "Registering future for " << socket.get() << ", message:" << msg.id();
           boost::mutex::scoped_lock futlock(_cancelables->guard);
           _cancelables->map[socket][msg.id()] = std::make_pair(fut, cancelRequested);
         }
@@ -427,7 +435,7 @@ namespace qi {
 
   void BoundObject::cancelCall(MessageSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)
   {
-    qiLogDebug() << "Canceling call: " << origMsgId << " on client " << socket.get();
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Canceling call: " << origMsgId << " on client " << socket.get();
     std::pair<Future<AnyReference>, AtomicIntPtr > fut;
     {
       boost::mutex::scoped_lock lock(_cancelables->guard);
@@ -435,14 +443,14 @@ namespace qi {
       CancelableMap::iterator it = cancelableCalls.find(socket);
       if (it == cancelableCalls.end())
       {
-        qiLogDebug() << "Socket " << socket.get() << " not recorded";
+        QI_LOG_DEBUG_BOUNDOBJECT() << "Socket " << socket.get() << " not recorded";
         return;
       }
       FutureMap::iterator futIt = it->second.find(origMsgId);
 
       if (futIt == it->second.end())
       {
-        qiLogDebug() << "No recorded future for message " << origMsgId;
+        QI_LOG_DEBUG_BOUNDOBJECT() << "No recorded future for message " << origMsgId;
         return;
       }
       fut = futIt->second;
@@ -467,7 +475,7 @@ namespace qi {
       boost::shared_ptr<GenericObject> ao = qi::detail::getGenericFuture(val);
       if (!ao)
       {
-        qiLogDebug() << "Message " << origMsgId << ": return value is not a future.";
+        QI_LOG_DEBUG_BOUNDOBJECT() << "Message " << origMsgId << ": return value is not a future.";
         return;
       }
 
@@ -494,28 +502,6 @@ namespace qi {
       // We do the call in async because this may invoke user code, we must not block this thread
       ao->async<void>("cancel");
     }
-  }
-
-  void BoundObject::onSocketDisconnected(MessageSocketPtr socket, std::string error)
-  {
-    // Disconnect event links set for this client.
-    if (_onSocketDisconnectedCallback)
-      _onSocketDisconnectedCallback(socket, error);
-    {
-      boost::mutex::scoped_lock lock(_cancelables->guard);
-      _cancelables->map.erase(socket);
-    }
-    BySocketServiceSignalLinks::iterator it = _links.find(socket);
-    if (it != _links.end())
-    {
-      for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
-      {
-        _object.disconnect(jt->second.localSignalLinkId.value()).async()
-            .then([](Future<void> f) { if (f.hasError()) qiLogError() << f.error(); });
-      }
-      _links.erase(it);
-    }
-    removeRemoteReferences(socket);
   }
 
   qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId,
@@ -563,6 +549,60 @@ namespace qi {
     for (MetaObject::PropertyMap::iterator it = map.begin(); it != map.end(); ++it)
       res.push_back(it->second.name());
     return res;
+  }
+
+  bool BoundObject::bindToSocket(const MessageSocketPtr& socket) noexcept
+  {
+    if (!socket)
+      return false;
+
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Binding to socket " << socket;
+    auto syncConnectionList = _messageDispatchConnectionList.synchronize();
+    const auto end = syncConnectionList->end();
+    auto connectionIt =
+      std::find_if(syncConnectionList->begin(), end,
+                   [&](const MessageDispatchConnection& conn) { return conn.socket() == socket; });
+    if (connectionIt != end)
+      // This object is already accepting messages from this socket, do nothing.
+      return false;
+
+    MessageDispatcher::MessageHandler handler =
+      track([this, socket](const Message& msg) { return onMessage(msg, socket); }, &_tracker);
+    syncConnectionList->emplace_back(socket,
+                                     MessageDispatcher::RecipientId{ _serviceId, _objectId },
+                                     std::move(handler));
+    return true;
+  }
+
+  bool BoundObject::unbindFromSocket(const MessageSocketPtr& socket) noexcept
+  {
+    if (!socket)
+      return false;
+
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Unbinding from socket " << socket;
+
+    // We consider that this method was a success if any of the following actions had an effect.
+    bool success = removeConnections(socket) != 0;
+    success = removeCancelables(socket) != 0 || success;
+    success = removeLinks(socket) != 0 || success;
+
+    // Remove all hosted objects that were created in the context of this socket for this object.
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Removing children objects from socket " << socket;
+    success = removeObjectsFromSocket(socket) || success;
+
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Calling callback of socket disconnection";
+    ka::invoke_catch(
+      exceptionLogError(logCategory,
+                        "The callback called when a socket is unbound has thrown an exception"),
+      [&] {
+        // Do not lock the value when calling the callback to avoid a deadlock if the callback
+        // is reset within itself.
+        auto callback = _onSocketUnboundCallback.get();
+        if (callback)
+          callback(socket);
+      });
+
+    return success;
   }
 
   void BoundObject::_removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id)
@@ -768,7 +808,125 @@ namespace qi {
     }
   }
 
-// id 1 is for the service itself, we must not use it for sub-objects
-qi::Atomic<unsigned int> BoundObject::_nextId(2);
+  std::atomic<unsigned int> BoundObject::_nextId(
+    Message::GenericObject_Main + 1 // Start the object id values after the ones fixed by the protocol.
+  );
+
+  Future<void> BoundObject::deferDestruction(BoundObjectPtr&& object)
+  {
+    if (!object)
+      return futurize();
+
+    QI_ASSERT_TRUE(object.use_count() == 1);
+
+    if (object->_owner)
+      object->_owner.reset();
+
+    return deferConsumeWhenReady<BoundObjectPtr>(
+      std::move(object), [](Future<void> ready, PtrHolder<BoundObjectPtr> holder) {
+        return ready.andThen(FutureCallbackType_Async, [=](void*) {
+          consumePtr(holder, [](BoundObjectPtr&& object) { object.reset(); });
+        });
+      });
+  }
+
+  std::size_t BoundObject::removeConnections(const MessageSocketPtr& socket) noexcept
+  {
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Removing connections to socket " << socket;
+
+    auto syncConnectionList = _messageDispatchConnectionList.synchronize();
+    auto end = syncConnectionList->end();
+    auto newEnd = std::remove_if(syncConnectionList->begin(), end,
+                                 [&](const MessageDispatchConnection& conn) {
+                                   return conn.socket() == socket;
+                                 });
+
+    const auto count = end - newEnd;
+    QI_ASSERT_TRUE(count >= 0);
+
+    syncConnectionList->erase(newEnd, end);
+    return static_cast<std::size_t>(count);
+  }
+
+  std::size_t BoundObject::removeCancelables(const MessageSocketPtr& socket) noexcept
+  {
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Removing cancelables from socket " << socket;
+    boost::mutex::scoped_lock lock(_cancelables->guard);
+    return _cancelables->map.erase(socket);
+  }
+
+  std::size_t BoundObject::removeLinks(const MessageSocketPtr& socket) noexcept
+  {
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Disconnecting links from socket " << socket;
+
+    boost::recursive_mutex::scoped_lock lock(_callMutex);
+    auto it = _links.find(socket);
+
+    std::size_t count = 0;
+
+    if (it != _links.end())
+    {
+      count = it->second.size();
+      for (const auto& linkSlot : it->second)
+      {
+        // FIXME: Do this in the destructor of `RemoteSignalLink` instead, and make it move only.
+        const auto remoteLink = linkSlot.second;
+        _object.disconnect(remoteLink.localSignalLinkId.value()).async().then([](Future<void> f) {
+          if (f.hasError())
+            qiLogError() << f.error();
+        });
+      }
+      _links.erase(it);
+    }
+
+    return count;
+  }
+
+  namespace detail
+  {
+    namespace boundObject
+    {
+      SocketBinding::SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept
+        : _object(object)
+        , _socket(socket)
+      {
+        QI_ASSERT_NOT_NULL(_object);
+        QI_ASSERT_NOT_NULL(socket);
+        const auto res = _object->bindToSocket(socket);
+        QI_IGNORE_UNUSED(res);
+        QI_ASSERT_TRUE(res);
+      }
+
+      SocketBinding::SocketBinding(SocketBinding&&) = default;
+
+      SocketBinding& SocketBinding::operator=(SocketBinding&& other)
+      {
+        if (&other == this)
+          return *this;
+
+        reset();
+        _object = ka::exchange(other._object, {});
+        _socket = ka::exchange(other._socket, {});
+        return *this;
+      }
+
+      SocketBinding::~SocketBinding()
+      {
+        reset();
+      }
+
+      void SocketBinding::reset()
+      {
+        if (!_object)
+          return;
+        if (auto shSock = _socket.lock())
+        {
+          const auto res = _object->unbindFromSocket(shSock);
+          QI_IGNORE_UNUSED(res);
+          QI_ASSERT_TRUE(res);
+        }
+      }
+    }
+  }
 
 }

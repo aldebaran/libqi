@@ -8,143 +8,88 @@
 static const auto logCategory = "qimessaging.messagedispatcher";
 qiLogCategory(logCategory);
 
-namespace qi {
+// Helper for debug logs of the class. Can only be called from non static member functions of
+// `qi::MessageDispatcher`.
+#define QI_LOG_DEBUG_MSGDISPATCHER() \
+  qiLogDebug() << this << " - "
 
-#if 0
-  //Needed for handling message Timeout
-  static int _gst()
+namespace qi
+{
+
+namespace
+{
+
+  /// std::map || boost::flat_map M
+  template<typename M>
+  boost::optional<typename M::mapped_type> find(const M& map, const typename M::key_type& key)
   {
-    static const std::string st = qi::os::getenv("QI_MESSAGE_TIMEOUT");
-    if (st != "")
-    {
-      return atoi(st.c_str());
-    }
-    else
-    {
-      // Default timeout in NAOqi 1
-      return 5 * 60;
-    }
+    const auto it = map.find(key);
+    if (it == map.end())
+      return {};
+    return it->second;
   }
 
-  static inline unsigned int getSocketTimeout()
+}
+
+MessageDispatcher::MessageDispatcher(ExecutionContext& execContext)
+  : _execContext{ execContext }
+{
+}
+
+Future<bool> MessageDispatcher::dispatch(Message& msg)
+{
+  QI_LOG_DEBUG_MSGDISPATCHER() << "Posting a message " << msg.address() << " for dispatch.";
+  return _execContext.async([=] {
+    const auto handlers = find(_state->recipients, RecipientId{ msg.service(), msg.object() })
+                            .value_or(MessageHandlerList{});
+    QI_LOG_DEBUG_MSGDISPATCHER() << "Dispatching a message " << msg.address() << " to "
+                                 << handlers.size() << " handlers.";
+    return tryDispatch(handlers, msg);
+  });
+}
+
+SignalLink MessageDispatcher::messagePendingConnect(unsigned int serviceId,
+                                                    unsigned int objectId,
+                                                    MessageHandler fun) noexcept
+{
+  auto state = _state.synchronize();
+  auto& handlers = state->recipients[RecipientId{ serviceId, objectId }];
+  const auto newSignalLinkId = state->nextSignalLink++;
+  QI_LOG_DEBUG_MSGDISPATCHER() << "Connecting a handler (linkId=" << newSignalLinkId
+                               << ") for message dispatch for service=" << serviceId
+                               << ", object=" << objectId;
+  handlers.emplace(newSignalLinkId, std::move(fun));
+  return newSignalLinkId;
+}
+
+bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId,
+                                                 unsigned int objectId,
+                                                 SignalLink linkId) noexcept
+{
+  auto state = _state.synchronize();
+  const auto it = state->recipients.find(RecipientId{ serviceId, objectId });
+  if (it != state->recipients.end())
   {
-    static int _socket_timeout = _gst();
-    return _socket_timeout;
+    QI_LOG_DEBUG_MSGDISPATCHER()
+      << "Disconnecting a handler (linkId=" << linkId
+      << ") for message dispatch for service=" << serviceId << ", object=" << objectId;
+    return it->second.erase(linkId) > 0;
   }
-#endif
+  return false;
+}
 
-  const unsigned int MessageDispatcher::ALL_OBJECTS = -1;
+bool MessageDispatcher::tryDispatch(const MessageHandlerList& handlers, const Message& msg)
+{
+  // Continue dispatching if an exception was thrown.
+  // onHandlerError: (std::exception || boost::exception || void) -> bool
+  static const auto onHandlerError =
+    ka::compose([] { return DispatchStatus::MessageHandlingFailure; },
+                exceptionLogError(logCategory, "Message handler failed"));
 
-  MessageDispatcher::MessageDispatcher(ExecutionContext& execContext)
-    : _execContext{ execContext }
-  {
-  }
-
-  void MessageDispatcher::dispatch(const qi::Message& msg) {
-    _execContext.post([=] {
-      //remove the address from the messageSent map
-      if (msg.type() == qi::Message::Type_Reply)
-      {
-        boost::mutex::scoped_lock sl(_messageSentMutex);
-        MessageSentMap::iterator it;
-        it = _messageSent.find(msg.id());
-        if (it != _messageSent.end())
-          _messageSent.erase(it);
-        else
-          qiLogDebug() << "Message " << msg.id() <<  " is not in the messageSent map";
-      }
-
-      const auto copyTargetHandlers = [&](MessageHandlerList& handlers, const Target& target) {
-        auto it = _signalMap.find(target);
-        if (it != _signalMap.end())
-          handlers = it->second;
-      };
-
-      // Continue dispatching if an exception was thrown.
-      // onHandlerError: (std::exception || boost::exception || void) -> DispatchStatus
-      static const auto onHandlerError = ka::compose([] { return DispatchStatus::MessageHandlingFailure; },
-        qi::exceptionLogError(logCategory, "Message handler failed"));
-
-      const auto dispatch = [&](MessageHandlerList& handlers) {
-        using Slot = MessageHandlerList::value_type;
-        return std::any_of(handlers.begin(), handlers.end(), [&](const Slot& slot) {
-          const auto& handler = slot.second;
-          return isMessageHandled(ka::invoke_catch(onHandlerError, handler, msg));
-        });
-      };
-
-      MessageHandlerList specificHandlers;
-      MessageHandlerList allServiceHandlers;
-
-      {
-        boost::recursive_mutex::scoped_lock lock(_signalMapMutex);
-        copyTargetHandlers(specificHandlers, Target(msg.service(), msg.object()));
-        copyTargetHandlers(allServiceHandlers, Target(msg.service(), ALL_OBJECTS));
-      }
-
-      if (!dispatch(specificHandlers))
-        dispatch(allServiceHandlers);
-
-    });
-  }
-
-  qi::SignalLink
-  MessageDispatcher::messagePendingConnect(unsigned int serviceId, unsigned int objectId, MessageHandler fun) {
-    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
-    auto& sig = _signalMap[Target(serviceId, objectId)];
-    const auto newSignalLinkId = _nextSignalLink++;
-    sig.emplace(newSignalLinkId, std::move(fun));
-    return newSignalLinkId;
-  }
-
-  void MessageDispatcher::messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId)
-  {
-    boost::recursive_mutex::scoped_lock sl(_signalMapMutex);
-    auto it = _signalMap.find(Target(serviceId, objectId));
-    if(it != _signalMap.end())
-    {
-      it->second.erase(linkId);
-    }
-  }
-
-  void MessageDispatcher::cleanPendingMessages()
-  {
-    //we are deleting the Socket and want to timeout all pending request
-    //or the cleanup timer ask us to remove pending request that timed out
-    while (true)
-    {
-      MessageAddress ma;
-      {
-        boost::mutex::scoped_lock l(_messageSentMutex);
-        MessageSentMap::iterator it = _messageSent.begin();
-        if (it == _messageSent.end())
-          break;
-        ma = it->second;
-        _messageSent.erase(it);
-      }
-      //generate an error message for the caller.
-      qi::Message msg(qi::Message::Type_Error, ma);
-      msg.setError("Endpoint disconnected, message dropped.");
-      dispatch(msg);
-    }
-  }
-
-  void MessageDispatcher::sent(const qi::Message& msg) {
-    //store Call id, we can use them later to notify the client
-    //if the call did not succeed. (network disconnection, message lost)
-    if (msg.type() == qi::Message::Type_Call)
-    {
-      boost::mutex::scoped_lock l(_messageSentMutex);
-      MessageSentMap::iterator it = _messageSent.find(msg.id());
-      if (it != _messageSent.end()) {
-        qiLogInfo() << "Message ID conflict. A message with the same Id is already in flight" << msg.id();
-        return;
-      }
-      _messageSent[msg.id()] = msg.address();
-    }
-    return;
-  }
-
-
-
+  using Slot = MessageHandlerList::value_type;
+  return std::any_of(handlers.begin(), handlers.end(), [&](const Slot& slot) {
+    const auto& handler = slot.second;
+    return isMessageHandled(ka::invoke_catch(onHandlerError, handler, msg));
+  });
+}
 }

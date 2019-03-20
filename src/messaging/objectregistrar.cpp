@@ -32,14 +32,14 @@ namespace qi {
     , _sdClient(sdClient)
     , _id(qi::os::generateUuid())
   {
-    _server.endpointsChanged.connect(track(boost::bind(&ObjectRegistrar::updateServiceInfo, this),
-                                           static_cast<Trackable<Server>*>(this)));
+    _server.endpointsChanged.connect(
+      track(boost::bind(&ObjectRegistrar::updateServiceInfo, this), &_tracker));
   }
 
   ObjectRegistrar::~ObjectRegistrar()
   {
-    _dying = true;
-    qi::Trackable<Server>::destroy();
+    _tracker.destroy();
+    close();
   }
 
   void ObjectRegistrar::close()
@@ -155,8 +155,8 @@ namespace qi {
     qi::Promise<unsigned int> prom;
     qi::Future<unsigned int>  future;
     future = _sdClient->registerService(si);
-    future.connect(track(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom),
-                         static_cast<Trackable<Server>*>(this)));
+    future.connect(
+      track(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom), &_tracker));
 
     return prom.future();
   };
@@ -258,11 +258,6 @@ namespace qi {
         return it->second.object;
     }
     return AnyObject();
-  }
-
-  void ObjectRegistrar::registerSocket(MessageSocketPtr socket)
-  {
-    onTransportServerNewConnection(socket, false);
   }
 
   void ObjectRegistrar::open()

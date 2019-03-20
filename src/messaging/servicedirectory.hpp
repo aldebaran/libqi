@@ -22,10 +22,6 @@ namespace qi
     ServiceDirectory();
     virtual ~ServiceDirectory();
 
-    //TransportSocket
-    virtual void onSocketDisconnected(MessageSocketPtr socket, std::string error);
-
-
   public:
     //Public Bound API
     std::vector<ServiceInfo> services();
@@ -40,6 +36,9 @@ namespace qi
 
     qi::Signal<unsigned int, std::string>  serviceAdded;
     qi::Signal<unsigned int, std::string>  serviceRemoved;
+
+  private:
+    void removeClientSocket(MessageSocketPtr socket);
 
   public:
     std::map<unsigned int, ServiceInfo>                       pendingServices;
