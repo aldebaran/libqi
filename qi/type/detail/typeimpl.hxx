@@ -242,10 +242,8 @@ namespace qi
 
     static const TypeInfo&  info()
     {
-      static TypeInfo* result = 0;
-      if (!result)
-        result = new TypeInfo(qi::typeId<T>());
-      return *result;
+      static const TypeInfo result(qi::typeId<T>());
+      return result;
     }
 
     static void* clone(void* src)
