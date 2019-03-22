@@ -11,6 +11,7 @@
 #include <qi/type/dynamicobjectbuilder.hpp>
 #include <qi/session.hpp>
 #include <testsession/testsessionpair.hpp>
+#include <qi/testutils/testutils.hpp>
 
 qiLogCategory("test");
 static qi::Promise<int> *payload;
@@ -114,15 +115,6 @@ TEST_F(ObjectEventRemote, CoDeco)
   }
 }
 
-int verifA = 0;
-int verifB = 0;
-
-void cb(int a, int b)
-{
-  verifA = a;
-  verifB = b;
-}
-
 TEST(TestSignal, TwoLongPost)
 {
   qi::DynamicObjectBuilder gob;
@@ -133,15 +125,23 @@ TEST(TestSignal, TwoLongPost)
   TestSessionPair p;
   p.server()->registerService("MyService", op);
   qi::AnyObject clientOp = p.client()->service("MyService").value();
-  clientOp.connect("sig1", &cb);
+
+  std::atomic_int verifA {0};
+  std::atomic_int verifB {0};
+  qi::Promise<void> prom;
+  auto fut = prom.future();
+  clientOp.connect("sig1", [&](int a, int b){
+    verifA = a;
+    verifB = b;
+    prom.setValue(nullptr);
+  });
 
   qi::GenericFunctionParameters params;
   params.push_back(qi::AnyValue(42L).clone());
   params.push_back(qi::AnyValue(43L).clone());
 
   clientOp.metaPost("sig1", params);
-  for(unsigned int i=0; i<100 && (verifA == 0 || verifB == 0); ++i)
-    std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
+  ASSERT_TRUE(test::finishesWithValue(fut));
   ASSERT_EQ(42, verifA);
   ASSERT_EQ(43, verifB);
 }
