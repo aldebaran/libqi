@@ -419,12 +419,12 @@ namespace qi {
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
-    qiLogVerbose() << "ServiceDirectoryClient: Service Removed #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectoryClient: Service Removed #" << idx << ": " << name;
     serviceRemoved(idx, name);
   }
 
   void ServiceDirectoryClient::onServiceAdded(unsigned int idx, const std::string &name) {
-    qiLogVerbose() << "ServiceDirectoryClient: Service Added #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectoryClient: Service Added #" << idx << ": " << name;
     serviceAdded(idx, name);
   }
 

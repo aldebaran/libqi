@@ -252,10 +252,9 @@ namespace qi {
       if (unavailable)
       {
         iPort = 0;
-        qiLogError() << "Socket Cannot find available port, Last Error: "
-                     << unavailable << std::endl;
+        qiLogError() << "Socket Cannot find available port, Last Error: " << unavailable;
       }
-      qiLogDebug() << "Returning port: " << iPort << std::endl;
+      qiLogDebug() << "Returning port: " << iPort;
       return iPort;
     }
 

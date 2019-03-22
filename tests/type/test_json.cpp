@@ -449,9 +449,9 @@ TEST(DecodeJSON, StructWithDifferentSizedFields)
   std::cout << qi::AnyValue(val).signature().toString() << std::endl;
 
   std::string json = qi::encodeJSON(val);
-  qiLogDebug() << json << std::endl;
+  qiLogDebug() << json;
   qi::AnyValue res_any = qi::decodeJSON(json);
-  qiLogDebug() << res_any.signature().toString() << std::endl;
+  qiLogDebug() << res_any.signature().toString();
   Qiqi res = res_any.to<Qiqi>();
   EXPECT_EQ(val,
             res) << qi::encodeJSON(val) << "\n" << qi::encodeJSON(res);

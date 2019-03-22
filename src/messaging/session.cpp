@@ -130,7 +130,7 @@ namespace qi {
        return;
      }
      MessageSocketPtr s = _sdClient.socket();
-     qiLogVerbose() << "Inserting sd to cache for " << mid <<" " << url.str() << std::endl;
+     qiLogVerbose() << "Inserting sd to cache for " << mid <<" " << url.str();
      _socketsCache.insert(mid, s->remoteEndpoint().value(), s);
      p.setValue(0);
   }

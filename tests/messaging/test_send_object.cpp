@@ -36,7 +36,7 @@ TEST(SendObject, pass_obj)
   s->loadService("naoqi.testanymodule.test");
   qi::AnyObject o = s->service("test").value();
 
-  qiLogInfo() << "check first service" << std::endl;
+  qiLogInfo() << "check first service";
   test_service(o);
 
   qi::AnyObject o2 = o.call<qi::AnyObject>("make_other_object");
