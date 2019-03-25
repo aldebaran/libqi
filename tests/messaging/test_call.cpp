@@ -7,6 +7,7 @@
 
 #include <list>
 #include <thread>
+#include <mutex>
 
 #include <gtest/gtest.h>
 
