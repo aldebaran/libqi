@@ -409,13 +409,20 @@ namespace qi {
     auto futureService = futureLink.andThen(track(
           [privSession, servicename](qi::SignalLink) mutable
           {
-            return privSession->_serviceHandler.service(servicename, "");
+            // Do not use the `Session_Service::service` method that returns an object for the
+            // service, instead use the service directory client `service` method that returns the
+            // service info. The reason behind this choice is that to construct a full object, we
+            // need to first get the service info from the service directory, then connect to the
+            // service (by authentifying this session to it) and get the meta object of the service,
+            // meaning at least 3 RPC to finally discard the object because all we need to know is
+            // if the service already exists or not.
+            return privSession->_sdClient.service(servicename);
           }, privSession)).unwrap();
 
     futureService.connect(
-          [promise](qi::Future<AnyObject> futureService) mutable
+          [promise](qi::Future<ServiceInfo> futureService) mutable
           {
-             if (!futureService.hasError())
+             if (futureService.hasValue())
              {
                try
                {
