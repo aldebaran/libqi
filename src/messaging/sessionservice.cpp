@@ -437,6 +437,14 @@ namespace qi {
       }
     }
 
+    qi::Future<qi::ServiceInfo> fut;
+    ServiceRequest* rq = nullptr;
+    boost::optional<long> requestId;
+
+    // Lock the request mutex until the request is saved, i.e. do not release it between the check
+    // of the existence of an equivalent request and its insertion in the map. Otherwise if this
+    // function is called concurrently on the same object, we might end up with concurrent requests
+    // for the same service and then concurrent authentication requests, remote objects, etc.
     {
       boost::recursive_mutex::scoped_lock l(_requestsMutex);
       for (auto it = _requests.begin(); it != _requests.end(); ++it)
@@ -447,22 +455,19 @@ namespace qi {
           return it->second->promise.future();
         }
       }
-    }
 
-    // TODO 40203: check if it's possible that the following future is never set.
-    qi::Future<qi::ServiceInfo> fut = _sdClient->service(service);
-    ServiceRequest *rq = new ServiceRequest(service);
-    long requestId = ++_requestsIndex;
-    qiLogVerbose() << "Asynchronously asking service '" << service << "' to SD client. "
-      "requestId = " << os::to_string(requestId);
+      // TODO 40203: check if it's possible that the following future is never set.
+      fut = _sdClient->service(service);
+      rq = new ServiceRequest(service);
+      requestId = ++_requestsIndex;
+      qiLogVerbose() << "Asynchronously asking service '" << service << "' to SD client. "
+        "requestId = " << os::to_string(*requestId);
 
-    {
-      boost::recursive_mutex::scoped_lock l(_requestsMutex);
-      QI_ASSERT_NULL(_requests[requestId]);
-      _requests[requestId].reset(rq);
+      QI_ASSERT_NULL(_requests[*requestId]);
+      _requests[*requestId].reset(rq);
     }
     rq->promise.setOnCancel(track([=](Promise<AnyObject>& p) mutable {
-      removeRequest(requestId);
+      removeRequest(*requestId);
       p.setCanceled();
     }, this));
     qi::Future<qi::AnyObject> result = rq->promise.future();
@@ -474,24 +479,24 @@ namespace qi {
       // Ensure that the promise is always set, even in case of exception.
       bool mustSetPromise = true;
       boost::optional<Promise<AnyObject>> promise;
-      auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, requestId});
+      auto _ = ka::scoped(SetPromiseInError{*this, promise, mustSetPromise, *requestId});
 
       {
         boost::recursive_mutex::scoped_lock sl(_requestsMutex);
-        ServiceRequest *sr = serviceRequest(requestId);
+        ServiceRequest *sr = serviceRequest(*requestId);
         if (!sr)
         {
-          logWarningUnknownServiceRequest("service() ServiceInfo continuation", requestId);
+          logWarningUnknownServiceRequest("service() ServiceInfo continuation", *requestId);
           return;
         }
 
         qiLogVerbose() << "Received answer from SD client for service '" << sr->serviceInfo.name() << "'. "
-          "requestId = " << requestId;
+          "requestId = " << *requestId;
         promise = sr->promise;
 
         if (fut.hasError())
         {
-          setErrorAndRemoveRequest(*promise, fut.error(), requestId);
+          setErrorAndRemoveRequest(*promise, fut.error(), *requestId);
           return;
         }
         const qi::ServiceInfo& si = fut.value();
@@ -511,7 +516,7 @@ namespace qi {
             if (s->remoteCapability(capabilityname::clientServerSocket, false))
             {
               qiLogVerbose() << "sd is local and service is capable, going through socketOfService";
-              onTransportSocketResult(qi::Future<MessageSocketPtr>(s), requestId);
+              onTransportSocketResult(qi::Future<MessageSocketPtr>(s), *requestId);
               mustSetPromise = false;
               return;
             }
@@ -523,7 +528,7 @@ namespace qi {
           ss << "No endpoints returned for service:" << sr->serviceInfo.name()
              << " (id:" << sr->serviceInfo.serviceId() << ")";
           qiLogVerbose() << ss.str();
-          setErrorAndRemoveRequest(*promise, ss.str(), requestId);
+          setErrorAndRemoveRequest(*promise, ss.str(), *requestId);
           return;
         }
 
@@ -544,14 +549,14 @@ namespace qi {
             ss << "No " << protocol << " endpoint available for service:" << sr->serviceInfo.name()
                << " (id:" << sr->serviceInfo.serviceId() << ")";
             qiLogVerbose() << ss.str();
-            setErrorAndRemoveRequest(*promise, ss.str(), requestId);
+            setErrorAndRemoveRequest(*promise, ss.str(), *requestId);
           }
         }
       }
       qiLogVerbose() << "Requesting socket from cache. service = '" << service << "', "
-        "requestId = " << requestId;
+        "requestId = " << *requestId;
       Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value(), protocol);
-      f.connect(track(boost::bind(&Session_Service::onTransportSocketResult, this, _1, requestId), this));
+      f.connect(track(boost::bind(&Session_Service::onTransportSocketResult, this, _1, *requestId), this));
       mustSetPromise = false;
     }, this));
     return result;
