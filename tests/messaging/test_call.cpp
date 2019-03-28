@@ -8,6 +8,8 @@
 #include <list>
 #include <thread>
 #include <mutex>
+#include <atomic>
+#include <array>
 
 #include <gtest/gtest.h>
 
@@ -1021,39 +1023,49 @@ TEST(TestCall, ForceOverload)
   ASSERT_EQ("foo", client.call<std::string>("ping::(s)", "foo"));
 }
 
-void _delaySet(qi::Promise<int> p, qi::MilliSeconds delay, int value)
-{
-  boost::this_thread::sleep_for(delay);
-  if (value == -1)
-    p.setError("-1");
-  else
-    p.setValue(value);
-}
-
-qi::Future<int> delaySet(qi::MilliSeconds delay, int value)
-{
-  qi::Promise<int> p;
-  boost::thread(_delaySet, p, delay, value);
-  return p.future();
-}
-
 TEST(TestCall, Future)
 {
   TestSessionPair p;
+
+  static constexpr auto callCount = 2;
+  struct
+  {
+    std::array<qi::Promise<void>, callCount> syncPromises;
+    std::atomic<int> promIndex{ 0 };
+
+    qi::Future<int> operator()(int value)
+    {
+      const auto idx = promIndex++;
+      QI_ASSERT_TRUE(idx < syncPromises.size());
+      auto& syncProm = syncPromises[idx];
+
+      qi::Promise<int> result;
+      syncProm.future().connect([=](qi::Future<void>) mutable {
+        if (value == -1)
+          result.setError("-1");
+        else
+          result.setValue(value);
+      });
+      return result.future();
+    }
+  } delaySet;
+
   qi::DynamicObjectBuilder gob;
   gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
-  gob.advertiseMethod("delaySet", &delaySet);
+  gob.advertiseMethod("delaySet", [&](int value){ return delaySet(value); });
+
   qi::AnyObject sobj = gob.object();
   p.server()->registerService("delayer", sobj);
   qi::AnyObject obj = p.client()->service("delayer").value();
 
-  qi::Future<int> f = obj.async<int>("delaySet", 500, 41);
-  // FIXME: this is highly racy
-  ASSERT_TRUE(test::isStillRunning(f, test::willDoNothing(), qi::MilliSeconds{ 0 }));
+  qi::Future<int> f = obj.async<int>("delaySet", 41);
+  qi::Future<int> f2 = obj.async<int>("delaySet", -1);
 
-  qi::Future<int> f2 =  obj.async<int>("delaySet", 500, -1);
-  // FIXME: this is highly racy
-  ASSERT_TRUE(test::isStillRunning(f2, test::willDoNothing(), qi::MilliSeconds{ 0 }));
+  ASSERT_TRUE(test::isStillRunning(f, test::willDoNothing(), usualTimeout));
+  ASSERT_TRUE(test::isStillRunning(f2, test::willDoNothing(), usualTimeout));
+
+  for (auto& syncProm : delaySet.syncPromises)
+    syncProm.setValue(nullptr);
 
   ASSERT_TRUE(test::finishesWithValue(f));
   ASSERT_EQ(41, f.value());
@@ -1063,13 +1075,15 @@ TEST(TestCall, Future)
 TEST(TestCall, CallOnFutureReturn)
 {
   TestSessionPair p;
+
   qi::DynamicObjectBuilder gob;
   gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
-  gob.advertiseMethod("delaySet", &delaySet);
+  gob.advertiseMethod("futurize", [](int value){ return qi::futurize(value); });
+
   qi::AnyObject sobj = gob.object();
-  p.server()->registerService("delayer", sobj);
-  qi::AnyObject obj = p.client()->service("delayer").value();
-  int f = obj.call<int>("delaySet", qi::MilliSeconds{ 500 }, 41);
+  p.server()->registerService("futurizer", sobj);
+  qi::AnyObject obj = p.client()->service("futurizer").value();
+  int f = obj.call<int>("futurize", 41);
   ASSERT_EQ(41, f);
 }
 
