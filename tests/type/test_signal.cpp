@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <ka/unit.hpp>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/signalspy.hpp>
@@ -345,11 +346,25 @@ void lol(int v, int& target)
   target = v;
 }
 
+namespace
+{
+
 struct MockCallback
 {
+  MockCallback()
+  {
+    ON_CALL(*this, call(testing::_)).WillByDefault(testing::Return(ka::unit));
+  }
+
   void operator()(int val) { call(val); }
-  MOCK_METHOD1(call, void(int));
+
+  // TODO: Replace ka::unit_t by void once we upgrade GoogleMock with the fix on mock methods returning
+  // void crashing in optimized compilation on recent compilers.
+  // See: https://github.com/google/googletest/issues/705
+  MOCK_METHOD1(call, ka::unit_t(int));
 };
+
+}
 
 TEST(TestSignal, SignalSignal)
 {
