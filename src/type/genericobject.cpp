@@ -1,3 +1,4 @@
+#include <sstream>
 #include <qi/anyobject.hpp>
 #include <qi/log.hpp>
 
@@ -140,9 +141,8 @@ qi::FutureSync<SignalLink> GenericObject::connect(const std::string &name, const
   int eventId = metaObject().signalId(name);
 
   if (eventId < 0) {
-    std::stringstream ss;
-    ss << "Can't find signal: " << name;
-    qiLogError() << ss.str();
+    std::ostringstream ss;
+    ss << "signal \"" << name << "\" was not found";
     return qi::makeFutureError<SignalLink>(ss.str());
   }
   return connect(eventId, functor);
