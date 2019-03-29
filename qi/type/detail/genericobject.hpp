@@ -9,6 +9,7 @@
 
 #include <map>
 #include <string>
+#include <sstream>
 
 #include <boost/smart_ptr/enable_shared_from_this.hpp>
 
@@ -222,7 +223,11 @@ qi::FutureSync<T> GenericObject::property(const std::string& name)
 {
   int pid = metaObject().propertyId(name);
   if (pid < 0)
-    return makeFutureError<T>("Property not found");
+  {
+    std::ostringstream ss;
+    ss << "property \"" << name << "\" was not found";
+    return makeFutureError<T>(ss.str());
+  }
   qi::Future<AnyValue> f = property(pid);
   qi::Promise<T> p;
   f.connect(boost::bind(&detail::futureAdapterVal<T>,_1, p),
@@ -235,7 +240,11 @@ qi::FutureSync<void> GenericObject::setProperty(const std::string& name, const T
 {
   int pid = metaObject().propertyId(name);
   if (pid < 0)
-    return makeFutureError<void>("Property not found");
+  {
+    std::ostringstream ss;
+    ss << "property \"" << name << "\" was not found";
+    return makeFutureError<void>(ss.str());
+  }
   return setProperty(pid, AnyValue::from(val));
 }
 
