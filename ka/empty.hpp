@@ -13,8 +13,10 @@
 /// - std::unique_ptr, std::shared_ptr, boost::shared_ptr (in `memory.hpp`)
 /// - std::initializer_list
 /// - boost::optional (in `opt.hpp`)
+/// - std::function (in `functional.hpp`)
 /// - any type that defines a member function `empty` (in this case `ka::empty`
-///   simply forwards to the member function).
+///   simply forwards to the member function). This includes standard
+///   containers, `boost::function`, etc.
 ///
 /// `ka::empty` is defined as a polymorphic *function object*, that calls a free
 /// function `empty` through `ADL`. The benefits of this approach are that:
