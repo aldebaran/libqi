@@ -1,6 +1,7 @@
 #ifndef KA_FUNCTIONAL_HPP
 #define KA_FUNCTIONAL_HPP
 #pragma once
+#include <functional>
 #include <boost/config.hpp>
 #include <boost/optional.hpp>
 #include "integersequence.hpp"
@@ -960,6 +961,14 @@ namespace ka {
   };
 
   KA_DERIVE_CTOR_FUNCTION_TEMPLATE(scope_lock_transfo)
+
+  namespace detail {
+  // model EmptyProcedure std::function<A (B...)>:
+    template<typename A, typename... B> KA_CONSTEXPR
+    bool empty(std::function<A (B...)> const& x) {
+      return !static_cast<bool>(x);
+    }
+  } // namespace detail
 } // namespace ka
 
 #endif // KA_FUNCTIONAL_HPP

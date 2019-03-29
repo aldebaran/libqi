@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <gtest/gtest.h>
+#include <boost/function.hpp>
 #include <boost/optional.hpp>
 #include <ka/opt.hpp>
 #include <ka/memory.hpp>
@@ -50,6 +51,16 @@ TEST(Empty, StdContainer) {
   // `empty` member function.
   ASSERT_TRUE(ka::empty(std::vector<int>{}));
   ASSERT_FALSE(ka::empty(std::vector<int>{1, 2, 3}));
+}
+
+TEST(Empty, StdFunction) {
+  ASSERT_TRUE(ka::empty(std::function<bool (int)>{}));
+  ASSERT_FALSE(ka::empty(std::function<int ()>{ka::constant_function(3)}));
+}
+
+TEST(Empty, BoostFunction) {
+  ASSERT_TRUE(ka::empty(boost::function<bool (int)>{}));
+  ASSERT_FALSE(ka::empty(boost::function<int ()>{ka::constant_function(3)}));
 }
 
 namespace {
