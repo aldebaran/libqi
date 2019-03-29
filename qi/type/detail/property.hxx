@@ -125,10 +125,7 @@ namespace qi
   Property<T>::~Property()
   {
     _tracked.destroy();
-    if (auto errorMsg = tryJoinStrandNoThrow())
-    {
-      qiLogError("qitype.property") << "Failed to join Property strand: '" << *errorMsg << "'.";
-    }
+    joinStrand();
     SignalBase::clearExecutionContext();
   }
 
@@ -165,22 +162,21 @@ namespace qi
   }
 
   template<typename T>
-  Strand::OptionalErrorMessage Property<T>::tryJoinStrandNoThrow() QI_NOEXCEPT(true)
+  void Property<T>::joinStrand() QI_NOEXCEPT(true)
   {
-    struct JoinStrand : boost::static_visitor<Strand::OptionalErrorMessage>
+    struct JoinStrand : boost::static_visitor<void>
     {
-      Strand::OptionalErrorMessage operator()(Strand*) const
+      void operator()(Strand*) const
       {
         // Do nothing, we do not own the strand, we have no right to join it.
-        return {};
       }
 
-      Strand::OptionalErrorMessage operator()(Strand& strand) const
+      void operator()(Strand& strand) const
       {
-        return strand.join(std::nothrow);
+        strand.join();
       }
     };
-    return boost::apply_visitor(JoinStrand{}, _strand);
+    boost::apply_visitor(JoinStrand{}, _strand);
   }
 }
 

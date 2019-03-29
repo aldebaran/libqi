@@ -214,7 +214,7 @@ namespace qi
         ObjectSerializationInfo res;
         res.serviceId = sid;
         res.objectId = nullObjectId;
-        res.objectPtrUid = os::ptrUid(nullptr);
+        res.objectUid = os::ptrUid(nullptr);
         return res;
       }
 
@@ -230,7 +230,7 @@ namespace qi
       res.metaObject = sbo->metaObject(oid);
       res.serviceId = sid;
       res.objectId = oid;
-      res.objectPtrUid = object.ptrUid();
+      res.objectUid = object.uid();
       return res;
     }
 
@@ -264,10 +264,10 @@ namespace qi
       if (!context)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
-                   << " ptruid = '" << (osi.objectPtrUid ? *osi.objectPtrUid : PtrUid{}) << "' on "
+                   << " uid = '" << (osi.objectUid ? *osi.objectUid : ObjectUid{}) << "' on "
                    << context.get();
       RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
-      AnyObject o = makeDynamicAnyObject(ro, true, osi.objectPtrUid, &onProxyLost);
+      AnyObject o = makeDynamicAnyObject(ro, true, osi.objectUid, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
       QI_ASSERT(o);
       return o;

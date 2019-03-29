@@ -1,5 +1,5 @@
 #include <qi/log.hpp>
-#include <qi/messaging/sock/option.hpp>
+#include <src/messaging/sock/option.hpp>
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
 

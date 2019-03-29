@@ -35,7 +35,7 @@ using CapabilityMap = std::map<std::string, AnyValue>;
     // Capability: remote end supports call cancelations.
     QI_API extern char const * const remoteCancelableCalls;
 
-    // Capability: Objects allow unique identification using Ptruid.
+    // Capability: Objects allow unique identification using Ptruid/ObjectUid.
     QI_API extern char const * const objectPtrUid;
   }
 

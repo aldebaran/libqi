@@ -64,7 +64,7 @@ public:
   void initialize(const MetaObject& mo, const ObjectTypeData& data);
   const TypeInfo& info() override;
   const MetaObject& metaObject(void* instance) override;
-  PtrUid ptrUid(void* instance) const override;
+  ObjectUid uid(void* instance) const override;
   qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override;
   void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params) override;
   qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber) override;

@@ -1,8 +1,8 @@
 #pragma once
 #ifndef _QI_SOCK_TRAITS_HPP
 #define _QI_SOCK_TRAITS_HPP
-#include <qi/messaging/sock/concept.hpp>
 #include <ka/typetraits.hpp>
+#include "concept.hpp"
 
 /// @file
 /// Contains traits used by the code in the sock namespace.

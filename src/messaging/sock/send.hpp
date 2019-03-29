@@ -8,17 +8,18 @@
 #include <sstream>
 #include <boost/thread/synchronized_value.hpp>
 #include <boost/core/ignore_unused.hpp>
-#include <qi/messaging/sock/concept.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/option.hpp>
-#include <qi/messaging/sock/error.hpp>
-#include <qi/messaging/sock/common.hpp>
 #include <ka/src.hpp>
+#include <ka/scoped.hpp>
 #include <qi/trackable.hpp>
 #include <qi/future.hpp>
-#include <ka/scoped.hpp>
 #include <qi/atomic.hpp>
 #include "src/messaging/message.hpp"
+#include "concept.hpp"
+#include "traits.hpp"
+#include "option.hpp"
+#include "error.hpp"
+#include "common.hpp"
+
 
 /// @file
 /// Contains functions and types related to message sending on a socket.

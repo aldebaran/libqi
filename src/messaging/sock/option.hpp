@@ -3,12 +3,12 @@
 #define _QI_SOCK_OPTION_HPP
 #include <limits>
 #include <boost/optional.hpp>
-#include <qi/messaging/sock/concept.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/socketptr.hpp>
 #include <ka/typetraits.hpp>
-#include <qi/log.hpp>
 #include <ka/macroregular.hpp>
+#include <qi/log.hpp>
+#include "concept.hpp"
+#include "traits.hpp"
+#include "socketptr.hpp"
 
 /// @file
 /// Contains option types (ssl, ipV6) and functions to set options on a socket.

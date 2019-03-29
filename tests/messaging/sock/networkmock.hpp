@@ -7,17 +7,17 @@
 #include <thread>
 #include <chrono>
 #include <boost/shared_ptr.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/error.hpp>
-#include <qi/messaging/sock/common.hpp>
 #include <ka/moveoncopy.hpp>
 #include <ka/utility.hpp>
 #include <ka/macroregular.hpp>
+#include <src/messaging/sock/traits.hpp>
+#include <src/messaging/sock/error.hpp>
+#include <src/messaging/sock/common.hpp>
 
 /// @file
 /// Contains the implementation of the Network concept for unit tests.
 ///
-/// See qi/messaging/sock/concept.hpp
+/// See src/messaging/sock/concept.hpp
 
 /// Contains mock types for unit tests.
 namespace mock

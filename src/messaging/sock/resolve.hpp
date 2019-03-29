@@ -2,16 +2,16 @@
 #ifndef _QI_SOCK_RESOLVE_HPP
 #define _QI_SOCK_RESOLVE_HPP
 #include <string>
-#include <qi/messaging/sock/concept.hpp>
 #include <ka/typetraits.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/error.hpp>
-#include <qi/messaging/sock/option.hpp>
 #include <ka/src.hpp>
-#include <qi/url.hpp>
-#include <qi/os.hpp>
 #include <ka/functional.hpp>
 #include <ka/macroregular.hpp>
+#include <qi/url.hpp>
+#include <qi/os.hpp>
+#include "concept.hpp"
+#include "traits.hpp"
+#include "error.hpp"
+#include "option.hpp"
 
 /// @file
 /// Contains functions and types related to URL resolve.

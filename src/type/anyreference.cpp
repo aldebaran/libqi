@@ -104,7 +104,7 @@ namespace detail
         detail::ManagedObjectPtr o(
               new GenericObject(
                 static_cast<ObjectTypeInterface*>(pointedSrc._type),
-                pointedSrc._value, pointedSrc.to<AnyObject>().ptrUid()),
+                pointedSrc._value, pointedSrc.to<AnyObject>().uid()),
               boost::bind(dropIt, _1, qi::AnyValue(*this)));
         return AnyReference::from(o).convert((TypeInterface*)targetType);
       }
@@ -893,7 +893,7 @@ namespace detail
       QI_ASSERT_TRUE(pointeeType);
       auto* pointeeValue = pointee.rawValue();
       QI_ASSERT_TRUE(pointeeValue);
-      const PtrUid pointeeUid = pointeeType->ptrUid(pointeeValue);
+      const ObjectUid pointeeUid = pointeeType->uid(pointeeValue);
       AnyValue pointer{*this};
       AnyObject obj(new GenericObject(pointeeType, pointeeValue, pointeeUid),
               [pointer] (GenericObject *obj) mutable {

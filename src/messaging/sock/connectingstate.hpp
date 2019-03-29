@@ -10,9 +10,9 @@
 #include <ka/functional.hpp>
 #include <ka/utility.hpp>
 #include <qi/future.hpp>
-#include <qi/messaging/sock/connect.hpp>
-#include <qi/messaging/sock/option.hpp>
-#include <qi/messaging/sock/traits.hpp>
+#include "connect.hpp"
+#include "option.hpp"
+#include "traits.hpp"
 
 namespace qi
 {

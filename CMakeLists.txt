@@ -113,26 +113,9 @@ set(QI_H qi/detail/async.hxx
          qi/iocolor.hpp
          qi/strand.hpp
          qi/assert.hpp
-         qi/messaging/sock/accept.hpp
-         qi/messaging/sock/common.hpp
-         qi/messaging/sock/concept.hpp
-         qi/messaging/sock/connect.hpp
-         qi/messaging/sock/connectedstate.hpp
-         qi/messaging/sock/connectingstate.hpp
-         qi/messaging/sock/disconnectedstate.hpp
-         qi/messaging/sock/disconnectingstate.hpp
-         qi/messaging/sock/error.hpp
-         qi/messaging/sock/macrolog.hpp
-         qi/messaging/sock/socketptr.hpp
-         qi/messaging/sock/sslcontextptr.hpp
-         qi/messaging/sock/socketwithcontext.hpp
-         qi/messaging/sock/networkasio.hpp
-         qi/messaging/sock/option.hpp
-         qi/messaging/sock/receive.hpp
-         qi/messaging/sock/resolve.hpp
-         qi/messaging/sock/send.hpp
-         qi/messaging/sock/traits.hpp
+
          qi/ptruid.hpp
+         qi/objectuid.hpp
          qi/tag.hpp
          qi/uuid.hpp)
 
@@ -320,53 +303,76 @@ set(QIM_H qi/api.hpp
           qi/url.hpp
 )
 
-set(QIM_C src/messaging/applicationsession.cpp
-          src/messaging/authprovider_p.hpp
-          src/messaging/authprovider.cpp
-          src/messaging/boundobject.cpp
-          src/messaging/boundobject.hpp
-          src/messaging/clientauthenticator_p.hpp
-          src/messaging/clientauthenticator.cpp
-          src/messaging/gateway.cpp
-          src/messaging/message.hpp
-          src/messaging/message.cpp
-          src/messaging/messagedispatcher.hpp
-          src/messaging/messagedispatcher.cpp
-          src/messaging/objecthost.hpp
-          src/messaging/objecthost.cpp
-          src/messaging/objectregistrar.hpp
-          src/messaging/objectregistrar.cpp
-          src/messaging/remoteobject.cpp
-          src/messaging/remoteobject_p.hpp
-          src/messaging/servicedirectory.cpp
-          src/messaging/servicedirectory.hpp
-          src/messaging/servicedirectoryclient.hpp
-          src/messaging/servicedirectoryclient.cpp
-          src/messaging/servicedirectoryproxy.cpp
-          src/messaging/serviceinfo.cpp
-          src/messaging/session.cpp
-          src/messaging/session_p.hpp
-          src/messaging/sessionservice.hpp
-          src/messaging/sessionservice.cpp
-          src/messaging/sessionservices.hpp
-          src/messaging/sessionservices.cpp
-          src/messaging/server.hpp
-          src/messaging/server.cpp
-          src/messaging/streamcontext.hpp
-          src/messaging/streamcontext.cpp
-          src/messaging/transportserver.hpp
-          src/messaging/transportserver.cpp
-          src/messaging/transportserverasio_p.cpp
-          src/messaging/transportserverasio_p.hpp
-          src/messaging/messagesocket.hpp
-          src/messaging/messagesocket.cpp
-          src/messaging/transportsocketcache.cpp
-          src/messaging/transportsocketcache.hpp
-          src/messaging/tcpmessagesocket.cpp
-          src/messaging/tcpmessagesocket.hpp
-          src/messaging/url.cpp
-          src/registration.cpp
-          )
+set(QIM_C
+  src/messaging/applicationsession.cpp
+  src/messaging/authprovider_p.hpp
+  src/messaging/authprovider.cpp
+  src/messaging/boundobject.cpp
+  src/messaging/boundobject.hpp
+  src/messaging/clientauthenticator_p.hpp
+  src/messaging/clientauthenticator.cpp
+  src/messaging/gateway.cpp
+  src/messaging/message.hpp
+  src/messaging/message.cpp
+  src/messaging/messagedispatcher.hpp
+  src/messaging/messagedispatcher.cpp
+  src/messaging/objecthost.hpp
+  src/messaging/objecthost.cpp
+  src/messaging/objectregistrar.hpp
+  src/messaging/objectregistrar.cpp
+  src/messaging/remoteobject.cpp
+  src/messaging/remoteobject_p.hpp
+  src/messaging/servicedirectory.cpp
+  src/messaging/servicedirectory.hpp
+  src/messaging/servicedirectoryclient.hpp
+  src/messaging/servicedirectoryclient.cpp
+  src/messaging/servicedirectoryproxy.cpp
+  src/messaging/serviceinfo.cpp
+  src/messaging/session.cpp
+  src/messaging/session_p.hpp
+  src/messaging/sessionservice.hpp
+  src/messaging/sessionservice.cpp
+  src/messaging/sessionservices.hpp
+  src/messaging/sessionservices.cpp
+  src/messaging/server.hpp
+  src/messaging/server.cpp
+  src/messaging/streamcontext.hpp
+  src/messaging/streamcontext.cpp
+  src/messaging/transportserver.hpp
+  src/messaging/transportserver.cpp
+  src/messaging/transportserverasio_p.cpp
+  src/messaging/transportserverasio_p.hpp
+  src/messaging/messagesocket.hpp
+  src/messaging/messagesocket.cpp
+  src/messaging/transportsocketcache.cpp
+  src/messaging/transportsocketcache.hpp
+  src/messaging/tcpmessagesocket.cpp
+  src/messaging/tcpmessagesocket.hpp
+  src/messaging/url.cpp
+  src/registration.cpp
+)
+
+set(QI_SOCKET_H
+  src/messaging/sock/accept.hpp
+  src/messaging/sock/common.hpp
+  src/messaging/sock/concept.hpp
+  src/messaging/sock/connect.hpp
+  src/messaging/sock/connectedstate.hpp
+  src/messaging/sock/connectingstate.hpp
+  src/messaging/sock/disconnectedstate.hpp
+  src/messaging/sock/disconnectingstate.hpp
+  src/messaging/sock/error.hpp
+  src/messaging/sock/macrolog.hpp
+  src/messaging/sock/socketptr.hpp
+  src/messaging/sock/sslcontextptr.hpp
+  src/messaging/sock/socketwithcontext.hpp
+  src/messaging/sock/networkasio.hpp
+  src/messaging/sock/option.hpp
+  src/messaging/sock/receive.hpp
+  src/messaging/sock/resolve.hpp
+  src/messaging/sock/send.hpp
+  src/messaging/sock/traits.hpp
+)
 
 set(QIPERF_H
   qi/perf/dataperfsuite.hpp
@@ -417,13 +423,27 @@ qi_stage_cmake(qimodule-config.cmake)
 include(qimodule-config.cmake)
 
 qi_create_lib(qi SHARED
-                 ${QI_H}     ${QI_C}
-                 ${QITYPE_H} ${QITYPE_C}
-                 ${QIM_H}    ${QIM_C}
-                 ${QIPERF_H} ${QIPERF_C}
-                 ${KA_H}
-              DEPENDS ASSUME_SYSTEM_INCLUDE BOOST BOOST_ATOMIC BOOST_DATE_TIME BOOST_THREAD BOOST_CHRONO BOOST_FILESYSTEM BOOST_LOCALE BOOST_REGEX BOOST_PROGRAM_OPTIONS
-              SUBMODULE ${_tp_qi})
+    ${QI_H}     ${QI_C}
+    ${QITYPE_H} ${QITYPE_C}
+    ${QIM_H}    ${QIM_C}
+    ${QIPERF_H} ${QIPERF_C}
+    ${QI_SOCKET_H}
+    ${KA_H}
+  DEPENDS
+    ASSUME_SYSTEM_INCLUDE
+    BOOST
+    BOOST_ATOMIC
+    BOOST_DATE_TIME
+    BOOST_THREAD
+    BOOST_CHRONO
+    BOOST_FILESYSTEM
+    BOOST_LOCALE
+    BOOST_REGEX
+    BOOST_PROGRAM_OPTIONS
+  SUBMODULE ${_tp_qi}
+)
+
+
 
 #### Add optional libs {{{
 if(WIN32)

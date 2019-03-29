@@ -30,7 +30,7 @@ namespace qi
   std::ostream& operator<<(std::ostream& os, const qi::Object<T>& obj)
   {
     if (obj.isValid())
-      os << obj.ptrUid() << "\n";
+      os << obj.uid() << "\n";
     else
       os << "<INVALID OBJECT>\n";
     return os;
@@ -524,7 +524,7 @@ namespace
     ASSERT_TRUE(serviceObject.isValid());
 
     // TODO: It would be good if this worked but right now these two objects don't have the same
-    // PtrUid.
+    // ObjectUid.
     // ASSERT_EQ(concreteService, serviceObject);
   }
 
@@ -544,7 +544,7 @@ namespace
     ASSERT_TRUE(serviceObject.isValid());
 
     // TODO: It would be good if this worked but right now these two objects don't have the same
-    // PtrUid.
+    // ObjectUid.
     // ASSERT_EQ(concreteService, serviceObject);
   }
 

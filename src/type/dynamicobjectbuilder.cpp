@@ -175,7 +175,7 @@ namespace qi
     if (!_p->_objptr)
     {
       _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy,
-                                         boost::optional<PtrUid>{}, onDelete);
+                                         boost::optional<ObjectUid>{}, onDelete);
       _p->_object->setManageable(_p->_objptr.asGenericObject());
     }
     return _p->_objptr;

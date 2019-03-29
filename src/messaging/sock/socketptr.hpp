@@ -4,8 +4,8 @@
 #include <utility>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
-#include <qi/messaging/sock/socketwithcontext.hpp>
 #include <ka/utility.hpp>
+#include "socketwithcontext.hpp"
 
 /// @file
 /// Contains socket and socket pointer traits used in the sock namespace.

@@ -1,18 +1,18 @@
 #pragma once
 #ifndef _QI_SOCK_RECEIVE_HPP
 #define _QI_SOCK_RECEIVE_HPP
-#include <qi/messaging/sock/concept.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/option.hpp>
-#include <qi/messaging/sock/error.hpp>
-#include <qi/messaging/sock/common.hpp>
-#include <ka/src.hpp>
-#include "src/messaging/message.hpp"
-#include <qi/trackable.hpp>
-#include <qi/log.hpp>
-#include <ka/macroregular.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
+#include <ka/src.hpp>
+#include <ka/macroregular.hpp>
+#include <qi/trackable.hpp>
+#include <qi/log.hpp>
+#include "src/messaging/message.hpp"
+#include "concept.hpp"
+#include "traits.hpp"
+#include "option.hpp"
+#include "error.hpp"
+#include "common.hpp"
 
 /// @file
 /// Contains functions and types related to message reception on a socket.

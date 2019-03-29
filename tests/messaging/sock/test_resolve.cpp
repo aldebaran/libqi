@@ -5,10 +5,10 @@
 #include <boost/optional.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/sock/resolve.hpp>
+#include <src/messaging/sock/resolve.hpp>
 #include <ka/src.hpp>
-#include <qi/messaging/sock/connect.hpp>
-#include <qi/messaging/sock/networkasio.hpp>
+#include <src/messaging/sock/connect.hpp>
+#include <src/messaging/sock/networkasio.hpp>
 #include <ka/scoped.hpp>
 #include <qi/future.hpp>
 #include "networkmock.hpp"

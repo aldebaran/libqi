@@ -9,7 +9,11 @@
 
 #include <deque>
 #include <atomic>
+#include <memory>
+#include <ka/functional.hpp>
+#include <ka/mutablestore.hpp>
 #include <qi/assert.hpp>
+#include <qi/config.hpp>
 #include <qi/detail/executioncontext.hpp>
 #include <qi/detail/futureunwrap.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -37,7 +41,7 @@ namespace detail
 }
 
 // we use ExecutionContext's helpers in schedulerFor, we don't need to implement all the methods
-class StrandPrivate : public ExecutionContext, public boost::enable_shared_from_this<StrandPrivate>
+class QI_API StrandPrivate : public ExecutionContext, public boost::enable_shared_from_this<StrandPrivate>
 {
 public:
   enum class State;
@@ -55,8 +59,13 @@ public:
   boost::condition_variable_any _processFinished;
   bool _dying;
   Queue _queue;
+  class ScopedPromiseGroup;
+  std::shared_ptr<ScopedPromiseGroup> _deferredTasksFutures; // Shared to avoid including issues
 
   explicit StrandPrivate(qi::ExecutionContext& executor);
+  ~StrandPrivate();
+
+  void join() QI_NOEXCEPT(true);
 
   // Schedules the callback for execution. If the trigger date `tp` is in the past, executes the
   // callback immediately in the calling thread.
@@ -89,17 +98,19 @@ public:
 private:
   void stopProcess(boost::recursive_mutex::scoped_lock& lock,
                    bool finished);
+
+  bool joined = false;
+
+  template<class Task>
+  auto track(Task&& task)
+    // TODO: C++ >= 14 : Remove the following line.
+    -> decltype(ka::scope_lock_proc(ka::fwd<Task>(task), ka::mutable_store(weak_from_this())))
+  {
+    return ka::scope_lock_proc(ka::fwd<Task>(task), ka::mutable_store(weak_from_this()));
+  }
+
 };
 
-inline StrandPrivate::StrandPrivate(qi::ExecutionContext& executor)
-  : _executor(executor)
-  , _curId(0)
-  , _aliveCount(0)
-  , _processing(false)
-  , _processingThread(0)
-  , _dying(false)
-{
-}
 
 /** Class that schedules tasks sequentially
  *
@@ -120,6 +131,7 @@ public:
   Strand();
   /// Construct a strand that will schedule work on executionContext
   Strand(qi::ExecutionContext& executionContext);
+
   /// Call detroy()
   ~Strand();
 
@@ -129,10 +141,16 @@ public:
    * on. A strand can't be reused after it has been join()ed.
    *
    * It is safe to call this method concurrently with other methods. All the returned futures will be set to error.
+   * @Note: Under extreme circumstances such as system memory exhaustion, this
+   *        method could still throw a `std::bad_alloc` exception, thus causing a call
+   *        to `std::terminate` because of the `noexcept` specifier. This behavior is
+   *        considered acceptable.
    */
-  void join();
+  void join() QI_NOEXCEPT(true);
 
   /** Joins the strand.
+   *
+   * @deprecated Use join() which is currently noexcept.
    *
    * This version catches any exception and returns its message.
    * This version must be preferred in destructors to prevent abort.
@@ -148,6 +166,7 @@ public:
    * }
    * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    */
+  QI_API_DEPRECATED_MSG(Use 'join()' instead)
   OptionalErrorMessage join(std::nothrow_t) QI_NOEXCEPT(true);
 
   // DEPRECATED
@@ -217,7 +236,7 @@ public:
       -> detail::Stranded<typename std::decay<F>::type>
   {
     return detail::Stranded<typename std::decay<F>::type>(std::forward<F>(func),
-                                                              _p,
+                                                              boost::atomic_load(&_p),
                                                               std::move(onFail),
                                                               options);
   }
@@ -230,7 +249,7 @@ public:
       -> detail::StrandedUnwrapped<typename std::decay<F>::type>
   {
     return detail::StrandedUnwrapped<typename std::decay<F>::type>(std::forward<F>(func),
-                                                              _p,
+                                                              boost::atomic_load(&_p),
                                                               std::move(onFail),
                                                               options);
   }

@@ -4,6 +4,8 @@
 */
 #include <atomic>
 #include <boost/atomic.hpp>
+#include <boost/thread/synchronized_value.hpp>
+#include <boost/container/flat_map.hpp>
 
 #include <ka/errorhandling.hpp>
 #include <qi/strand.hpp>
@@ -28,7 +30,82 @@ namespace
     detail::setPromiseFromCallWithExceptionSupport(p, std::forward<Proc>(proc));
     return p.future();
   }
+
+  // Executes the provided function and returns any caught exception's message if any.
+  // Procedure<void()> Proc
+  template<class Proc>
+  Strand::OptionalErrorMessage safeInvoke(Proc&& proc) noexcept
+  {
+    return ka::invoke_catch(ka::exception_message{}, [&] {
+      std::forward<Proc>(proc)();
+      return Strand::OptionalErrorMessage{};
+    });
+  }
+
+  static const auto dyingStrandMessage = "The strand is dying.";
 }
+
+  // Stores promises and set them in error on destruction if they are not removed before.
+  class StrandPrivate::ScopedPromiseGroup
+  {
+    struct ErrorSetter
+    {
+      qi::Promise<void> promise;
+
+      void operator()() {
+        if (!promise.future().isFinished()) // That `if` could be removed but it reduces the chances of
+                                            // ending with an exception thrown when setting the promise
+        {
+          promise.setError("Strand joining - deferred task promise broken");
+        }
+      }
+    };
+
+  public:
+    ~ScopedPromiseGroup()
+    {
+      setAllInError();
+    }
+
+    // Registers a promise to be set in error once this object is destroyed.
+    FutureUniqueId add(Promise<void> promise)
+    {
+      const auto id = promise.future().uniqueId();
+      _promiseTerminators->emplace(id, ErrorSetter{std::move(promise)});
+      return id;
+    }
+
+    // Removes a promise to avoid setting it in error.
+    // Note: `id` should have been obtained through `add()`.
+    void remove(FutureUniqueId id)
+    {
+      _promiseTerminators->erase(id);
+    }
+
+    // Sets all the currently registered promises in error and unregisters them.
+    void setAllInError()
+    {
+      auto synchedTerminators = _promiseTerminators.synchronize();
+      for (auto&& slot : *synchedTerminators)
+      {
+        auto errorMsg = safeInvoke([&]{
+          // We move the setter out so that setter's resources are guaranteed
+          // to be released as soon as invocation is terminated (whatever the issue).
+          auto errorSetter = std::move(slot.second);
+          errorSetter();
+        });
+        if (errorMsg)
+        {
+          qiLogWarning() << "Error when setting promise in error: " << *errorMsg;
+        }
+      }
+      synchedTerminators->clear();
+    }
+
+  private:
+    using FutureFuncMap = boost::container::flat_map<FutureUniqueId, ErrorSetter>;
+    boost::synchronized_value<FutureFuncMap> _promiseTerminators;
+  };
 
 enum class StrandPrivate::State
 {
@@ -48,6 +125,84 @@ struct StrandPrivate::Callback
   qi::Future<void> asyncFuture;
   ExecutionOptions executionOptions;
 };
+
+
+StrandPrivate::StrandPrivate(qi::ExecutionContext& executor)
+  : _executor(executor)
+  , _curId(0)
+  , _aliveCount(0)
+  , _processing(false)
+  , _processingThread(0)
+  , _dying(false)
+  , _deferredTasksFutures{ std::make_shared<ScopedPromiseGroup>() }
+{
+}
+
+
+StrandPrivate::~StrandPrivate() {
+  const auto error = ka::invoke_catch(ka::exception_message{}, [this]{
+    join();
+    return Strand::OptionalErrorMessage{};
+  });
+
+  if (error)
+  {
+    qiLogWarning() << "Error while joining tasks in StrandPrivate destruction. "
+      "Detail: " << *error;
+  }
+}
+
+void StrandPrivate::join() QI_NOEXCEPT(true)
+{
+  if (joined)
+  {
+    qiLogDebug() << "Strand joining (" << this << ") -> already joined, ignored.";
+    return;
+  }
+
+  boost::unique_lock<boost::recursive_mutex> lock(_mutex);
+  qiLogDebug() << "Strand joining (" << this << ")...";
+
+  _dying = true; // Starting from this point, either this thread or the processing thread will complete the joining.
+
+  if (isInThisContext())
+  {
+    qiLogDebug() << "Strand joining (" << this << ") -> joining in the thread currently executing task:"
+      << "deferring join until after task is finished...";
+    return;
+  }
+
+  qiLogDebug() << "Strand joining (" << this << ") -> Joining starts : processing=" << _processing
+    << ", size=" << _aliveCount << ")";
+
+  qiLogDebug() << "Strand joining (" << this << ") -> clearing scheduled tasks...";
+  for (auto&& task : _queue)
+  {
+    if (task->state == StrandPrivate::State::Canceled)
+      continue;
+    QI_ASSERT(task->state == StrandPrivate::State::Scheduled);
+
+    const auto errorMsg = safeInvoke([&]{
+      task->promise.setError(dyingStrandMessage);
+    });
+    if (errorMsg)
+    {
+      qiLogWarning() << "Error when setting promise in error: " << *errorMsg;
+    }
+  }
+  _queue.clear();
+
+  qiLogDebug() << "Strand joining (" << this << ") -> clearing deferred tasks...";
+  _deferredTasksFutures.reset();
+
+  qiLogDebug() << "Strand joining (" << this << ") -> waiting for currently executing task to finish...";
+  _processFinished.wait(lock, [&]{ return !_processing; });
+
+  qiLogDebug() << "Strand joining (" << this << ") -> DONE";
+  joined = true;
+}
+
+
 
 boost::shared_ptr<StrandPrivate::Callback> StrandPrivate::createCallback(boost::function<void()> cb, ExecutionOptions options)
 {
@@ -82,8 +237,12 @@ Future<void> StrandPrivate::deferImpl(boost::function<void()> cb, qi::Duration d
 
   qiLogDebug() << "Deferring job id " << cbStruct->id << " in " << qi::to_string(delay);
   if (delay.count())
-    cbStruct->asyncFuture = _executor.asyncDelay(boost::bind( &StrandPrivate::enqueue, this, cbStruct, options),
-                                                  delay, options);
+  {
+    cbStruct->asyncFuture = _executor.asyncDelay(track([=]{
+      enqueue(cbStruct, options);
+    }), delay, options);
+    _deferredTasksFutures->add(cbStruct->promise);
+  }
   else
     enqueue(cbStruct, options);
   return cbStruct->promise.future();
@@ -106,7 +265,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct, ExecutionOptio
     {
       if (_dying)
       {
-        cbStruct->promise.setError("the strand is dying");
+        cbStruct->promise.setError(dyingStrandMessage);
         qiLogDebug() << "Strand is dying on job id " << cbStruct->id;
         return false;
       }
@@ -133,6 +292,10 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct, ExecutionOptio
     {
       qiLogDebug() << "Schedule process on job id " << cbStruct->id;
       _processing = true;
+      if (cbStruct->asyncFuture.isValid())
+      {
+        _deferredTasksFutures->remove(cbStruct->promise.future().uniqueId());
+      }
       return true;
     }
 
@@ -142,7 +305,7 @@ void StrandPrivate::enqueue(boost::shared_ptr<Callback> cbStruct, ExecutionOptio
   if (shouldschedule)
   {
     qiLogDebug() << "StrandPrivate::process was not scheduled, doing it";
-    _executor.async(boost::bind(&StrandPrivate::process, shared_from_this()), options);
+    _executor.async(track([=]{ process(); }), options);
   }
 }
 
@@ -154,7 +317,7 @@ void StrandPrivate::stopProcess(boost::recursive_mutex::scoped_lock& lock,
   {
     qiLogDebug() << "Strand quantum expired, rescheduling";
     lock.unlock();
-    _executor.async(boost::bind(&StrandPrivate::process, shared_from_this()));
+    _executor.async(track([=] { process(); }));
   }
   else
   {
@@ -285,71 +448,32 @@ bool StrandPrivate::isInThisContext() const
 }
 
 Strand::Strand()
-  : _p(new StrandPrivate(*qi::getEventLoop()))
+  : _p(boost::make_shared<StrandPrivate>(*qi::getEventLoop()))
 {
   qiLogDebug() << this << " new strand";
 }
 
 Strand::Strand(qi::ExecutionContext& eventloop)
-  : _p(new StrandPrivate(eventloop))
+  : _p(boost::make_shared<StrandPrivate>(eventloop))
 {
 }
 
 Strand::~Strand()
 {
-  if (const auto error = join(std::nothrow))
-  {
-    qiLogWarning() << "Error while joining tasks in Strand destruction. "
-                      "Detail: " << *error;
-  }
+  join();
 }
 
-namespace
+void Strand::join() QI_NOEXCEPT(true)
 {
-  static const auto dyingStrandMessage = "the strand is dying";
-}
-
-void Strand::join()
-{
-  if (!_p)
+  // keep it alive until we unlock the mutex
+  auto pimpl = boost::atomic_exchange(&_p, {});
+  QI_ASSERT_NULL(_p);
+  if (!pimpl)
   {
     qiLogDebug() << this << " already joined";
     return;
   }
-
-  // keep it alive until we unlock the mutex
-  boost::shared_ptr<StrandPrivate> prv;
-
-  {
-    boost::unique_lock<boost::recursive_mutex> lock(_p->_mutex);
-    qiLogVerbose() << this << " joining (processing: " << _p->_processing
-      << ", size: " << _p->_aliveCount << ")";
-
-    _p->_dying = true;
-
-    if (isInThisContext())
-    {
-      qiLogVerbose() << this << " joining from inside the context";
-      // don't wait if we are joining the strand from within the strand
-      return;
-    }
-
-    boost::atomic_exchange(&prv, _p);
-
-    prv->_processFinished.wait(lock, [&]{ return !prv->_processing; });
-    while (!prv->_queue.empty())
-    {
-      auto task = std::move(prv->_queue.front());
-      prv->_queue.pop_front();
-      if (task->state == StrandPrivate::State::Canceled)
-        continue;
-      QI_ASSERT(task->state == StrandPrivate::State::Scheduled);
-      task->promise.setError(dyingStrandMessage);
-      --prv->_aliveCount;
-    }
-
-    qiLogVerbose() << this << " joined, remaining tasks: " << prv->_aliveCount;
-  }
+  pimpl->join();
 }
 
 /// Join all tasks, returning an error message if necessary instead of throwing

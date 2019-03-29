@@ -32,6 +32,26 @@
  */
 # define QI_API QI_LIB_API(qi)
 
+/* The `QI_API_TESTONLY` macro exports/imports types when compiling tests only.
+ *
+ * This is for instance useful to unit-test internal components of libqi.
+ *
+ * This macro definition depends on the `QI_WITH_TESTS` macro.
+ *
+ * Example: Making an internal type available for unit testing.
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * class QI_API_TESTONLY StuffPrivate
+ * {
+ *   ...
+ * };
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ */
+#ifdef QI_WITH_TESTS
+# define QI_API_TESTONLY QI_API
+#else
+# define QI_API_TESTONLY
+#endif
+
 # define QI_API_LEVEL 2
 
 /* dynamic_casting template partial specializations

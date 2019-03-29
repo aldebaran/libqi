@@ -5,15 +5,16 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 #include <ka/functional.hpp>
-#include <qi/trackable.hpp>
 #include <ka/typetraits.hpp>
-#include <qi/messaging/sock/concept.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/option.hpp>
-#include <qi/messaging/sock/socketptr.hpp>
-#include <qi/future.hpp>
 #include <ka/macroregular.hpp>
+#include <qi/trackable.hpp>
+#include <qi/future.hpp>
 #include <qi/url.hpp>
+#include "concept.hpp"
+#include "traits.hpp"
+#include "option.hpp"
+#include "socketptr.hpp"
+
 
 /// @file
 /// Contains procedure transformations (to transform a procedure into a "stranded"

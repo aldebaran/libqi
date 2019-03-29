@@ -10,6 +10,9 @@
 #include <atomic>
 #include <thread>
 #include <boost/asio.hpp>
+#include <qi/api.hpp>
+#include <ka/ark/mutable.hpp>
+#include <ka/macroregular.hpp>
 #include <qi/eventloop.hpp>
 #include <boost/thread/synchronized_value.hpp>
 
@@ -35,7 +38,7 @@ namespace qi {
     Stream* sd;
   };
 
-  class EventLoopPrivate
+  class QI_API_TESTONLY EventLoopPrivate
   {
   public:
     EventLoopPrivate(std::string name) : _name(std::move(name)) {}
@@ -50,18 +53,23 @@ namespace qi {
     virtual qi::Future<void> asyncCall(qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback, ExecutionOptions options = defaultExecutionOptions())=0;
     virtual void post(qi::SteadyClockTimePoint timepoint, const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions())=0;
     virtual void* nativeHandle()=0;
+    virtual void setMinThreads(unsigned int min)=0;
     virtual void setMaxThreads(unsigned int max)=0;
     boost::synchronized_value<boost::function<void()>> _emergencyCallback;
     const std::string _name;
   };
 
-  class EventLoopAsio final: public EventLoopPrivate
+  class QI_API_TESTONLY EventLoopAsio final: public EventLoopPrivate
   {
   public:
     static const char* const defaultName;
 
     explicit EventLoopAsio(int threadCount = 0, std::string name = defaultName,
       bool spawnOnOverload = true);
+
+    EventLoopAsio(int threadCount, int minThreadCount, int maxThreadCount,
+                  std::string name, bool spawnOnOverload);
+
     ~EventLoopAsio() override;
 
     bool isInThisContext() const override;
@@ -77,18 +85,32 @@ namespace qi {
     void post(qi::SteadyClockTimePoint timepoint,
         const boost::function<void ()>& callback, ExecutionOptions options = defaultExecutionOptions()) override;
     void* nativeHandle() override;
+    void setMinThreads(unsigned int min) override;
     void setMaxThreads(unsigned int max) override;
-
+    int workerCount() const;
+    MilliSeconds maxIdleDuration() const;
   private:
+    // Strongly-typed wrapper around a boolean.
+    using UpdateLastWorkDate = ka::ark_mutable_t<bool>;
+
     /// Destructible D
     template<typename D>
     void invoke_maybe(boost::function<void()> f, qi::uint64_t id, qi::Promise<void> p,
-                      const boost::system::error_code& erc, D countTask);
+        const boost::system::error_code& erc, D countTask, UpdateLastWorkDate);
     void runWorkerLoop();
     void runPingLoop();
 
+    qi::Future<void> asyncCallInternal(
+      qi::Duration delay, boost::function<void ()> callback,
+      ExecutionOptions options, UpdateLastWorkDate);
+
+    qi::Future<void> asyncCallInternal(
+      qi::SteadyClockTimePoint timepoint, boost::function<void ()> callback,
+      ExecutionOptions options, UpdateLastWorkDate);
+
     boost::asio::io_service _io;
     std::atomic<boost::asio::io_service::work*> _work; // keep io.run() alive
+    std::atomic<int> _minThreads;
     std::atomic<int> _maxThreads;
 
     class WorkerThreadPool;

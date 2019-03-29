@@ -4,8 +4,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
 #include <gtest/gtest.h>
-#include <qi/messaging/sock/send.hpp>
-#include <qi/messaging/sock/sslcontextptr.hpp>
+#include <src/messaging/sock/send.hpp>
+#include <src/messaging/sock/sslcontextptr.hpp>
 #include <qi/future.hpp>
 #include <ka/scoped.hpp>
 #include "src/messaging/message.hpp"

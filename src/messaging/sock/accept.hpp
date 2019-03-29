@@ -3,16 +3,16 @@
 #define _QI_SOCK_ACCEPT_HPP
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
-#include <qi/messaging/sock/concept.hpp>
-#include <qi/messaging/sock/traits.hpp>
-#include <qi/messaging/sock/error.hpp>
-#include <qi/messaging/sock/option.hpp>
-#include <qi/messaging/sock/resolve.hpp>
-#include <qi/messaging/sock/common.hpp>
 #include <ka/src.hpp>
-#include <qi/url.hpp>
 #include <ka/macroregular.hpp>
 #include <ka/functional.hpp>
+#include <qi/url.hpp>
+#include "concept.hpp"
+#include "traits.hpp"
+#include "error.hpp"
+#include "option.hpp"
+#include "resolve.hpp"
+#include "common.hpp"
 
 /// @file
 /// Contains functions and types related to socket acception, in the context of

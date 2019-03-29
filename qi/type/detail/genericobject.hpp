@@ -18,7 +18,7 @@
 #include <qi/future.hpp>
 #include <qi/signal.hpp>
 #include <qi/type/typeobject.hpp>
-#include <qi/ptruid.hpp>
+#include <qi/objectuid.hpp>
 
 #ifdef _MSC_VER
 #  pragma warning( push )
@@ -42,7 +42,7 @@ class QI_API GenericObject
   , public boost::enable_shared_from_this<GenericObject>
 {
 public:
-  GenericObject(ObjectTypeInterface *type, void *value, const boost::optional<PtrUid>& maybePtrUid = boost::none);
+  GenericObject(ObjectTypeInterface *type, void *value, const boost::optional<ObjectUid>& maybeUid = boost::none);
   ~GenericObject();
   const MetaObject &metaObject();
 
@@ -137,7 +137,7 @@ public:
   bool isValid() { return type && value;}
   ObjectTypeInterface*  type;
   void*        value;
-  PtrUid ptrUid; ///< Uid of "value".
+  ObjectUid uid; ///< Uid of "value".
 
 private:
   /// Common meta call algorithm, without unwrapping the returned future.
