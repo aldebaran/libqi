@@ -173,9 +173,8 @@ namespace qi { namespace sock {
         Proc2 setupStop = Proc2{})
     {
       using namespace ka;
-      auto& io = _resolve.getIoService();
       _resolve(url, ipV6,
-        [=, &io](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
+        [=](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
           if (erc)
           {
             onComplete(erc, {});
