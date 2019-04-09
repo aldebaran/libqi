@@ -38,7 +38,7 @@ public:
 void foo(qi::Atomic<int>* r, int, int)     { ++*r; }
 void foo2(qi::Atomic<int>* r, char, char)  { ++*r; }
 void foo3(qi::Atomic<int>* r, Foo *)       { ++*r; }
-void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(0); ++*r; }
+void foolast(int, qi::Promise<void> prom, qi::Atomic<int>* r) { prom.setValue(nullptr); ++*r; }
 } // anonymous
 
 void fire(int &a) { a = 44; }
@@ -83,10 +83,10 @@ TEST(TestSignal, RegisterSignalAndMethodWithDifferentSignature)
 
 TEST(TestSignal, TestCompilation)
 {
-  qi::Atomic<int>        res{0};
+  qi::Atomic<int> res{0};
   qi::Signal<int> s;
-  Foo*                   f = (Foo*)1;
-  qi::Promise<void>      prom;
+  auto f = reinterpret_cast<Foo*>(1);
+  qi::Promise<void> prom;
 
   //do not count
   s.connect(qi::AnyFunction::from(&Foo::func, f));
@@ -297,7 +297,7 @@ TEST(TestSignal, AutoDisconnect)
 void waitFuture(qi::Atomic<int>& cnt, qi::Promise<void> start, qi::Future<void> f)
 {
   if (++cnt == 2)
-    start.setValue(0);
+    start.setValue(nullptr);
   f.wait();
 
   // force disconnection, may trigger a segfault
@@ -324,7 +324,7 @@ TEST(TestSignal, NonBlockingDestroy)
   }
 
   // all went well, unblock the callback
-  finish.setValue(0);
+  finish.setValue(nullptr);
 }
 
 TEST(TestSignal, BadArity)
@@ -334,7 +334,10 @@ TEST(TestSignal, BadArity)
   // avoid using s.connect() which will catch the problem at compile-time
   EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo))));
   EXPECT_ANY_THROW(s.connect(qi::SignalSubscriber(qi::AnyFunction::from(&foo2))));
-  EXPECT_ANY_THROW(s.connect(qi::AnyFunction::from((boost::function<void(qi::Atomic<int>*, int)>)boost::bind(&Foo::func1, (Foo*)0, _1, _2))));
+  EXPECT_ANY_THROW(s.connect(qi::AnyFunction::from(
+    boost::function<void(qi::Atomic<int>*, int)>{
+      boost::bind(&Foo::func1, static_cast<Foo*>(nullptr), _1, _2)
+    })));
 }
 
 void lol(int v, int& target)
@@ -456,8 +459,10 @@ void dynTest0(int& tgt)                     { tgt |= 1;}
 void dynTest1(int& tgt, int)                { tgt |= 2;}
 void dynTest2(int& tgt, int, int)           { tgt |= 4;}
 void dynTest3(int& tgt, int, std::string)   { tgt |= 8;}
-void dynTestN(int& tgt, const qi::AnyArguments& a)   { tgt |= 32;}
-qi::AnyReference dynTestN2(int& tgt, const std::vector<qi::AnyReference>& a)   { tgt |= 16; return qi::AnyReference();}
+void dynTestN(int& tgt, const qi::AnyArguments&)   { tgt |= 32;}
+qi::AnyReference dynTestN2(int& tgt, const std::vector<qi::AnyReference>&) {
+  tgt |= 16; return qi::AnyReference();
+}
 
 
 TEST(TestSignal, Dynamic)
@@ -493,10 +498,10 @@ TEST(TestSignal, Dynamic)
 qi::Future<void> onSubs(std::atomic<bool>& var, bool subs)
 {
   var = subs;
-  return qi::Future<void>{0};
+  return qi::Future<void>{nullptr};
 }
 
-void callback(int i)
+void callback(int)
 {}
 
 TEST(TestSignal, OnSubscriber)
