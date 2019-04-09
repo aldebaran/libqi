@@ -8,6 +8,7 @@
 #include <functional>
 #include <tuple>
 #include <gtest/gtest.h>
+#include <boost/optional.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <ka/functional.hpp>
@@ -1285,7 +1286,7 @@ TEST(Value, OptionalRawBuffer)
   qi::Buffer buffer;
   buffer.write(data.c_str(), data.size() + 1);
 
-  AnyValue v{ make_optional<qi::Buffer>(buffer) };
+  AnyValue v{ make_optional(buffer) };
   ASSERT_TRUE(v.optionalHasValue());
 
   auto readBuffer = v.toOptional<qi::Buffer>();
