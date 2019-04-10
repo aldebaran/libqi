@@ -440,6 +440,7 @@ qi_create_lib(qi SHARED
     BOOST_LOCALE
     BOOST_REGEX
     BOOST_PROGRAM_OPTIONS
+    BOOST_RANDOM
   SUBMODULE ${_tp_qi}
 )
 
