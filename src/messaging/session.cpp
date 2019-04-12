@@ -23,17 +23,22 @@
 #include "authprovider_p.hpp"
 #include "clientauthenticator_p.hpp"
 
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/algorithm/string/join.hpp>
+
 qiLogCategory("qimessaging.session");
 
 namespace qi {
-
-  SessionPrivate::SessionPrivate(qi::Session* session, bool enforceAuth)
+  SessionPrivate::SessionPrivate(qi::Session* session,
+                                 bool enforceAuth,
+                                 SessionConfig config)
     : _sdClient(enforceAuth)
     , _serverObject(&_sdClient, enforceAuth)
     , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, enforceAuth)
     , _servicesHandler(&_sdClient, &_serverObject)
     , _sd(&_serverObject)
-    , _sdClientClosedByThis{false}
+    , _sdClientClosedByThis{ false }
+    , _config(std::move(config))
   {
     session->connected.setCallType(qi::MetaCallType_Queued);
     session->disconnected.setCallType(qi::MetaCallType_Queued);
@@ -167,12 +172,32 @@ namespace qi {
     return _sdClient.isConnected();
   }
 
+  SessionConfig::SessionConfig() = default;
+
+  Url SessionConfig::defaultConnectUrl()
+  {
+    static const Url url("tcp://127.0.0.1:9559");
+    QI_ASSERT_TRUE(url.isValid());
+    return url;
+  }
+
+  Url SessionConfig::defaultListenUrl()
+  {
+    static const Url url("tcp://127.0.0.1:0");
+    QI_ASSERT_TRUE(url.isValid());
+    return url;
+  }
 
   // ###### Session
-  Session::Session(bool enforceAuthentication)
-    : _p(new SessionPrivate(this, enforceAuthentication))
+  Session::Session(bool enforceAuthentication, SessionConfig config)
+    : _p(new SessionPrivate(this, enforceAuthentication, std::move(config)))
   {
 
+  }
+
+  Session::Session(SessionConfig defaultConfig)
+    : Session(false, std::move(defaultConfig))
+  {
   }
 
   Session::~Session()
@@ -188,7 +213,27 @@ namespace qi {
     return sdServiceName;
   }
 
+  const SessionConfig& Session::config() const
+  {
+    return _p->_config;
+  }
+
   // ###### Client
+  qi::FutureSync<void> Session::connect()
+  {
+    // If no connect URL was specified in the configuration, fallback on the hardcoded default
+    // connect URL. This is to have an homogeneous behavior with `listen`.
+    const auto& connectUrl = _p->_config.connectUrl;
+    if (!connectUrl)
+    {
+      const auto defaultConnectUrl = SessionConfig::defaultConnectUrl();
+      qiLogVerbose() << "No connect URL configured, using the hardcoded default value '"
+                     << defaultConnectUrl << "'";
+      return listen(defaultConnectUrl);
+    }
+    return connect(*connectUrl);
+  }
+
   qi::FutureSync<void> Session::connect(const char* serviceDirectoryURL)
   {
     return _p->connect(qi::Url(serviceDirectoryURL, "tcp", 9559));
@@ -249,10 +294,81 @@ namespace qi {
     return cancelOnTimeout(_p->_serviceHandler.service(service, protocol), timeout);
   }
 
-  qi::FutureSync<void> Session::listen(const qi::Url &address)
+  qi::FutureSync<void> Session::listen()
+  {
+    // If no listen URL was specified in the configuration, then the list is empty and the `listen`
+    // overload will use the hardcoded default value.
+    return listen(_p->_config.listenUrls);
+  }
+
+  qi::FutureSync<void> Session::listen(const qi::Url& address)
   {
     qiLogInfo() << "Session listener created on " << address.str();
     return _p->_serverObject.listen(address);
+  }
+
+  qi::FutureSync<void> Session::listen(const std::vector<Url>& addresses)
+  {
+    if (addresses.empty())
+    {
+      const auto defaultListenUrl = SessionConfig::defaultListenUrl();
+      qiLogWarning() << "No listen URL specified, using the hardcoded default value '"
+                     << defaultListenUrl << "', consider specifying a value.";
+      return listen(defaultListenUrl);
+    }
+
+    qiLogInfo() << "Session listener created on "
+                << boost::join(boost::adaptors::transform(addresses,
+                                                          [](const Url& address) {
+                                                            return address.str();
+                                                          }),
+                               ", ");
+    std::vector<Future<void>> futs;
+    futs.reserve(addresses.size());
+    std::transform(addresses.cbegin(), addresses.cend(), std::back_inserter(futs),
+                   [&](const Url& listenUrl) { return listen(listenUrl).async(); });
+
+    Promise<void> prom;
+    waitForAll(futs).async().andThen([prom](const std::vector<Future<void>>& futs) mutable {
+      std::ostringstream oss;
+      bool failure = false;
+      for (const auto& fut : futs)
+      {
+        if (fut.hasValue())
+          continue;
+
+        const auto wasFailure = ka::exchange(failure, true);
+        if (wasFailure)
+          oss << ", ";
+        if (fut.hasError())
+          oss << fut.error();
+        else
+        {
+          QI_ASSERT_TRUE(fut.isCanceled());
+          oss << "listen request was canceled";
+        }
+      }
+      if (failure)
+        prom.setError("Failed to listen on all URLs: " + oss.str());
+      else
+        prom.setValue(nullptr);
+    });
+    return prom.future();
+  }
+
+  qi::FutureSync<void> Session::listenStandalone()
+  {
+    // If no listen URL was specified in the configuration, fallback on the hardcoded default
+    // listen URL. This is to have an homogeneous behavior with `listen`.
+    const auto& listenUrls = _p->_config.listenUrls;
+    if (listenUrls.empty())
+    {
+      const auto defaultListenUrl = SessionConfig::defaultListenUrl();
+      qiLogWarning() << "No listen URL configured, using the hardcoded default value '"
+                     << defaultListenUrl << "', consider specifying a value.";
+      return listenStandalone(defaultListenUrl);
+    }
+    return listenStandalone(listenUrls);
   }
 
   qi::FutureSync<void> Session::listenStandalone(const qi::Url &address)
@@ -297,11 +413,12 @@ namespace qi {
   {
     if (!obj)
       return makeFutureError<unsigned int>("registerService: Object is empty");
-    if (endpoints().empty()) {
-      qi::Url listeningAddress("tcp://127.0.0.1:0");
-      qiLogVerbose() << listeningAddress.str() << "." << std::endl;
-      listen(listeningAddress);
-    }
+
+    // Compatibility: Exposing a service means the session must be a server (it must be listening
+    // for connections). A better solution would probably be to raise an error, but since a lot of
+    // code relies on the following behavior, we're keeping it that way.
+    if (endpoints().empty())
+      listen();
 
     if (!isConnected()) {
       return qi::makeFutureError< unsigned int >("Session not connected.");
@@ -445,6 +562,7 @@ namespace qi {
           });
     return promise.future();
   }
+
 }
 
 #ifdef _MSC_VER

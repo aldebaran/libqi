@@ -150,6 +150,8 @@ namespace qi {
   QI_API inline bool operator!=(const Url& lhs, const Url& rhs)
   { return !(lhs == rhs); }
 
+  QI_API std::ostream& operator<<(std::ostream& out, const Url& url);
+
   using UrlVector = std::vector<Url>;
 
   /**
