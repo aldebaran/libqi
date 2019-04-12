@@ -6,47 +6,64 @@
 
 #include "utils.hpp"
 
-#include <boost/filesystem.hpp>
-#include <cctype>
 #include <algorithm>
 #include <iterator>
-#include <ctime>
+#include <random>
+
+#include <boost/filesystem.hpp>
+#include <boost/utility/string_ref.hpp>
+
 #include <qi/os.hpp>
 #include <qi/path.hpp>
 
-static char rand_alnum()
-{
-  unsigned char c;
-  while (true)
+namespace {
+
+  static auto randomSource = [] {
+    std::random_device trueRand;
+    std::seed_seq seed{ trueRand(), trueRand(), trueRand(), trueRand()
+                      , trueRand(), trueRand(), trueRand(), trueRand()
+                      };
+    return std::default_random_engine{ seed };
+  }();
+
+  // Returns a random number inside `[min, max]` (`min` and `max` are included).
+  //
+  // Precondition: min <= max
+  //
+  // N is one of {short, int, long, long long,
+  //  unsigned short, unsigned int, unsigned long, unsigned long long}
+  template<typename N>
+  N randomNumber(N min, N max)
   {
-    c = static_cast<unsigned char>(std::rand());
-    if ((c >= 'a' && c <= 'z') ||
-        (c >= 'A' && c <= 'Z') ||
-        (c >= '0' && c <= '9'))
-      return c;
+    std::uniform_int_distribution<N> dice(min, max);
+    return dice(randomSource);
   }
+
+  // Returns a random character inside `[0-9a-zA-Z]`.
+  char randomAlphaNum()
+  {
+    static const boost::string_ref alphanums
+      = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    const auto randomIdx = randomNumber<int>(0, alphanums.size() - 1);
+    return alphanums[randomIdx];
+  }
+
 }
 
-std::string randomstr(std::string::size_type sz) {
-
+std::string randomstr(std::string::size_type sz)
+{
   std::string s;
   s.reserve(sz);
-  //need to have different seeds to avoid DDOS attack
-  unsigned int seed = static_cast<unsigned int>(
-      qi::SystemClock::now().time_since_epoch().count()/1000);
-  srand(seed);
-  generate_n(std::back_inserter(s), sz, rand_alnum);
+  generate_n(std::back_inserter(s), sz, randomAlphaNum);
   return s;
 }
 
-std::wstring wrandomstr(std::wstring::size_type sz) {
+std::wstring wrandomstr(std::wstring::size_type sz)
+{
   std::wstring s;
   s.reserve(sz);
-  //need to have different seeds to avoid DDOS attack
-  unsigned int seed = static_cast<unsigned int>(
-      qi::SystemClock::now().time_since_epoch().count()/1000);
-  srand(seed);
-  generate_n(std::back_inserter(s), sz, rand_alnum);
+  generate_n(std::back_inserter(s), sz, randomAlphaNum);
   return s;
 }
 
