@@ -12,10 +12,8 @@
 #include <chrono>
 
 static bool _stopped = false;
-static qi::ApplicationSession* _app;
-static qi::SessionPtr _sd;
-static char **_argv = nullptr;
-static int _argc = 3;
+static qi::ApplicationSession* _app = nullptr;
+static qi::Session* _sd = nullptr;
 
 void onStop()
 {
@@ -35,34 +33,25 @@ TEST(QiApplicationSessionNoAutoExit, defaultConnect)
   ASSERT_FALSE(_stopped);
 }
 
-TEST(QiApplicationSessionNoAutoConnect, checkArgs)
-{
-  ASSERT_EQ(3, _app->argc());
-  EXPECT_EQ(std::string("no"), _app->argv()[0]);
-  EXPECT_EQ(std::string("options"), _app->argv()[1]);
-  EXPECT_EQ(std::string("given"), _app->argv()[2]);
-
-  ASSERT_EQ(3, _argc);
-  EXPECT_EQ(std::string("no"), _argv[0]);
-  EXPECT_EQ(std::string("options"), _argv[1]);
-  EXPECT_EQ(std::string("given"), _argv[2]);
-  EXPECT_EQ(0, _argv[3]);
-}
-
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
 
-  _sd = qi::makeSession();
-  _sd->listenStandalone("tcp://127.0.0.1:0");
-  _argv = new char*[4];
-  strcpy((_argv[0] = new char[4]), "no");
-  strcpy((_argv[1] = new char[10]), "options");
-  strcpy((_argv[2] = new char[10]), "given");
-  _argv[3] = 0;
+  auto sd = qi::makeSession();
+  auto scopedSd = ka::scoped_set_and_restore(_sd, sd.get());
+  sd->listenStandalone("tcp://127.0.0.1:0");
 
-  qi::ApplicationSession app(_argc, _argv, qi::ApplicationSession::Option_NoAutoExit, _sd->endpoints()[0]);
-  _app = &app;
+  argc = 0; // no option given
+  qi::ApplicationSession app(argc, argv, qi::ApplicationSession::Option_NoAutoExit,
+                             sd->endpoints()[0]);
+  auto scopedApp = ka::scoped_set_and_restore(_app, &app);
   app.atStop(&onStop);
-  return RUN_ALL_TESTS();
+
+  auto res = RUN_ALL_TESTS();
+
+  // We must explicitly close the standalone session before destroying the app, otherwise it might
+  // use resources that are owned by the app.
+  sd->close();
+
+  return res;
 }

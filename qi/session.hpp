@@ -33,6 +33,18 @@ namespace qi {
   class Session;
   using SessionPtr = boost::shared_ptr<Session>;
 
+  struct QI_API SessionConfig
+  {
+    /// These URLs are guaranteed to be valid.
+    static Url defaultConnectUrl();
+    static Url defaultListenUrl();
+
+    SessionConfig();
+
+    boost::optional<Url> connectUrl;
+    std::vector<Url> listenUrls;
+  };
+
   /** A Session allows you to interconnect services on the same machine or over
    * the network.
    *
@@ -40,7 +52,9 @@ namespace qi {
    */
   class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
-    Session(bool enforceAuthentication = false);
+    Session(bool enforceAuthentication = false, SessionConfig config = {});
+    explicit Session(SessionConfig defaultConfig);
+
     virtual ~Session();
 
     enum ServiceLocality {
@@ -51,10 +65,18 @@ namespace qi {
 
     static const char* serviceDirectoryServiceName();
 
-    //Client
+    const SessionConfig& config() const;
+
+    // Client
+    /// Uses the connection URL from the configuration or the hardcoded default connect URL if the
+    /// first one isn't set.
+    qi::FutureSync<void> connect();
+
+    /// Ignores the configuration URL and uses the given one instead.
     qi::FutureSync<void> connect(const char* serviceDirectoryURL);
     qi::FutureSync<void> connect(const std::string &serviceDirectoryURL);
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
+
     bool isConnected() const;
     qi::Url url() const;
 
@@ -88,8 +110,17 @@ namespace qi {
                                             const std::string& protocol,
                                             qi::MilliSeconds timeout);
 
-    //Server
+    // Server
+    /// Uses the listen URLs from the configuration.
+    qi::FutureSync<void> listen();
+
+    /// Ignores the configuration listen URLs and uses the given one instead.
     qi::FutureSync<void> listen(const qi::Url &address);
+
+    /// Ignores the configuration listen URLs and uses the given ones instead. If the parameter is
+    /// empty, uses the hardcoded default listen URL.
+    qi::FutureSync<void> listen(const std::vector<qi::Url>& addresses);
+
     std::vector<qi::Url> endpoints() const;
     bool    setIdentity(const std::string& key, const std::string& crt);
 
@@ -97,7 +128,14 @@ namespace qi {
     qi::FutureSync<void>    close();
 
     //this create a listen and create a service directory
+    /// Uses the listen URLs from the configuration or the hardcoded default listen URL if the first
+    /// one is empty.
+    qi::FutureSync<void> listenStandalone();
+
+    /// Ignores the configuration listen URLs and uses the given one instead.
     qi::FutureSync<void> listenStandalone(const qi::Url &address);
+
+    /// Ignores the configuration listen URLs and uses the given ones instead.
     qi::FutureSync<void> listenStandalone(const std::vector<qi::Url> &addresses);
 
     qi::FutureSync<unsigned int> registerService(const std::string &name, AnyObject object);
