@@ -4,8 +4,10 @@
 #include <boost/range/algorithm/copy.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <boost/algorithm/hex.hpp>
 #include <gtest/gtest.h>
 #include <ka/conceptpredicate.hpp>
+#include <ka/ark/inputiter.hpp>
 #include <ka/range.hpp>
 #include <ka/sha1.hpp>
 
@@ -109,12 +111,13 @@ TEST(Sha1, PerformanceRIter) {
   std::string s{"abcd"};
   using clock = high_resolution_clock;
   const auto start = clock::now();
-  for (auto i = iteration_count; i != 0; --i)
-  {
+  for (auto i = iteration_count; i != 0; --i) {
     s[0] = static_cast<char>(sha1(s)[0]);
   }
   std::cout << duration_cast<nanoseconds>(clock::now() - start).count() << " ns\n";
-  std::cout << s << '\n'; // print to avoid the computation to be optimized out
+  // Print to avoid the computation to be optimized out.
+  // `hex` returns the output iterator.
+  *boost::algorithm::hex(s, std::ostream_iterator<char>{std::cout}) = '\n';
 }
 
 namespace std {
@@ -140,21 +143,25 @@ TEST(Sha1, PerformancePointers) {
     s[0] = sha1(range)[0];
   }
   std::cout << duration_cast<nanoseconds>(clock::now() - start).count() << " ns\n";
-  std::cout << s << '\n'; // print to avoid the computation to be optimized out
+  // Print to avoid the computation to be optimized out.
+  // `hex` returns the output iterator.
+  *boost::algorithm::hex(s, std::ostream_iterator<char>{std::cout}) = '\n';
 }
 
 TEST(Sha1, PerformanceIIter) {
   using namespace ka;
   using namespace std::chrono;
-  using I = std::istream_iterator<uint8_t>;
+  // Make the string iterator an input iterator.
+  using I = ark::input_iter_t<std::string::iterator>;
   std::string s{"abcd"};
-  std::istringstream ss{s};
-  const auto range = std::make_pair(I{ss}, I{});
+  const auto range = std::make_pair(I{s.begin()}, I{s.end()});
   using clock = high_resolution_clock;
   const auto start = clock::now();
   for (auto i = iteration_count; i != 0; --i) {
     s[0] = static_cast<char>(sha1(range)[0]);
   }
   std::cout << duration_cast<nanoseconds>(clock::now() - start).count() << " ns\n";
-  std::cout << s << '\n'; // print to avoid the computation to be optimized out
+  // Print to avoid the computation to be optimized out.
+  // `hex` returns the output iterator.
+  *boost::algorithm::hex(s, std::ostream_iterator<char>{std::cout}) = '\n';
 }
