@@ -497,4 +497,18 @@
   KA_GENERATE_FRIEND_REGULAR_OP_EQUAL_AND_OP_LESS_10(type, m0, m1, m2, m3, m4, m5, m6, m7, m8, m9)  \
   KA_GENERATE_FRIEND_REGULAR_DERIVED_OPS(type)
 
+/// Defines a Regular type without any implicit conversion, and whose state is
+/// an integer.
+///
+/// Such a type is useful in testing generic code to ensure there is no typing
+/// mistake. On the opposite, builtin types (`int`, `bool`, `char`, etc.) are
+/// poor candidates for such a task, due to their implicit conversions.
+#define KA_DERIVE_REGULAR_TEST_TYPE(type)         \
+  struct type {                                   \
+    int value;                                    \
+    inline explicit type(int i = 0) : value(i) {} \
+  /* Regular: */                                  \
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(type, value) \
+  }
+
 #endif  // KA_MACROREGULAR_HPP
