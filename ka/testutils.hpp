@@ -13,6 +13,19 @@
 #include "macroregular.hpp"
 
 namespace ka {
+  namespace test {
+    // These types can be used to test correct typing of generic code.
+    KA_DERIVE_REGULAR_TEST_TYPE(A);
+    KA_DERIVE_REGULAR_TEST_TYPE(B);
+    KA_DERIVE_REGULAR_TEST_TYPE(C);
+    KA_DERIVE_REGULAR_TEST_TYPE(D);
+    KA_DERIVE_REGULAR_TEST_TYPE(E);
+    KA_DERIVE_REGULAR_TEST_TYPE(F);
+    KA_DERIVE_REGULAR_TEST_TYPE(G);
+    KA_DERIVE_REGULAR_TEST_TYPE(H);
+    KA_DERIVE_REGULAR_TEST_TYPE(I);
+    KA_DERIVE_REGULAR_TEST_TYPE(J);
+  } // namespace test
 
   /// Useful to test support for move-only types.
   template<typename T>
