@@ -1,6 +1,7 @@
 qi_create_gmock(
   test_ka
   SRC
+    "ark/test_inputiter.cpp"
     "ark/test_mutable.cpp"
     "test_algorithm.cpp"
     "test_base64.cpp"
