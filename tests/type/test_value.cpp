@@ -1030,12 +1030,15 @@ TEST(Value, OptionalBool)
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_FALSE(v.content().to<bool>());
 
-  // optional with a different type of int is allowed
-  EXPECT_NO_THROW(v.set(make_optional(1337)));
-  EXPECT_NO_THROW(v.set(make_optional(67u)));
+  // optional with a different type of int is allowed as long as it's 0 or 1.
+  EXPECT_NO_THROW(v.set(make_optional(0)));
+  EXPECT_NO_THROW(v.set(make_optional(1)));
+  EXPECT_THROW(v.set(make_optional(1337)), std::exception);
 
-  // conversion from a float is technically allowed
-  EXPECT_NO_THROW(v.set(make_optional(33.2)));
+  // conversion from a float is technically allowed as long as it's (close to) 0 or 1.
+  EXPECT_NO_THROW(v.set(make_optional(1.f)));
+  EXPECT_NO_THROW(v.set(make_optional(0.f)));
+  EXPECT_THROW(v.set(make_optional(3.14f)), std::exception);
 
   // conversion from a non numeric type is not allowed
   EXPECT_THROW(v.set(make_optional<std::string>("cookies")), std::exception);
@@ -1163,11 +1166,12 @@ TEST(Value, OptionalAnyValue)
   ASSERT_NO_THROW(v.set(make_optional(AnyValue{ "marshmallows" })));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("marshmallows", v.toOptional<AnyValue>()->to<std::string>());
-  EXPECT_ANY_THROW(v.toOptional<std::string>());
+  EXPECT_EQ("marshmallows", v.toOptional<std::string>().value());
 
   ASSERT_NO_THROW(v.set(make_optional(AnyValue{ 42329 })));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(42329, v.toOptional<AnyValue>()->to<int>());
+  EXPECT_EQ(42329, v.toOptional<int>().value());
   EXPECT_ANY_THROW(v.toOptional<std::string>());
 }
 

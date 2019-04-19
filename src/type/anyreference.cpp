@@ -332,6 +332,7 @@ namespace detail
       return {};
 
     return ka::invoke_catch(DefaultUniqueAnyRef{}, [&] {
+      const auto optValType = targetType->valueType();
       UniqueAnyReference result{ AnyReference{ targetType } };
       switch (_type->kind())
       {
@@ -340,13 +341,26 @@ namespace detail
         // optional
         break;
       case TypeKind_Optional:
-        result->setOptional(*this);
+      {
+        const auto thisType = static_cast<OptionalTypeInterface*>(_type);
+        const auto thisValueType = thisType->valueType();
+
+        // We do not allow the conversion of Opt<T> to Opt<U> if T is not convertible to U, even if
+        // the instance of Opt<T> is empty. An exception to this is if T is Dynamic because it might
+        // work in some cases (where the dynamic value is convertible to U).
+        if (thisValueType->kind() != TypeKind_Dynamic &&
+            thisValueType->signature().isConvertibleTo(optValType->signature()) == 0.f)
+        {
+          throwConversionFailure(_type, optValType, "optional value type is not convertible to"
+                                 " target optional value type.");
+        }
+        result->setOptional(asOptional());
         break;
+      }
       // In all other cases, try setting this value as the value of the
       // optional
       default:
         // Recurse the conversion to the value type of the optional
-        const auto optValType = targetType->valueType();
         auto converted = convert(optValType);
         if (!converted->isValid())
           throwConversionFailure(_type, optValType, "");
@@ -775,6 +789,15 @@ namespace detail
     if (kind() != TypeKind_Raw)
       throw std::runtime_error("asRaw only available for raw kind");
     return static_cast<RawTypeInterface*>(_type)->get(_value);
+  }
+
+  boost::optional<AnyReference> AnyReferenceBase::asOptional() const
+  {
+    if (kind() != TypeKind_Optional)
+      throw std::runtime_error("asOptional only available for optional kind");
+    if (optionalHasValue())
+      return boost::make_optional(content());
+    return {};
   }
 
   UniqueAnyReference AnyReferenceBase::convert(TypeInterface* targetType) const
@@ -1236,7 +1259,7 @@ namespace detail
         break;
       }
     case TypeKind_Optional:
-      setOptional(val);
+      setOptional(AnyReference(val).asOptional());
       break;
     default:
       throw std::runtime_error("Update not implemented for this type.");
@@ -1272,39 +1295,28 @@ namespace detail
     t->set(&_value, element);
   }
 
-  void AnyReferenceBase::setOptional(const AnyReference& opt)
+  void AnyReferenceBase::setOptional(const boost::optional<AnyReference>& opt)
   {
-    if (opt.kind() != TypeKind_Optional)
-      throw std::runtime_error("Cannot set optional from argument: argument is not an Optional");
     if (kind() != TypeKind_Optional)
       throw std::runtime_error("Cannot set optional from argument: object is not an Optional");
 
-    const auto argType = static_cast<OptionalTypeInterface*>(opt._type);
-    const auto thisType = static_cast<OptionalTypeInterface*>(_type);
+    auto* const thisType = static_cast<OptionalTypeInterface*>(_type);
 
-    const auto argValueType = argType->valueType();
-    const auto thisValueType = thisType->valueType();
-
-    // When argument optional has no value, we might not know what its real value type is (when
-    // for instance its type is dynamic), which means that we cannot know for sure that the
-    // argument value type would have been convertible to this object value type.
-    // The signature conversion check returns zero when conversion cannot be ensured.
-    // Otherwise, we accept that if it had a value it would have been convertible in any cases.
-    if (argValueType->signature().isConvertibleTo(thisValueType->signature()) == 0.f)
-    {
-      throw std::runtime_error(
-          "Cannot set optional from argument: argument value type is not convertible to this "
-          "object value type");
-    }
-
-    if (!argType->hasValue(opt._value))
+    if (!opt)
       thisType->reset(&_value);
     else
     {
-      auto conv = opt.content().convert(thisValueType);
-      if (conv->isValid())
-        thisType->set(&_value, conv->_value);
+      const auto& argValue = *opt;
+      auto conv = argValue.convert(thisType->valueType());
+      if (!conv->isValid())
+        throwConversionFailure(argValue.type(), thisType, "(invalid optional value type)");
+      thisType->set(&_value, conv->_value);
     }
+  }
+
+  void AnyReferenceBase::setOptional(const AnyReference& opt)
+  {
+    return setOptional(opt.asOptional());
   }
 
   void AnyReferenceBase::setRaw(const char *buffer, size_t size) {
