@@ -34,6 +34,7 @@ qi_create_gmock(
   "test_path_conf.cpp"
   "test_periodictask.cpp"
   "test_ptruid.cpp"
+  "test_objectuid.cpp"
   "test_qi.cpp" # main
   "test_qiatomic.cpp"
   "test_qiclock.cpp"
