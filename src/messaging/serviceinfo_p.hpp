@@ -20,7 +20,7 @@ public:
   unsigned int processId;
   qi::UrlVector endpoints;
   std::string sessionId;
-  boost::optional<qi::ObjectUid> objectUid;
+  std::string objectUid; // TODO: Revert to use `boost::optional<qi::ObjectUid>` once retro-compatibility is not an issue anymore.
 };
 
 }

@@ -14,6 +14,7 @@
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
 #include "remoteobject_p.hpp"
+#include "src/type/objectuid_p.hpp"
 
 qiLogCategory("qimessaging.sessionservice");
 
@@ -213,7 +214,10 @@ namespace qi {
         session_service_private::sendCapabilities(socket);
         qi::Future<void> metaObjFut;
         QI_ASSERT_NULL(sr->remoteObject);
-        sr->remoteObject.reset(new qi::RemoteObject(sr->serviceInfo.serviceId(), socket, sr->serviceInfo.objectUid()));
+        sr->remoteObject.reset(new qi::RemoteObject(sr->serviceInfo.serviceId()
+                              , socket
+                              , deserializeObjectUid(sr->serviceInfo.objectUid()))
+                              );
 
         // TODO 40203: check if it's possible that the following future is never set.
         metaObjFut = sr->remoteObject->fetchMetaObject();
@@ -249,7 +253,10 @@ namespace qi {
         socket->socketEvent.disconnectAsync(*old);
       QI_ASSERT_NULL(sr->remoteObject);
 
-      sr->remoteObject = boost::make_shared<RemoteObject>(sr->serviceInfo.serviceId(), socket, sr->serviceInfo.objectUid());
+      sr->remoteObject = boost::make_shared<RemoteObject>(sr->serviceInfo.serviceId()
+                                                         , socket
+                                                         , deserializeObjectUid(sr->serviceInfo.objectUid())
+                                                         );
 
       //ask the remoteObject to fetch the metaObject
       metaObjFut = sr->remoteObject->fetchMetaObject();

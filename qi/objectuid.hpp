@@ -13,7 +13,8 @@ namespace qi
   /// We only guarantee that it is Regular, i.e. it has value semantics.
   /// See ka/concept.hpp for a complete definition of Regular.
   /// The definition of ObjectUid may be changed in the future.
-  using ObjectUid = PtrUid; // TODO: strong type
-}
+  using ObjectUid = PtrUid;
+
+} // namespace qi
 
 #endif
