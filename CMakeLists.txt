@@ -412,6 +412,7 @@ set(KA_H
   ka/src.hpp
   ka/testutils.hpp
   ka/typetraits.hpp
+  ka/unit.hpp
   ka/utility.hpp
 )
 
