@@ -76,7 +76,7 @@ public:
 
     Config& setConnectUrl(Url connectUrl);
 
-    boost::optional<Url> connectUrl() const;
+    const boost::optional<Url>& connectUrl() const;
 
     /**
      * Set default url to listen to
