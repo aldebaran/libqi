@@ -6,12 +6,12 @@
 
 #include <utility>
 #include <boost/program_options.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <qi/trackable.hpp>
 #include <qi/applicationsession.hpp>
 #include <qi/anyvalue.hpp>
 #include <qi/log.hpp>
+#include "applicationsession_internal.hpp"
 
 qiLogCategory("qi.applicationsession");
 
@@ -21,144 +21,37 @@ namespace qi
 namespace
 {
 
+using appsession_internal::ProgramOptions;
+boost::synchronized_value<boost::optional<ProgramOptions>> g_defaultProgramOptions;
+
+template<typename... Args>
+ProgramOptions emplaceDefaultProgramOptions(Args&&... args)
+{
+  auto syncProgOpts = g_defaultProgramOptions.synchronize();
+  syncProgOpts->emplace(std::forward<Args>(args)...);
+  return syncProgOpts->get();
+}
+
+/// @throws `boost::bad_optional_access` if `setDefaultProgramOptions` was not called before.
+ProgramOptions defaultProgramOptions()
+{
+  return g_defaultProgramOptions->value();
+}
+
 void onDisconnected(const std::string& /*errorMessage*/)
 {
   Application::stop();
 }
 
-std::string& argvConnectAddress()
-{
-  static std::string address;
-  return address;
-}
-
-std::string& argvListenAddresses()
-{
-  static std::string addresses;
-  return addresses;
-}
-
-bool& argvStandalone()
-{
-  static bool standalone = false;
-  return standalone;
-}
-
-void parseAddress()
-{
-  namespace po = boost::program_options;
-  po::options_description desc("ApplicationSession options");
-
-  static const std::string qiListenUrlsOption = ""
-      "Set URL to listen to.\n"
-      "Can be more than one URL to listen semicolon-separated list.\n"
-
-      " tcp://127.0.0.1:9555;tcp://:9999;127.0.0.1\n"
-      "Missing information from incomplete URLs will be defaulted by defaultListenUrl.\n"
-      "If the default URL is tcps://0.0.0.0:9559 the previous list will become:\n"
-      " tcp://127.0.0.1:9555;tcp://0.0.0.0:9999;tcps://127.0.0.1:9559";
-
-  desc.add_options()
-      ("qi-url", po::value<std::string>(&argvConnectAddress()), "The address of the service directory")
-      ("qi-listen-url", po::value<std::string>(&argvListenAddresses()), qiListenUrlsOption.c_str())
-      ("qi-standalone", "create a standalone session (this will use qi-listen-url if provided");
-
-  po::variables_map vm;
-  po::parsed_options parsed =
-      po::command_line_parser(Application::arguments()).options(desc).allow_unregistered().run();
-  po::store(parsed, vm);
-  po::notify(vm);
-
-  Application::setArguments(po::collect_unrecognized(parsed.options, po::include_positional));
-  argvStandalone() = vm.count("qi-standalone") ? true : false;
-
-  Application::options().add(desc);
-}
-
 // This function is used to add the callback before the call of Application's constructor
 int& addParseOptions(int& argc)
 {
-  Application::atEnter(parseAddress);
-  return argc;
-}
-
-/// @pre `addressesStr` is not empty.
-/// @post The returned list is not empty.
-std::vector<Url> splitListenAddresses(const std::string& addressesStr,
-                                      const Url& base = SessionConfig::defaultListenUrl())
-{
-  QI_ASSERT_FALSE(addressesStr.empty());
-  std::vector<std::string> addresses;
-  boost::split(addresses, addressesStr, boost::is_any_of(";"));
-  const auto urls = boost::adaptors::transform(addresses, [&](const std::string& address) {
-    return specifyUrl(Url(address), base);
+  Application::atEnter([]{
+    const auto programOptions = emplaceDefaultProgramOptions(Application::arguments());
+    Application::setArguments(programOptions.unrecognizedArgs);
+    Application::options().add(ProgramOptions::description());
   });
-  QI_ASSERT_FALSE(urls.empty());
-  return std::vector<Url>(urls.begin(), urls.end());
-}
-
-/// @post The returned configuration holds a valid connect URL and a least one valid listen URL.
-ApplicationSession::Config finalizeConfig(ApplicationSession::Config conf)
-{
-  // Priority for configuration values are: command line over environment over hardcoded.
-  // Assuming hardcoded values are already in the config passed as the parameter, we first check
-  // the environment values and then the command line arguments.
-  //
-  // At each step, we keep the first of the listen URLs with lower priorities as base for incomplete
-  // URLs before discarding all lower priorities URLs.
-
-  const auto updateConnectUrl = [&](const std::string& connectAddress) {
-    if (connectAddress.empty())
-      return;
-
-    auto base = conf.connectUrl().value_or(Url());
-    base = specifyUrl(base, SessionConfig::defaultConnectUrl());
-
-    qiLogVerbose() << "Connect url specified: " << connectAddress
-                   << ", now defaulting missing URL parts from " << base;
-    conf.setConnectUrl(specifyUrl(Url(connectAddress), base));
-    qiLogVerbose() << "Connect url is now: " << *conf.connectUrl();
-  };
-
-  const auto updateListenUrls = [&](const std::string& listenAddresses) {
-    if (listenAddresses.empty())
-      return;
-
-    const auto& confListenUrls = conf.listenUrls();
-    auto base =
-      confListenUrls.empty() ? Url{} : confListenUrls.front();
-    base = specifyUrl(base, SessionConfig::defaultListenUrl());
-
-    qiLogVerbose() << "Listen URLs specified: {" << listenAddresses
-                 << "}, now defaulting missing URL parts with " << base;
-
-    auto listenUrls = splitListenAddresses(listenAddresses, base);
-    conf.setListenUrls(listenUrls);
-
-    auto listenUrlsStr = boost::join(
-      boost::adaptors::transform(conf.listenUrls(), [](const Url& url) { return url.str(); }), " ");
-    qiLogVerbose() << "Listen URLs are now: " << listenUrlsStr;
-  };
-
-  qiLogVerbose() << "Interpreting environment variables.";
-  {
-    const auto envConnectAddress = os::getenv("QI_URL");
-    const auto envListenAddresses = os::getenv("QI_LISTEN_URL");
-    updateConnectUrl(envConnectAddress);
-    updateListenUrls(envListenAddresses);
-  }
-
-  qiLogVerbose() << "Interpreting command line arguments.";
-
-  // Having both standalone and a connect URL as command line arguments is not acceptable.
-  if (argvStandalone() && !argvConnectAddress().empty())
-    throw std::runtime_error("You cannot specify both --qi-standalone and --qi-url to connect.");
-
-  conf.setStandalone(conf.standalone() || argvStandalone());
-  updateConnectUrl(argvConnectAddress());
-  updateListenUrls(argvListenAddresses());
-
-  return conf;
+  return argc;
 }
 
 }
@@ -167,7 +60,7 @@ class ApplicationSessionPrivate : public Trackable<ApplicationSessionPrivate>
 {
 public:
   ApplicationSessionPrivate(const ApplicationSession::Config& config)
-    : _config(finalizeConfig(config))
+    : _config(reconfigureWithProgramOptions(config, defaultProgramOptions()))
     , _session(makeSession(_config.sessionConfig()))
     , _init(false)
   {
@@ -197,7 +90,7 @@ public:
     _session->connect();
 
     // Only listen if there were listen URLs specified on the command line.
-    if (!argvListenAddresses().empty())
+    if (defaultProgramOptions().hasCliListenUrl)
       _session->listen();
   }
 
@@ -373,7 +266,9 @@ Url ApplicationSession::url() const
 
 Url ApplicationSession::listenUrl() const
 {
-  return _p->_config.sessionConfig().listenUrls.at(0);
+  const auto& confListenUrls = _p->_config.sessionConfig().listenUrls;
+  QI_ASSERT_FALSE(confListenUrls.empty());
+  return confListenUrls.at(0);
 }
 
 std::vector<Url> ApplicationSession::allListenUrl() const
@@ -411,11 +306,12 @@ void ApplicationSession::run()
 
 bool ApplicationSession::standAlone()
 {
-  return argvStandalone();
+  return _p->_config.standalone();
 }
 
 std::string ApplicationSession::helpText() const
 {
   return Application::helpText();
 }
+
 }

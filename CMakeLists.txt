@@ -304,6 +304,8 @@ set(QIM_H qi/api.hpp
 )
 
 set(QIM_C
+  src/messaging/applicationsession_internal.hpp
+  src/messaging/applicationsession_internal.cpp
   src/messaging/applicationsession.cpp
   src/messaging/authprovider_p.hpp
   src/messaging/authprovider.cpp

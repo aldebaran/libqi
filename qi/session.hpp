@@ -39,8 +39,11 @@ namespace qi {
     static Url defaultConnectUrl();
     static Url defaultListenUrl();
 
+  // Regular:
     SessionConfig();
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(SessionConfig, connectUrl, listenUrls)
 
+  // SessionConfig:
     boost::optional<Url> connectUrl;
     std::vector<Url> listenUrls;
   };

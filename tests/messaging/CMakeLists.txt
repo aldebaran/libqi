@@ -93,10 +93,6 @@ if(QI_WITH_TESTS)
   qi_create_gtest(test_applicationsession SRC test_applicationsession.cpp DEPENDS QI GTEST TIMEOUT 30)
   qi_create_gtest(test_applicationsession_option SRC test_applicationsession_option.cpp DEPENDS QI GTEST TIMEOUT 30)
   qi_create_gtest(test_applicationsessionnoautoexit SRC test_applicationsession_noautoexit.cpp DEPENDS QI GTEST TIMEOUT 30)
-  qi_create_test_helper(test_appsession_opts SRC test_applicationsession_opts.cpp DEPENDS QI GTEST GTEST_MAIN)
-  qi_add_test(test_appsession_options_low test_appsession_opts ARGUMENTS low TIMEOUT 30)
-  qi_add_test(test_appsession_options_med test_appsession_opts ARGUMENTS medium TIMEOUT 30)
-  qi_add_test(test_appsession_options_high test_appsession_opts ARGUMENTS high TIMEOUT 30)
 
   # Broken!
   #qi_create_gtest(test_application SRC "test_messaging_application_exit.cpp" DEPENDS QI)
@@ -104,6 +100,7 @@ endif()
 
 # Some tests target internal classes
 set(MESSAGING_SOURCES
+  "../../src/messaging/applicationsession_internal.cpp"
   "../../src/messaging/boundobject.cpp"
   "../../src/messaging/messagedispatcher.cpp"
   "../../src/messaging/objecthost.cpp"
@@ -131,6 +128,7 @@ qi_create_gmock(
   "sock/test_receive.cpp"
   "sock/test_send.cpp"
   "test_tcpmessagesocket.cpp"
+  "test_appsession_internal.cpp"
   ${MESSAGING_SOURCES}
 
   DEPENDS
