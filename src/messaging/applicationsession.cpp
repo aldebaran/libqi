@@ -272,7 +272,7 @@ ApplicationSession::Config& ApplicationSession::Config::setConnectUrl(Url url)
   return *this;
 }
 
-boost::optional<Url> ApplicationSession::Config::connectUrl() const
+const boost::optional<Url>& ApplicationSession::Config::connectUrl() const
 {
   return _sessionConfig.connectUrl;
 }
