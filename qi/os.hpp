@@ -212,7 +212,8 @@ namespace qi {
      * \brief Change or add an environment variable.
      * \param var The variable name.
      * \param value The value of the variable.
-     * \return 0 on success, or -1 on error.
+     * \return 0 on success, or another unspecified value on error, in which case `errno` is set to
+     *   indicate the cause of the error.
      *
      * \verbatim
      * Adds the variable name to the environment with the value in argument if name
@@ -222,6 +223,22 @@ namespace qi {
      * \endverbatim
      */
     QI_API int setenv(const char *var, const char *value);
+
+    /**
+     * \brief Remove an environment variable.
+     * \param var The variable name. If null, the behavior is unspecified.
+     * \return 0 on success, or another unspecified value on error, in which case `errno` is set to
+     *   indicate the cause of the error.
+     *
+     * \verbatim
+     * Removes the variable name from the environment. If the variable did not already exist or was
+     * unset, the environment is unchanged and the function returns with a success.
+     * \endverbatim
+     * \post `getenv(var).empty()`
+     *
+     */
+    QI_API int unsetenv(const char *var);
+
     /**
      * \brief Return the timezone.
      * \return A string with the timezone.

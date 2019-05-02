@@ -299,6 +299,25 @@ TEST(QiOs, envParam)
   EXPECT_EQ('z', qi::os::getEnvParam<char>("TOTO", 'z'));
 }
 
+TEST(QiOs, Unsetenv)
+{
+  ASSERT_EQ(0, qi::os::setenv("cookies", "good"));
+  EXPECT_EQ("good", qi::os::getenv("cookies"));
+  ASSERT_EQ(0, qi::os::unsetenv("cookies"));
+  EXPECT_TRUE(qi::os::getenv("cookies").empty());
+}
+
+TEST(QiOs, UnsetenvInexistentVariable)
+{
+  ASSERT_EQ(0, qi::os::unsetenv("a_variable_name_that_probably_does_not_exist"));
+}
+
+TEST(QiOs, UnsetenvTwice)
+{
+  ASSERT_EQ(0, qi::os::setenv("cookies", "good"));
+  ASSERT_EQ(0, qi::os::unsetenv("cookies"));
+  ASSERT_EQ(0, qi::os::unsetenv("cookies"));
+}
 
 TEST(QiOs, getpid)
 {
