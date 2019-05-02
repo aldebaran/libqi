@@ -147,6 +147,11 @@ namespace qi {
                         boost::filesystem::path(value, qi::unicodeFacet()).wstring().c_str());
     }
 
+    int unsetenv(const char *var) {
+      return _wputenv_s(boost::filesystem::path(var, qi::unicodeFacet()).wstring().c_str(),
+                        L"");
+    }
+
     void sleep(unsigned int seconds) {
       Sleep(seconds * 1000);
     }

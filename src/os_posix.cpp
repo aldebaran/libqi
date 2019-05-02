@@ -85,6 +85,10 @@ namespace qi {
       return ::setenv(var, value, 1);
     }
 
+    int unsetenv(const char *var) {
+      return ::unsetenv(var);
+    }
+
     void sleep(unsigned int seconds) {
       // In case sleep was interrupted by a signal,
       // keep sleeping until we have slept the correct amount
