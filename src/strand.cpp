@@ -240,7 +240,7 @@ Future<void> StrandPrivate::deferImpl(boost::function<void()> cb, qi::Duration d
   {
     cbStruct->asyncFuture = _executor.asyncDelay(track([=]{
       enqueue(cbStruct, options);
-    }), delay, options);
+    }), delay, options).then(ka::constant_function());
     _deferredTasksFutures->add(cbStruct->promise);
   }
   else
