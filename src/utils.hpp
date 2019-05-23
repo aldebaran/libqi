@@ -24,7 +24,12 @@ std::string fsconcat(S&&... paths)
       std::vector<std::string>{ std::initializer_list<std::string>{ std::forward<S>(paths)... } });
 }
 
+/// Returns a random string of the asked size, with characters inside
+/// `[0-9A-Za-z]`.
 std::string randomstr(std::string::size_type sz);
+
+/// Returns a random wide-character string of the asked size, with characters
+/// inside `[0-9A-Za-z]`.
 std::wstring wrandomstr(std::wstring::size_type sz);
 
 #endif  // _SRC_UTILS_HPP_

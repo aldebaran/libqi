@@ -214,6 +214,8 @@ public:
   /// @return a pair of (char*, size) corresponding to the raw buffer. No copy made.
   std::pair<char*, size_t> asRaw() const;
 
+  boost::optional<AnyReference> asOptional() const;
+
   /** @return contained AnyValue or throw if type is not dynamic.
    * @note Returned AnyReference might be empty.
    */
@@ -256,8 +258,11 @@ public:
   void  setDynamic(const AnyReference &value);
 
   /// Sets the value of the optional. A copy will be made.
-  /// @throw std::runtime_error if either kind of `this` or kind of `opt` is not Optional
-  void  setOptional(const AnyReference& opt);
+  /// @throw std::runtime_error if `this` is not Optional.
+  void setOptional(const boost::optional<AnyReference>& opt);
+
+  QI_API_DEPRECATED_MSG(Use `setOptional(boost::optional<AnyReference>)` instead)
+  void setOptional(const AnyReference& opt);
 
   /// set the value of the raw buffer, a copy will be made.
   /// @throw std::runtime_error when kind is not Raw

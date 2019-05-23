@@ -358,6 +358,106 @@ TEST(TestCall, TestFloatToDoubleConvertion)
   qi::Future<int> fut = proxy.async<int>("fakeRGB", "Haha", 42, duration);
 }
 
+struct TestCallOptional : testing::Test
+{
+  void SetUp() override
+  {
+    qi::DynamicObjectBuilder ob;
+    ob.advertiseMethod(funcName, [](boost::optional<int> o){
+      return o ? *o : -1;
+    });
+
+    serviceId = p.server()->registerService(serviceName, ob.object()).value();
+    ASSERT_TRUE(serviceId != 0);
+
+    proxy = p.client()->service(serviceName).value();
+    ASSERT_TRUE(proxy);
+  }
+
+  void TearDown() override
+  {
+    p.server()->unregisterService(serviceId);
+  }
+
+  const std::string serviceName = "serviceConv";
+  const std::string funcName = "funcOpt";
+  TestSessionPair p;
+  unsigned int serviceId;
+  qi::AnyObject proxy;
+};
+
+// The function can be called with a optional<int> with a value.
+TEST_F(TestCallOptional, CanBeCalledWithOptIntWithValue)
+{
+  auto fut = proxy.async<int>(funcName, boost::make_optional(42));
+  int val;
+  ASSERT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(42, val);
+}
+
+// The function can be called with a optional<int> without a value.
+TEST_F(TestCallOptional, CanBeCalledWithOptIntWithoutValue)
+{
+  auto fut = proxy.async<int>(funcName, boost::optional<int>());
+  int val;
+  EXPECT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(-1, val);
+}
+
+// The function can be called with boost::none.
+TEST_F(TestCallOptional, CanBeCalledWithOptNone)
+{
+  auto fut = proxy.async<int>(funcName, boost::none);
+  int val;
+  EXPECT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(-1, val);
+}
+
+// The function can be called with an int (implicit conversion from T to Opt<T>).
+TEST_F(TestCallOptional, CanBeCalledWithInt)
+{
+  auto fut = proxy.async<int>(funcName, 42);
+  int val;
+  EXPECT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(42, val);
+}
+
+// The function can be called with a optional<AnyValue> with an int value.
+TEST_F(TestCallOptional, CanBeCalledWithOptAnyValueWithIntValue)
+{
+  auto fut = proxy.async<int>(funcName, boost::make_optional(qi::AnyValue::from(13)));
+  int val;
+  EXPECT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(13, val);
+}
+
+// The function can be called with a optional<AnyValue> without a value.
+TEST_F(TestCallOptional, CanBeCalledWithOptAnyValueWithoutValue)
+{
+  auto fut = proxy.async<int>(funcName, boost::optional<qi::AnyValue>());
+  int val;
+  EXPECT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(-1, val);
+}
+
+// The function can be called with a optional<AnyValue> with a value of another type we can convert
+// from.
+TEST_F(TestCallOptional, CanBeCalledWithOptAnyValueWithValueOfConvertibleType)
+{
+  auto fut = proxy.async<int>(funcName, boost::make_optional(qi::AnyValue::from(true)));
+  int val;
+  EXPECT_TRUE(test::finishesWithValue(fut, test::willAssignValue(val)));
+  EXPECT_EQ(1, val);
+}
+
+// The function cannot be called with a optional<AnyValue> with a value of a type we can't convert
+// from.
+TEST_F(TestCallOptional, FailsIfCalledWithOptAnyValueWithValueOfNonConvertibleType)
+{
+  auto fut = proxy.async<int>(funcName, boost::make_optional(qi::AnyValue::from("foo")));
+  EXPECT_TRUE(test::finishesWithError(fut));
+}
+
 qi::AnyObject createObject() {
   qi::DynamicObjectBuilder ob;
 
