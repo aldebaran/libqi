@@ -123,10 +123,10 @@ namespace qi {
     else                 return {};
   }
 
-  size_t getMaxPayloadFromEnv(size_t defaultValue)
+  std::uint32_t getMaxPayloadFromEnv(std::uint32_t defaultValue)
   {
     std::string l = os::getenv("QI_MAX_MESSAGE_PAYLOAD");
-    return l.empty() ? defaultValue : boost::lexical_cast<size_t>(l);
+    return l.empty() ? defaultValue : boost::lexical_cast<std::uint32_t>(l);
   }
 
 } // namespace qi

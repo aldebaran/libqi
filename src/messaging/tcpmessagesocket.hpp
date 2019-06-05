@@ -343,7 +343,7 @@ namespace qi {
     }
   }
 
-  size_t getMaxPayloadFromEnv(size_t defaultValue = std::numeric_limits<size_t>::max());
+  std::uint32_t getMaxPayloadFromEnv(std::uint32_t defaultValue = std::numeric_limits<std::uint32_t>::max());
 
   /// Start receiving messages. Also allows to send messages.
   ///
