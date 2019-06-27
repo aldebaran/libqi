@@ -10,6 +10,7 @@
 #include <vector>
 #include <utility> // pair
 #include <boost/bind.hpp>
+#include <ka/errorhandling.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/log.hpp>
 #include <qi/strand.hpp>
@@ -173,20 +174,30 @@ namespace detail {
     }
 
     template <typename T>
-    void FutureBaseTyped<T>::cancel(qi::Future<T>& future)
+    void FutureBaseTyped<T>::cancel(qi::Future<T>& future) noexcept
     {
-      CancelCallback onCancel;
+      // optional necessary in case of error, see ka::invoke_catch() usage below
+      auto cancelImpl = [&]() -> boost::optional<std::string> {
+        CancelCallback onCancel;
+        {
+          boost::recursive_mutex::scoped_lock lock(mutex());
+          if (isFinished())
+            return {};
+          requestCancel();
+          std::swap(onCancel, _onCancel);
+        }
+        if (onCancel)
+        {
+          qi::Promise<T> prom(future);
+          onCancel(prom);
+        }
+
+        return {};
+      };
+
+      if (auto const maybeError = ka::invoke_catch(ka::exception_message{}, cancelImpl))
       {
-        boost::recursive_mutex::scoped_lock lock(mutex());
-        if (isFinished())
-          return;
-        requestCancel();
-        std::swap(onCancel, _onCancel);
-      }
-      if (onCancel)
-      {
-        qi::Promise<T> prom(future);
-        onCancel(prom);
+        qiLogError("qi.future") << "Future/Promise cancel handler threw an exception: " << maybeError.value();
       }
     }
 
