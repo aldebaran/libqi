@@ -381,7 +381,7 @@ namespace qi {
      * expected to set a value or an error to the Future as fast as possible.
      * Note that cancelation may be asynchronous.
      */
-    void cancel()
+    void cancel() noexcept
     {
       _p->cancel(*this);
     }
@@ -760,7 +760,7 @@ namespace qi {
     bool hasError(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasError(msecs); }
     bool hasValue(int msecs = FutureTimeout_Infinite) const            { _sync = false; return _future.hasValue(msecs); }
     const std::string &error(int msecs = FutureTimeout_Infinite) const { _sync = false; return _future.error(msecs); }
-    void cancel()                                                      { _sync = false; _future.cancel(); }
+    void cancel() noexcept                                             { _sync = false; _future.cancel(); }
     bool isCancelable() const                                          { _sync = false; return true; }
     void connect(const Connection& s)                                  { _sync = false; _future.connect(s);}
     void _connect(const boost::function<void()>& s)                    { _sync = false; _future._connect(s);}
@@ -991,7 +991,7 @@ namespace qi {
       FutureBaseTyped();
       ~FutureBaseTyped();
 
-      void cancel(qi::Future<T>& future);
+      void cancel(qi::Future<T>& future) noexcept;
 
       /*
        * inplace api for promise
