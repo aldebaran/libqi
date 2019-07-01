@@ -395,6 +395,20 @@ TEST(Value, Tuple)
   ASSERT_EQ(p, gtuple.to<Point2D>());
 }
 
+TEST(Value, StructFromAndToMap)
+{
+  std::map<std::string, int> asMap;
+  asMap["x"] = 1;
+  asMap["y"] = 2;
+  auto value = AnyValue::from(asMap);
+
+  Point2D expectedStruct;
+  expectedStruct.x = 1;
+  expectedStruct.y = 2;
+
+  auto asStruct = value.to<Point2D>();
+  EXPECT_EQ(expectedStruct, asStruct);
+}
 
 struct Point2
 {
