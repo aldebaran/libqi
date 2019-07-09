@@ -193,7 +193,7 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
   auto sb = getSignal(_data, instance, event);
   if (!sb) {
     qiLogWarning() << "connect: no such signal: " << event;
-    return qi::makeFutureError<SignalLink>("Cant find signal");
+    return qi::makeFutureError<SignalLink>("cannot find signal");
   }
   SignalLink id = sb->connect(subscriber);
   if (!isValidSignalLink(id))
@@ -221,7 +221,7 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
   if (!sb)
   {
     qiLogWarning() << "disconnect: no such signal: " << event;
-    return qi::makeFutureError<void>("Cant find signal");
+    return qi::makeFutureError<void>("cannot find signal");
   }
 
   return sb->disconnectAsync(link).andThen([](bool successful)
@@ -237,7 +237,7 @@ qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject co
   if (!p)
   {
     qiLogWarning() << "property: no such property: " << id;
-    return qi::makeFutureError<AnyValue>("Cant find property");
+    return qi::makeFutureError<AnyValue>("cannot find property");
   }
   ExecutionContext* ec = getExecutionContext(instance, context);
   if (ec)
@@ -259,7 +259,7 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject con
   if (!p)
   {
     qiLogWarning() << "setProperty: no such property: " << id;
-    return qi::makeFutureError<void>("Cant find property");
+    return qi::makeFutureError<void>("cannot find property");
   }
   qiLogDebug() << "SetProperty " << id << " " << encodeJSON(value);
   ExecutionContext* ec = getExecutionContext(instance, context);
