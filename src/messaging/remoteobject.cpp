@@ -529,7 +529,7 @@ namespace qi {
         LocalToRemoteSignalLinkMap::iterator it;
         it = _localToRemoteSignalLink.find(event);
         if (it == _localToRemoteSignalLink.end()) {
-          qiLogWarning() << "Cant find " << event << " in the localtoremote signal map";
+          qiLogWarning() << "Cannot find " << event << " in the local-to-remote signal map";
           return f;
         }
 
@@ -542,7 +542,7 @@ namespace qi {
           if (vslit != rsl.localSignalLink.end()) {
             rsl.localSignalLink.erase(vslit);
           } else {
-            qiLogWarning() << "Can't find " << linkId << " in the remote signal vector (event:" << event << ")";
+            qiLogWarning() << "Cannot find " << linkId << " in the remote signal vector (event:" << event << ")";
           }
 
           // Only drop the remote connection when no more local connection is registered.
