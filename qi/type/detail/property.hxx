@@ -121,7 +121,7 @@ namespace qi
     ka::invoke_catch(qi::exceptionLogError("qi.type.readonlyproperty",
                                            "Error while destroying a read only property"),
                      [&] {
-                       Trackable<ReadOnlyProperty>::destroy();
+                       this->destroy();
                        _source.disconnectAsync(_subscription);
                      });
   }
