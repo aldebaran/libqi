@@ -1034,7 +1034,7 @@ TEST(TestCall, Future)
     qi::Future<int> operator()(int value)
     {
       const auto idx = promIndex++;
-      QI_ASSERT_TRUE(idx < syncPromises.size());
+      QI_ASSERT_TRUE(idx < static_cast<int>(syncPromises.size()));
       auto& syncProm = syncPromises[idx];
 
       qi::Promise<int> result;
