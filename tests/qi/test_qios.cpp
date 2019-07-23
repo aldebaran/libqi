@@ -335,6 +335,17 @@ TEST(QiOs, getpid)
 #endif
 }
 
+TEST(QiOs, Home)
+{
+#ifdef ANDROID
+  // Home always fails on Android as it is not accessible.
+  EXPECT_THROW(qi::os::home(), std::runtime_error);
+#else
+  // On any other platform, this should not throw.
+  EXPECT_NO_THROW(qi::os::home());
+#endif
+}
+
 TEST(QiOs, tmp)
 {
   std::string temp = qi::os::tmp();
@@ -447,8 +458,12 @@ TEST(QiOs, tmpdir_prefix_zero)
 
 TEST(QiOs, get_host_name)
 {
+#ifdef ANDROID
+  EXPECT_THROW(qi::os::gethostname(), std::runtime_error);
+#else
   std::string temp = qi::os::gethostname();
   EXPECT_NE(std::string(), temp);
+#endif
 }
 
 bool freeportbind(unsigned short port, int &sock)

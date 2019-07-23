@@ -116,6 +116,7 @@ namespace qi {
     QI_API int checkdbg();
     /**
      * \brief Return path to the current user's HOME.
+     * \throws On Android, a `std::runtime_error` explaining that this function is not available.
      * \return String to user's HOME
      */
     QI_API std::string home();
@@ -149,6 +150,7 @@ namespace qi {
     QI_API void symlink(const qi::Path& source, const qi::Path& destination);
     /**
      * \brief Get the system's hostname.
+     * \throws On Android, a `std::runtime_error` explaining that this function is not available.
      * \return The system's hostname. An empty string is returned on failure.
      */
     QI_API std::string gethostname();

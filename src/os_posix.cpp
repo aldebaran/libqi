@@ -105,10 +105,17 @@ namespace qi {
     }
 
 
+#ifdef ANDROID
+  // TODO: Use a constexpr function in C++20.
+#  define QI_OS_ANDROID_CANNOT_DO_MSG(what) \
+    "Cannot " what " for Android from libqi, " \
+    "use the NDK or the Android API instead."
+#endif
+
     std::string home()
     {
 #ifdef ANDROID
-      return "/mnt/sdcard";
+      throw std::runtime_error(QI_OS_ANDROID_CANNOT_DO_MSG("get a home directory"));
 #endif
       std::string envHome = qi::os::getenv("HOME");
       if (envHome != "")
@@ -173,16 +180,11 @@ namespace qi {
       return p.make_preferred().string(qi::unicodeFacet());
     }
 
+    std::string gethostname()
+    {
 #ifdef ANDROID
-    std::string gethostname()
-    {
-      assert(0 && "qi::os::gethostname is not implemented for android, "
-                  "use the JAVA API instead");
-      return "";
-    }
+      throw std::runtime_error(QI_OS_ANDROID_CANNOT_DO_MSG("get a hostname"));
 #else
-    std::string gethostname()
-    {
       long hostNameMax;
 #ifdef HAVE_SC_HOST_NAME_MAX
       hostNameMax = sysconf(_SC_HOST_NAME_MAX) + 1;
@@ -199,7 +201,11 @@ namespace qi {
 
       free(szHostName);
       return std::string();
+#endif
     }
+
+#ifdef ANDROID
+#  undef QI_OS_ANDROID_CANNOT_DO_MSG
 #endif
 
     int isatty(int fd)
