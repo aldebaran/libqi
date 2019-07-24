@@ -4,6 +4,13 @@
 
 project(qi_examples)
 
+#### Set compilation flags {{{
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+endif()
+#### }}}
+
 qi_create_bin(qipath_example qipath_example.cpp NO_INSTALL)
 qi_use_lib(qipath_example QI BOOST_FILESYSTEM)
 set_target_properties(qipath_example PROPERTIES FOLDER "examples")
