@@ -456,27 +456,27 @@ namespace qi {
     return registerService(rename, retval.to<qi::AnyObject>());
   }
 
-  qi::Future<AnyValue> Session::_callModule(const std::string &moduleName,
+  qi::Future<AnyValue> Session::_callModule(const std::string &moduleFunction,
       const AnyReferenceVector& args,
       qi::MetaCallType metacallType)
   {
-    size_t separatorPos = moduleName.find_last_of(".");
-    std::string package = moduleName.substr(0, separatorPos);
-    std::string function = moduleName.substr(separatorPos + 1);
+    size_t separatorPos = moduleFunction.find_last_of(".");
+    std::string moduleName = moduleFunction.substr(0, separatorPos);
+    std::string functionName = moduleFunction.substr(separatorPos + 1);
 
-    qi::AnyModule p = qi::import(package);
+    qi::AnyModule module = qi::import(moduleName);
 
     AnyReferenceVector fullargs;
     SessionPtr thisptr = shared_from_this();
     fullargs.push_back(AnyReference::from(thisptr));
     fullargs.insert(fullargs.end(), args.begin(), args.end());
 
-    int id = p.metaObject().findMethod(function, fullargs);
+    int id = module.metaObject().findMethod(functionName, fullargs);
     qi::Future<AnyReference> ret;
     if (id > 0)
-      ret = p.metaCall(function, fullargs, metacallType);
+      ret = module.metaCall(functionName, fullargs, metacallType);
     else
-      ret = p.metaCall(function, args, metacallType);
+      ret = module.metaCall(functionName, args, metacallType);
 
     qi::Promise<AnyValue> promise;
     promise.setOnCancel([ret](qi::Promise<AnyValue>&) mutable { ret.cancel(); });
