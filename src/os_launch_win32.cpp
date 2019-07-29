@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <windows.h>
+
 #include <process.h>
 #include <signal.h>
 
@@ -21,6 +21,8 @@
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 #include <qi/path.hpp>
+
+#include "os_win32.hpp"
 
 qiLogCategory("qi.os");
 
@@ -60,20 +62,6 @@ namespace os
       return static_cast<int>(processInfo.dwProcessId);
     }
 
-    std::string messageForError(DWORD errorCode)
-    {
-      LPVOID lpMsgBuf = nullptr;
-      FormatMessage(
-          FORMAT_MESSAGE_ALLOCATE_BUFFER |
-          FORMAT_MESSAGE_FROM_SYSTEM |
-          FORMAT_MESSAGE_IGNORE_INSERTS,
-          NULL,
-          errorCode,
-          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-          (LPTSTR) &lpMsgBuf,
-          0, NULL );
-      return static_cast<const char*>(lpMsgBuf);
-    }
   }
 
   int spawnvp(char* const argv[])
@@ -126,8 +114,9 @@ namespace os
   {
     auto logLastError = [&pid](const std::string& doingWhat)
     {
+      const auto errorMessage = lastErrorMessage();
       qiLogDebug() << "Error waiting for pid " << pid << " "
-                   << doingWhat << ": " << messageForError(GetLastError());
+                   << doingWhat << ": " << errorMessage;
     };
 
     const HANDLE handle = OpenProcess(

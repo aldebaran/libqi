@@ -7,18 +7,21 @@
 #include <qi/log.hpp>
 #include <qi/os.hpp>
 
+#include <boost/predef/os.h>
 #include <boost/filesystem.hpp>
 #include <boost/thread/tss.hpp>
 
 #include <cstring>
 
-# ifdef _WIN32
+#if BOOST_OS_WINDOWS
 #  include <windows.h>
-# else
+#  include "os_win32.hpp"
+#else
 #  include <dlfcn.h>
-# endif
+#endif
 
 #include <qi/path.hpp>
+
 
 qiLogCategory("qi.dlfcn");
 
@@ -85,15 +88,6 @@ namespace qi {
       return function;
     }
 
-#ifdef _WIN32
-
-    void cleanup(char* ptr)
-    {
-      delete[] ptr;
-    }
-
-#endif // !_WIN32
-
     const char *dlerror(void) {
 #ifdef _WIN32
       /* GetLastError() must be called at the closest time after a system call it must retrieve error from
@@ -116,16 +110,13 @@ namespace qi {
       if (lastError == 0)
         return NULL;
 
-      static boost::thread_specific_ptr<char> err(cleanup);
-      if (!err.get())
-        err.reset(static_cast<char*>(new char[255]));
-
-      DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, 0, lastError, 0, err.get(), sizeof(char) * 255, 0);
-
+      // Keep alive the last message for this thread.
+      static thread_local std::string errorMessage;
+      errorMessage = translateSystemError(lastError);
 
       // Unix dlerror() resets its value after a call, ensure same behavior
       SetLastError(0);
-      return err.get();
+      return errorMessage.c_str();
 #else
       return ::dlerror();
 #endif

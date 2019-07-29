@@ -155,6 +155,7 @@ if (WIN32)
   list(APPEND QI_C
     src/os_launch_win32.cpp
     src/os_win32.cpp
+    src/os_win32.hpp
     src/os_debugger_win32.cpp
   )
 else()
