@@ -3,6 +3,7 @@ qi_create_gmock(
   SRC
     "ark/test_mutable.cpp"
     "test_algorithm.cpp"
+    "test_base64.cpp"
     "test_conceptpredicate.cpp"
     "test_empty.cpp"
     "test_errorhandling.cpp"
