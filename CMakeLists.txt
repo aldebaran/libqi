@@ -396,6 +396,7 @@ set(QIPERF_C
 
 set(KA_H
   ka/algorithm.hpp
+  ka/base64.hpp
   ka/ark/mutable.hpp
   ka/concept.hpp
   ka/conceptpredicate.hpp
