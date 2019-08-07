@@ -304,6 +304,8 @@ set(QIM_H qi/api.hpp
 )
 
 set(QIM_C
+  src/messaging/applicationsession_internal.hpp
+  src/messaging/applicationsession_internal.cpp
   src/messaging/applicationsession.cpp
   src/messaging/authprovider_p.hpp
   src/messaging/authprovider.cpp
@@ -394,6 +396,7 @@ set(KA_H
   ka/ark/mutable.hpp
   ka/concept.hpp
   ka/conceptpredicate.hpp
+  ka/empty.hpp
   ka/errorhandling.hpp
   ka/functional.hpp
   ka/integersequence.hpp
@@ -403,6 +406,7 @@ set(KA_H
   ka/moveoncopy.hpp
   ka/mutablestore.hpp
   ka/mutex.hpp
+  ka/opt.hpp
   ka/range.hpp
   ka/relationpredicate.hpp
   ka/scoped.hpp
@@ -410,6 +414,7 @@ set(KA_H
   ka/src.hpp
   ka/testutils.hpp
   ka/typetraits.hpp
+  ka/unit.hpp
   ka/utility.hpp
 )
 

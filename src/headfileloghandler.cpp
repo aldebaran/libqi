@@ -49,7 +49,7 @@ namespace log
     }
     catch (const boost::filesystem::filesystem_error& e)
     {
-      qiLogWarning() << e.what() << std::endl;
+      qiLogWarning() << e.what();
     }
     // Open the file.
     FILE* file = qi::os::fopen(fPath.make_preferred().string().c_str(), "w+");
@@ -61,7 +61,7 @@ namespace log
     }
     else
     {
-      qiLogWarning() << "Cannot open " << filePath << std::endl;
+      qiLogWarning() << "Cannot open " << filePath;
     }
   }
 

@@ -251,9 +251,7 @@ namespace qi {
       return;
     }
 
-    AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
-    CapabilityMap authData = cmref.to<CapabilityMap>();
-    cmref.destroy();
+    CapabilityMap authData = msg.value(typeOf<CapabilityMap>()->signature(), socket).to<CapabilityMap>();
     CapabilityMap::iterator authStateIt = authData.find(AuthProvider::State_Key);
 
     if (authStateIt == authData.end() || authStateIt->second.to<unsigned int>() < AuthProvider::State_Error
@@ -421,12 +419,12 @@ namespace qi {
   }
 
   void ServiceDirectoryClient::onServiceRemoved(unsigned int idx, const std::string &name) {
-    qiLogVerbose() << "ServiceDirectoryClient: Service Removed #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectoryClient: Service Removed #" << idx << ": " << name;
     serviceRemoved(idx, name);
   }
 
   void ServiceDirectoryClient::onServiceAdded(unsigned int idx, const std::string &name) {
-    qiLogVerbose() << "ServiceDirectoryClient: Service Added #" << idx << ": " << name << std::endl;
+    qiLogVerbose() << "ServiceDirectoryClient: Service Added #" << idx << ": " << name;
     serviceAdded(idx, name);
   }
 

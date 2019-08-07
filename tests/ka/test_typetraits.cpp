@@ -5,6 +5,7 @@
 #include <ka/macro.hpp>
 #include <string>
 #include <array>
+#include <iterator>
 #include <vector>
 #include <deque>
 #include <list>
@@ -589,31 +590,55 @@ TEST(TypeTraits, Conditional) {
   static_assert(Equal<Conditional<false, int, float>, float>::value, "");
 }
 
-template<typename Conjunction, bool value, typename Base>
-void assertConjunction() {
-  static_assert(Conjunction::value == value, "");
-  static_assert(std::is_base_of<Base, Conjunction>::value, "");
-}
-
 struct custom_true_t  { static const bool value = true; };
 struct custom_false_t { static const bool value = false; };
 
-TEST(TypeTraits, Conjunction)
-{
+template<typename IntCst, typename Base>
+void checkIntConstant() {
+  static_assert(IntCst::value == Base::value, "");
+  static_assert(std::is_base_of<Base, IntCst>::value, "");
+}
+
+TEST(TypeTraits, Negation) {
   using namespace ka;
-  assertConjunction<Conjunction<>, true,  true_t>();
-  assertConjunction<Conjunction<true_t>, true,  true_t>();
-  assertConjunction<Conjunction<false_t>, false, false_t>();
-  assertConjunction<Conjunction<true_t, false_t>, false, false_t>();
-  assertConjunction<Conjunction<false_t, true_t>, false, false_t>();
-  assertConjunction<Conjunction<true_t, true_t>, true,  true_t>();
-  assertConjunction<Conjunction<custom_true_t>, true,  custom_true_t>();
-  assertConjunction<Conjunction<custom_false_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_true_t, custom_false_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_false_t, custom_true_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_false_t, false_t>, false, custom_false_t>();
-  assertConjunction<Conjunction<custom_true_t, custom_true_t>, true,  custom_true_t>();
-  assertConjunction<Conjunction<true_t, custom_true_t>, true,  custom_true_t>();
+  checkIntConstant<Negation<true_t>, false_t>();
+  checkIntConstant<Negation<false_t>, true_t>();
+  checkIntConstant<Negation<custom_true_t>, false_t>();
+  checkIntConstant<Negation<custom_false_t>, true_t>();
+}
+
+TEST(TypeTraits, Conjunction) {
+  using namespace ka;
+  checkIntConstant<Conjunction<>, true_t>();
+  checkIntConstant<Conjunction<true_t>, true_t>();
+  checkIntConstant<Conjunction<false_t>, false_t>();
+  checkIntConstant<Conjunction<true_t, false_t>, false_t>();
+  checkIntConstant<Conjunction<false_t, true_t>, false_t>();
+  checkIntConstant<Conjunction<true_t, true_t>, true_t>();
+  checkIntConstant<Conjunction<custom_true_t>, custom_true_t>();
+  checkIntConstant<Conjunction<custom_false_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_true_t, custom_false_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_false_t, custom_true_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_false_t, false_t>, custom_false_t>();
+  checkIntConstant<Conjunction<custom_true_t, custom_true_t>, custom_true_t>();
+  checkIntConstant<Conjunction<true_t, custom_true_t>, custom_true_t>();
+}
+
+TEST(TypeTraits, Disjunction) {
+  using namespace ka;
+  checkIntConstant<Disjunction<>, false_t>();
+  checkIntConstant<Disjunction<true_t>, true_t>();
+  checkIntConstant<Disjunction<false_t>, false_t>();
+  checkIntConstant<Disjunction<true_t, false_t>, true_t>();
+  checkIntConstant<Disjunction<false_t, true_t>, true_t>();
+  checkIntConstant<Disjunction<true_t, true_t>, true_t>();
+  checkIntConstant<Disjunction<custom_true_t>, custom_true_t>();
+  checkIntConstant<Disjunction<custom_false_t>, custom_false_t>();
+  checkIntConstant<Disjunction<custom_true_t, custom_false_t>, custom_true_t>();
+  checkIntConstant<Disjunction<custom_false_t, custom_true_t>, custom_true_t>();
+  checkIntConstant<Disjunction<false_t, custom_false_t>, custom_false_t>();
+  checkIntConstant<Disjunction<custom_true_t, custom_true_t>, custom_true_t>();
+  checkIntConstant<Disjunction<custom_true_t, true_t>, custom_true_t>();
 }
 
 namespace {
@@ -702,4 +727,60 @@ TEST(TypeTraits, IsRetract) {
 
   static_assert(!IsRetract<f_t, g_inv_t>::value, "");
   static_assert(!IsRetract<g_inv_t, f_t>::value, "");
+}
+
+namespace my {
+
+struct iterator_t {};
+struct non_iterator_t {};
+
+template<typename T, typename = ka::EnableIfInputIterator<T>>
+iterator_t f(T);
+
+template<typename T, typename = ka::EnableIfNotInputIterator<T>>
+non_iterator_t f(T);
+
+} // namespace my
+
+TEST(TypeTraits, EnableIfInputIterator) {
+  using ka::Equal;
+  using my::iterator_t;
+  using my::non_iterator_t;
+
+  { // InputIterator
+    std::istream_iterator<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // ForwardIterator
+    std::forward_list<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x.begin()))>::value, "");
+  }
+  { // BidirectionalIterator
+    std::list<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x.begin()))>::value, "");
+  }
+  { // RandomAccessIterator (0)
+    std::vector<int> x;
+    static_assert(Equal<iterator_t, decltype(my::f(x.begin()))>::value, "");
+  }
+  { // RandomAccessIterator (1)
+    int* x;
+    static_assert(Equal<iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // RandomAccessIterator (2)
+    int* x;
+    static_assert(Equal<iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // Non-iterator (0)
+    std::string x;
+    static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // Non-iterator (1)
+    std::vector<int> x;
+    static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
+  }
+  { // Non-iterator (2)
+    float x;
+    static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
+  }
 }

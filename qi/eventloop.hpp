@@ -60,7 +60,7 @@ namespace qi
               bool spawnOnOverload);
 
     /// \brief Default destructor.
-    ~EventLoop();
+    ~EventLoop() override;
 
     /**
      * \brief Checks if the current thread is one of the event loop threads.

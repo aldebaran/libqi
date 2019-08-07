@@ -43,14 +43,14 @@ namespace qi  {
     template<typename T>
     inline void initializeType(TypeInterface* &tgt)
     {
-      qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type " << typeid(T).name();
+      qiLogDebug("qitype.typeof") << "first typeOf request for unregistered type " << qi::typeId<T>().name();
       tgt = new TypeImpl<T>();
     }
 
     template<typename T>
     inline TypeInterface* typeOfBackend()
     {
-      TypeInterface* result = getType(typeid(T));
+      TypeInterface* result = getType(qi::typeId<T>());
       if (!result)
       {
 

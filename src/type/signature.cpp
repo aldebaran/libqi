@@ -102,7 +102,7 @@ namespace qi {
   }
 
 
-  float qi::Signature::isConvertibleTo(const qi::Signature& b) const
+  float Signature::isConvertibleTo(const qi::Signature& b) const
   {
     /* The returned float is just a basic heuristic, it does not handle:
      * - comparison between integral types
@@ -146,14 +146,21 @@ namespace qi {
     }
 
     // Source is convertible to an optional if source's type is convertible to the destination
-    // optional value type. For instance, int is convertible to optional<int>, but also int is
-    // convertible to optional<dynamic>
+    // optional value type or if source's type is void. For instance, int is convertible to
+    // optional<int>, but also int is convertible to optional<dynamic>
     if (d == Type_Optional)
     {
       // If source is also an optional then we are performing a optional to optional conversion.
       // By design this is allowed if source value type is convertible to dest value type.
       if (s == Type_Optional)
         return children()[0].isConvertibleTo(b.children()[0]);
+
+      // Converting void to optional means constructing an empty optional. This design choice was
+      // made to simplify conversion from language bindings where types are not explicit (like
+      // python).
+      else if (s == Type_Void)
+        return calculateFactor();
+
       return isConvertibleTo(b.children()[0]);
     }
     else if (s == Type_Optional)

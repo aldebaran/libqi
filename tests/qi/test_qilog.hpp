@@ -10,6 +10,7 @@
 
 #include <boost/utility/string_ref_fwd.hpp>
 #include <gmock/gmock.h>
+#include <ka/unit.hpp>
 #include <qi/log.hpp>
 
 class LogHandler final
@@ -31,7 +32,10 @@ class MockLogHandler
 public:
   explicit MockLogHandler(const std::string& name);
 
-  MOCK_METHOD3(log, void(qi::LogLevel, const char* /*category*/, const char* /*msg*/));
+  // TODO: Replace unit_t by void once we upgrade GoogleMock with the fix on mock methods returning
+  // void crashing in optimized compilation on recent compilers.
+  // See: https://github.com/google/googletest/issues/705
+  MOCK_METHOD3(log, ka::unit_t(qi::LogLevel, const char* /*category*/, const char* /*msg*/));
 
   void operator()(qi::LogLevel,
                   qi::Clock::time_point,

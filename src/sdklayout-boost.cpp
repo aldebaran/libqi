@@ -737,6 +737,12 @@ namespace detail {
          ++it)
     {
       libPaths.push_back(fsconcat(*it, "lib", subfolder));
+#ifdef _WIN32 // TODO: replace _WIN32 usage in this file by Boost.Predef macros.
+      // On Windows some shared libraries/plugins might be located close to their related
+      // executable, in particular in the case of project  dependencies copied by qibuild into
+      // the bin directory.
+      libPaths.push_back(fsconcat(*it, "bin", subfolder));
+#endif
     }
     return libPaths;
   }

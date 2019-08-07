@@ -194,9 +194,8 @@ namespace qi {
       qi::Message& reply)
   {
     // the socket now contains the remote capabilities in socket->remoteCapabilities()
-    AnyReference cmref = msg.value(typeOf<CapabilityMap>()->signature(), socket);
-    CapabilityMap authData = cmref.to<CapabilityMap>();
-    cmref.destroy();
+    CapabilityMap authData =
+      msg.value(typeOf<CapabilityMap>()->signature(), socket).to<CapabilityMap>();
 
     CapabilityMap authResult = auth->processAuth(authData);
     const unsigned int state = authResult[AuthProvider::State_Key].to<unsigned int>();

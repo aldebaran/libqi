@@ -2,7 +2,6 @@
 #define KA_MUTABLESTORE_HPP
 #pragma once
 #include <functional>
-#include <boost/config/suffix.hpp>
 #include <boost/variant.hpp>
 #include "macroregular.hpp"
 #include "typetraits.hpp"

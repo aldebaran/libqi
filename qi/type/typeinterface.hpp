@@ -68,7 +68,7 @@ namespace qi{
   /// \warning Be careful to put the declaration outside any namespaces.
   #define QI_TYPE_REGISTER_CUSTOM(type, typeimpl) \
     static bool BOOST_PP_CAT(__qi_registration, __LINE__) QI_ATTR_UNUSED \
-      = qi::registerType(typeid(type), new typeimpl)
+      = qi::registerType(qi::typeId<type>(), new typeimpl)
 
 
   class ListTypeInterface;

@@ -7,6 +7,9 @@
 
 #include <list>
 #include <thread>
+#include <mutex>
+#include <atomic>
+#include <array>
 
 #include <gtest/gtest.h>
 
@@ -1018,39 +1021,49 @@ TEST(TestCall, ForceOverload)
   ASSERT_EQ("foo", client.call<std::string>("ping::(s)", "foo"));
 }
 
-void _delaySet(qi::Promise<int> p, qi::MilliSeconds delay, int value)
-{
-  boost::this_thread::sleep_for(delay);
-  if (value == -1)
-    p.setError("-1");
-  else
-    p.setValue(value);
-}
-
-qi::Future<int> delaySet(qi::MilliSeconds delay, int value)
-{
-  qi::Promise<int> p;
-  boost::thread(_delaySet, p, delay, value);
-  return p.future();
-}
-
 TEST(TestCall, Future)
 {
   TestSessionPair p;
+
+  static constexpr auto callCount = 2;
+  struct
+  {
+    std::array<qi::Promise<void>, callCount> syncPromises;
+    std::atomic<int> promIndex{ 0 };
+
+    qi::Future<int> operator()(int value)
+    {
+      const auto idx = promIndex++;
+      QI_ASSERT_TRUE(idx < static_cast<int>(syncPromises.size()));
+      auto& syncProm = syncPromises[idx];
+
+      qi::Promise<int> result;
+      syncProm.future().connect([=](qi::Future<void>) mutable {
+        if (value == -1)
+          result.setError("-1");
+        else
+          result.setValue(value);
+      });
+      return result.future();
+    }
+  } delaySet;
+
   qi::DynamicObjectBuilder gob;
   gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
-  gob.advertiseMethod("delaySet", &delaySet);
+  gob.advertiseMethod("delaySet", [&](int value){ return delaySet(value); });
+
   qi::AnyObject sobj = gob.object();
   p.server()->registerService("delayer", sobj);
   qi::AnyObject obj = p.client()->service("delayer").value();
 
-  qi::Future<int> f = obj.async<int>("delaySet", 500, 41);
-  // FIXME: this is highly racy
-  ASSERT_TRUE(test::isStillRunning(f, test::willDoNothing(), qi::MilliSeconds{ 0 }));
+  qi::Future<int> f = obj.async<int>("delaySet", 41);
+  qi::Future<int> f2 = obj.async<int>("delaySet", -1);
 
-  qi::Future<int> f2 =  obj.async<int>("delaySet", 500, -1);
-  // FIXME: this is highly racy
-  ASSERT_TRUE(test::isStillRunning(f2, test::willDoNothing(), qi::MilliSeconds{ 0 }));
+  ASSERT_TRUE(test::isStillRunning(f, test::willDoNothing(), usualTimeout));
+  ASSERT_TRUE(test::isStillRunning(f2, test::willDoNothing(), usualTimeout));
+
+  for (auto& syncProm : delaySet.syncPromises)
+    syncProm.setValue(nullptr);
 
   ASSERT_TRUE(test::finishesWithValue(f));
   ASSERT_EQ(41, f.value());
@@ -1060,13 +1073,15 @@ TEST(TestCall, Future)
 TEST(TestCall, CallOnFutureReturn)
 {
   TestSessionPair p;
+
   qi::DynamicObjectBuilder gob;
   gob.setThreadingModel(qi::ObjectThreadingModel_MultiThread);
-  gob.advertiseMethod("delaySet", &delaySet);
+  gob.advertiseMethod("futurize", [](int value){ return qi::futurize(value); });
+
   qi::AnyObject sobj = gob.object();
-  p.server()->registerService("delayer", sobj);
-  qi::AnyObject obj = p.client()->service("delayer").value();
-  int f = obj.call<int>("delaySet", qi::MilliSeconds{ 500 }, 41);
+  p.server()->registerService("futurizer", sobj);
+  qi::AnyObject obj = p.client()->service("futurizer").value();
+  int f = obj.call<int>("futurize", 41);
   ASSERT_EQ(41, f);
 }
 
@@ -1154,17 +1169,17 @@ TEST(TestCall, DISABLED_Statistics)
 {
   TestSessionPair p;
   qi::DynamicObjectBuilder gob;
-  const auto mid = gob.advertiseMethod("sleep", [](qi::MilliSeconds dura) {
-    boost::this_thread::sleep_for(dura);
+  const auto mid = gob.advertiseMethod("msleep", [](long long ms) {
+    boost::this_thread::sleep_for(qi::MilliSeconds(ms));
   });
   qi::AnyObject srv = gob.object();
   p.server()->registerService("sleep", srv);
   qi::AnyObject obj = p.client()->service("sleep").value();
-  obj.call<void>("sleep", 10);
+  obj.call<void>("msleep", 10);
   EXPECT_TRUE(obj.stats().empty());
   obj.call<void>("enableStats", true);
-  obj.call<void>("sleep", 10);
-  obj.call<void>("sleep", 100);
+  obj.call<void>("msleep", 10);
+  obj.call<void>("msleep", 100);
   qi::ObjectStatistics stats = obj.call<qi::ObjectStatistics>("stats");
   EXPECT_EQ(1u, stats.size());
   qi::MethodStatistics m = stats[mid];
@@ -1173,14 +1188,14 @@ TEST(TestCall, DISABLED_Statistics)
   EXPECT_GT(0.05, std::abs(m.wall().minValue() - 0.010));
   EXPECT_GT(0.05, std::abs(m.wall().maxValue() - 0.100));
   obj.call<void>("clearStats");
-  obj.call<void>("sleep", 0);
+  obj.call<void>("msleep", 0);
   stats = obj.call<qi::ObjectStatistics>("stats");
   m = stats[mid];
   EXPECT_EQ(1u, m.count());
   obj.call<void>("enableStats", false);
   obj.call<void>("clearStats");
   EXPECT_TRUE(!obj.call<bool>("isStatsEnabled"));
-  obj.call<void>("sleep", 0);
+  obj.call<void>("msleep", 0);
   stats = obj.call<qi::ObjectStatistics>("stats");
   EXPECT_TRUE(stats.empty());
 }

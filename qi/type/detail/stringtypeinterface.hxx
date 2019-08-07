@@ -178,6 +178,6 @@ namespace qi
  */
 #define QI_EQUIVALENT_STRING_REGISTER(type, func) \
   static bool BOOST_PP_CAT(__qi_registration, __COUNTER__) QI_ATTR_UNUSED \
-    = qi::registerType(typeid(type),  qi::makeTypeEquivalentString((type*)0, func))
+    = qi::registerType(qi::typeId<type>(),  qi::makeTypeEquivalentString((type*)0, func))
 
 #endif  // _QITYPE_DETAIL_TYPESTRING_HXX_

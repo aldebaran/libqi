@@ -1,6 +1,7 @@
 #ifndef KA_FUNCTIONAL_HPP
 #define KA_FUNCTIONAL_HPP
 #pragma once
+#include <functional>
 #include <boost/config.hpp>
 #include <boost/optional.hpp>
 #include "integersequence.hpp"
@@ -19,7 +20,7 @@ namespace ka {
 
   /// Polymorphic function that maps any input to the same output.
   ///
-  /// Copiable Ret
+  /// Copyable Ret
   template<typename Ret>
   struct constant_function_t {
     Ret ret;
@@ -162,7 +163,7 @@ namespace ka {
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// // `log_name` and `log_heat` take no input (void) and returns no ouput (void).
   /// auto log_name_then_heat = compose(log_heat, log_name);
-  /// auto fut = strand.async(log_name_then_heat);
+  /// auto fut = std::async(log_name_then_heat);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Remark: In the future, add a SFINAE guard if there is a name clash.
@@ -243,8 +244,8 @@ namespace ka {
   /// twice_of_incr(m); // Apply `incr`, then `twice`.
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
-  /// Remark: Operator `*=` is proposed as an opt-in alternative to
-  ///   `compose_accu` in the `functional_ops` namespace.
+  /// Remark: Operator `*` is proposed as an opt-in alternative to
+  ///   `compose_accu` in the `functional_ops_accu` namespace.
   ///
   /// Accumulation<T, Args...> G, Accumulation<T, Args...> F
   template<typename G, typename F>
@@ -334,22 +335,31 @@ namespace ka {
       return compose(fwd<G>(g), fwd<F>(f));
     }
 
+    /// Performs a function composition in reverse order of that of traditional
+    /// mathematical function composition, that is `f | g == g * f`, where `f`
+    /// is evaluated first, then `g`.
+    ///
+    /// The motivation for this operator is it can be easier to read in some
+    /// situations.
+    ///
+    /// Example: Composing in place
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// // `motor` takes a `string` and returns the properties of a motor.
+    /// // `heat` takes the properties of a motor and returns an `int`.
+    /// // `motor_names` is a container of string.
+    /// auto max_heat = std::max_element(motor_names.begin(), motor_names.end(),
+    ///   motor | heat); // `motor | heat` gets the motor, then its heat
+    /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    template<typename F, typename G>
+    auto operator|(F&& f, G&& g) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
+      return compose(fwd<G>(g), fwd<F>(f));
+    }
+  } // namespace functional_ops
+
+  namespace functional_ops_accu {
     /// Performs a composition of accumulation procedures.
     ///
     /// See `compose_accu()`.
-    ///
-    /// `*=` is used as a variant of `*` (the function composition operator).
-    /// The `=` sign is used to emphasize the notion of accumulation.
-    ///
-    /// This naming follows the fact that in the language, binary operations
-    /// typically have a semantically equivalent accumulation counterpart.
-    /// For example for a type `T`, `+: T x T -> T` is a binary operation and
-    /// has for counterpart the semantically equivalent accumulation
-    /// `+=: T& x T -> void`.
-    ///
-    /// So composing functions (i.e. regular procedures with signature
-    /// `A0 x A1 x ... -> B`) is done with `*` and composing accumulations (i.e.
-    /// procedures with signature `A0& x A1 x ... -> void)` is done with `*=`.
     ///
     /// Note: Symmetrically to `compose` with `id_transfo_t`, `compose_accu` with
     ///   `id_action_t` forms a category. Therefore, the same kind of invariants
@@ -359,15 +369,22 @@ namespace ka {
     /// // `a` is an arbitrary accumulation.
     /// id_action_t _1;
     ///
-    /// assert((a *= _1) == a);
-    /// assert((_1 *= a) == a);
-    /// assert((_1 *= _1) == _1);
+    /// assert((a * _1) == a);
+    /// assert((_1 * a) == a);
+    /// assert((_1 * _1) == _1);
     /// ```
     template<typename G, typename F>
-    auto operator*=(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
+    auto operator*(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
-  }
+
+    /// Performs a accumulation composition in reverse order of that of traditional
+    /// mathematical function composition, that is `f | g == g * f`.
+    template<typename F, typename G>
+    auto operator|(F&& f, G&& g) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
+      return compose_accu(fwd<G>(g), fwd<F>(f));
+    }
+  } // namespace functional_ops_accu
 
   /// Function that transforms the codomain (return type) of the given procedure
   /// into an "enriched" type.
@@ -849,31 +866,27 @@ namespace ka {
     return {fwd<Proc>(proc)};
   }
 
-  namespace detail {
-    template<typename Ret>
-    struct scope_lock_proc_t {
-      template<typename Proc, typename L, typename... Args>
-      boost::optional<Ret> operator()(Proc& proc, L& lockable, Args&&... args) const {
-        if (auto lock = scopelock(lockable)) {
-          return proc(fwd<Args>(args)...);
-        }
-        return {};
-      }
-    };
+  // We can't include `opt.hpp` because of the circular dependency with this file. Instead we just
+  // forward declare it and include `opt.hpp` at the end of this file.
+  template<typename>
+  class opt_t;
 
-    template<>
-    struct scope_lock_proc_t<void> {
-      template<typename Proc, typename L, typename... Args>
-      void operator()(Proc& proc, L& lockable, Args&&... args) const {
-        if (auto lock = scopelock(lockable)) {
-          proc(fwd<Args>(args)...);
-        }
+  namespace detail {
+    /// Procedure<T (...)> Proc,
+    /// Mutable<ScopeLockable> M
+    template <typename Proc, typename M, typename... Args>
+    opt_t<ResultOf<Proc&(Args&&...)>> scope_lock_invoke(Proc& proc, M& mut_lockable, Args&&... args) {
+      opt_t<ResultOf<Proc&(Args&&...)>> res;
+      if (auto lock = scopelock(*mut_lockable)) {
+        res.call_set(proc, fwd<Args>(args)...);
       }
-    };
-  } // namespace detail
+      return res;
+    }
+  }
 
   /// Procedure wrapper that calls its underlying procedure only if the associated
-  /// lockable could be locked.
+  /// lockable could be locked and returns an opt_t set with the result of the procedure if it was
+  /// called or empty otherwise.
   ///
   /// Example: weak_ptr as a lockable to perform lifetime protection
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -895,21 +908,20 @@ namespace ka {
     M mut_lockable;
   // Regular (if members are):
     KA_GENERATE_FRIEND_REGULAR_OPS_2(scope_lock_proc_t, proc, mut_lockable)
+
   // Procedure:
     template<typename... Args>
     auto operator()(Args&&... args)
-      -> decltype(detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-                    (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
-      return detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-        (proc, src(mut_lockable), fwd<Args>(args)...);
+      // TODO: Remove this when we can use C++14
+      -> decltype(detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...)) {
+      return detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...);
     }
 
     template<typename... Args>
     auto operator()(Args&&... args) const
-      -> decltype(detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-                    (proc, src(mut_lockable), fwd<Args>(args)...)) { // TODO: Remove this when we can use C++14
-      return detail::scope_lock_proc_t<Decay<decltype(proc(fwd<Args>(args)...))>>{}
-        (proc, src(mut_lockable), fwd<Args>(args)...);
+      // TODO: Remove this when we can use C++14
+      -> decltype(detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...)) {
+      return detail::scope_lock_invoke(proc, mut_lockable, fwd<Args>(args)...);
     }
   };
 
@@ -960,6 +972,17 @@ namespace ka {
   };
 
   KA_DERIVE_CTOR_FUNCTION_TEMPLATE(scope_lock_transfo)
+
+  namespace detail {
+  // model EmptyProcedure std::function<A (B...)>:
+    template<typename A, typename... B> KA_CONSTEXPR
+    bool empty(std::function<A (B...)> const& x) {
+      return !static_cast<bool>(x);
+    }
+  } // namespace detail
 } // namespace ka
+
+// For ka::scope_lock_proc_t
+#include "opt.hpp"
 
 #endif // KA_FUNCTIONAL_HPP

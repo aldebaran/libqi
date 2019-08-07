@@ -391,6 +391,31 @@ TEST(FunctionalCompose, Id) {
   ASSERT_EQ(gf0(0), gf1(0));
 }
 
+TEST(FunctionalCompose, OperatorPipe) {
+  using namespace ka;
+  using ka::functional_ops::operator|;
+  using std::string;
+
+  auto half = [](int x) {
+    return x / 2.f;
+  };
+  auto greater_1 = [](float x) {
+    return x > 1.f;
+  };
+  auto str = [](bool x) -> string {
+    return x ? "true" : "false";
+  };
+
+  {
+    auto f = half | greater_1 | str;
+    testComposeMulti(f);
+  }
+  {
+    auto const f = half | greater_1 | str;
+    testComposeMulti(f);
+  }
+}
+
 namespace {
   void remove_n(std::string& s, char c, int n) {
     ka::erase_if(s, [&](char x) {return x == c && --n >= 0;});
@@ -520,15 +545,15 @@ TEST(FunctionalComposeAccu, ComposeAction) {
 
 TEST(FunctionalComposeAccu, Identity) {
   using namespace ka;
-  using namespace ka::functional_ops;
+  using ka::functional_ops_accu::operator*;
   using namespace test;
   a_t f;
   id_action_t _1;
-  static_assert(Equal<Decay<decltype(_1 *= _1)>, decltype(_1)>::value, "");
-  static_assert(Equal<Decay<decltype(f *= _1)>, decltype(f)>::value, "");
-  static_assert(Equal<Decay<decltype(f *= _1 *= _1)>, decltype(f)>::value, "");
-  static_assert(Equal<Decay<decltype(_1 *= f)>, decltype(f)>::value, "");
-  static_assert(Equal<Decay<decltype(_1 *= f *= _1)>, decltype(f)>::value, "");
+  static_assert(Equal<Decay<decltype(_1 * _1)>, decltype(_1)>::value, "");
+  static_assert(Equal<Decay<decltype(f * _1)>, decltype(f)>::value, "");
+  static_assert(Equal<Decay<decltype(f * _1 * _1)>, decltype(f)>::value, "");
+  static_assert(Equal<Decay<decltype(_1 * f)>, decltype(f)>::value, "");
+  static_assert(Equal<Decay<decltype(_1 * f * _1)>, decltype(f)>::value, "");
 
 // TODO: Remove this define (but keep the content) when get rid of VS2013.
 #if KA_COMPILER_VS2013_OR_BELOW
@@ -539,20 +564,45 @@ TEST(FunctionalComposeAccu, Identity) {
 #endif
 }
 
+TEST(FunctionalComposeAccu, OperatorPipe) {
+  using namespace ka;
+  using ka::functional_ops_accu::operator|;
+
+  auto half = [](float& x) {
+    x /= 2.f;
+  };
+  auto clamp = [](float& x) {
+    if (x > 1.f) x = 1.f;
+    if (x < -1.f) x = -1.f;
+  };
+  auto abs = [](float& x) {
+    if (x < 0.f) x = -x;
+  };
+
+  {
+    auto f = half | clamp | abs;
+    testComposeAccuMulti(f);
+  }
+  {
+    auto const f = half | clamp | abs;
+    testComposeAccuMulti(f);
+  }
+}
+
 TEST(FunctionalComposeAccu, Simplification) {
   using namespace ka;
-  using namespace ka::functional_ops;
+  using ka::functional_ops_accu::operator*;
   using namespace test;
   // We expect chains of composition to be simplified in the right way.
   a_t f;
   auto g = retract(f);
-  auto z = g *= f *= g *= f *= g *= f *= g *= f;
+  auto z = g * f * g * f * g * f * g * f;
   static_assert(Equal<decltype(z), id_action_t>::value, "");
-  static_assert(Equal<Decay<decltype(z *= g)>, decltype(g)>::value, "");
+  static_assert(Equal<Decay<decltype(z * g)>, decltype(g)>::value, "");
 }
 
 TEST(FunctionalComposeAccu, Associative) {
-  using namespace ka::functional_ops;
+  using ka::functional_ops_accu::operator*;
   using std::string;
 
   auto f = [](float& x) {
@@ -568,11 +618,11 @@ TEST(FunctionalComposeAccu, Associative) {
     x -= 1;
   };
 
-  auto a = (((i *= h) *= g) *= f);
-  auto b = ((i *= (h *= g)) *= f);
-  auto c = (i *= (h *= (g *= f)));
-  auto d = ((i *= h) *= (g *= f));
-  auto e = (i *= ((h *= g) *= f));
+  auto a = (((i * h) * g) * f);
+  auto b = ((i * (h * g)) * f);
+  auto c = (i * (h * (g * f)));
+  auto d = ((i * h) * (g * f));
+  auto e = (i * ((h * g) * f));
 
   {
     float i = 3;
@@ -627,7 +677,7 @@ TEST(FunctionalComposeAccu, Associative) {
 
 TEST(FunctionalComposeAccu, Id) {
   using namespace ka;
-  using namespace ka::functional_ops;
+  using ka::functional_ops_accu::operator*;
   using std::string;
 
   auto f = [](float& x) {
@@ -638,10 +688,10 @@ TEST(FunctionalComposeAccu, Id) {
   };
   id_action_t _1;
 
-  auto f0 = (f *= _1);
-  auto f1 = (_1 *= f);
-  auto gf0 = ((g *= f) *= _1);
-  auto gf1 = (_1 *= (g *= f));
+  auto f0 = (f * _1);
+  auto f1 = (_1 * f);
+  auto gf0 = ((g * f) * _1);
+  auto gf1 = (_1 * (g * f));
 
   {
     float i = 3;
@@ -1156,17 +1206,17 @@ TEST(FunctionalPolyIncr, Isomorphic) {
 
 TEST(FunctionalPolyIncr, Composition) {
   using namespace ka;
-  using namespace ka::functional_ops;
+  using ka::functional_ops_accu::operator*;
   {
     incr_t incr;
-    auto incr_twice = (incr *= incr);
+    auto incr_twice = (incr * incr);
     int i = 0;
     incr_twice(i);
     ASSERT_EQ(2, i);
   } {
     incr_t incr;
     auto decr = retract(incr);
-    auto id = (incr *= decr *= decr *= incr);
+    auto id = (incr * decr * decr * incr);
     static_assert(Equal<decltype(id), id_action_t>::value, "");
     int i = 0;
     id(i);
@@ -1242,8 +1292,8 @@ TEST(FunctionalScopeLock, ReturnsProcResultOnLockSuccess) {
   // TODO: pass by value instead of mutable store when source is available
   auto proc = scope_lock_proc([](int i){ return i + 10; }, mutable_store(L{ true }));
   auto res = proc(5);
-  ASSERT_TRUE(res);
-  ASSERT_EQ(15, res.value());
+  ASSERT_FALSE(res.empty());
+  ASSERT_EQ(15, *res);
 }
 
 TEST(FunctionalScopeLock, ReturnsEmptyOptionalOnLockFailure) {
@@ -1253,7 +1303,7 @@ TEST(FunctionalScopeLock, ReturnsEmptyOptionalOnLockFailure) {
   // TODO: pass by value instead of mutable store when source is available
   auto proc = scope_lock_proc([](int i){ return i + 10; }, mutable_store(L{ false }));
   auto res = proc(12);
-  ASSERT_FALSE(res);
+  ASSERT_TRUE(res.empty());
 }
 
 TEST(FunctionalScopeLock, StaysLockedUntilProcIsFinished) {

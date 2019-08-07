@@ -274,7 +274,7 @@ namespace qi
     }
   }
 
-  AnyReference Message::value(const qi::Signature& signature,
+  AnyValue Message::value(const qi::Signature& signature,
                               const qi::MessageSocketPtr& socket) const
   {
     qi::TypeInterface* type = qi::TypeInterface::fromSignature(signature);
@@ -283,9 +283,12 @@ namespace qi
       throw std::runtime_error("Could not construct type for " + signature.toString());
     }
     qi::BufferReader br(_buffer);
-    //TODO: not exception safe
     AnyReference res(type);
-    return decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get());
+    return AnyValue(
+      decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get()),
+      false, // i.e. don't copy
+      true   // i.e. become resource owner
+    );
   }
 
   void Message::setValue(const AutoAnyReference& value,

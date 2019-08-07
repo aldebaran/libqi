@@ -118,7 +118,7 @@ namespace qi
   template<typename T, template< class...> class PropertyType>
   T ProxyProperty<T, PropertyType>::getter(GenericObject* object, const std::string& propertyName)
   {
-    return object->property<T>(propertyName);
+    return object->property<T>(propertyName).value();
   }
   template<typename T, template< class...> class PropertyType>
   bool ProxyProperty<T, PropertyType>::setter(T& target, const T& v, GenericObject* object, const std::string& propertyName)

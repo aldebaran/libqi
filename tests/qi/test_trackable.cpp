@@ -11,7 +11,7 @@ qiLogCategory("test");
 void _delayValue(std::chrono::milliseconds delay, qi::Promise<void> p)
 {
   std::this_thread::sleep_for(delay);
-  p.setValue(0);
+  p.setValue(nullptr);
 }
 
 qi::Future<void> delayValue(std::chrono::milliseconds delay)
@@ -20,7 +20,7 @@ qi::Future<void> delayValue(std::chrono::milliseconds delay)
   if (delay >= std::chrono::milliseconds::zero())
     boost::thread(_delayValue, delay, p);
   else
-    p.setValue(0);
+    p.setValue(nullptr);
   return p.future();
 }
 
@@ -117,11 +117,11 @@ TEST(FutureTrack, track_actor_build)
   qi::Actor stuff;
 
   // rvalue
-  auto f1 = qi::track([&stuff](int){}, &stuff);
+  auto f1 = qi::track([](int){}, &stuff);
   (void) f1;
 
   // lvalue
-  auto func = [&stuff](int){};
+  auto func = [](int){};
   auto f2 = qi::track(func, &stuff);
   (void) f2;
 }

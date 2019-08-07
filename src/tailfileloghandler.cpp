@@ -48,7 +48,7 @@ namespace log
     }
     catch (const boost::filesystem::filesystem_error& e)
     {
-      qiLogWarning() << e.what() << std::endl;
+      qiLogWarning() << e.what();
     }
 
     // Open the file.
@@ -57,7 +57,7 @@ namespace log
     if (file)
       _p->_file = file;
     else
-      qiLogWarning() << "Cannot open " << filePath << std::endl;
+      qiLogWarning() << "Cannot open " << filePath;
   }
 
   TailFileLogHandler::~TailFileLogHandler()

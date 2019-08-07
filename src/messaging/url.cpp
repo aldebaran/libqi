@@ -334,4 +334,8 @@ namespace qi {
     return lhs.str() == rhs.str();
   }
 
+  std::ostream& operator<<(std::ostream& out, const Url& url)
+  {
+    return out << url.str();
+  }
 }

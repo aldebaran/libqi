@@ -1,12 +1,63 @@
 How to use this dissector?
 ==========================
 
-Copy the file qim.lua into $HOME/.config/wireshark/plugins.
+Copy the file qi.lua into $HOME/.config/wireshark/plugins.
 
-Simply enter `qim' in the search bar and it will only display
-qimessaging packets.
+The Qi protocol messages will then be detected and interpreted by Wireshark.
+You can filter and search the messages by fields from the Qi protocol in the
+"display filter" bar.
 
-Todo
-====
+All fields are prefixed with 'qi'. By entering 'qi' as the display filter, only
+Qi message packets are displayed.
 
-- Replace enum values by strings.
+Available fields
+================
+
+The list of fields available is:
+  - `qi.src`
+    The source of the packet in the form `<ip>:<port>`.
+
+  - `qi.dst`
+    The destination of the packet in the form `<ip>:<port>`.
+
+  - `qi.magiccookie`
+    The value of the magic cookie, which is the constant value '0x42dead42'
+    encoded as big endian.
+
+  - `qi.id`
+    The id of the message.
+
+  - `qi.len`
+    The size in bytes of the payload of the message (not counting the header size).
+
+  - `qi.version`
+    The version of the protocol used by the message (`0` is the only supported value
+    at the moment).
+
+  - `qi.type`
+    The type of the message.
+
+  - `qi.flags`
+    The value of the flag bitfield of the message. The list of available flags is:
+
+      + `qi.flags.returntype`
+        The value of the `Return type` flag bit.
+
+      + `qi.flags.dynamicpayload`
+       The value of the `Dynamic payload` flag bit.
+
+  - `qi.service`
+    The id of the service of the message, which is the service hosting the
+    object with the `qi.object` id.
+
+  - `qi.object`
+    The id of the object of the message, which is the object implementing the
+    function (for a post, call or reply) or owning the signal (for an event).
+
+  - `qi.action`
+    The id of the action of the message, which is the id of the method (for a
+    post, call or reply) or the signal (for an event).
+
+  - `qi.payload`
+    The payload or data of the message. This can for example contain the
+    parameters of a function call or the returned value of a reply.

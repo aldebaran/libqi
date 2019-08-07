@@ -97,7 +97,8 @@ namespace qi {
     T* ptr = reinterpret_cast<T*>(0x10000);
     U* pptr = ptr;
     std::ptrdiff_t offset = reinterpret_cast<intptr_t>(pptr) - reinterpret_cast<intptr_t>(ptr);
-    qiLogDebug() << "Offset check T(" << typeid(ptr).name() << ")= " << pptr << ", U(" << typeid(ptr).name() << ")= " << ptr << ", T-U= " << offset;
+    qiLogDebug() << "Offset check T(" << qi::typeIdRuntime(ptr).name() << ")= " << ptr
+                 << ", U(" << qi::typeIdRuntime(pptr).name() << ")= " << pptr << ", T-U= " << offset;
     return ObjectTypeBuilderBase::inherits<U>(offset);
   }
 
@@ -155,7 +156,7 @@ namespace qi {
   template<typename T>
   void ObjectTypeBuilder<T>::registerType()
   {
-    ::qi::registerType(typeid(T), type());
+    ::qi::registerType(qi::typeId<T>(), type());
   }
 
   template<typename A>

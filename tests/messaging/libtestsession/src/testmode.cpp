@@ -8,6 +8,7 @@
 
 #include <iomanip>
 
+#include <iostream>
 #include <qi/os.hpp>
 #include <testsession/testsession.hpp>
 #include <boost/optional.hpp>

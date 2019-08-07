@@ -22,7 +22,7 @@ namespace qi {
   class SessionPrivate : public qi::Trackable<SessionPrivate>
   {
   public:
-    SessionPrivate(Session* session, bool enforceAuth = false);
+    SessionPrivate(Session* session, bool enforceAuth = false, SessionConfig config = {});
     virtual ~SessionPrivate();
 
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
@@ -51,6 +51,7 @@ namespace qi {
     Session_SD           _sd;
     TransportSocketCache _socketsCache;
     std::atomic<bool>    _sdClientClosedByThis;
+    const SessionConfig  _config; // Keep it const for thread-safety.
   };
 }
 

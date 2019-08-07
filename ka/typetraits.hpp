@@ -1,6 +1,7 @@
 #ifndef KA_TYPETRAITS_HPP
 #define KA_TYPETRAITS_HPP
 #pragma once
+#include <iterator>
 #include <type_traits>
 #include <boost/container/container_fwd.hpp>
 
@@ -363,12 +364,23 @@ namespace ka {
   template<bool B, typename T, typename F>
   using Conditional = typename std::conditional<B, T, F>::type;
 
-  /// Behave exactly as the std::conjunction of C++17
+  /// Behave exactly as the std::negation of C++17 (except for the lack of `operator()`).
+  template<typename B>
+  struct Negation : std::integral_constant<bool, ! bool(B::value)> {};
+
+  /// Behave exactly as the std::conjunction of C++17.
   template<typename...> struct Conjunction : true_t {};
   template<typename B1> struct Conjunction<B1> : B1 {};
   template<typename B1, typename... Bn>
   struct Conjunction<B1, Bn...>
     : Conditional<bool(B1::value), Conjunction<Bn...>, B1> {};
+
+  /// Behave exactly as the std::disjunction of C++17 (except for the lack of `operator()`).
+  template<typename...> struct Disjunction : false_t {};
+  template<typename B1> struct Disjunction<B1> : B1 {};
+  template<typename B1, typename... Bn>
+  struct Disjunction<B1, Bn...>
+    : Conditional<bool(B1::value), B1, Disjunction<Bn...>>  {};
 
   KA_GENERATE_TRAITS_HAS(HasOperatorStar, T, *std::declval<T>())
 
@@ -442,6 +454,36 @@ namespace ka {
   template<typename G, typename F>
   struct IsRetract : detail::IsRetract<G, F, HasRetract<Decay<F>>> {
   };
+
+  KA_GENERATE_TRAITS_HAS(HasInputIteratorTag, T,
+    std::declval<std::input_iterator_tag>() = typename std::iterator_traits<T>::iterator_category{})
+
+  /// Causes a substitution failure if the type is not an iterator, effectively
+  /// discarding the function from the overload set.
+  ///
+  /// Note: `EnableIfInputIterator` is to be typically used in conjunction with
+  ///       `EnableIfNotInputIterator`.
+  ///
+  /// Example: Making an overload visible only for iterators, and another one
+  ///          for other types
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// /// InputIterator I
+  /// template<typename I, typename = ka::EnableIfInputIterator<I>>
+  /// I distance(I b, I e);
+  ///
+  /// /// Arithmetic N
+  /// template<typename N, typename = ka::EnableIfNotInputIterator<N>>
+  /// N distance(N b, N e);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  template<typename T>
+  using EnableIfInputIterator = EnableIf<HasInputIteratorTag<T>::value>;
+
+  /// Causes a substitution failure if the type is an iterator, effectively
+  /// discarding the function from the overload set.
+  ///
+  /// See `EnableIfInputIterator` for a usage example.
+  template<typename T>
+  using EnableIfNotInputIterator = EnableIf<!HasInputIteratorTag<T>::value>;
 } // namespace ka
 
-#endif  // KA_TYPETRAITS_HPP
+#endif // KA_TYPETRAITS_HPP

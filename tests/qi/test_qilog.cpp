@@ -17,6 +17,11 @@ LogHandler::~LogHandler()
 MockLogHandler::MockLogHandler(const std::string& name)
   : handler(name, std::ref(*this))
 {
+  // TODO: Replace unit_t by void once we upgrade GoogleMock with the fix on mock methods returning
+  // void crashing in optimized compilation on recent compilers.
+  // See: https://github.com/google/googletest/issues/705
+  using testing::_;
+  ON_CALL(*this, log(_, _, _)).WillByDefault(testing::Return(ka::unit));
 }
 
 
