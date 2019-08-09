@@ -406,7 +406,7 @@ namespace qi {
 
   bool Session::setIdentity(const std::string& key, const std::string& crt)
   {
-    return _p->_serverObject.setIdentity(key, crt);
+    return _p->_serverObject.setIdentity(key, crt).value();
   }
 
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::AnyObject obj)
@@ -438,7 +438,7 @@ namespace qi {
 
   std::vector<qi::Url> Session::endpoints() const
   {
-    return _p->_serverObject.endpoints();
+    return _p->_serverObject.endpoints().value();
   }
 
   qi::FutureSync<unsigned int> Session::loadService(const std::string &moduleName, const std::string& renameModule, const AnyReferenceVector& args)

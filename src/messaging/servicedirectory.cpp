@@ -359,7 +359,7 @@ namespace qi
     si.setName(Session::serviceDirectoryServiceName());
     si.setServiceId(qi::Message::Service_ServiceDirectory);
     si.setMachineId(qi::os::getMachineId());
-    si.setEndpoints(_server->endpoints());
+    si.setEndpoints(_server->endpoints().value());
     _sdObject->updateServiceInfo(si);
   }
 
@@ -368,7 +368,7 @@ namespace qi
     if (_init)
       throw std::runtime_error("Already initialised");
     _init = true;
-    const bool success = _server->addObject(1, _serviceBoundObject);
+    const bool success = _server->addObject(1, _serviceBoundObject).value();
     QI_IGNORE_UNUSED(success);
     QI_ASSERT_TRUE(success);
 
@@ -408,7 +408,7 @@ namespace qi
       auto it = _sdObject->connectedServices.find(qi::Message::Service_ServiceDirectory);
       if (it != _sdObject->connectedServices.end())
       {
-        it->second.setEndpoints(_server->endpoints());
+        it->second.setEndpoints(_server->endpoints().value());
         return;
       }
 
@@ -418,7 +418,7 @@ namespace qi
       si.setMachineId(qi::os::getMachineId());
       si.setProcessId(qi::os::getpid());
       si.setSessionId("0");
-      si.setEndpoints(_server->endpoints());
+      si.setEndpoints(_server->endpoints().value());
       unsigned int regid = _sdObject->registerService(si);
       (void)regid;
       _sdObject->serviceReady(qi::Message::Service_ServiceDirectory);

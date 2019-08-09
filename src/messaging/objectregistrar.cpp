@@ -53,7 +53,7 @@ namespace qi {
         iter != services.rend();
         ++iter)
       unregisterService(iter->first);
-    Server::close();
+    Server::close().value();
   }
 
   void serviceReady(qi::Future<void> fut, qi::Promise<unsigned int> result, unsigned int idx) {
@@ -69,7 +69,7 @@ namespace qi {
     qi::ServiceInfo si;
     si.setProcessId(qi::os::getpid());
     si.setMachineId(qi::os::getMachineId());
-    si.setEndpoints(Server::endpoints());
+    si.setEndpoints(Server::endpoints().value());
     si.setSessionId(_id);
 
     boost::mutex::scoped_lock sl(_servicesMutex);
@@ -136,30 +136,31 @@ namespace qi {
 
   qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::AnyObject obj)
   {
-    if (Server::endpoints().empty()) {
-      qiLogError() << "Could not register service: " << name << " because the current server has not endpoint";
-      return qi::Future<unsigned int>();
-    }
-    qi::ServiceInfo si;
-    si.setName(name);
-    si.setProcessId(qi::os::getpid());
-    si.setMachineId(qi::os::getMachineId());
-    si.setEndpoints(Server::endpoints());
-    si.setSessionId(_id);
-    si.setObjectUid(obj.uid());
-
-    int id = ++_registerServiceRequestIndex;
-    {
-      boost::mutex::scoped_lock sl(_registerServiceRequestMutex);
-      _registerServiceRequest[id] = std::make_pair(obj, si);
-    }
-
     qi::Promise<unsigned int> prom;
-    qi::Future<unsigned int>  future;
-    future = _sdClient->registerService(si);
-    future.connect(
-      track(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom), &_tracker));
+    Server::endpoints().andThen(track([=](const UrlVector& endpoints) mutable {
+      if (endpoints.empty()) {
+        const auto error = "Could not register service: " + name + " because the current server has not endpoint";
+        prom.setError(error);
+        return;
+      }
+      qi::ServiceInfo si;
+      si.setName(name);
+      si.setProcessId(qi::os::getpid());
+      si.setMachineId(qi::os::getMachineId());
+      si.setEndpoints(endpoints);
+      si.setSessionId(_id);
+      si.setObjectUid(obj.uid());
 
+      int id = ++_registerServiceRequestIndex;
+      {
+        boost::mutex::scoped_lock sl(_registerServiceRequestMutex);
+        _registerServiceRequest[id] = std::make_pair(obj, si);
+      }
+
+      auto future = _sdClient->registerService(si);
+      future.connect(
+        track(boost::bind<void>(&ObjectRegistrar::onFutureFinished, this, _1, id, prom), &_tracker));
+    }, &_tracker));
     return prom.future();
   };
 
