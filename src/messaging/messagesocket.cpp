@@ -16,7 +16,7 @@ namespace qi
 {
   MessageSocket::~MessageSocket()
   {
-    qiLogDebug() << "Destroying transport socket";
+    QI_LOG_DEBUG_SOCKET(this) << "Destroying transport socket";
     _signalsStrand.join();
   }
 
