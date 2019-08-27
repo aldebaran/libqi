@@ -79,12 +79,26 @@ namespace qi
     const boost::optional<ObjectUid>& uid = {},
     boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
-  QI_API AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other);
+  /// \deprecated This function is considered harmful. Use `makeDynamicAnyObject` instead and bind
+  /// the lifetime of the `shared_ptr` to the deleter.
+  //
+  // WARNING: This function leaks and is harmful but seems difficult to fix right now. So we've
+  // decided to deprecate it until it can get completely removed.
+  QI_API_DEPRECATED_MSG(
+    "This function is considered harmful. Use `makeDynamicAnyObject` instead and bind "
+    "the lifetime of the `shared_ptr` to the deleter.")
+  QI_API AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj,
+                                                  boost::shared_ptr<Empty> other);
 
-  /** Make an AnyObject that shares its ref counter with \p other
-  * Note that \p obj will not be destroyed when the shared counter reaches 0.
-  */
+  /// Make an AnyObject that shares its ref counter with \p other.
+  /// Note that \p obj will not be destroyed when the shared counter reaches 0.
+  ///
+  /// \deprecated This function is considered harmful. Use `makeDynamicAnyObject` instead and bind
+  /// the lifetime of the `shared_ptr` to the deleter.
   template<typename T>
+  QI_API_DEPRECATED_MSG(
+    "This function is considered harmful. Use `makeDynamicAnyObject` instead and bind "
+    "the lifetime of the `shared_ptr` to the deleter.")
   inline AnyObject makeDynamicSharedAnyObject(DynamicObject *obj, boost::shared_ptr<T> other)
   {
 QI_WARNING_PUSH()

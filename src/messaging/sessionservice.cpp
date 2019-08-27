@@ -384,14 +384,20 @@ namespace qi {
         qiLogVerbose() << "A request for the service " << sr->serviceInfo.name() << " have been discarded, "
                                         << "the remoteobject on the service was already available.";
         sr->promise.setValue(it->second);
-      } else {
+      }
+      else
+      {
+        // Move the pointer out of the request, since the request is going to be erased.
+        auto remoteObject = std::move(sr->remoteObject);
+        auto resetPtr = [=](qi::GenericObject*) mutable { remoteObject.reset(); };
+        auto obj = makeDynamicAnyObject(remoteObject.get(), false, remoteObject->uid(),
+                                        std::move(resetPtr));
 
-        AnyObject o = makeDynamicSharedAnyObject(sr->remoteObject.get(), sr->remoteObject);
         //register the remote object in the cache
 
         // If this throws, the promise will be set because of the `scoped` object.
-        addService(sr->serviceInfo.name(), o);
-        sr->promise.setValue(o);
+        addService(sr->serviceInfo.name(), obj);
+        sr->promise.setValue(obj);
       }
     }
 
