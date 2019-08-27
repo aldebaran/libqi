@@ -89,7 +89,8 @@ namespace qi {
   template<typename T> qi::AnyObject DynamicObjectBuilder::object(boost::shared_ptr<T> other)
   {
     DynamicObject* dobj = bareObject();
-    qi::AnyObject ao = makeDynamicSharedAnyObject(dobj, other);
+    auto resetOther = [other](qi::GenericObject*) mutable { other.reset(); };
+    qi::AnyObject ao = makeDynamicAnyObject(dobj, false, dobj->uid(), std::move(resetOther));
     setManageable(dobj, ao.asGenericObject());
     return ao;
   }

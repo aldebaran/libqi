@@ -40,7 +40,7 @@ Future<AnyReference> GenericObject::metaCallNoUnwrap(
 
   try
   {
-    return type->metaCall(value, shared_from_this(), method, params, callType, returnSignature);
+    return type->metaCall(value, AnyObject(shared_from_this()), method, params, callType, returnSignature);
   }
   catch (const std::exception &e)
   {
@@ -99,7 +99,7 @@ void GenericObject::metaPost(unsigned int event, const GenericFunctionParameters
     qiLogWarning() << "Operating on invalid GenericObject..";
     return;
   }
-  type->metaPost(value, shared_from_this(), event, args);
+  type->metaPost(value, AnyObject(shared_from_this()), event, args);
 }
 
 /// Resolve signature and bounce
@@ -154,7 +154,7 @@ qi::FutureSync<SignalLink> GenericObject::connect(unsigned int event, const Sign
     qiLogWarning() << "Operating on invalid GenericObject..";
     return qi::makeFutureError<SignalLink>("Operating on invalid GenericObject..");
   }
-  return type->connect(value, shared_from_this(), event, sub);
+  return type->connect(value, AnyObject(shared_from_this()), event, sub);
 }
 
 qi::FutureSync<void> GenericObject::disconnect(SignalLink linkId)
@@ -163,15 +163,15 @@ qi::FutureSync<void> GenericObject::disconnect(SignalLink linkId)
     qiLogWarning() << "Operating on invalid GenericObject..";
     return qi::makeFutureError<void>("Operating on invalid GenericObject");
   }
-  return type->disconnect(value, shared_from_this(), linkId);
+  return type->disconnect(value, AnyObject(shared_from_this()), linkId);
 }
 
 qi::FutureSync<AnyValue> GenericObject::property(unsigned int id) {
-  return type->property(value, shared_from_this(), id);
+  return type->property(value, AnyObject(shared_from_this()), id);
 }
 
 qi::FutureSync<void> GenericObject::setProperty(unsigned int id, const AnyValue& val) {
-  return type->setProperty(value, shared_from_this(), id, val);
+  return type->setProperty(value, AnyObject(shared_from_this()), id, val);
 }
 
 qi::FutureSync<SignalLink> GenericObject::connect(unsigned int signal, AnyObject target, unsigned int slot)

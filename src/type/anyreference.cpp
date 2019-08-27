@@ -918,12 +918,14 @@ namespace detail
       QI_ASSERT_TRUE(pointeeValue);
       const ObjectUid pointeeUid = pointeeType->uid(pointeeValue);
       AnyValue pointer{*this};
-      AnyObject obj(new GenericObject(pointeeType, pointeeValue, pointeeUid),
-              [pointer] (GenericObject *obj) mutable {
-                delete obj;
-                pointer.reset(); // reset explicitly because we don't want the pointer's
-                                 // lifetime be that of the deleter
-              });
+      auto go =
+        detail::ManagedObjectPtr(new GenericObject(pointeeType, pointeeValue, pointeeUid),
+                                 [pointer](GenericObject* obj) mutable {
+                                   delete obj;
+                                   pointer.reset(); // reset explicitly because we don't want the
+                                                    // pointer's lifetime be that of the deleter
+                                 });
+      AnyObject obj(std::move(go));
 
       return UniqueAnyReference{ AnyReference::from(obj).clone() };
     }

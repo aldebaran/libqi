@@ -276,8 +276,24 @@ public:
   Object(T* ptr, boost::function<void(T*)> deleter);
   /// @}
 
+  explicit Object(detail::ManagedObjectPtr obj)
+  {
+    init(obj);
+  }
+
   /// Shares ref counter with other, which must handle the destruction of go.
-  template<typename U> Object(GenericObject* go, boost::shared_ptr<U> other);
+  ///
+  /// \deprecated This constructor is considered harmful. It is undefined
+  /// behavior to associate a `GenericObject` to a different `shared_ptr` than
+  /// the one it was instantiated with.
+  //
+  // WARNING: This constructor relies on the use of an internal function of the
+  // `boost::shared_ptr` API.
+  // TODO: Remove this constructor.
+  template <typename U>
+  QI_API_DEPRECATED_MSG("This constructor is considered harmful.")
+  Object(GenericObject* go, boost::shared_ptr<U> other);
+
   template<typename U> Object(boost::shared_ptr<U> other);
   bool isValid() const;
   explicit operator bool() const;
@@ -327,11 +343,6 @@ private:
 
   template <typename> friend class Object;
   template <typename> friend class WeakObject;
-
-  Object(detail::ManagedObjectPtr obj)
-  {
-    init(obj);
-  }
 
   void init(detail::ManagedObjectPtr obj);
 
@@ -431,12 +442,23 @@ template<typename T> inline Object<T>::Object(GenericObject* go, boost::function
 {
   init(detail::ManagedObjectPtr(go, deleter));
 }
+
 template<typename T> template<typename U> Object<T>::Object(GenericObject* go, boost::shared_ptr<U> other)
 {
   init(detail::ManagedObjectPtr(other, go));
+
+  // WARNING: Relying on an internal function from boost is codesmell and
+  // dangerous. `GenericObject` inherits from `enable_shared_from_this` which
+  // means constructing a `shared_ptr<GenericObject>` by aliasing and then
+  // using `shared_from_this` is undefined behavior. This is why the following
+  // call had to be added. This constructor is impossible to implement correctly
+  // without this call and is therefore deprecated.
+  // TODO: Remove this this constructor as soon as possible.
+  //
   // Notify the shared_from_this of GenericObject
   _obj->_internal_accept_owner(&other, go);
 }
+
 namespace detail
 {
   // Low-level constructor from type, for factorization purpose only

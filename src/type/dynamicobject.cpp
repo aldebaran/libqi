@@ -469,8 +469,17 @@ namespace qi
 
   AnyObject makeDynamicSharedAnyObjectImpl(DynamicObject* obj, boost::shared_ptr<Empty> other)
   {
-    GenericObject* go = new GenericObject(getDynamicTypeInterface(), obj, obj->uid());
-    return AnyObject(go, other);
+    // Breaking the contract here: technically `other` and the `GenericObject` do not share the same
+    // shared state, but it would be undefined behavior to do so as `GenericObject` inherits from
+    // `enabled_shared_from_this`.
+    // TODO: Remove this function as soon as possible.
+    auto deleteGenObjReleaseOther = [=](GenericObject* go) mutable {
+      // Delete the GenericObject before releasing the shared_ptr because the GenericObject might depend
+      // on it.
+      delete go;
+      other.reset();
+    };
+    return makeDynamicAnyObject(obj, false, obj->uid(), std::move(deleteGenObjReleaseOther));
   }
 
   AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
@@ -479,19 +488,16 @@ namespace qi
   {
     QI_ASSERT_TRUE(obj);
     ObjectTypeInterface* type = getDynamicTypeInterface();
-    std::unique_ptr<GenericObject> go;
 
-    if (uid) go.reset(new GenericObject(type, obj, *uid));
-    else go.reset(new GenericObject(type, obj, obj->uid()));
+    const auto genObjUid = uid ? *uid : obj->uid();
 
+    auto deleter = [&]() -> boost::function<void(GenericObject*)> {
     if (destroyObject || onDelete)
-    {
-      return AnyObject(go.release(),
-        boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete));
-    }
+      return boost::bind(&cleanupDynamicObject, _1, destroyObject, onDelete);
     else
-    {
-      return AnyObject(go.release(), &AnyObject::deleteGenericObjectOnly);
-    }
+      return &AnyObject::deleteGenericObjectOnly;
+    }();
+
+    return AnyObject(detail::ManagedObjectPtr(new GenericObject(type, obj, uid), std::move(deleter)));
   }
 }
