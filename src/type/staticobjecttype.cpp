@@ -263,15 +263,13 @@ qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject con
     return ec->async(boost::bind(&setPropertyValue, p, value));
   else
   {
-    try
-    {
-      p->setValue(value.asReference());
-    }
-    catch(const std::exception& e)
-    {
-      return qi::makeFutureError<void>(std::string("setProperty: ") + e.what());
-    }
-    return qi::Future<void>(0);
+    const auto asyncSetValue = [&]{
+      return p->setValue(value.asReference()).async();
+    };
+    const auto formatError = [&](const std::string& err) {
+      return str(boost::format("Failed to set object property '%1%', reason: %2%") % id % err);
+    };
+    return ka::invoke_catch(futureErrorFromException<void>(formatError), asyncSetValue);
   }
 }
 
