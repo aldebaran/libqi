@@ -1527,3 +1527,36 @@ TYPED_TEST(FutureValue, SafeValuePtr)
   testSafeValue([](const Future<X>& f) {return f.valueSharedPtr(longTimeout);}, UnitFuture{});
   testSafeValue([](const Future<X>& f) {return f.valueSharedPtr(Infinity{});}, UnitFuture{});
 }
+
+TEST(FutureErrorFromException, WithIdentity)
+{
+  auto res = ka::invoke_catch(
+    qi::futureErrorFromException<int>(),
+    []() -> qi::Future<int> {
+      throw std::runtime_error("an exception");
+    }
+  );
+
+  std::string err;
+  EXPECT_TRUE(test::finishesWithError(res, test::willAssignError(err)));
+  EXPECT_NE(std::string::npos, err.find("an exception"));
+}
+
+TEST(FutureErrorFromException, WithTransfo)
+{
+  const std::string prefix = "test - ";
+  auto addPrefix = [&](const std::string& msg){
+    return prefix + msg;
+  };
+  auto res = ka::invoke_catch(
+    qi::futureErrorFromException<int>(addPrefix),
+    []() -> qi::Future<int> {
+      throw std::runtime_error("an exception");
+    }
+  );
+
+  std::string err;
+  EXPECT_TRUE(test::finishesWithError(res, test::willAssignError(err)));
+  EXPECT_EQ(0u, err.find(prefix)) << err;
+  EXPECT_NE(std::string::npos, err.find("an exception"));
+}
