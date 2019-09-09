@@ -626,7 +626,7 @@ char* signature_to_json(const char* sig)
     qi::Signature s(sig);
     res = qi::encodeJSON(s.toData());
   } catch (const std::exception& e) {
-    qiLogInfo() << e.what();
+    qiLogVerbose() << e.what();
     return  nullptr;
   }
   free(resc);

@@ -301,7 +301,7 @@ public:
       PointerTypeInterface* ptype = static_cast<PointerTypeInterface*>(source.type());
       // FIXME: find a way!
       if (ptype->pointerKind() == PointerTypeInterface::Shared)
-        qiLogInfo() << "Object will *not* track original shared pointer";
+        qiLogVerbose() << "Object will *not* track original shared pointer";
       set(storage, *source);
     }
     else if (source.kind() == TypeKind_Optional)

@@ -190,7 +190,7 @@ namespace qi
     auto it = std::upper_bound(l.begin(), l.end(), CompareCallTime(d->tPost));
     if (it == l.begin())
     { // damm, first element is older than us
-      qiLogInfo() << "No async parent can be found";
+      qiLogVerbose() << "No async parent can be found";
       return false;
     }
     --it;
@@ -271,7 +271,7 @@ namespace qi
                      [&](const std::shared_ptr<CallData>& d) { return d && d->uid == trace.id(); });
     if (it == container.end())
     {
-      qiLogInfo() << "Message not where it should be";
+      qiLogVerbose() << "Message not where it should be";
       return;
     }
 

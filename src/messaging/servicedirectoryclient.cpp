@@ -334,7 +334,7 @@ namespace qi {
   qi::FutureSync<void> ServiceDirectoryClient::connect(const qi::Url &serviceDirectoryURL) {
     if (isConnected()) {
       const char* s = "Session is already connected";
-      qiLogInfo() << s;
+      qiLogVerbose() << s;
       return qi::makeFutureError<void>(s);
     }
     qi::Promise<void> promise;

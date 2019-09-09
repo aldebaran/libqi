@@ -483,7 +483,7 @@ namespace qi
                                                     MessageSocket& socket,
                                                     Message reply)
   {
-    qiLogInfo() << "Sending an authentication error '" << error << "' to socket " << &socket << ".";
+    qiLogVerbose() << "Sending an authentication error '" << error << "' to socket " << &socket << ".";
     reply.setType(Message::Type_Error);
     reply.setError(std::move(error));
     auto errorSent = socket.send(std::move(reply));

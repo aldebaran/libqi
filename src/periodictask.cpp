@@ -327,12 +327,12 @@ namespace qi
     }
     catch (const std::exception& e)
     {
-      qiLogInfo() << "Exception in task " << _name << ": " << e.what();
+      qiLogVerbose() << "Exception in task " << _name << ": " << e.what();
       shouldAbort = true;
     }
     catch(...)
     {
-      qiLogInfo() << "Unknown exception in task callback.";
+      qiLogVerbose() << "Unknown exception in task callback.";
       shouldAbort = true;
     }
     if (shouldAbort)

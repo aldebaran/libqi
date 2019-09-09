@@ -139,7 +139,7 @@ namespace qi {
   {
     if (isConnected()) {
       const char* s = "Session is already connected";
-      qiLogInfo() << s;
+      qiLogVerbose() << s;
       return qi::makeFutureError<void>(s);
     }
     _serverObject.open();
@@ -303,7 +303,7 @@ namespace qi {
 
   qi::FutureSync<void> Session::listen(const qi::Url& address)
   {
-    qiLogInfo() << "Session listener created on " << address.str();
+    qiLogVerbose() << "Session listener created on " << address.str();
     return _p->_serverObject.listen(address);
   }
 
@@ -317,7 +317,7 @@ namespace qi {
       return listen(defaultListenUrl);
     }
 
-    qiLogInfo() << "Session listener created on "
+    qiLogVerbose() << "Session listener created on "
                 << boost::join(boost::adaptors::transform(addresses,
                                                           [](const Url& address) {
                                                             return address.str();

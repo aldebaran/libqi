@@ -273,7 +273,7 @@ namespace qi
            it != _endpoints.end();
            it++)
       {
-        qiLogInfo() << "TransportServer will listen on: " << it->str();
+        qiLogVerbose() << "TransportServer will listen on: " << it->str();
       }
     }
 
