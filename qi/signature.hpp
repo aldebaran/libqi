@@ -153,8 +153,12 @@ namespace qi {
     friend QI_API bool operator==(const Signature &lhs, const Signature &rhs);
   };
 
+  inline std::ostream& operator<<(std::ostream& os, const Signature& s)
+  {
+    return os << s.toString();
+  }
 
-  QI_API inline bool operator!=(const Signature &lhs, const Signature &rhs)
+  inline bool operator!=(const Signature &lhs, const Signature &rhs)
   { return !(lhs == rhs); }
   QI_API bool operator==(const Signature &lhs, const Signature &rhs);
 

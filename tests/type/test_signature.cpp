@@ -22,57 +22,8 @@
 #include <vector>
 #include <map>
 
-namespace qi
+TEST(TestSignature, SignatureSize)
 {
-  // OLD API compat layer for this test.
-  template<typename T> struct signatureFromType
-  {
-    static std::string value()
-    {
-      return typeOf<T>()->signature().toString();
-    }
-  };
-  struct signatureFromObject
-  {
-    template<typename T> static std::string value(const T& ptr)
-    {
-      return typeOf(ptr)->signature().toString();
-    }
-  };
-}
-class noSigForThis;
-using MapInt = std::map<int, int>;
-
-TEST(TestSignature, BasicTypeSignature) {
-  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<char>::value());
-  EXPECT_EQ("C",    qi::signatureFromType<unsigned char>::value());
-  EXPECT_EQ("w",    qi::signatureFromType<short>::value());
-  EXPECT_EQ("W",    qi::signatureFromType<unsigned short>::value());
-  EXPECT_EQ("i",    qi::signatureFromType<int>::value());
-  EXPECT_EQ("I",    qi::signatureFromType<unsigned int>::value());
-
-  EXPECT_EQ("c",    qi::signatureFromType<qi::int8_t>::value());
-  EXPECT_EQ("C",    qi::signatureFromType<qi::uint8_t>::value());
-  EXPECT_EQ("w",    qi::signatureFromType<qi::int16_t>::value());
-  EXPECT_EQ("W",    qi::signatureFromType<qi::uint16_t>::value());
-  EXPECT_EQ("i",    qi::signatureFromType<qi::int32_t>::value());
-  EXPECT_EQ("I",    qi::signatureFromType<qi::uint32_t>::value());
-  EXPECT_EQ("l",    qi::signatureFromType<qi::int64_t>::value());
-  EXPECT_EQ("L",    qi::signatureFromType<qi::uint64_t>::value());
-
-  // long is platform-dependant and can't be tested.
-  EXPECT_EQ("l",    qi::signatureFromType<long long>::value());
-  EXPECT_EQ("L",    qi::signatureFromType<unsigned long long>::value());
-
-  EXPECT_EQ("f",    qi::signatureFromType<float>::value());
-  EXPECT_EQ("d",    qi::signatureFromType<double>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<std::string>::value());
-  EXPECT_EQ("[i]",  qi::signatureFromType< std::vector<int> >::value());
-  EXPECT_EQ("{ii}", qi::signatureFromType< MapInt >::value() );
-}
-
-TEST(TestSignature, SignatureSize) {
   qi::Signature s("(iiii)");
   EXPECT_EQ(4u, s.children().size());
   EXPECT_EQ(0u, s.children().at(0).children().size());
@@ -84,61 +35,8 @@ TEST(TestSignature, SignatureSize) {
   EXPECT_EQ(2u, s.children().size());
 }
 
-TEST(TestSignature, TypeConstRefPointerMix) {
-
-  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<char>::value());
-  EXPECT_EQ("i",    qi::signatureFromType<int>::value());
-  EXPECT_EQ("f",    qi::signatureFromType<float>::value());
-  EXPECT_EQ("d",    qi::signatureFromType<double>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<std::string>::value());
-  EXPECT_EQ("[i]",  qi::signatureFromType< std::vector<int> >::value());
-  EXPECT_EQ("{ii}", qi::signatureFromType< MapInt >::value() );
-
-  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<const char>::value());
-  EXPECT_EQ("i",    qi::signatureFromType<const int>::value());
-  EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
-  EXPECT_EQ("d",    qi::signatureFromType<const double>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const std::string>::value());
-  EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int > >::value());
-  EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt >::value());
-
-  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
-  EXPECT_EQ("c",    qi::signatureFromType<const char&>::value());
-  EXPECT_EQ("i",    qi::signatureFromType<const int&>::value());
-  EXPECT_EQ("f",    qi::signatureFromType<const float&>::value());
-  EXPECT_EQ("d",    qi::signatureFromType<const double&>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const std::string&>::value());
-  EXPECT_EQ("[i]",  qi::signatureFromType<const std::vector< int >& >::value());
-  EXPECT_EQ("{ii}", qi::signatureFromType<const MapInt& >::value());
-}
-
-TEST(TestSignature, Bools) {
-  EXPECT_EQ("b",    qi::signatureFromType<bool>::value());
-  EXPECT_EQ("b",    qi::signatureFromType<bool&>::value());
-  EXPECT_EQ("b",    qi::signatureFromType<const bool>::value());
-  EXPECT_EQ("b",    qi::signatureFromType<const bool&>::value());
-}
-
-TEST(TestSignature, Strings) {
-  EXPECT_EQ("s",    qi::signatureFromType<std::string>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const std::string>::value());
-
-  EXPECT_EQ("s",    qi::signatureFromType<char *>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const char *>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const char * const>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<char const * const>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<char *&>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const char *&>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<const char * const&>::value());
-  EXPECT_EQ("s",    qi::signatureFromType<char const * const&>::value());
-}
-
-
-TEST(TestSignature, VArgs) {
-  EXPECT_EQ("#m",    qi::signatureFromType<qi::AnyVarArguments>::value());
-
+TEST(TestSignature, VArgs)
+{
   //vargs
   EXPECT_TRUE(qi::Signature("#b").isValid());
   EXPECT_TRUE(qi::Signature("#b<titi,toto>").isValid());
@@ -148,65 +46,19 @@ TEST(TestSignature, VArgs) {
   EXPECT_TRUE(qi::Signature("~b<titi,toto>").isValid());
 }
 
-struct MPoint {
-  MPoint(int x=0, int y=0)
+struct MPoint
+{
+  MPoint(std::int32_t x=0, std::int32_t y=0)
     : x(x)
     , y(y)
   {}
-  int x;
-  int y;
+  std::int32_t x;
+  std::int32_t y;
 };
 QI_TYPE_STRUCT(MPoint, x, y);
 
-TEST(TestSignature, NamedTuple) {
-  EXPECT_EQ("(ii)<MPoint,x,y>", qi::typeOf<MPoint>()->signature().toString());
-}
-
-TEST(TestSignature, ComplexTypeSignature) {
-  //{ii}
-  using MapInt = std::map<int, int>;
-  //{{ii}{ii}}
-  using MapInt2 = std::map<MapInt, MapInt>;
-  using VectorMapInt2 = std::vector<MapInt2>;
-
-  // MapInt2& Does not works
-  using MapInt2Ref = MapInt2;
-
-  using VectMapInt2Ref = std::vector<MapInt2Ref>;
-
-  // const VectMapInt2Ref does not works
-  using VectMapInt2RefConst = VectMapInt2Ref;
-
-  using VectVectMapInt2ConstRef = std::vector<VectMapInt2RefConst>;
-
-  using FuckinMap = std::map<VectorMapInt2, VectVectMapInt2ConstRef>;
-
-  //{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
-  //and obama said: Yes We Can!
-  EXPECT_EQ("{ii}"                        , qi::typeOf<MapInt>()->signature().toString());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2>()->signature().toString());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectorMapInt2>()->signature().toString());
-  EXPECT_EQ("{{ii}{ii}}"                  , qi::typeOf<MapInt2Ref>()->signature().toString());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2Ref>()->signature().toString());
-  EXPECT_EQ("[{{ii}{ii}}]"                , qi::typeOf<VectMapInt2RefConst>()->signature().toString());
-  EXPECT_EQ("[[{{ii}{ii}}]]"              , qi::typeOf<VectVectMapInt2ConstRef>()->signature().toString());
-  EXPECT_EQ("{[{{ii}{ii}}][[{{ii}{ii}}]]}", qi::typeOf<FuckinMap>()->signature().toString());
-}
-
-TEST(TestSignature, FromObject) {
-  int myint = 42;
-  EXPECT_EQ("i", qi::signatureFromObject::value(myint));
-}
-
-TEST(TestSignature, ComplexConstRefPtr) {
-  EXPECT_EQ("f",    qi::signatureFromType<float>::value());
-  EXPECT_EQ("f",    qi::signatureFromType<float&>::value());
-  EXPECT_EQ("f",    qi::signatureFromType<const float &>::value());
-  EXPECT_EQ("f",    qi::signatureFromType<const float>::value());
-}
-
-TEST(TestSignature, Equal) {
-  EXPECT_EQ(qi::signatureFromType<float&>::value(), qi::signatureFromType<float>::value());
+TEST(TestSignature, Equal)
+{
   EXPECT_TRUE(qi::Signature("[s]") == qi::Signature("[s]"));
   EXPECT_TRUE(qi::Signature("(ss)<Point,x,y>") == qi::Signature("(ss)")); // really?
 
@@ -214,9 +66,8 @@ TEST(TestSignature, Equal) {
   EXPECT_TRUE(qi::Signature("(mm)") != "(m)");
 }
 
-TEST(TestSignature, InvalidSignature) {
-
-
+TEST(TestSignature, InvalidSignature)
+{
   //empty signature are invalid
   EXPECT_THROW(qi::Signature(""), std::runtime_error);
   EXPECT_THROW(qi::Signature("("), std::runtime_error);
@@ -228,15 +79,16 @@ TEST(TestSignature, InvalidSignature) {
   EXPECT_THROW(qi::Signature("(mm"), std::runtime_error);
 }
 
-TEST(TestSignature, InvalidNumberOfArgs) {
+TEST(TestSignature, InvalidNumberOfArgs)
+{
   //empty signature are invalid
   EXPECT_THROW(qi::Signature("[iii]"), std::runtime_error);
   EXPECT_THROW(qi::Signature("{iii}"), std::runtime_error);
   EXPECT_THROW(qi::Signature("{i}"), std::runtime_error);
 }
 
-
-TEST(TestSignature, FromString) {
+TEST(TestSignature, FromString)
+{
   qi::Signature *sig;
 
   sig = new qi::Signature();
@@ -265,9 +117,9 @@ TEST(TestSignature, FromString) {
   delete sig;
 }
 
-TEST(TestSignature, SignatureSplitError) {
+TEST(TestSignature, SignatureSplitError)
+{
   std::vector<std::string> sigInfo;
-
 
   sigInfo = qi::signatureSplit("reply");
   EXPECT_EQ("", sigInfo[0]);
@@ -294,7 +146,8 @@ TEST(TestSignature, SignatureSplitError) {
   EXPECT_NO_THROW(qi::signatureSplit("titi::s({i{is}})"));
 }
 
-TEST(TestSignature, IsCompatible) {
+TEST(TestSignature, IsCompatible)
+{
   qi::Signature s("(s[m])");
   EXPECT_EQ(s.isConvertibleTo("(si)"), 0.);
   EXPECT_EQ(s.isConvertibleTo("(sf)"), 0.);
@@ -309,7 +162,8 @@ TEST(TestSignature, IsCompatible) {
   EXPECT_GT(s3.isConvertibleTo("([m])"), s3.isConvertibleTo("(m)"));
 }
 
-TEST(TestSignature, SignatureSplit) {
+TEST(TestSignature, SignatureSplit)
+{
   std::vector<std::string> sigInfo;
 
   ASSERT_NO_THROW(sigInfo = qi::signatureSplit("reply::(s)"));
@@ -339,7 +193,8 @@ TEST(TestSignature, SignatureSplit) {
   EXPECT_EQ("", sigInfo[2]);
 }
 
-TEST(TestSignature, ItAnnotation) {
+TEST(TestSignature, ItAnnotation)
+{
   std::string orig("((m)<Plouf,x>(scf)<Point3d,x,y,z>)");
   qi::Signature sig(orig);
   qi::SignatureVector subsig = sig.children();
@@ -370,151 +225,56 @@ TEST(TestSignature, TestToSTLType)
 //expect that the following test to do not build. (static assert)
 static int gGlobalResult = 0;
 
-void vfun0()                                                                                      { gGlobalResult = 0; }
-void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
-void vfun2(const int &p0,const int &p1)                                                           { gGlobalResult = p0 + p1; }
-void vfun3(const int &p0,const int &p1,const int &p2)                                             { gGlobalResult = p0 + p1 + p2; }
-void vfun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { gGlobalResult = p0 + p1 + p2 + p3; }
-void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
-void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
+void vfun0() { gGlobalResult = 0; }
+void vfun1(const int &p0) { gGlobalResult = p0; }
+void vfun2(const int &p0,const int &p1) { gGlobalResult = p0 + p1; }
+void vfun3(const int &p0,const int &p1,const int &p2) { gGlobalResult = p0 + p1 + p2; }
+void vfun4(const int &p0,const int &p1,const int &p2,const int &p3) { gGlobalResult = p0 + p1 + p2 + p3; }
+void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4)
+{ gGlobalResult = p0 + p1 + p2 + p3 + p4; }
+void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4,const int &p5)
+{ gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 
-int fun0()                                                                                      { return 0; }
-int fun1(const int &p0)                                                                         { return p0; }
-int fun2(const int &p0,const int &p1)                                                           { return p0 + p1; }
-int fun3(const int &p0,const int &p1,const int &p2)                                             { return p0 + p1 + p2; }
-int fun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { return p0 + p1 + p2 + p3; }
-int fun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { return p0 + p1 + p2 + p3 + p4; }
-int fun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { return p0 + p1 + p2 + p3 + p4 + p5; }
+int fun0() { return 0; }
+int fun1(const int &p0) { return p0; }
+int fun2(const int &p0,const int &p1) { return p0 + p1; }
+int fun3(const int &p0,const int &p1,const int &p2) { return p0 + p1 + p2; }
+int fun4(const int &p0,const int &p1,const int &p2,const int &p3) { return p0 + p1 + p2 + p3; }
+int fun5(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4)
+{ return p0 + p1 + p2 + p3 + p4; }
+int fun6(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4,const  int &p5)
+{ return p0 + p1 + p2 + p3 + p4 + p5; }
 
 
 struct Foo {
-  void voidCall()                                          { return; }
-  int intStringCall(const std::string &plouf)              { return plouf.size(); }
+  void voidCall() { return; }
+  int intStringCall(const std::string &plouf) { return plouf.size(); }
 
-  int fun0()                                                                                      { return 0; }
-  int fun1(const int &p0)                                                                         { return p0; }
-  int fun2(const int &p0,const int &p1)                                                           { return p0 + p1; }
-  int fun3(const int &p0,const int &p1,const int &p2)                                             { return p0 + p1 + p2; }
-  int fun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { return p0 + p1 + p2 + p3; }
-  int fun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { return p0 + p1 + p2 + p3 + p4; }
-  int fun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { return p0 + p1 + p2 + p3 + p4 + p5; }
+  int fun0() { return 0; }
+  int fun1(const int &p0) { return p0; }
+  int fun2(const int &p0,const int &p1) { return p0 + p1; }
+  int fun3(const int &p0,const int &p1,const int &p2) { return p0 + p1 + p2; }
+  int fun4(const int &p0,const int &p1,const int &p2,const int &p3) { return p0 + p1 + p2 + p3; }
+  int fun5(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4)
+  { return p0 + p1 + p2 + p3 + p4; }
+  int fun6(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4,const int &p5)
+  { return p0 + p1 + p2 + p3 + p4 + p5; }
 
-  void vfun0()                                                                                      { gGlobalResult = 0; }
-  void vfun1(const int &p0)                                                                         { gGlobalResult = p0; }
-  void vfun2(const int &p0,const int &p1)                                                           { gGlobalResult = p0 + p1; }
-  void vfun3(const int &p0,const int &p1,const int &p2)                                             { gGlobalResult = p0 + p1 + p2; }
-  void vfun4(const int &p0,const int &p1,const int &p2,const int &p3)                               { gGlobalResult = p0 + p1 + p2 + p3; }
-  void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4)                { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
-  void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const  int &p4,const  int &p5) { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
+  void vfun0() { gGlobalResult = 0; }
+  void vfun1(const int &p0) { gGlobalResult = p0; }
+  void vfun2(const int &p0,const int &p1) { gGlobalResult = p0 + p1; }
+  void vfun3(const int &p0,const int &p1,const int &p2) { gGlobalResult = p0 + p1 + p2; }
+  void vfun4(const int &p0,const int &p1,const int &p2,const int &p3) { gGlobalResult = p0 + p1 + p2 + p3; }
+  void vfun5(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4)
+  { gGlobalResult = p0 + p1 + p2 + p3 + p4; }
+  void vfun6(const int &p0,const int &p1,const int &p2,const int &p3,const int &p4,const int &p5)
+  { gGlobalResult = p0 + p1 + p2 + p3 + p4 + p5; }
 };
-
-
-
-TEST(TestSignature, WeirdPointerTypes) {
-  EXPECT_EQ("X", qi::signatureFromType<bool*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<bool*&>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const bool*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const bool*&>::value());
-
-  EXPECT_EQ("X", qi::signatureFromType<float *>::value());
-  EXPECT_EQ("X", qi::signatureFromType<float const *>::value());
-  EXPECT_EQ("X", qi::signatureFromType<float * const>::value());
-  EXPECT_EQ("X", qi::signatureFromType<float const * const>::value());
-}
-//not instanciable
-//TEST(TestSignature, noSignature) {
-//  EXPECT_EQ("X", qi::signatureFromType<noSigForThis>::value());
-//  EXPECT_EQ("X", qi::signatureFromType<void (int, int)>::value());
-//}
-
-TEST(TestSignature, WeirdBasicFunctionSignature) {
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun0));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun1));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun2));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun3));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun4));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun5));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&fun6));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun0));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun1));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun2));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun3));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun4));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun5));
-  EXPECT_EQ("X", qi::signatureFromObject::value(fun6));
-}
-
-TEST(TestSignature, WeirdPointers) {
-  EXPECT_EQ("X", qi::signatureFromType<const bool*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const int*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const float*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const double*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const std::string*>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const std::vector< int >* >::value());
-  EXPECT_EQ("X", qi::signatureFromType<const MapInt* >::value());
-
-  EXPECT_EQ("X", qi::signatureFromType<const bool*&>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const int*&>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const float*&>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const double*&>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const std::string*&>::value());
-  EXPECT_EQ("X", qi::signatureFromType<const std::vector< int >*& >::value());
-  EXPECT_EQ("X", qi::signatureFromType<const MapInt*& >::value());
-}
-
-
-TEST(TestSignature, FunctionType) {
-  EXPECT_EQ("X", qi::signatureFromType<void (*)(int, int)>::value());
-}
-
-TEST(TestSignature, BasicVoidFunctionSignature) {
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun0));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun1));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun2));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun3));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun4));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun5));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&vfun6));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun0));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun1));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun2));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun3));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun4));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun5));
-  EXPECT_EQ("X", qi::signatureFromObject::value(vfun6));
-
-}
-
-//dont ask me why, but member function evaluates to bool :(
-TEST(TestSignature, WeirdBasicVoidMemberSignature) {
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun0));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun1));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun2));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun3));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun4));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun5));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::vfun6));
-}
-
-TEST(TestSignature, WeirdBasicMemberSignature) {
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun0));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun1));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun2));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun3));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun4));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun5));
-  EXPECT_EQ("X", qi::signatureFromObject::value(&Foo::fun6));
-}
-
-//yes shared_ptr evaluate to bool
-TEST(TestSignature, WeirdSharedPtr) {
-  EXPECT_EQ("X", qi::signatureFromType< boost::shared_ptr<int> >::value());
-  EXPECT_EQ("X", qi::signatureFromType< boost::shared_ptr<int> &>::value());
-}
 
 qiLogCategory("test.signature()");
 
-void stackIt(std::vector<qi::Signature>& stack, const qi::Signature& sig) {
+void stackIt(std::vector<qi::Signature>& stack, const qi::Signature& sig)
+{
   qiLogInfo() << "Pushing:" << sig.toString() << ", annot:" << sig.annotation();
   qi::SignatureVector child = sig.children();
   for (qi::SignatureVector::const_reverse_iterator it = child.rbegin(); it != child.rend(); ++it) {
@@ -581,7 +341,8 @@ qi::Signature tuple(const std::string& str)
   return qi::Signature("(" + str + ")");
 }
 
-TEST(TestSignature, Annotation) {
+TEST(TestSignature, Annotation)
+{
   using qi::Signature;
   Signature s("i<foo>");
   EXPECT_EQ("foo", s.annotation());
@@ -603,18 +364,18 @@ TEST(TestSignature, Annotation) {
     ('i', "")
     ('i', "bam<baz>")
     );
-EXPECT_TRUE(SignatureValidator(tuple("i<foo>[i<bar>]<baz>{i<bim>I<bam>}<boum>(i<pif>I<paf>)<pouf>"))
-  ('(', "")
-  ('i', "foo")
-  ('[', "baz")
-  ('i', "bar")
-  ('{', "boum")
-  ('i', "bim")
-  ('I', "bam")
-  ('(', "pouf")
-  ('i', "pif")
-  ('I', "paf")
-  );
+  EXPECT_TRUE(SignatureValidator(tuple("i<foo>[i<bar>]<baz>{i<bim>I<bam>}<boum>(i<pif>I<paf>)<pouf>"))
+    ('(', "")
+    ('i', "foo")
+    ('[', "baz")
+    ('i', "bar")
+    ('{', "boum")
+    ('i', "bim")
+    ('I', "bam")
+    ('(', "pouf")
+    ('i', "pif")
+    ('I', "paf")
+    );
  EXPECT_TRUE(SignatureValidator("[[[[i<a>]<b>]<c>]<d>]<e>")
    ('[', "e")
    ('[', "d")
@@ -630,7 +391,8 @@ EXPECT_TRUE(SignatureValidator(tuple("i<foo>[i<bar>]<baz>{i<bim>I<bam>}<boum>(i<
  EXPECT_FALSE(SignatureValidator("i<coin>")('i', ""));
 }
 
-TEST(TestSignature, AnnotationInvalid) {
+TEST(TestSignature, AnnotationInvalid)
+{
   using qi::Signature;
   EXPECT_THROW(Signature("i<foo")  , std::runtime_error);
   EXPECT_THROW(Signature("ifoo>")  , std::runtime_error);
@@ -712,8 +474,8 @@ TEST(TestSignature, ToData)
 }
 
 
-TEST(TestSignatureIterator, Simple) {
-
+TEST(TestSignatureIterator, Simple)
+{
   qi::SignatureVector::iterator it;
 
   qi::Signature signature("(is)");
@@ -727,7 +489,8 @@ TEST(TestSignatureIterator, Simple) {
   verif_iter(*it, "s", Type_String, false);
 }
 
-TEST(TestSignatureIterator, Empty) {
+TEST(TestSignatureIterator, Empty)
+{
   qi::Signature sig3;
 
   EXPECT_TRUE(sig3.children().size() == 0);
@@ -735,6 +498,146 @@ TEST(TestSignatureIterator, Empty) {
   EXPECT_STREQ("", sig3.toString().c_str());
 }
 
+//{ii}
+using MapInt = std::map<std::int32_t, std::int32_t>;
 
+//{{ii}{ii}}
+using MapInt2 = std::map<MapInt, MapInt>;
 
-//#endif
+using VectorMapInt2 = std::vector<MapInt2>;
+using VectMapInt2 = std::vector<MapInt2>;
+using VectVectMapInt2 = std::vector<VectMapInt2>;
+
+//{[{{ii}{ii}}][[{{ii}{ii}}&]#]}
+using ComplexMap = std::map<VectorMapInt2, VectVectMapInt2>;
+
+class TestSignatureWithTypeToString
+  : public ::testing::TestWithParam<std::pair<qi::TypeInterface* const, const char*>>
+{};
+
+// Equivalent types alternatives.
+#define EQ_TYPES_ALTS(T, S) \
+  { qi::typeOf<T>(),        S }, \
+  { qi::typeOf<T&>(),       S }, \
+  { qi::typeOf<const T>(),  S }, \
+  { qi::typeOf<const T&>(), S }
+
+// Equivalent pointers alternatives.
+#define EQ_PTRS_ALTS(P, S) \
+  EQ_TYPES_ALTS(P*, S),      \
+  EQ_TYPES_ALTS(P* const, S) \
+
+INSTANTIATE_TEST_CASE_P(
+  MostTypes,
+  TestSignatureWithTypeToString,
+  ::testing::ValuesIn(
+    std::map<qi::TypeInterface*, const char*> {
+      // Integral types
+      EQ_TYPES_ALTS(bool,                      "b"),
+      EQ_TYPES_ALTS(std::int8_t,               "c"),
+      EQ_TYPES_ALTS(std::uint8_t,              "C"),
+      EQ_TYPES_ALTS(std::int16_t,              "w"),
+      EQ_TYPES_ALTS(std::uint16_t,             "W"),
+      EQ_TYPES_ALTS(std::int32_t,              "i"),
+      EQ_TYPES_ALTS(std::uint32_t,             "I"),
+      EQ_TYPES_ALTS(std::int64_t,              "l"),
+      EQ_TYPES_ALTS(std::uint64_t,             "L"),
+
+      // Float types
+      EQ_TYPES_ALTS(float,                     "f"),
+      EQ_TYPES_ALTS(double,                    "d"),
+
+      // Strings
+      EQ_TYPES_ALTS(std::string,               "s"),
+      EQ_PTRS_ALTS(char,                       "s"),
+
+      // Containers
+      EQ_TYPES_ALTS(std::vector<std::int32_t>, "[i]"),
+      EQ_TYPES_ALTS(qi::AnyVarArguments,       "#m"),
+      EQ_TYPES_ALTS(MPoint,                    "(ii)<MPoint,x,y>"),
+      EQ_TYPES_ALTS(MapInt,                    "{ii}"),
+      EQ_TYPES_ALTS(MapInt2,                   "{{ii}{ii}}"),
+      EQ_TYPES_ALTS(VectorMapInt2,             "[{{ii}{ii}}]"),
+      EQ_TYPES_ALTS(VectMapInt2,               "[{{ii}{ii}}]"),
+      EQ_TYPES_ALTS(VectMapInt2,               "[{{ii}{ii}}]"),
+      EQ_TYPES_ALTS(VectVectMapInt2,           "[[{{ii}{ii}}]]"),
+      EQ_TYPES_ALTS(ComplexMap,                "{[{{ii}{ii}}][[{{ii}{ii}}]]}"),
+
+      // Pointers
+      EQ_PTRS_ALTS(bool,                       "X"),
+      EQ_PTRS_ALTS(float,                      "X"),
+      EQ_PTRS_ALTS(int,                        "X"),
+      EQ_PTRS_ALTS(double,                     "X"),
+      EQ_PTRS_ALTS(std::string,                "X"),
+      EQ_PTRS_ALTS(std::vector<int>,           "X"),
+      EQ_PTRS_ALTS(MapInt,                     "X"),
+      EQ_PTRS_ALTS(bool,                       "X"),
+      EQ_PTRS_ALTS(int,                        "X"),
+      EQ_TYPES_ALTS(boost::shared_ptr<int>,    "X"),
+      { qi::typeOf<void (*)(int, int)>(),      "X" },
+      { qi::typeOf<decltype(&fun0)>(),         "X" },
+      { qi::typeOf<decltype(&fun1)>(),         "X" },
+      { qi::typeOf<decltype(&fun2)>(),         "X" },
+      { qi::typeOf<decltype(&fun3)>(),         "X" },
+      { qi::typeOf<decltype(&fun4)>(),         "X" },
+      { qi::typeOf<decltype(&fun5)>(),         "X" },
+      { qi::typeOf<decltype(&fun6)>(),         "X" },
+      { qi::typeOf<decltype(fun0)>(),          "X" },
+      { qi::typeOf<decltype(fun1)>(),          "X" },
+      { qi::typeOf<decltype(fun2)>(),          "X" },
+      { qi::typeOf<decltype(fun3)>(),          "X" },
+      { qi::typeOf<decltype(fun4)>(),          "X" },
+      { qi::typeOf<decltype(fun5)>(),          "X" },
+      { qi::typeOf<decltype(fun6)>(),          "X" },
+      { qi::typeOf<decltype(&vfun0)>(),        "X" },
+      { qi::typeOf<decltype(&vfun1)>(),        "X" },
+      { qi::typeOf<decltype(&vfun2)>(),        "X" },
+      { qi::typeOf<decltype(&vfun3)>(),        "X" },
+      { qi::typeOf<decltype(&vfun4)>(),        "X" },
+      { qi::typeOf<decltype(&vfun5)>(),        "X" },
+      { qi::typeOf<decltype(&vfun6)>(),        "X" },
+      { qi::typeOf<decltype(vfun0)>(),         "X" },
+      { qi::typeOf<decltype(vfun1)>(),         "X" },
+      { qi::typeOf<decltype(vfun2)>(),         "X" },
+      { qi::typeOf<decltype(vfun3)>(),         "X" },
+      { qi::typeOf<decltype(vfun4)>(),         "X" },
+      { qi::typeOf<decltype(vfun5)>(),         "X" },
+      { qi::typeOf<decltype(vfun6)>(),         "X" },
+      { qi::typeOf<decltype(&Foo::vfun0)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::vfun1)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::vfun2)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::vfun3)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::vfun4)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::vfun5)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::vfun6)>(),   "X" },
+      { qi::typeOf<decltype(&Foo::fun0)>(),    "X" },
+      { qi::typeOf<decltype(&Foo::fun1)>(),    "X" },
+      { qi::typeOf<decltype(&Foo::fun2)>(),    "X" },
+      { qi::typeOf<decltype(&Foo::fun3)>(),    "X" },
+      { qi::typeOf<decltype(&Foo::fun4)>(),    "X" },
+      { qi::typeOf<decltype(&Foo::fun5)>(),    "X" },
+      { qi::typeOf<decltype(&Foo::fun6)>(),    "X" },
+    }
+  )
+);
+
+#undef EQ_PTRS_ALTS
+#undef EQ_TYPES_ALTS
+
+TEST_P(TestSignatureWithTypeToString, toString)
+{
+  const auto param = GetParam();
+  const auto type = param.first;
+  const auto expected = param.second;
+  EXPECT_EQ(expected, type->signature().toString());
+}
+
+TEST_P(TestSignatureWithTypeToString, OuputStreamOperator)
+{
+  const auto param = GetParam();
+  const auto type = param.first;
+  const auto expected = param.second;
+  std::ostringstream oss;
+  oss << type->signature();
+  EXPECT_EQ(expected, oss.str());
+}
