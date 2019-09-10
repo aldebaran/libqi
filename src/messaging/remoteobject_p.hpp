@@ -11,6 +11,7 @@
 #include <qi/anyobject.hpp>
 #include <qi/type/dynamicobject.hpp>
 #include <qi/signal.hpp>
+#include <qi/messaging/messagesocket_fwd.hpp>
 
 #include "messagedispatcher.hpp"
 #include "objecthost.hpp"
@@ -21,7 +22,6 @@
 
 namespace qi {
 
-  class MessageSocket;
   class ServerClient;
 
   struct RemoteSignalLinks {
@@ -34,15 +34,35 @@ namespace qi {
     qi::Future<qi::SignalLink>  future;
   };
 
-  class RemoteObject : public qi::DynamicObject, public ObjectHost, public Trackable<RemoteObject> {
+  /// This class represents the interface to a remote (potentially in a different process or host)
+  /// `qi::Object`.
+  ///
+  /// Remote objects are proxies of the concrete objects and are responsible for transmitting them
+  /// requests (and receiving responses).
+  ///
+  /// Remote objects are created when:
+  ///   - A user requests the object representing a service (those live in the user's process).
+  ///   - An object is received as the result of an outgoing remote procedure call (those live in
+  /// the process sending the call).
+  ///   - An object is received as a parameter of an incoming procedure call (those live in
+  /// the process receiving the call).
+  class RemoteObject
+    : public DynamicObject
+    , public ObjectHost
+    , public Trackable<RemoteObject>
+  {
   public:
     RemoteObject();
     RemoteObject(unsigned int service, qi::MessageSocketPtr socket = qi::MessageSocketPtr());
     //deprecated
-    RemoteObject(unsigned int service, unsigned int object, qi::MetaObject metaObject, qi::MessageSocketPtr socket = qi::MessageSocketPtr());
-    ~RemoteObject();
+    RemoteObject(unsigned int service,
+                 unsigned int object,
+                 qi::MetaObject metaObject,
+                 qi::MessageSocketPtr socket = qi::MessageSocketPtr());
 
-    unsigned int nextId() { return ++_nextId; }
+    ~RemoteObject() override;
+
+    unsigned int nextId() override { return ++_nextId; }
 
     //must be called to make the object valid.
     qi::Future<void> fetchMetaObject();
@@ -55,7 +75,7 @@ namespace qi {
 
   protected:
     //TransportSocket.messagePending
-    void onMessagePending(const qi::Message &msg);
+    DispatchStatus onMessagePending(const qi::Message &msg);
     //TransportSocket.disconnected
     void onSocketDisconnected(std::string error);
 

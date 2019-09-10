@@ -256,7 +256,7 @@ TEST(system, InvalidBin)
 namespace
 {
 
-std::default_random_engine randEngine()
+const std::default_random_engine& randEngine()
 {
   static const auto randEngine = [] {
     std::random_device rd;

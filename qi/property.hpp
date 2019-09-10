@@ -42,6 +42,48 @@ namespace qi
     virtual FutureSync<AnyValue> value() const = 0;
   };
 
+  /// Base type for all type-parameterized properties that allow typed access to their value.
+  ///
+  /// std::Semiregular T
+  template<typename T>
+  class ReadableProperty : public PropertyBase
+  {
+  public:
+    // Forced to keep the FutureSync as a return value type to ensure compatibility with
+    // previous code of PropertyImpl.
+    virtual FutureSync<T> get() const = 0;
+
+    /// Same as `get()`.
+    Future<T> operator*() const
+    {
+      return get().async();
+    }
+
+  // Readable:
+    friend Future<T> src(const ReadableProperty& prop)
+    {
+      return *prop;
+    }
+  };
+
+  /// A typed-parameterized readable property that is also a signal.
+  ///
+  /// std::Semiregular T
+  template <typename T>
+  class SignalingProperty : public SignalF<void(const T&)>,
+                            public ReadableProperty<T>
+  {
+  public:
+    using SignalType = SignalF<void(const T&)>;
+    using PropertyType = T;
+
+    explicit SignalingProperty(SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
+    explicit SignalingProperty(ExecutionContext* execContext,
+                               SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
+
+    SignalBase* signal() override { return this; }
+  };
+
   namespace util
   {
     // Used as a qi::Property::Setter to only store and dispatch a value if it was changed.
@@ -62,7 +104,7 @@ namespace qi
   }
 
   template<typename T>
-  class PropertyImpl: public SignalF<void(const T&)>, public PropertyBase
+  class PropertyImpl: public SignalingProperty<T>
   {
   public:
     /** Setter called with storage containing old value, and new value
@@ -70,8 +112,6 @@ namespace qi
     */
     using Setter = boost::function<bool (boost::reference_wrapper<T>, const T&)>;
     using Getter = boost::function<T(boost::reference_wrapper<const T>)>;
-    using SignalType = SignalF<void(const T&)>;
-    using PropertyType = T;
 
     /**
      * @param getter value getter, default to reading _value.
@@ -98,12 +138,9 @@ namespace qi
       Getter getter = Getter(), Setter setter = Setter(),
       SignalBase::OnSubscribers onsubscribe = SignalBase::OnSubscribers());
 
-    virtual FutureSync<T> get() const = 0;
     virtual FutureSync<void> set(const T& v) = 0;
 
     PropertyImpl<T>& operator=(const T& v) { this->set(v); return *this; }
-
-    SignalBase* signal() override { return this; }
 
   protected:
     Getter _getter;
@@ -112,6 +149,41 @@ namespace qi
 
     T getImpl() const;
     void setImpl(const T& v);
+  };
+
+  /// Property that only provides an interface to get its value and forbids (as much as possible)
+  /// setting it.
+  ///
+  /// std::Semiregular T
+  template <typename T>
+  class ReadOnlyProperty // Sadly we are forced to inherit SignalingProperty publicly for the qi
+                         // type system, which means users of this type can always cast it to a
+                         // reference to PropertyBase and call the setter.
+    : public SignalingProperty<T>,
+      public Trackable<ReadOnlyProperty<T>>
+  {
+  public:
+    using ImplType = SignalingProperty<T>;
+    using SignalType = typename ImplType::SignalType;
+    using PropertyType = typename ImplType::PropertyType;
+    using FunctionType = typename ImplType::FunctionType;
+
+    /// Constructs this property from a source property on which it will register as a signal
+    /// subscriber. The source property must outlive the read-only property.
+    explicit ReadOnlyProperty(SignalingProperty<T>& source);
+
+    ~ReadOnlyProperty();
+
+    FutureSync<T> get() const override;
+    FutureSync<AnyValue> value() const override;
+
+  private:
+    /// Returns a future in error explaining that this class does not allow setting the value.
+    FutureSync<void> setValue(AutoAnyReference) override;
+
+  protected:
+    SignalingProperty<T>& _source;
+    SignalSubscriber _subscription;
   };
 
   /** Povide access to a stored value and signal to connected callbacks when the value changed.

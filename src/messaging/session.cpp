@@ -111,7 +111,8 @@ namespace qi {
     }
 
     // Allow the SD process to use the existing socket to talk to our services
-    _serverObject.registerSocket(_sdClient.socket());
+    MessageSocketPtr sdSocket = _sdClient.socket();
+    _serverObject.addOutgoingSocket(sdSocket);
 
     /* Allow reusing the SD socket for communicating with services.
      * To do this, we must add it to our socket cache, and for this we need
@@ -129,9 +130,8 @@ namespace qi {
        p.setError(e.what());
        return;
      }
-     MessageSocketPtr s = _sdClient.socket();
      qiLogVerbose() << "Inserting sd to cache for " << mid <<" " << url.str();
-     _socketsCache.insert(mid, s->remoteEndpoint().value(), s);
+     _socketsCache.insert(mid, sdSocket->remoteEndpoint().value(), sdSocket);
      p.setValue(0);
   }
 
@@ -397,7 +397,7 @@ namespace qi {
       p.setError(f.error());
     else
     {
-      _sdClient.setServiceDirectory(boost::static_pointer_cast<ServiceBoundObject>(_sd._serviceBoundObject)->object());
+      _sdClient.setServiceDirectory(_sd._serviceBoundObject->object());
       // _sdClient will trigger its connected, which will trigger our connected
 
       p.setValue(0);

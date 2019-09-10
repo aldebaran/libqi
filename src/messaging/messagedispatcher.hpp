@@ -8,8 +8,10 @@
 #define _SRC_MESSAGEDISPATCHER_HPP_
 
 #include <qi/anyobject.hpp>
-#include <qi/signal.hpp>
-#include <boost/thread/mutex.hpp>
+
+#include <boost/thread/synchronized_value.hpp>
+#include <boost/container/flat_map.hpp>
+
 #include "message.hpp"
 
 namespace qi {
@@ -26,35 +28,50 @@ namespace qi {
    *
    * TODO: handle timeout on request taking too long to complete
    */
-  class MessageDispatcher {
+  class MessageDispatcher
+  {
   public:
-    MessageDispatcher(ExecutionContext* execContext = nullptr);
+    using MessageHandler = std::function<DispatchStatus (const Message&)>;
 
-    //internal: called by Socket to tell the class that we sent a message
-    void sent(const qi::Message& msg);
-    //internal: called by Socket to tell the class a message have been receive
-    void dispatch(const qi::Message& msg);
-    void cleanPendingMessages();
+    MessageDispatcher(ExecutionContext& execContext);
 
-    static const unsigned int ALL_OBJECTS;
-    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun);
-    void           messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId);
+    Future<bool> dispatch(qi::Message& msg);
+
+    qi::SignalLink messagePendingConnect(unsigned int serviceId,
+                                         unsigned int objectId,
+                                         MessageHandler fun) noexcept;
+
+    /// @invariant
+    ///   `d.messagePendingDisconnect(sid, oid, d.messagePendingConnect(sid, oid, _)) == true`
+    bool messagePendingDisconnect(unsigned int serviceId,
+                                  unsigned int objectId,
+                                  qi::SignalLink linkId) noexcept;
 
   public:
-    using Target = std::pair<unsigned int, unsigned int>;
-    using OnMessageSignal = Signal<const qi::Message&>;
-    // use shared-ptr on signal so that we may hold it without holding the map lock
-    using SignalMap = std::map<Target, boost::shared_ptr<OnMessageSignal> >;
-    using MessageSentMap = std::map<unsigned int, MessageAddress>;
+    struct RecipientId
+    {
+      unsigned int serviceId;
+      unsigned int objectId;
+      KA_GENERATE_FRIEND_REGULAR_OPS_2(RecipientId, serviceId, objectId)
+    };
 
-    ExecutionContext*      _execContext;
-    SignalMap              _signalMap;
-    boost::recursive_mutex _signalMapMutex;
+    ExecutionContext& _execContext;
 
-    MessageSentMap         _messageSent;
-    boost::mutex           _messageSentMutex;
+    using MessageHandlerList = boost::container::flat_map<SignalLink, MessageHandler>;
+    using RecipientMessageHandlerMap = boost::container::flat_map<RecipientId, MessageHandlerList>;
+
+    // Mutable state of the object.
+    struct State
+    {
+      RecipientMessageHandlerMap recipients;
+      SignalLink nextSignalLink = 0;
+    };
+    using SyncState =  boost::synchronized_value<State>;
+    SyncState _state;
+
+  private:
+    static bool tryDispatch(const MessageHandlerList& handlers, const Message& msg);
   };
-
 }
 
 #endif  // _SRC_MESSAGEDISPATCHER_HPP_

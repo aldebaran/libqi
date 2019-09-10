@@ -23,6 +23,8 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/session.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <ka/errorhandling.hpp>
+#include <ka/functional.hpp>
 #include <testsession/testsessionpair.hpp>
 #include "src/messaging/message.hpp"
 
@@ -717,11 +719,20 @@ TEST(TestCall, TestObjectPassing)
   TestSessionPair p;
   qi::Promise<int> eventValue;
 
+  auto testInfo = testing::UnitTest::GetInstance()->current_test_info();
+  auto logPrefix = std::string(testInfo->test_case_name()) + "." + testInfo->name() + " - ";
+
+  qiLogInfo() << logPrefix <<  "Creating object.";
+
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("makeObjectCall", &makeObjectCall);
   ob.advertiseMethod("bindObjectEvent", boost::function<void(qi::AnyObject, const std::string&)>(boost::bind(&bindObjectEvent, _1, _2, boost::ref(eventValue))));
   qi::AnyObject obj(ob.object());
+
+  qiLogInfo() << logPrefix << "Registering service 's' on server.";
   p.server()->registerService("s", obj);
+
+  qiLogInfo() << logPrefix << "Fetching service 's' on client.";
   qi::AnyObject proxy = p.client()->service("s").value();
 
   qi::AnyObject unregisteredObj;
@@ -731,29 +742,41 @@ TEST(TestCall, TestObjectPassing)
     ob.advertiseSignal<int>("fire");
     unregisteredObj = ob.object();
   }
+
   // Transmit unregisteredObj through the network.
+  qiLogInfo() << logPrefix << "Calling 'makeObjectCall' on client proxy object.";
   qi::Future<int> v = proxy.async<int>("makeObjectCall", unregisteredObj, "add", 1);
   ASSERT_TRUE(test::finishesWithValue(v));
   ASSERT_EQ(2, v.value());
+
+  qiLogInfo() << logPrefix << "Calling 'bindObjectEvent' on client proxy object.";
   proxy.call<void>("bindObjectEvent", unregisteredObj, "fire");
+
+  qiLogInfo() << logPrefix << " - Triggering 'fire(42)' event.";
   unregisteredObj.post("fire", 42);
   ASSERT_TRUE(test::finishesWithValue(eventValue.future()));
   ASSERT_EQ(42, eventValue.future().value());
   eventValue = qi::Promise<int>();
 
   // Check that object is locked by remote end
+  qiLogInfo() << logPrefix << "Releasing local reference to passed object.";
   qi::AnyWeakObject unregisteredWeakObj = unregisteredObj;
   unregisteredObj.reset();
   unregisteredObj = unregisteredWeakObj.lock();
   ASSERT_TRUE(unregisteredObj);
   if (p.client() == p.server())
     return; // test makes no sense in direct mode
+
   // This will delete the proxy
+  qiLogInfo() << logPrefix << "Triggering 'fire(0)' event.";
   unregisteredObj.post("fire", 0);
   ASSERT_TRUE(test::finishesWithValue(eventValue.future()));
   ASSERT_EQ(0, eventValue.future().value());
+
   eventValue = qi::Promise<int>();
   ASSERT_TRUE(test::isStillRunning(eventValue.future(), test::willDoNothing(), qi::MilliSeconds{0}));
+
+  qiLogInfo() << logPrefix << "Triggering 'fire(1)' event.";
   unregisteredObj.post("fire", 1);
   ASSERT_TRUE(test::isStillRunning(eventValue.future()));
 
@@ -1811,4 +1834,146 @@ TEST(TestCall, callAdvertisedAnyFunctionReturningAFuture)
   auto anyObject = ob.object();
   auto future = anyObject.metaCall("cancellableAsyncFuture", qi::GenericFunctionParameters{});
   EXPECT_TRUE(test::isStillRunning(future, test::willDoNothing(), qi::MilliSeconds{100}));
+}
+
+namespace
+{
+class StrandedObjectWithReadOnlyProperty
+{
+  mutable qi::Strand _strand;
+  qi::Property<int> sourceX;
+
+public:
+  explicit StrandedObjectWithReadOnlyProperty(int val)
+    : sourceX{val, _strand}
+    , x{sourceX}
+  {}
+
+  ~StrandedObjectWithReadOnlyProperty()
+  {
+    _strand.join();
+  }
+
+  qi::Future<int> add(int o)
+  {
+    return _strand.async([=] {
+      return sourceX.get().async()
+        .andThen(
+          _strand.unwrappedSchedulerFor([=](int val) { return sourceX.set(val + o).async(); }))
+        .unwrap()
+        .andThen(_strand.unwrappedSchedulerFor([=](void*) { return sourceX.get().async(); }))
+        .unwrap();
+    }).unwrap();
+  }
+
+  qi::ReadOnlyProperty<int> x;
+};
+QI_REGISTER_OBJECT(StrandedObjectWithReadOnlyProperty, x, add);
+
+template<typename T>
+auto makeFutureErrorFromException()
+  -> decltype(ka::compose(qi::makeFutureError<T>, ka::exception_message{}))
+{
+  return ka::compose(qi::makeFutureError<T>, ka::exception_message{});
+}
+
+
+class SyncObjectWithReadOnlyProperty
+{
+  qi::Property<int> sourceX;
+
+public:
+  SyncObjectWithReadOnlyProperty(int val)
+    : sourceX{val}
+    , x{sourceX}
+  {
+  }
+
+  qi::Future<int> add(int o)
+  {
+    static std::mutex mut;
+    std::lock_guard<std::mutex> lock{ mut };
+    return sourceX.get().async()
+      .andThen(FutureCallbackType_Sync, [=](int val){ return sourceX.set(val + o).async(); })
+      .unwrap()
+      .andThen(FutureCallbackType_Sync, [=](void*) { return sourceX.get().async(); })
+      .unwrap();
+  }
+
+  qi::ReadOnlyProperty<int> x;
+};
+QI_REGISTER_OBJECT(SyncObjectWithReadOnlyProperty, x, add);
+
+template<typename ObjectType>
+class TestCallReadOnlyProperty : public testing::Test
+{
+public:
+  TestCallReadOnlyProperty()
+    : objectWithReadOnlyProperty{boost::make_shared<ObjectType>(propertyDefaultValue)}
+    , serverObject{objectWithReadOnlyProperty}
+  {
+    static const auto serviceName = "ReadOnlyPropertyService";
+
+    auto& server = *sessionPair.server();
+    auto& client = *sessionPair.client();
+
+    qiLogInfo() << "Registering service '" << serviceName << "' on the server session.";
+    servId = server.registerService(serviceName, serverObject).value();
+
+    qiLogInfo() << "Waiting for service '" << serviceName << "' on the client session.";
+    EXPECT_EQ(qi::FutureState_FinishedWithValue, client.waitForService(serviceName).wait());
+
+    qiLogInfo() << "Getting service '" << serviceName << "' from the client session.";
+    clientObject = client.service(serviceName).value();
+  }
+
+  ~TestCallReadOnlyProperty()
+  {
+    sessionPair.server()->unregisterService(servId).wait();
+  }
+
+protected:
+  const int propertyDefaultValue = 42;
+  TestSessionPair sessionPair;
+  boost::shared_ptr<ObjectType> objectWithReadOnlyProperty;
+  qi::Object<ObjectType> serverObject;
+  qi::AnyObject clientObject;
+  unsigned int servId;
+};
+
+using ObjectWithReadOnlyPropertyTypes = testing::Types<
+  StrandedObjectWithReadOnlyProperty, SyncObjectWithReadOnlyProperty
+>;
+}
+
+TYPED_TEST_CASE(TestCallReadOnlyProperty, ObjectWithReadOnlyPropertyTypes);
+
+TYPED_TEST(TestCallReadOnlyProperty, GetProperty)
+{
+  qi::AnyObject& clientObj = this->clientObject;
+
+  qiLogInfo() << "Getting the property from the client service object.";
+  const auto fut = clientObj.property<int>("x").async();
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, fut.wait());
+  ASSERT_EQ(this->propertyDefaultValue, fut.value());
+}
+
+TYPED_TEST(TestCallReadOnlyProperty, SetProperty)
+{
+  qi::AnyObject& clientObj = this->clientObject;
+
+  qiLogInfo() << "Setting the property from the client service object.";
+  const auto fut = clientObj.setProperty<int>("x", 231).async();
+  ASSERT_EQ(qi::FutureState_FinishedWithError, fut.wait());
+}
+
+TYPED_TEST(TestCallReadOnlyProperty, CallAdd)
+{
+  qi::AnyObject& clientObj = this->clientObject;
+  const auto addedValue = 12;
+
+  qiLogInfo() << "Calling the method on the client service object.";
+  const auto fut = clientObj.async<int>("add", addedValue);
+  ASSERT_EQ(qi::FutureState_FinishedWithValue, fut.wait());
+  ASSERT_EQ(this->propertyDefaultValue + addedValue, fut.value());
 }

@@ -20,6 +20,8 @@
 
 qiLogCategory("qi.test.property");
 
+using namespace qi;
+
 namespace test
 {
   template< template< class ... > class PropertyType >
@@ -156,13 +158,16 @@ TEST(TestProperty, customSetter)
 
 TEST(TestProperty, customSetterStranded)
 {
-  qi::Strand strand;
+  const auto strand = std::make_shared<qi::Strand>();
+  std::weak_ptr<qi::Strand> weakStrand = strand;
   qi::Property<int> property{ 12, qi::Property<int>::Getter{},
-                              [&](int& storage, const int& value) {
-                                return strand.async([&] {
-                                  storage = value;
-                                  return true;
-                                }).value();
+                              [=](int& storage, const int& value) {
+                                if (auto strand = weakStrand.lock())
+                                  return strand->async([&] {
+                                    storage = value;
+                                    return true;
+                                  }).value();
+                                return false;
                               } };
   const int expected = 42;
   property.set(expected);
@@ -247,4 +252,21 @@ TYPED_TEST(TestPropertyWithContainerType, CanBeInstanciatedWithContainer)
 {
   qi::Property<TypeParam> p;
   SUCCEED();
+}
+
+TEST(TestReadOnlyProperty, Get)
+{
+  Property<int> source{ 42 };
+  ReadOnlyProperty<int> prop{ source };
+  EXPECT_EQ(42, prop.get().value());
+  EXPECT_EQ(42, prop.value().value().to<int>());
+}
+
+TEST(TestReadOnlyProperty, SetThroughAdaptedProperty)
+{
+  Property<int> source{ 42 };
+  ReadOnlyProperty<int> prop{ source };
+  EXPECT_EQ(42, prop.get().value());
+  source.set(51).value();
+  EXPECT_EQ(51, prop.get().value());
 }

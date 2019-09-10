@@ -12,6 +12,7 @@
 # include <qi/url.hpp>
 # include <qi/eventloop.hpp>
 # include <qi/signal.hpp>
+# include <qi/messaging/messagesocket_fwd.hpp>
 # include <vector>
 # include <boost/asio/ip/tcp.hpp>
 # include <boost/asio/ssl/stream.hpp>
@@ -43,9 +44,6 @@ namespace qi {
 
   using TransportServerImplPtr = boost::shared_ptr<TransportServerImpl>;
 
-
-  class MessageSocket;
-  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
 
   /**
    * @brief A socket acceptor (not a server, duh).

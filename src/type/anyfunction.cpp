@@ -73,8 +73,8 @@ namespace qi
     auto sz = qi::numericConvert<int>(vargs.size());
     const AnyReference* args = sz > 0 ? &vargs[0] : nullptr;
 
-    // Cast the size of the vector of the target function argument types into int because we
-    // assume that the number of arguments cannot possibly be more than INT_MAX.
+    // We assume that the number of arguments cannot possibly be more than INT_MAX.
+    QI_ASSERT_TRUE(target.size() <= std::numeric_limits<int>::max());
     if (qi::numericConvert<int>(target.size()) != sz + deltaCount)
     {
       throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %1%, got %2%",

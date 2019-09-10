@@ -35,7 +35,7 @@ qiLogCategory("qimessaging.servicedirectory");
 namespace qi
 {
 
-  qi::AnyObject createSDP(ServiceDirectory* self) {
+  qi::AnyObject createSDObject(ServiceDirectory* self) {
     static qi::ObjectTypeBuilder<ServiceDirectory>* ob = nullptr;
     static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
@@ -83,7 +83,7 @@ namespace qi
       qiLogWarning() << "Destroying while connected services remain";
   }
 
-  void ServiceDirectory::onSocketDisconnected(MessageSocketPtr socket, std::string error)
+  void ServiceDirectory::removeClientSocket(MessageSocketPtr socket)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
     // clean from idxToSocket
@@ -157,11 +157,11 @@ namespace qi
 
   unsigned int ServiceDirectory::registerService(const ServiceInfo &svcinfo)
   {
-    boost::shared_ptr<ServiceBoundObject> sbo = serviceBoundObject.lock();
-    if (!sbo)
-      throw std::runtime_error("ServiceBoundObject has expired.");
+    boost::shared_ptr<BoundObject> bo = serviceBoundObject.lock();
+    if (!bo)
+      throw std::runtime_error("BoundObject has expired.");
 
-    MessageSocketPtr socket = sbo->currentSocket();
+    MessageSocketPtr socket = bo->currentSocket();
     boost::recursive_mutex::scoped_lock lock(mutex);
     std::map<std::string, unsigned int>::iterator it;
     it = nameToIdx.find(svcinfo.name());
@@ -342,7 +342,8 @@ namespace qi
     , _init(false)
   {
     ServiceDirectory *sdObject = new ServiceDirectory();
-    boost::shared_ptr<ServiceBoundObject> sbo = boost::make_shared<ServiceBoundObject>(1, Message::GenericObject_Main, createSDP(sdObject), qi::MetaCallType_Direct);
+    auto sbo = makeServiceBoundObjectPtr(Message::Service_ServiceDirectory,
+                                         createSDObject(sdObject), qi::MetaCallType_Direct);
     _serviceBoundObject = sbo;
     sdObject->_setServiceBoundObject(sbo);
     _sdObject = sdObject;
@@ -445,10 +446,10 @@ namespace qi
       return it->second;
   }
 
-  void ServiceDirectory::_setServiceBoundObject(boost::shared_ptr<ServiceBoundObject> sbo)
+  void ServiceDirectory::_setServiceBoundObject(boost::shared_ptr<BoundObject> bo)
   {
-    serviceBoundObject = sbo;
-    sbo->_onSocketDisconnectedCallback = boost::bind(&ServiceDirectory::onSocketDisconnected, this, _1, _2);
+    serviceBoundObject = bo;
+    bo->setOnSocketUnbound(boost::bind(&ServiceDirectory::removeClientSocket, this, _1));
   }
 
 } // !qi

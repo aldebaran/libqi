@@ -15,6 +15,8 @@
 #include "log_p.hpp"
 #include <qi/log/consoleloghandler.hpp>
 #include <boost/thread.hpp>
+#include <boost/function_output_iterator.hpp>
+#include <boost/algorithm/string/trim.hpp>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -307,9 +309,12 @@ namespace log
       printf("%s() ", fct);
     if (context & qi::LogContextAttr_Return)
       printf("\n");
-    std::string ss = msg;
-    ss.reserve(qi::detail::rtrim(msg));
-    printf("%s\n", ss.c_str());
+    if (msg)
+    {
+      std::string msgStr(msg);
+      boost::algorithm::trim_right_if(msgStr, &qi::detail::isNewLine);
+      printf("%s\n", msgStr.c_str());
+    }
   }
 
   void ConsoleLogHandler::log(const qi::LogLevel verb,

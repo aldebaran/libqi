@@ -9,11 +9,18 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include "boundobject.hpp"
 
-qiLogCategory("qimessaging.boundobject");
+const auto logCategory = "qimessaging.boundobject";
+qiLogCategory(logCategory);
 
 const auto invalidValueError = "The value is invalid.";
 
-namespace qi {
+// Helper for debug logs of the class. Can only be called from non static member functions of
+// `qi::BoundObject`.
+#define QI_LOG_DEBUG_BOUNDOBJECT() \
+  qiLogDebug() << this << " (service=" << _serviceId << ", object=" << _objectId << ") - "
+
+namespace qi
+{
 
   static AnyReference forwardEvent(const GenericFunctionParameters& params,
                                    unsigned int service, unsigned int object,
@@ -46,7 +53,7 @@ namespace qi {
         if (valid)
         {
           qiLogDebug() << "forwardEvent success " << res[0].type()->infoString();
-          msg.setValues(res, "m", context, client.get());
+          msg.setValues(res, "m", context, client);
           msg.addFlags(Message::TypeFlag_DynamicPayload);
           res.destroy();
           processed = true;
@@ -60,7 +67,7 @@ namespace qi {
     if (!processed)
     {
       try {
-        msg.setValues(params, sig, context, client.get());
+        msg.setValues(params, sig, context, client);
       }
       catch (const std::exception& e)
       {
@@ -69,7 +76,7 @@ namespace qi {
           throw e;
         // Delegate conversion to the remote end.
         msg.addFlags(Message::TypeFlag_DynamicPayload);
-        msg.setValues(params, "m", context, client.get());
+        msg.setValues(params, "m", context, client);
       }
     }
     msg.setService(service);
@@ -80,17 +87,18 @@ namespace qi {
     return AnyReference();
   }
 
-  struct ServiceBoundObject::CancelableKit
+  struct BoundObject::CancelableKit
   {
-    ServiceBoundObject::CancelableMap map;
+    BoundObject::CancelableMap map;
     boost::mutex                      guard;
   };
 
-  ServiceBoundObject::ServiceBoundObject(unsigned int serviceId, unsigned int objectId,
-                                         qi::AnyObject object,
-                                         qi::MetaCallType mct,
-                                         bool bindTerminate,
-                                         boost::optional<boost::weak_ptr<ObjectHost>> owner)
+  BoundObject::BoundObject(unsigned int serviceId,
+                           unsigned int objectId,
+                           qi::AnyObject object,
+                           qi::MetaCallType mct,
+                           bool bindTerminate,
+                           boost::optional<boost::weak_ptr<ObjectHost>> owner)
     : ObjectHost(serviceId)
     , _cancelables(boost::make_shared<CancelableKit>())
     , _links()
@@ -100,87 +108,86 @@ namespace qi {
     , _callType(mct)
     , _owner(owner)
   {
-    _self = createServiceBoundObjectType(this, bindTerminate);
+    _self = createBoundObjectType(this, bindTerminate);
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Constructing a BoundObject";
   }
 
-  ServiceBoundObject::~ServiceBoundObject()
+  BoundObject::~BoundObject()
   {
-    qiLogDebug() << "~ServiceBoundObject()";
-    destroy();
+    _tracker.destroy();
     _cancelables.reset();
     ObjectHost::clear();
-    qiLogDebug() << "~ServiceBoundObject() reseting object " << _object.use_count();
-    _object.reset();
-    qiLogDebug() << "~ServiceBoundObject() finishing";
   }
 
-  qi::AnyObject ServiceBoundObject::createServiceBoundObjectType(ServiceBoundObject *self, bool bindTerminate) {
-    static qi::ObjectTypeBuilder<ServiceBoundObject>* ob = nullptr;
+  qi::AnyObject BoundObject::createBoundObjectType(BoundObject *self, bool bindTerminate) {
+    static qi::ObjectTypeBuilder<BoundObject>* ob = nullptr;
 
     static boost::mutex* mutex = nullptr;
     QI_THREADSAFE_NEW(mutex);
     boost::mutex::scoped_lock lock(*mutex);
     if (!ob)
     {
-      ob = new qi::ObjectTypeBuilder<ServiceBoundObject>();
+      ob = new qi::ObjectTypeBuilder<BoundObject>();
       // these are called synchronously by onMessage (and this is needed for
       // _currentSocket), no need for threadsafety here
       ob->setThreadingModel(ObjectThreadingModel_MultiThread);
       /* Network-related stuff.
       */
-      ob->advertiseMethod("registerEvent"  , &ServiceBoundObject::registerEvent, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEvent);
-      ob->advertiseMethod("unregisterEvent", &ServiceBoundObject::unregisterEvent, MetaCallType_Direct, qi::Message::BoundObjectFunction_UnregisterEvent);
-      ob->advertiseMethod("terminate",       &ServiceBoundObject::terminate, MetaCallType_Direct, qi::Message::BoundObjectFunction_Terminate);
+      ob->advertiseMethod("registerEvent"  , &BoundObject::registerEvent, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEvent);
+      ob->advertiseMethod("unregisterEvent", &BoundObject::unregisterEvent, MetaCallType_Direct, qi::Message::BoundObjectFunction_UnregisterEvent);
+      ob->advertiseMethod("terminate",       &BoundObject::terminate, MetaCallType_Direct, qi::Message::BoundObjectFunction_Terminate);
       /* GenericObject-related stuff.
       * Those methods could be advertised and implemented by GenericObject itself.
       * But since we already have a wrapper system in place in BoundObject, us it.
       * There is no use-case that requires the methods below without a BoundObject present.
       */
-      ob->advertiseMethod("metaObject"     , &ServiceBoundObject::metaObject, MetaCallType_Direct, qi::Message::BoundObjectFunction_MetaObject);
-      ob->advertiseMethod("property", &ServiceBoundObject::property, MetaCallType_Queued, qi::Message::BoundObjectFunction_GetProperty);
-      ob->advertiseMethod("setProperty", &ServiceBoundObject::setProperty, MetaCallType_Queued, qi::Message::BoundObjectFunction_SetProperty);
-      ob->advertiseMethod("properties",       &ServiceBoundObject::properties, MetaCallType_Direct, qi::Message::BoundObjectFunction_Properties);
-      ob->advertiseMethod("registerEventWithSignature"  , &ServiceBoundObject::registerEventWithSignature, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEventWithSignature);
+      ob->advertiseMethod("metaObject"     , &BoundObject::metaObject, MetaCallType_Direct, qi::Message::BoundObjectFunction_MetaObject);
+      ob->advertiseMethod("property", &BoundObject::property, MetaCallType_Queued, qi::Message::BoundObjectFunction_GetProperty);
+      ob->advertiseMethod("setProperty", &BoundObject::setProperty, MetaCallType_Queued, qi::Message::BoundObjectFunction_SetProperty);
+      ob->advertiseMethod("properties",       &BoundObject::properties, MetaCallType_Direct, qi::Message::BoundObjectFunction_Properties);
+      ob->advertiseMethod("registerEventWithSignature"  , &BoundObject::registerEventWithSignature, MetaCallType_Direct, qi::Message::BoundObjectFunction_RegisterEventWithSignature);
     }
     AnyObject result = ob->object(self, &AnyObject::deleteGenericObjectOnly);
     return result;
   }
 
   // Bound Method
-  qi::Future<SignalLink> ServiceBoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
+  qi::Future<SignalLink> BoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
     // fetch signature
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
     QI_ASSERT(_currentSocket);
-    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, weakPtr(), ""));
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, asHostWeakPtr(), ""));
     qi::Future<SignalLink> linking = _object.connect(eventId, mc);
     auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
     linkEntry = RemoteSignalLink(linking, eventId);
     return linking.andThen([=](SignalLink linkId) mutable {
-      qiLogDebug() << "SBO rl " << remoteSignalLinkId << " ll " << linkId;
+      QI_LOG_DEBUG_BOUNDOBJECT() << "Registered event remote_signal_link=" << remoteSignalLinkId
+                                 << " local_link=" << linkId;
       return linkId;
     });
   }
 
-  qi::Future<SignalLink> ServiceBoundObject::registerEventWithSignature(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
+  qi::Future<SignalLink> BoundObject::registerEventWithSignature(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
     // fetch signature
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
       throw std::runtime_error("No such signal");
     QI_ASSERT(_currentSocket);
-    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, weakPtr(), signature));
+    AnyFunction mc = AnyFunction::fromDynamicFunction(boost::bind(&forwardEvent, _1, _serviceId, _objectId, eventId, ms->parametersSignature(), _currentSocket, asHostWeakPtr(), signature));
     qi::Future<SignalLink> linking = _object.connect(eventId, mc);
     auto& linkEntry = _links[_currentSocket][remoteSignalLinkId];
     linkEntry = RemoteSignalLink(linking, eventId);
     return linking.andThen([=](SignalLink linkId) mutable {
-      qiLogDebug() << "SBO rl " << remoteSignalLinkId << " ll " << linkId;
+      QI_LOG_DEBUG_BOUNDOBJECT() << "Registered event remote_signal_link=" << remoteSignalLinkId
+                                 << " local_link=" << linkId;
       return linkId;
     });
   }
 
   // Bound Method
-  qi::Future<void> ServiceBoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
+  qi::Future<void> BoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
     ServiceSignalLinks&          sl = _links[_currentSocket];
     ServiceSignalLinks::iterator it = sl.find(remoteSignalLinkId);
 
@@ -202,21 +209,21 @@ namespace qi {
   }
 
   // Bound Method
-  qi::MetaObject ServiceBoundObject::metaObject(unsigned int objectId) {
+  qi::MetaObject BoundObject::metaObject(unsigned int objectId) {
     // we inject specials methods here
     return qi::MetaObject::merge(_self.metaObject(), _object.metaObject());
   }
 
 
-  void ServiceBoundObject::terminate(unsigned int)
+  void BoundObject::terminate(unsigned int)
   {
-    qiLogDebug() << "terminate() received";
+    QI_LOG_DEBUG_BOUNDOBJECT() << "terminate() received";
     if (_owner)
     {
       if (boost::shared_ptr<ObjectHost> owner = _owner->lock())
         owner->removeObject(_objectId);
       else
-        qiLogDebug() << "terminate() received an object with an expired owner";
+        QI_LOG_DEBUG_BOUNDOBJECT() << "terminate() received an object with an expired owner";
     }
     else
       qiLogWarning() << "terminate() received on object without an owner";
@@ -227,8 +234,10 @@ namespace qi {
     value.destroy();
   }
 
-  void ServiceBoundObject::onMessage(const qi::Message &msg, MessageSocketPtr socket) {
-    boost::mutex::scoped_lock lock(_callMutex);
+  DispatchStatus BoundObject::onMessage(const qi::Message& msg, MessageSocketPtr socket)
+  {
+    boost::recursive_mutex::scoped_lock lock(_callMutex);
+    bool exceptionWasThrown = false;
     try {
       if (msg.version() > Message::Header::currentVersion())
       {
@@ -237,18 +246,14 @@ namespace qi {
            << "remote end doesn't support binary protocol v" << msg.version();
         serverResultAdapter(qi::makeFutureError<AnyReference>(ss.str()), Signature(),
                             _gethost(), socket, msg.address(), Signature(), CancelableKitWeak());
-        return;
+        return DispatchStatus::MessageHandled_WithError;
       }
 
-      qiLogDebug() << this << "(" << service() << '/' << _objectId << ") msg " << msg.address() << " " << msg.buffer().size();
+      QI_LOG_DEBUG_BOUNDOBJECT() << "msg " << msg.address()
+                                 << " type=" << msg.type()
+                                 << ", size=" << msg.buffer().size();
 
-      if (msg.object() > _objectId)
-      {
-        qiLogDebug() << "Passing message to children";
-        ObjectHost::onMessage(msg, socket);
-        return;
-      }
-
+      QI_ASSERT_TRUE(msg.object() == _objectId);
       qi::AnyObject    obj;
       unsigned int     funcId;
       //choose between special function (on BoundObject) or normal calls
@@ -286,7 +291,7 @@ namespace qi {
             sigparam = mm->parametersSignature();
           else {
             qiLogError() << "No such signal/method on event message " << msg.address();
-            return;
+            return DispatchStatus::MessageHandled_WithError;
           }
         }
       }
@@ -294,12 +299,13 @@ namespace qi {
       {
         unsigned int origMsgId = msg.value("I", socket).to<unsigned int>();
         cancelCall(socket, msg, origMsgId);
-        return;
+        return DispatchStatus::MessageHandled;
       }
       else
       {
-        qiLogError() << "Unexpected message type " << msg.type() << " on " << msg.address();
-        return;
+        qiLogError() << "Unexpected message type " << Message::typeToString(msg.type()) << " ("
+                     << msg.type() << ") on " << msg.address();
+        return DispatchStatus::MessageNotHandled;
       }
 
       AnyReference ref;
@@ -376,7 +382,8 @@ namespace qi {
         qi::Future<AnyReference> fut = obj.metaCall(funcId, mfp, callType, sig);
         AtomicIntPtr cancelRequested = boost::make_shared<Atomic<int> >(0);
         {
-          qiLogDebug() << this << " Registering future for " << socket.get() << ", message:" << msg.id();
+          QI_LOG_DEBUG_BOUNDOBJECT()
+            << "Registering future for " << socket.get() << ", message:" << msg.id();
           boost::mutex::scoped_lock futlock(_cancelables->guard);
           _cancelables->map[socket][msg.id()] = std::make_pair(fut, cancelRequested);
         }
@@ -387,7 +394,7 @@ namespace qi {
         _currentSocket.reset();
 
         fut.connect(boost::bind<void>
-                    (&ServiceBoundObject::serverResultAdapter, _1, retSig, _gethost(), socket, msg.address(), sig,
+                    (&BoundObject::serverResultAdapter, _1, retSig, _gethost(), socket, msg.address(), sig,
                      CancelableKitWeak(_cancelables), cancelRequested));
       }
         break;
@@ -403,6 +410,7 @@ namespace qi {
       }
       //########################
     } catch (const std::runtime_error &e) {
+      exceptionWasThrown = true;
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError(e.what());
@@ -410,6 +418,7 @@ namespace qi {
                             CancelableKitWeak(_cancelables));
       }
     } catch (...) {
+      exceptionWasThrown = true;
       if (msg.type() == Message::Type_Call) {
         qi::Promise<AnyReference> prom;
         prom.setError("Unknown error catch");
@@ -417,11 +426,16 @@ namespace qi {
                             CancelableKitWeak(_cancelables));
       }
     }
+
+    if (!exceptionWasThrown)
+      return DispatchStatus::MessageHandled;
+    else
+      return DispatchStatus::MessageHandled_WithError;
   }
 
-  void ServiceBoundObject::cancelCall(MessageSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)
+  void BoundObject::cancelCall(MessageSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)
   {
-    qiLogDebug() << "Canceling call: " << origMsgId << " on client " << socket.get();
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Canceling call: " << origMsgId << " on client " << socket.get();
     std::pair<Future<AnyReference>, AtomicIntPtr > fut;
     {
       boost::mutex::scoped_lock lock(_cancelables->guard);
@@ -429,14 +443,14 @@ namespace qi {
       CancelableMap::iterator it = cancelableCalls.find(socket);
       if (it == cancelableCalls.end())
       {
-        qiLogDebug() << "Socket " << socket.get() << " not recorded";
+        QI_LOG_DEBUG_BOUNDOBJECT() << "Socket " << socket.get() << " not recorded";
         return;
       }
       FutureMap::iterator futIt = it->second.find(origMsgId);
 
       if (futIt == it->second.end())
       {
-        qiLogDebug() << "No recorded future for message " << origMsgId;
+        QI_LOG_DEBUG_BOUNDOBJECT() << "No recorded future for message " << origMsgId;
         return;
       }
       fut = futIt->second;
@@ -461,7 +475,7 @@ namespace qi {
       boost::shared_ptr<GenericObject> ao = qi::detail::getGenericFuture(val);
       if (!ao)
       {
-        qiLogDebug() << "Message " << origMsgId << ": return value is not a future.";
+        QI_LOG_DEBUG_BOUNDOBJECT() << "Message " << origMsgId << ": return value is not a future.";
         return;
       }
 
@@ -490,34 +504,14 @@ namespace qi {
     }
   }
 
-  void ServiceBoundObject::onSocketDisconnected(MessageSocketPtr client, std::string error)
+  qi::BoundObjectPtr makeServiceBoundObjectPtr(unsigned int serviceId,
+                                               qi::AnyObject object,
+                                               qi::MetaCallType mct)
   {
-    // Disconnect event links set for this client.
-    if (_onSocketDisconnectedCallback)
-      _onSocketDisconnectedCallback(client, error);
-    {
-      boost::mutex::scoped_lock lock(_cancelables->guard);
-      _cancelables->map.erase(client);
-    }
-    BySocketServiceSignalLinks::iterator it = _links.find(client);
-    if (it != _links.end())
-    {
-      for (ServiceSignalLinks::iterator jt = it->second.begin(); jt != it->second.end(); ++jt)
-      {
-        _object.disconnect(jt->second.localSignalLinkId.value()).async()
-            .then([](Future<void> f) { if (f.hasError()) qiLogError() << f.error(); });
-      }
-      _links.erase(it);
-    }
-    removeRemoteReferences(client);
+    return boost::make_shared<BoundObject>(serviceId, Message::GenericObject_Main, object, mct);
   }
 
-  qi::BoundAnyObject makeServiceBoundAnyObject(unsigned int serviceId, qi::AnyObject object, qi::MetaCallType mct) {
-    boost::shared_ptr<ServiceBoundObject> ret = boost::make_shared<ServiceBoundObject>(serviceId, Message::GenericObject_Main, object, mct); // TODO ju
-    return ret;
-  }
-
-  qi::Future<AnyValue> ServiceBoundObject::property(const AnyValue& prop)
+  qi::Future<AnyValue> BoundObject::property(const AnyValue& prop)
   {
     if (prop.kind() == TypeKind_String)
       return _object.property<AnyValue>(prop.toString());
@@ -530,7 +524,7 @@ namespace qi {
       throw std::runtime_error("Expected int or string for property index");
   }
 
-  Future<void> ServiceBoundObject::setProperty(const AnyValue& prop, AnyValue val)
+  Future<void> BoundObject::setProperty(const AnyValue& prop, AnyValue val)
   {
     qi::Future<void> result;
     if (prop.kind() == TypeKind_String)
@@ -546,7 +540,7 @@ namespace qi {
     return result;
   }
 
-  std::vector<std::string> ServiceBoundObject::properties()
+  std::vector<std::string> BoundObject::properties()
   {
     // FIXME implement
     std::vector<std::string> res;
@@ -557,7 +551,61 @@ namespace qi {
     return res;
   }
 
-  void ServiceBoundObject::_removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id)
+  bool BoundObject::bindToSocket(const MessageSocketPtr& socket) noexcept
+  {
+    if (!socket)
+      return false;
+
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Binding to socket " << socket;
+    auto syncConnectionList = _messageDispatchConnectionList.synchronize();
+    const auto end = syncConnectionList->end();
+    auto connectionIt =
+      std::find_if(syncConnectionList->begin(), end,
+                   [&](const MessageDispatchConnection& conn) { return conn.socket() == socket; });
+    if (connectionIt != end)
+      // This object is already accepting messages from this socket, do nothing.
+      return false;
+
+    MessageDispatcher::MessageHandler handler =
+      track([this, socket](const Message& msg) { return onMessage(msg, socket); }, &_tracker);
+    syncConnectionList->emplace_back(socket,
+                                     MessageDispatcher::RecipientId{ _serviceId, _objectId },
+                                     std::move(handler));
+    return true;
+  }
+
+  bool BoundObject::unbindFromSocket(const MessageSocketPtr& socket) noexcept
+  {
+    if (!socket)
+      return false;
+
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Unbinding from socket " << socket;
+
+    // We consider that this method was a success if any of the following actions had an effect.
+    bool success = removeConnections(socket) != 0;
+    success = removeCancelables(socket) != 0 || success;
+    success = removeLinks(socket) != 0 || success;
+
+    // Remove all hosted objects that were created in the context of this socket for this object.
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Removing children objects from socket " << socket;
+    success = removeObjectsFromSocket(socket) || success;
+
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Calling callback of socket disconnection";
+    ka::invoke_catch(
+      exceptionLogError(logCategory,
+                        "The callback called when a socket is unbound has thrown an exception"),
+      [&] {
+        // Do not lock the value when calling the callback to avoid a deadlock if the callback
+        // is reset within itself.
+        auto callback = _onSocketUnboundCallback.get();
+        if (callback)
+          callback(socket);
+      });
+
+    return success;
+  }
+
+  void BoundObject::_removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id)
   {
     CancelableKitPtr kitPtr = kit.lock();
     if (!kitPtr)
@@ -582,7 +630,7 @@ namespace qi {
   // if 'val' is a qi::Object<> its ownership will be given to the 'host' object
   static inline void convertAndSetValue(Message& ret, AnyReference val,
     const Signature& targetSignature, boost::weak_ptr<ObjectHost> host,
-    MessageSocket* socket, const Signature& forcedSignature)
+    MessageSocketPtr socket, const Signature& forcedSignature)
   {
     if (!val.isValid())
       throw std::runtime_error(invalidValueError);
@@ -607,13 +655,13 @@ namespace qi {
   }
 
   // second bounce when returned type is a future
-  void ServiceBoundObject::serverResultAdapterNext(AnyReference val, // the future
-                                                   Signature targetSignature,
-                                                   boost::weak_ptr<ObjectHost> host,
-                                                   MessageSocketPtr socket,
-                                                   const qi::MessageAddress& replyaddr,
-                                                   const Signature& forcedReturnSignature,
-                                                   CancelableKitWeak kit)
+  void BoundObject::serverResultAdapterNext(AnyReference val, // the future
+                                            Signature targetSignature,
+                                            boost::weak_ptr<ObjectHost> host,
+                                            MessageSocketPtr socket,
+                                            const qi::MessageAddress& replyaddr,
+                                            const Signature& forcedReturnSignature,
+                                            CancelableKitWeak kit)
   {
     QI_ASSERT_TRUE(val.isValid());
     _removeCachedFuture(kit, socket, replyaddr.messageId);
@@ -652,7 +700,7 @@ namespace qi {
           value = AnyValue(qi::typeOf<void>());
         else
           value = ao->call<AnyValue>("value", 0);
-        convertAndSetValue(ret, value.asReference(), targetSignature, host, socket.get(), forcedReturnSignature);
+        convertAndSetValue(ret, value.asReference(), targetSignature, host, socket, forcedReturnSignature);
       }
     } catch (const std::exception &e) {
       //be more than safe. we always want to nack the client in case of error
@@ -673,14 +721,14 @@ namespace qi {
     val.destroy();
   }
 
-  void ServiceBoundObject::serverResultAdapter(Future<AnyReference> future,
-                                               const qi::Signature& targetSignature,
-                                               boost::weak_ptr<ObjectHost> host,
-                                               MessageSocketPtr socket,
-                                               const qi::MessageAddress& replyaddr,
-                                               const Signature& forcedReturnSignature,
-                                               CancelableKitWeak kit,
-                                               AtomicIntPtr cancelRequested)
+  void BoundObject::serverResultAdapter(Future<AnyReference> future,
+                                        const qi::Signature& targetSignature,
+                                        boost::weak_ptr<ObjectHost> host,
+                                        MessageSocketPtr socket,
+                                        const qi::MessageAddress& replyaddr,
+                                        const Signature& forcedReturnSignature,
+                                        CancelableKitWeak kit,
+                                        AtomicIntPtr cancelRequested)
   {
     if(!socket->isConnected())
     {
@@ -702,7 +750,7 @@ namespace qi {
         boost::shared_ptr<GenericObject> ao = qi::detail::getGenericFuture(val);
         if (ao)
         {
-          boost::function<void()> cb = boost::bind(&ServiceBoundObject::serverResultAdapterNext, val, targetSignature,
+          boost::function<void()> cb = boost::bind(&BoundObject::serverResultAdapterNext, val, targetSignature,
                                                    host, socket, replyaddr, forcedReturnSignature, kit);
           if (ao->call<bool>("isValid"))
           {
@@ -738,7 +786,7 @@ namespace qi {
         }
         else
         {
-          convertAndSetValue(ret, val, targetSignature, host, socket.get(), forcedReturnSignature);
+          convertAndSetValue(ret, val, targetSignature, host, socket, forcedReturnSignature);
           future.setOnDestroyed(&destroyAbstractFuture);
         }
       } catch (const std::exception &e) {
@@ -760,7 +808,125 @@ namespace qi {
     }
   }
 
-// id 1 is for the service itself, we must not use it for sub-objects
-qi::Atomic<unsigned int> ServiceBoundObject::_nextId(2);
+  std::atomic<unsigned int> BoundObject::_nextId(
+    Message::GenericObject_Main + 1 // Start the object id values after the ones fixed by the protocol.
+  );
+
+  Future<void> BoundObject::deferDestruction(BoundObjectPtr&& object)
+  {
+    if (!object)
+      return futurize();
+
+    QI_ASSERT_TRUE(object.use_count() == 1);
+
+    if (object->_owner)
+      object->_owner.reset();
+
+    return deferConsumeWhenReady<BoundObjectPtr>(
+      std::move(object), [](Future<void> ready, PtrHolder<BoundObjectPtr> holder) {
+        return ready.andThen(FutureCallbackType_Async, [=](void*) {
+          consumePtr(holder, [](BoundObjectPtr&& object) { object.reset(); });
+        });
+      });
+  }
+
+  std::size_t BoundObject::removeConnections(const MessageSocketPtr& socket) noexcept
+  {
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Removing connections to socket " << socket;
+
+    auto syncConnectionList = _messageDispatchConnectionList.synchronize();
+    auto end = syncConnectionList->end();
+    auto newEnd = std::remove_if(syncConnectionList->begin(), end,
+                                 [&](const MessageDispatchConnection& conn) {
+                                   return conn.socket() == socket;
+                                 });
+
+    const auto count = end - newEnd;
+    QI_ASSERT_TRUE(count >= 0);
+
+    syncConnectionList->erase(newEnd, end);
+    return static_cast<std::size_t>(count);
+  }
+
+  std::size_t BoundObject::removeCancelables(const MessageSocketPtr& socket) noexcept
+  {
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Removing cancelables from socket " << socket;
+    boost::mutex::scoped_lock lock(_cancelables->guard);
+    return _cancelables->map.erase(socket);
+  }
+
+  std::size_t BoundObject::removeLinks(const MessageSocketPtr& socket) noexcept
+  {
+    QI_LOG_DEBUG_BOUNDOBJECT() << "Disconnecting links from socket " << socket;
+
+    boost::recursive_mutex::scoped_lock lock(_callMutex);
+    auto it = _links.find(socket);
+
+    std::size_t count = 0;
+
+    if (it != _links.end())
+    {
+      count = it->second.size();
+      for (const auto& linkSlot : it->second)
+      {
+        // FIXME: Do this in the destructor of `RemoteSignalLink` instead, and make it move only.
+        const auto remoteLink = linkSlot.second;
+        _object.disconnect(remoteLink.localSignalLinkId.value()).async().then([](Future<void> f) {
+          if (f.hasError())
+            qiLogError() << f.error();
+        });
+      }
+      _links.erase(it);
+    }
+
+    return count;
+  }
+
+  namespace detail
+  {
+    namespace boundObject
+    {
+      SocketBinding::SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept
+        : _object(object)
+        , _socket(socket)
+      {
+        QI_ASSERT_NOT_NULL(_object);
+        QI_ASSERT_NOT_NULL(socket);
+        const auto res = _object->bindToSocket(socket);
+        QI_IGNORE_UNUSED(res);
+        QI_ASSERT_TRUE(res);
+      }
+
+      SocketBinding::SocketBinding(SocketBinding&&) = default;
+
+      SocketBinding& SocketBinding::operator=(SocketBinding&& other)
+      {
+        if (&other == this)
+          return *this;
+
+        reset();
+        _object = ka::exchange(other._object, {});
+        _socket = ka::exchange(other._socket, {});
+        return *this;
+      }
+
+      SocketBinding::~SocketBinding()
+      {
+        reset();
+      }
+
+      void SocketBinding::reset()
+      {
+        if (!_object)
+          return;
+        if (auto shSock = _socket.lock())
+        {
+          const auto res = _object->unbindFromSocket(shSock);
+          QI_IGNORE_UNUSED(res);
+          QI_ASSERT_TRUE(res);
+        }
+      }
+    }
+  }
 
 }

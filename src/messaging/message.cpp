@@ -202,11 +202,11 @@ namespace qi
     ObjectSerializationInfo serializeObject(
       AnyObject object,
       boost::weak_ptr<ObjectHost> context,
-      StreamContext* strCtxt)
+      MessageSocketPtr socket)
     {
       auto host = context.lock();
-      if (!host || !strCtxt)
-        throw std::runtime_error("Unable to serialize object without a valid ObjectHost and StreamContext");
+      if (!host || !socket)
+        throw std::runtime_error("Unable to serialize object without a valid ObjectHost and MessageSocket");
 
       const unsigned int sid = host->service();
       if (!object)
@@ -219,15 +219,14 @@ namespace qi
       }
 
       const unsigned int oid = host->nextId();
-      ServiceBoundObject* sbo =
-          new ServiceBoundObject(sid, oid, object, MetaCallType_Queued, true, context);
-      boost::shared_ptr<BoundObject> bo(sbo);
-      host->addObject(bo, strCtxt, oid);
+      auto bo =
+        boost::make_shared<BoundObject>(sid, oid, object, MetaCallType_Queued, true, context);
+      host->addObject(bo, socket);
       qiLogDebug() << "Hooking " << oid <<" on " << host.get();
-      qiLogDebug() << "sbo " << sbo << "obj " << object.asGenericObject();
-      // Transmit the metaObject augmented by ServiceBoundObject.
+      qiLogDebug() << "BoundObject " << bo << " obj " << object.asGenericObject();
+      // Transmit the metaObject augmented by BoundObject.
       ObjectSerializationInfo res;
-      res.metaObject = sbo->metaObject(oid);
+      res.metaObject = bo->metaObject(oid);
       res.serviceId = sid;
       res.objectId = oid;
       res.objectUid = object.uid();
@@ -258,15 +257,14 @@ namespace qi
       dobj->metaPost(AnyObject(), mid, params);
     }
 
-    AnyObject deserializeObject(const ObjectSerializationInfo& osi,
-      MessageSocketPtr context)
+    AnyObject deserializeObject(const ObjectSerializationInfo& osi, MessageSocketPtr socket)
     {
-      if (!context)
+      if (!socket)
         throw std::runtime_error("Unable to deserialize object without a valid TransportSocket");
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
                    << " uid = '" << (osi.objectUid ? *osi.objectUid : ObjectUid{}) << "' on "
-                   << context.get();
-      RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, context);
+                   << socket.get();
+      RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, socket);
       AnyObject o = makeDynamicAnyObject(ro, true, osi.objectUid, &onProxyLost);
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
       QI_ASSERT(o);
@@ -285,7 +283,7 @@ namespace qi
     qi::BufferReader br(_buffer);
     AnyReference res(type);
     return AnyValue(
-      decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket.get()),
+      decodeBinary(&br, res, boost::bind(deserializeObject, _1, socket), socket),
       false, // i.e. don't copy
       true   // i.e. become resource owner
     );
@@ -294,7 +292,7 @@ namespace qi
   void Message::setValue(const AutoAnyReference& value,
                          const Signature& sig,
                          boost::weak_ptr<ObjectHost> context,
-                         StreamContext* streamContext)
+                         MessageSocketPtr socket)
   {
     if (!value.isValid())
     {
@@ -323,29 +321,29 @@ namespace qi
         setError(ss.str());
       }
       else
-        encodeBinary(*conv, boost::bind(serializeObject, _1, context, streamContext),
-                     streamContext);
+        encodeBinary(*conv, boost::bind(serializeObject, _1, context, socket),
+                     socket);
     }
     else if (value.type()->kind() != qi::TypeKind_Void)
     {
-      encodeBinary(value, boost::bind(serializeObject, _1, context, streamContext), streamContext);
+      encodeBinary(value, boost::bind(serializeObject, _1, context, socket), socket);
     }
   }
 
   void Message::setValues(const std::vector<qi::AnyReference>& values,
-                          boost::weak_ptr<ObjectHost> context, StreamContext* streamContext)
+                          boost::weak_ptr<ObjectHost> context, MessageSocketPtr socket)
   {
-    SerializeObjectCallback scb = boost::bind(serializeObject, _1, context, streamContext);
+    SerializeObjectCallback scb = boost::bind(serializeObject, _1, context, socket);
     for (unsigned i = 0; i < values.size(); ++i)
-      encodeBinary(values[i], scb, streamContext);
+      encodeBinary(values[i], scb, socket);
   }
 
   //convert args then call setValues
   void Message::setValues(const std::vector<qi::AnyReference>& in, const qi::Signature& expectedSignature,
-                          boost::weak_ptr<ObjectHost> context, StreamContext* streamContext) {
+                          boost::weak_ptr<ObjectHost> context, MessageSocketPtr socket) {
     qi::Signature argsSig = qi::makeTupleSignature(in, false);
     if (expectedSignature == argsSig) {
-      setValues(in, context, streamContext);
+      setValues(in, context, socket);
       return;
     }
     if (expectedSignature == "m")
@@ -365,7 +363,7 @@ namespace qi
       AnyReference tuple = makeGenericTuplePtr(types, values);
       AnyValue val(tuple, false, false);
       encodeBinary(AnyReference::from(val),
-                   boost::bind(serializeObject, _1, context, streamContext), streamContext);
+                   boost::bind(serializeObject, _1, context, socket), socket);
       return;
     }
     /* This check does not makes sense for this transport layer who does not care,
@@ -404,6 +402,6 @@ namespace qi
       }
     }
 
-    setValues(nargs, context, streamContext);
+    setValues(nargs, context, socket);
   }
 }

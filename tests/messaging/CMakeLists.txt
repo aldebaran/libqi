@@ -19,7 +19,12 @@ if(QI_WITH_TESTS)
   # A separate binary that registers a service on a service directory
   # Takes arguments supported by qi::ApplicationSession
   # Expects the url of the service directory to connect to
-  qi_create_test_helper(remoteserviceowner "remoteserviceowner.cpp" DEPENDS qi)
+  qi_create_test_helper(remoteserviceowner
+    "remoteperformanceservice.hpp"
+    "remoteserviceowner.cpp"
+  DEPENDS
+    qi
+  )
 
   qi_stage_dir(".")
 
@@ -56,6 +61,7 @@ if(QI_WITH_TESTS)
 
     SRC
     "objectio.hpp"
+    "remoteperformanceservice.hpp"
     "test_call.cpp"
     "test_call_many.cpp"
     "test_call_on_close_session.cpp"
@@ -71,7 +77,7 @@ if(QI_WITH_TESTS)
     qitestutils
     testsession
 
-    TIMEOUT 200
+    TIMEOUT 500
   )
 
   qimessaging_create_session_test(
@@ -86,7 +92,7 @@ if(QI_WITH_TESTS)
     qitestutils
     testsession
 
-    TIMEOUT 300
+    TIMEOUT 500
   )
 
   # Tests on Application require a separate binary

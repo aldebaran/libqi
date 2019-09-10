@@ -12,6 +12,7 @@
 #include <qi/signal.hpp>
 #include <qi/trackable.hpp>
 #include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/messagesocket_fwd.hpp>
 #include <qi/session.hpp>
 #include "remoteobject_p.hpp"
 #include "clientauthenticator_p.hpp"
@@ -19,7 +20,6 @@
 
 namespace qi {
 
-  class MessageSocket;
   class ServiceDirectoryClient: public qi::Trackable<ServiceDirectoryClient> {
   public:
     ServiceDirectoryClient(bool enforceAuth = false);

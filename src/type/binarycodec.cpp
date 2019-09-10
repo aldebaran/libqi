@@ -9,7 +9,7 @@
 #include <qi/anyvalue.hpp>
 
 #include "binarycodec_p.hpp"
-#include "src/messaging/streamcontext.hpp"
+#include "src/messaging/messagesocket.hpp"
 
 #include <qi/log.hpp>
 #include <qi/anyobject.hpp>
@@ -27,9 +27,9 @@ namespace qi {
 
   namespace detail
   {
-    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* ctx);
-    AnyReference deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
-    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* ctx);
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, MessageSocketPtr socket);
+    AnyReference deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, MessageSocketPtr socket);
+    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, MessageSocketPtr socket);
   }
   class BinaryDecoder;
   class BinaryEncoder;
@@ -413,11 +413,11 @@ namespace qi {
     class SerializeTypeVisitor
     {
     public:
-      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback serializeObjectCb, AnyReference value, StreamContext* tc )
+      SerializeTypeVisitor(BinaryEncoder& out, SerializeObjectCallback serializeObjectCb, AnyReference value, MessageSocketPtr socket )
         : out(out)
         , serializeObjectCb(serializeObjectCb)
         , value(value)
-        , streamContext(tc)
+        , socket(socket)
       {}
 
       BOOST_NORETURN void visitUnknown(AnyReference value)
@@ -476,7 +476,7 @@ namespace qi {
         out.beginList(numericConvert<std::uint32_t>(value.size()),
                       static_cast<ListTypeInterface*>(value.type())->elementType()->signature());
         for (; it != end; ++it)
-          serialize(*it, out, serializeObjectCb, streamContext);
+          serialize(*it, out, serializeObjectCb, socket);
         out.endList();
       }
 
@@ -493,8 +493,8 @@ namespace qi {
         for (; it != end; ++it)
         {
           AnyReference v = *it;
-          serialize(v[0], out, serializeObjectCb, streamContext);
-          serialize(v[1], out, serializeObjectCb, streamContext);
+          serialize(v[0], out, serializeObjectCb, socket);
+          serialize(v[1], out, serializeObjectCb, socket);
         }
         out.endMap();
       }
@@ -515,12 +515,12 @@ namespace qi {
 
       void visitAnyObject(AnyObject& ptr)
       {
-        if (!serializeObjectCb || !streamContext)
+        if (!serializeObjectCb || !socket)
           throw std::runtime_error("Object serialization callback and stream context required but not provided");
         ObjectSerializationInfo osi = serializeObjectCb(ptr);
-        if (streamContext->sharedCapability<bool>(capabilityname::metaObjectCache, false))
+        if (socket->sharedCapability<bool>(capabilityname::metaObjectCache, false))
         {
-          std::pair<unsigned int, bool> c = streamContext->sendCacheSet(osi.metaObject);
+          std::pair<unsigned int, bool> c = socket->sendCacheSet(osi.metaObject);
           osi.metaObjectCachedId = c.first;
           osi.transmitMetaObject = c.second;
           out.write(osi.transmitMetaObject);
@@ -535,7 +535,7 @@ namespace qi {
         out.write(osi.serviceId);
         out.write(osi.objectId);
 
-        if (streamContext->sharedCapability<bool>(capabilityname::objectPtrUid, false))
+        if (socket->sharedCapability<bool>(capabilityname::objectPtrUid, false))
         {
           // We serialize the ObjectUid because, on the receiver side once
           // deserialized, a new local object will be created.
@@ -549,7 +549,7 @@ namespace qi {
       {
         out.beginTuple(qi::makeTupleSignature(vals));
         for (unsigned i=0; i<vals.size(); ++i)
-          serialize(vals[i], out, serializeObjectCb, streamContext);
+          serialize(vals[i], out, serializeObjectCb, socket);
         out.endTuple();
       }
 
@@ -557,7 +557,7 @@ namespace qi {
       {
         //Remaining types
         out.writeValue(pointee, boost::bind(&typeDispatch<SerializeTypeVisitor>,
-                                            SerializeTypeVisitor(out, serializeObjectCb, pointee, streamContext), pointee));
+                                            SerializeTypeVisitor(out, serializeObjectCb, pointee, socket), pointee));
       }
 
       void visitRaw(AnyReference raw)
@@ -579,14 +579,14 @@ namespace qi {
         auto scopeEndOpt = ka::scoped([&]{ out.endOptional(); });
         if (hasValue)
         {
-          serialize(opt.content(), out, serializeObjectCb, streamContext);
+          serialize(opt.content(), out, serializeObjectCb, socket);
         }
       }
 
       BinaryEncoder& out;
       SerializeObjectCallback serializeObjectCb;
       AnyReference value;
-      StreamContext* streamContext;
+      MessageSocketPtr socket;
     };
 
     class DeserializeTypeVisitor
@@ -595,10 +595,10 @@ namespace qi {
       * result *must* be modified in place, not changed
       */
     public:
-      DeserializeTypeVisitor(BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* tc)
+      DeserializeTypeVisitor(BinaryDecoder& in, DeserializeObjectCallback context, MessageSocketPtr socket)
         : in(in)
         , context(context)
-        , streamContext(tc)
+        , socket(socket)
       {}
 
       void visitUnknown(AnyReference)
@@ -694,7 +694,7 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          AnyReference v = deserialize(elementType, in, context, streamContext);
+          AnyReference v = deserialize(elementType, in, context, socket);
           result.append(v);
           v.destroy();
         }
@@ -715,8 +715,8 @@ namespace qi {
           return;
         for (unsigned i = 0; i < sz; ++i)
         {
-          AnyReference k = deserialize(keyType, in, context, streamContext);
-          AnyReference v = deserialize(elementType, in, context, streamContext);
+          AnyReference k = deserialize(keyType, in, context, socket);
+          AnyReference v = deserialize(elementType, in, context, socket);
           result.insert(k, v);
           k.destroy();
           v.destroy();
@@ -724,10 +724,10 @@ namespace qi {
       }
       void visitAnyObject(AnyObject& o)
       {
-        if (!streamContext)
+        if (!socket)
           throw std::runtime_error("Stream context required to deserialize object");
         ObjectSerializationInfo osi;
-        if (streamContext->sharedCapability<bool>(capabilityname::metaObjectCache, false))
+        if (socket->sharedCapability<bool>(capabilityname::metaObjectCache, false))
         {
           in.read(osi.transmitMetaObject);
           if (osi.transmitMetaObject)
@@ -740,16 +740,16 @@ namespace qi {
         }
         in.read(osi.serviceId);
         in.read(osi.objectId);
-        if (streamContext->sharedCapability<bool>(capabilityname::objectPtrUid, false))
+        if (socket->sharedCapability<bool>(capabilityname::objectPtrUid, false))
         {
           ObjectUid uid;
           in.read(begin(uid), size(uid));
           osi.objectUid = uid;
         }
         if (!osi.transmitMetaObject)
-          osi.metaObject = streamContext->receiveCacheGet(osi.metaObjectCachedId);
+          osi.metaObject = socket->receiveCacheGet(osi.metaObjectCachedId);
         else if (osi.metaObjectCachedId != ObjectSerializationInfo::notCached)
-          streamContext->receiveCacheSet(osi.metaObjectCachedId, osi.metaObject);
+          socket->receiveCacheSet(osi.metaObjectCachedId, osi.metaObject);
         if (osi.objectId == nullObjectId)
           o = AnyObject();
         else if (context)
@@ -778,7 +778,7 @@ namespace qi {
         vals.resize(types.size());
         for (unsigned i = 0; i<types.size(); ++i)
         {
-          AnyReference val = deserialize(types[i], in, context, streamContext);
+          AnyReference val = deserialize(types[i], in, context, socket);
           if (!val.isValid())
             throw std::runtime_error("Deserialization of tuple field failed");
           vals[i] = val;
@@ -839,19 +839,19 @@ namespace qi {
 
         const auto optType = static_cast<OptionalTypeInterface*>(value.type());
         const auto valueType = optType->valueType();
-        auto val = detail::UniqueAnyReference{ deserialize(valueType, in, context, streamContext) };
+        auto val = detail::UniqueAnyReference{ deserialize(valueType, in, context, socket) };
         result.setOptional(boost::make_optional(*val));
       }
 
       AnyReference result;
       BinaryDecoder& in;
       DeserializeObjectCallback context;
-      StreamContext* streamContext;
+      MessageSocketPtr socket;
     }; //class
 
-    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, StreamContext* sctx)
+    void serialize(AnyReference val, BinaryEncoder& out, SerializeObjectCallback context, MessageSocketPtr socket)
     {
-      detail::SerializeTypeVisitor stv(out, context, val, sctx);
+      detail::SerializeTypeVisitor stv(out, context, val, socket);
       qi::typeDispatch(stv, val);
       if (out.status() != BinaryEncoder::Status::Ok) {
         std::stringstream ss;
@@ -860,9 +860,9 @@ namespace qi {
       }
     }
 
-    AnyReference deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
+    AnyReference deserialize(AnyReference what, BinaryDecoder& in, DeserializeObjectCallback context, MessageSocketPtr socket)
     {
-      detail::DeserializeTypeVisitor dtv(in, context, sctx);
+      detail::DeserializeTypeVisitor dtv(in, context, socket);
       dtv.result = what;
       qi::typeDispatch(dtv, dtv.result);
       if (in.status() != BinaryDecoder::Status::Ok) {
@@ -873,11 +873,11 @@ namespace qi {
       return dtv.result;
     }
 
-    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, StreamContext* sctx)
+    AnyReference deserialize(qi::TypeInterface *type, BinaryDecoder& in, DeserializeObjectCallback context, MessageSocketPtr socket)
     {
       AnyReference res(type);
       try {
-        return deserialize(res, in, context, sctx);
+        return deserialize(res, in, context, socket);
       } catch (const std::runtime_error&) {
         res.destroy();
         throw;
@@ -886,9 +886,9 @@ namespace qi {
 
   } // namespace detail
 
-  void encodeBinary(qi::Buffer *buf, const qi::AutoAnyReference &gvp, SerializeObjectCallback onObject, StreamContext* sctx) {
+  void encodeBinary(qi::Buffer *buf, const qi::AutoAnyReference &gvp, SerializeObjectCallback onObject, MessageSocketPtr socket) {
     BinaryEncoder be(*buf);
-    detail::SerializeTypeVisitor stv(be, onObject, gvp, sctx);
+    detail::SerializeTypeVisitor stv(be, onObject, gvp, socket);
     qi::typeDispatch(stv, gvp);
     if (be.status() != BinaryEncoder::Status::Ok) {
       std::stringstream ss;
@@ -899,9 +899,9 @@ namespace qi {
   }
 
   AnyReference decodeBinary(qi::BufferReader *buf, qi::AnyReference gvp,
-    DeserializeObjectCallback onObject, StreamContext* sctx) {
+    DeserializeObjectCallback onObject, MessageSocketPtr socket) {
     BinaryDecoder in(buf);
-    detail::DeserializeTypeVisitor dtv(in, onObject, sctx);
+    detail::DeserializeTypeVisitor dtv(in, onObject, socket);
     dtv.result = gvp;
     qi::typeDispatch(dtv, dtv.result);
     if (in.status() != BinaryDecoder::Status::Ok) {

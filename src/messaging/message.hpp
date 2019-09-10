@@ -17,6 +17,7 @@
 #include <qi/types.hpp>
 #include <ka/macroregular.hpp>
 #include <qi/assert.hpp>
+#include <qi/messaging/messagesocket_fwd.hpp>
 #include <ka/scoped.hpp>
 #include <boost/weak_ptr.hpp>
 
@@ -52,8 +53,6 @@ namespace qi {
   /** \class qi::Message
     * This class represent a network message
     */
-  class MessageSocket;
-  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
   class ObjectHost;
 
   class Message
@@ -302,23 +301,18 @@ namespace qi {
 
     QI_API void setValue(const AutoAnyReference& value,
                   const Signature& signature,
-                  boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                  StreamContext* streamContext = 0);
+                  boost::weak_ptr<ObjectHost> context = {},
+                  MessageSocketPtr socket = {});
 
     QI_API void setValues(const std::vector<qi::AnyReference>& values,
-                   boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                   StreamContext* streamContext = 0);
+                   boost::weak_ptr<ObjectHost> context = {},
+                   MessageSocketPtr socket = {});
 
     /// Convert values to \p targetSignature and assign to payload.
     QI_API void setValues(const std::vector<qi::AnyReference>& values,
                    const qi::Signature& targetSignature,
-                   boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                   StreamContext* streamContext = 0);
-
-    /// Append additional data to payload
-    QI_API void appendValue(const AutoAnyReference& value,
-                     boost::weak_ptr<ObjectHost> context = boost::weak_ptr<ObjectHost>{},
-                     StreamContext* streamContext = 0);
+                   boost::weak_ptr<ObjectHost> context = {},
+                   MessageSocketPtr socket = {});
 
     MessageAddress address() const
     {
@@ -341,11 +335,11 @@ namespace qi {
 
     void encodeBinary(const qi::AutoAnyReference& ref,
                       SerializeObjectCallback onObject,
-                      StreamContext* sctx)
+                      MessageSocketPtr socket)
     {
       auto updateHeaderSize =
           ka::scoped([&] { _header.size = static_cast<qi::uint32_t>(_buffer.totalSize()); });
-      qi::encodeBinary(&_buffer, ref, onObject, sctx);
+      qi::encodeBinary(&_buffer, ref, onObject, socket);
     }
   };
 
@@ -356,7 +350,39 @@ namespace qi {
     return os;
   }
 
+  inline std::ostream& operator<<(std::ostream& os, const qi::Message::Type& type)
+  {
+    return os << Message::typeToString(type);
+  }
+
   QI_API std::ostream& operator<<(std::ostream& os, const qi::Message& msg);
+
+
+  /// Status returned by message handlers.
+  /// This is used mainly to determine if a message have been handled or not
+  /// and how to route it to another handler if it was not handled yet.
+  enum class DispatchStatus
+  {
+    MessageHandled,           ///< The message was understood and processed without error.
+
+    MessageHandled_WithError, ///< The message was understood, but it's processing lead
+                              ///< to an error (for example: the requested function call is not found).
+
+    MessageNotHandled,        ///< The message was not understood or not handled  on purpose.
+                              ///< (for example: the handler isn't the recipient or don't know how to handle this message).
+
+    MessageHandlingFailure,   ///< An error happened before the message was handled.
+                              ///< (for example: an exception thrown in a message handler).
+  };
+
+  /// @returns true if the message was handled, with or without error.
+  inline bool isMessageHandled(DispatchStatus status)
+  {
+    return status == DispatchStatus::MessageHandled
+        || status == DispatchStatus::MessageHandled_WithError
+        ;
+  }
+
 }
 
 QI_TYPE_CONCRETE(qi::Message);

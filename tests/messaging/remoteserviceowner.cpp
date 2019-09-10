@@ -2,6 +2,8 @@
 #include <qi/anymodule.hpp>
 #include <qi/log.hpp>
 
+#include "remoteperformanceservice.hpp"
+
 qiLogCategory("RemoteServiceOwner");
 
 struct PingPongService
@@ -22,10 +24,12 @@ private:
 
 QI_REGISTER_OBJECT(PingPongService, take, give)
 
+
+
 int main(int argc, char **argv) {
   qi::ApplicationSession app(argc, argv);
   app.session()->setIdentity(qi::path::findData("qi", "server.key"),
-                             qi::path::findData("qi", "server.crt"));
+    qi::path::findData("qi", "server.crt"));
   qi::log::addFilter("qi*", qi::LogLevel_Debug);
 
   qiLogInfo() << "Attempting connection to " << app.url().str();
@@ -34,9 +38,11 @@ int main(int argc, char **argv) {
   assert(client->isConnected());
 
   auto service = boost::make_shared<PingPongService>();
-  qiLogInfo() << "Created PingPongService";
+  auto perfService = boost::make_shared<RemotePerformanceService>();
+  qiLogInfo() << "Created PingPongService & RemotePerformanceService";
   client->registerService("PingPongService", service);
-  qiLogInfo() << "Registered PingPongService";
+  client->registerService("RemotePerformanceService", perfService);
+  qiLogInfo() << "Registered PingPongService & RemotePerformanceService";
   app.run();
 
   return 0;

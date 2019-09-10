@@ -372,7 +372,9 @@ TEST(TestStrand, TypeErasedCall)
 TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
 {
   static const int TOTAL = 50;
-  std::default_random_engine randEngine(1828);
+  std::random_device rd;
+  std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
+  std::default_random_engine randEngine(seq);
   std::uniform_int_distribution<int> distrib;
 
   int callcount = 0;
@@ -414,7 +416,9 @@ void chaincall(qi::AnyObject aobj, qi::Promise<void> finished, int TOTAL)
 TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
 {
   static const int TOTAL = 300;
-  std::default_random_engine randEngine(1828);
+  std::random_device rd;
+  std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
+  std::default_random_engine randEngine(seq);
   std::uniform_int_distribution<int> distrib;
 
   int callcount = 0;

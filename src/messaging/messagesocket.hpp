@@ -12,6 +12,7 @@
 # include <qi/eventloop.hpp>
 # include <qi/signal.hpp>
 # include <qi/binarycodec.hpp>
+# include <qi/messaging/messagesocket_fwd.hpp>
 # include <string>
 # include "messagedispatcher.hpp"
 # include "streamcontext.hpp"
@@ -55,7 +56,7 @@ namespace qi
 
     explicit MessageSocket(qi::EventLoop* eventLoop = qi::getNetworkEventLoop())
       : _eventLoop(eventLoop)
-      , _dispatcher{ &_signalsStrand }
+      , _dispatcher{ _signalsStrand }
       // connected is the only signal to be synchronous, because it will always be the first signal
       // emitted (so no other asynchronous signal emission will overlap with it) and it's not
       // emitted from the network event loop worker
@@ -85,13 +86,17 @@ namespace qi
 
     bool isConnected() const;
 
-    static const unsigned int ALL_OBJECTS = (unsigned int)-1;
-
-    qi::SignalLink messagePendingConnect(unsigned int serviceId, unsigned int objectId, boost::function<void (const qi::Message&)> fun) {
-      return _dispatcher.messagePendingConnect(serviceId, objectId, fun);
+    qi::SignalLink messagePendingConnect(unsigned int serviceId,
+                                         unsigned int objectId,
+                                         MessageDispatcher::MessageHandler fun) noexcept
+    {
+      return _dispatcher.messagePendingConnect(serviceId, objectId, std::move(fun));
     }
 
-    void messagePendingDisconnect(unsigned int serviceId, unsigned int objectId, qi::SignalLink linkId) {
+    void messagePendingDisconnect(unsigned int serviceId,
+                                  unsigned int objectId,
+                                  qi::SignalLink linkId) noexcept
+    {
       _dispatcher.messagePendingDisconnect(serviceId, objectId, linkId);
     }
 
@@ -112,8 +117,44 @@ namespace qi
     qi::Signal<SocketEventData>  socketEvent;
   };
 
-  using MessageSocketPtr = boost::shared_ptr<MessageSocket>;
+  using MessageSocketWeakPtr = boost::weak_ptr<MessageSocket>;
   MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getNetworkEventLoop());
+
+  /// A connection to the message dispatch of a socket that acts as a RAII helper to connect and
+  /// disconnect the object as a message handler. Instances do not own their underlying socket.
+  class MessageDispatchConnection
+  {
+  public:
+  // MoveOnly:
+    MessageDispatchConnection(const MessageDispatchConnection&) = delete;
+    MessageDispatchConnection& operator=(const MessageDispatchConnection&) = delete;
+
+    MessageDispatchConnection(MessageDispatchConnection&&);
+    MessageDispatchConnection& operator=(MessageDispatchConnection&&);
+
+  // MessageDispatchConnection:
+    MessageDispatchConnection() noexcept;
+
+    /// @throws A `std::invalid_argument` exception if the socket pointer is null.
+    MessageDispatchConnection(MessageSocketPtr socket,
+                              MessageDispatcher::RecipientId recipientId,
+                              MessageDispatcher::MessageHandler handler);
+    ~MessageDispatchConnection();
+
+    MessageSocketPtr socket() const noexcept { return _socket.lock(); }
+
+    MessageDispatcher::RecipientId recipientId() const noexcept { return _recipientId; }
+
+  private:
+    void reset();
+
+    static MessageDispatcher::RecipientId defaultRecipientId() noexcept;
+
+    MessageSocketWeakPtr _socket;
+    MessageDispatcher::RecipientId _recipientId = defaultRecipientId();
+    SignalLink _messageDispatcherLink = SignalBase::invalidSignalLink;
+  };
+
 }
 
 #endif  // _SRC_MESSAGESOCKET_HPP_

@@ -15,6 +15,7 @@
 #include <qi/anyvalue.hpp>
 #include <qi/type/metaobject.hpp>
 #include <qi/objectuid.hpp>
+#include <qi/messaging/messagesocket_fwd.hpp>
 
 namespace qi {
 
@@ -35,8 +36,6 @@ namespace qi {
     static const qi::uint32_t notCached = 0xFFFFFFFF;
   };
 
-  class StreamContext;
-
   /// Type of callback invoked by sdeerializer when it encounters an object
   using DeserializeObjectCallback = boost::function<AnyObject(const ObjectSerializationInfo&)>;
 
@@ -46,33 +45,33 @@ namespace qi {
   template <typename T>
   AnyReference decodeBinary(qi::BufferReader *buf, T* value,
                             DeserializeObjectCallback onObject=DeserializeObjectCallback(),
-                            StreamContext* streamContext = 0
+                            MessageSocketPtr socket = 0
                             );
 
    /** Encode content of \p gvp into \p buf.
     * @param buf buffer that will be filled with serialized data
     * @param gvp AnyReference to serialize
     * @param onObject callback invoked each time an object is encountered.
-    * @param ctx connection context
+    * @param socket connection context
     * @throw std::runtime_error when the encoding fail
     */
-  QI_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback(), StreamContext* ctx=0);
+  QI_API void encodeBinary(qi::Buffer *buf, const AutoAnyReference &gvp, SerializeObjectCallback onObject=SerializeObjectCallback(), MessageSocketPtr socket=0);
 
 
   /** Decode content of \p buf into \p gvp.
    * @param buf buffer with serialized data
    * @param gvp initialized AnyReference of correct type. Will be filled in.
    * @param onObject callback invoked each time an object is encountered.
-   * @param ctx connection context
+   * @param socket connection context
    * @return the result of the deserialize type visitor
    *
    * @throw std::runtime_error when the decoding fail
    */
-  QI_API AnyReference decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), StreamContext* ctx = 0);
+  QI_API AnyReference decodeBinary(qi::BufferReader *buf, AnyReference gvp, DeserializeObjectCallback onObject=DeserializeObjectCallback(), MessageSocketPtr socket = 0);
 
   template <typename T>
-  AnyReference decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject, StreamContext* ctx) {
-    return decodeBinary(buf, AnyReference::fromPtr(value), onObject, ctx);
+  AnyReference decodeBinary(qi::BufferReader *buf, T* value, DeserializeObjectCallback onObject, MessageSocketPtr socket) {
+    return decodeBinary(buf, AnyReference::fromPtr(value), onObject, socket);
   }
 }
 

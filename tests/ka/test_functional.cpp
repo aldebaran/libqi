@@ -723,7 +723,7 @@ TEST(FunctionalComposeAccu, Id) {
 namespace {
   struct x_t {
     x_t() = default;
-    x_t(bool b) : b{ b } {}
+    explicit x_t(bool b) : b{ b } {}
     bool b{ false };
     bool operator==(x_t x) const {return b == x.b;}
   };

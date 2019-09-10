@@ -16,7 +16,9 @@
 #include <qi/api.hpp>
 #include <qi/type/fwd.hpp>
 #include <qi/type/detail/typeinterface.hpp>
+#include <ka/macro.hpp>
 #include <ka/scoped.hpp>
+#include <ka/utility.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/optional.hpp>
 
@@ -74,6 +76,23 @@ protected:
   AnyReference _element(const AnyReference& key, bool throwOnFailure, bool autoInsert);
 
 public:
+  AnyReferenceBase(const AnyReferenceBase&) = default;
+
+  // Resetting pointers is not mandatory but safer and easier to debug.
+  AnyReferenceBase(AnyReferenceBase&& x) KA_NOEXCEPT(true)
+    : _type(ka::exchange(x._type, nullptr))
+    , _value(ka::exchange(x._value, nullptr))
+  {}
+
+  AnyReferenceBase& operator=(const AnyReferenceBase&) = default;
+
+  AnyReferenceBase& operator=(AnyReferenceBase&& x) KA_NOEXCEPT(true)
+  {
+    _type = ka::exchange(x._type, nullptr);
+    _value = ka::exchange(x._value, nullptr);
+    return *this;
+  }
+
   /// Attempts the conversion of the value behind the reference to the given type.
   /// Converted value is invalid if conversion failed.
   UniqueAnyReference convert(TypeInterface* targetType) const;

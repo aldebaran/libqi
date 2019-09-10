@@ -23,13 +23,12 @@ namespace qi {
   ServiceDirectoryClient::StateData::operator=(StateData&& o)
   {
     sdSocket = ka::exchange(o.sdSocket, nullptr);
-    sdSocketDisconnectedSignalLink = ka::exchange(
-      o.sdSocketDisconnectedSignalLink, SignalBase::invalidSignalLink);
-    sdSocketSocketEventSignalLink = ka::exchange(
-      o.sdSocketSocketEventSignalLink, SignalBase::invalidSignalLink);
+    sdSocketDisconnectedSignalLink =
+      ka::exchange(o.sdSocketDisconnectedSignalLink, SignalBase::invalidSignalLink);
+    sdSocketSocketEventSignalLink =
+      ka::exchange(o.sdSocketSocketEventSignalLink, SignalBase::invalidSignalLink);
     addSignalLink = ka::exchange(o.addSignalLink, SignalBase::invalidSignalLink);
-    removeSignalLink = ka::exchange(
-      o.removeSignalLink, SignalBase::invalidSignalLink);
+    removeSignalLink = ka::exchange(o.removeSignalLink, SignalBase::invalidSignalLink);
     localSd = ka::exchange(o.localSd, false);
     return *this;
   }
@@ -237,7 +236,8 @@ namespace qi {
         if (msg.type() == Message::Type_Error)
           error << "Authentication failed: " << msg.value("s", socket).to<std::string>();
         else
-          error << "Expected a message for function #" << Message::ServerFunction_Authenticate << " (authentication), received a message for function " << msg.function();
+          error << "Expected a message for function #" << Message::ServerFunction_Authenticate
+                << " (authentication), received a message for function " << msg.function();
         qi::Future<void> fdc = onSocketFailure(socket, error.str());
         fdc.then(std::bind(&qi::Promise<void>::setError, prom, error.str()));
       }

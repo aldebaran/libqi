@@ -83,8 +83,10 @@ void __chaosThread(void *data)
     std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
     return std::default_random_engine{ seq };
   }();
-  std::uniform_int_distribution<int> distrib0To9{ 0, 9 };
-  std::uniform_int_distribution<int> distrib0to49{ 0, 49 };
+  std::uniform_int_distribution<int> dis0to9{ 0, 9 };
+  std::uniform_int_distribution<int> dis0to49{ 0, 49 };
+  const auto random0to9 = [&] { return dis0to9(randEngine); };
+  const auto random0to49 = [&] { return dis0to49(randEngine); };
 
   // #2 Run until interrupt :
   while (mutex->try_lock())
@@ -107,19 +109,19 @@ void __chaosThread(void *data)
     while (methodToCall.compare("") != 0 && nbCalls > 0)
     {
       // #2.2.1 Randomise number of call.
-      nbCalls = distrib0to49(randEngine) + 1;
+      nbCalls = random0to49() + 1;
 
       // #2.2.2 Call method.
       std::string pong = proxy.call<std::string>(methodToCall);
 
       // #2.2.3 Sleep a random time between 0 and 9ms.
-      std::this_thread::sleep_for(std::chrono::milliseconds{ distrib0To9(randEngine) });
+      std::this_thread::sleep_for(std::chrono::milliseconds{ random0to9() });
 
       nbCalls--;
     }
 
     // #2.3 Sleep a random time between 0 and 9ms.
-    std::this_thread::sleep_for(std::chrono::milliseconds{ distrib0To9(randEngine) });
+    std::this_thread::sleep_for(std::chrono::milliseconds{ random0to9() });
 
     // #2.3 Disconnect session.
     session->close().wait(qi::Seconds{ 10 });

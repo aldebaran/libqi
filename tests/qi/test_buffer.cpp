@@ -31,7 +31,7 @@ TEST(TestBuffer, TestReserveSpace)
     std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
     return std::default_random_engine{ seq };
   }();
-  std::uniform_int_distribution<> ucDistrib{
+  std::uniform_int_distribution<int> ucDistrib{
     std::numeric_limits<unsigned char>::min(),
     std::numeric_limits<unsigned char>::max()
   };

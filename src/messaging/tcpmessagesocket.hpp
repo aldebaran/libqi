@@ -286,6 +286,8 @@ namespace qi {
     bool handleNormalMessage(Message& msg);
     bool handleMessage(Message& msg);
 
+    Future<void> dispatchOrSendError(Message& msg);
+
     ConnectedState& asConnected(State& s)
     {
       return boost::get<ConnectedState>(s);
@@ -558,7 +560,7 @@ namespace qi {
   {
     messageReady(msg);
     socketEvent(SocketEventData(msg));
-    _dispatcher.dispatch(msg);
+    dispatchOrSendError(msg);
     return true;
   }
 
@@ -582,6 +584,33 @@ namespace qi {
       success = handleNormalMessage(msg);
     }
     return success;
+  }
+
+  template<typename N, typename S>
+  Future<void> TcpMessageSocket<N, S>::dispatchOrSendError(Message& msg)
+  {
+    auto fut = _dispatcher.dispatch(msg);
+
+    // Call request expects a reply and if the client doesn't get it, it might block. To avoid that,
+    // if no handler was able to process the message, send back an error informing the client.
+    if (msg.type() == Message::Type_Call)
+    {
+      const MessageAddress msgAddress = msg.address();
+      return fut
+        .andThen(ka::scope_lock_proc(
+          [msgAddress, this](bool handled) {
+            if (!handled)
+            {
+              Message errorMsg(Message::Type_Error, msgAddress);
+              errorMsg.setError("The call request could not be handled.");
+              send(errorMsg);
+            }
+          },
+          ka::mutable_store(this->weak_from_this())))
+        .andThen([](ka::opt_t<void>) {});
+    }
+
+    return fut.andThen([](bool){});
   }
 
   template<typename N, typename S>

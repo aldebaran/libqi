@@ -296,6 +296,7 @@ set(QIM_H qi/api.hpp
           qi/messaging/clientauthenticatorfactory.hpp
           qi/messaging/detail/autoservice.hxx
           qi/messaging/gateway.hpp
+          qi/messaging/messagesocket_fwd.hpp
           qi/messaging/servicedirectoryproxy.hpp
           qi/messaging/serviceinfo.hpp
           qi/applicationsession.hpp
