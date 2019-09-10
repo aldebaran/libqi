@@ -9,6 +9,7 @@
 
 # include <qi/api.hpp>
 # include <qi/types.hpp>
+# include <ka/macroregular.hpp>
 # include <boost/shared_ptr.hpp>
 # include <vector>
 # include <cstddef>
@@ -211,6 +212,8 @@ namespace qi
     size_t read(void* buffer, size_t offset = 0, size_t length = 0) const;
 
     bool operator==(const Buffer& b) const;
+    friend KA_GENERATE_REGULAR_OP_DIFFERENT(Buffer)
+
   private:
     friend class BufferReader;
     // CS4251
