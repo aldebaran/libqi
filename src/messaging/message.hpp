@@ -70,13 +70,10 @@ namespace qi {
       qi::uint32_t object = 0;
       qi::uint32_t action = 0;
 
-      bool operator==(const Header& b) const
-      {
-        return magic == b.magic && id == b.id && size == b.size &&
-               version == b.version && type == b.type &&
-               flags == b.flags && service == b.service &&
-               object == b.object && action == b.action;
-      }
+      friend KA_GENERATE_REGULAR_OP_EQUAL_9(Header,
+        magic, id, size, version, type, flags, service, object, action
+      )
+      friend KA_GENERATE_REGULAR_OP_DIFFERENT(Header)
 
       static inline qi::uint16_t currentVersion()
       {
@@ -323,10 +320,8 @@ namespace qi {
 
     const Header& header() const {return _header;}
 
-    bool operator==(const Message& b) const
-    {
-      return _header == b._header && signature == b.signature && _buffer == b._buffer;
-    }
+    friend KA_GENERATE_REGULAR_OP_EQUAL_3(Message, _header, signature, _buffer)
+    friend KA_GENERATE_REGULAR_OP_DIFFERENT(Message)
 
   private:
     Buffer _buffer;

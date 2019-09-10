@@ -4,15 +4,6 @@
 #include <qi/application.hpp>
 #include "src/messaging/message.hpp"
 
-namespace qi
-{
-  template<typename T>
-  bool operator!=(const T& a, const T& b)
-  {
-    return !(a == b);
-  }
-} // namespace qi
-
 TEST(TestMessage, CopiesAreDistinct)
 {
   using namespace qi;
