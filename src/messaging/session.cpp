@@ -551,7 +551,7 @@ namespace qi {
 
     // schedule some clean up
     promise.future().connect(
-          [futureLink, privSession] (qi::Future<void>) mutable
+          track([futureLink, privSession] (qi::Future<void>) mutable
           {
             futureLink.cancel();
             futureLink.andThen(track(
@@ -559,7 +559,7 @@ namespace qi {
                   {
                     privSession->_sdClient.serviceAdded.disconnectAsync(link);
                   }, privSession));
-          });
+          }, privSession));
     return promise.future();
   }
 
