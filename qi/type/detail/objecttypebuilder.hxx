@@ -44,13 +44,14 @@ KA_WARNING_DISABLE(, noexcept-type)
 
   template<typename T> void ObjectTypeBuilderBase::buildFor(bool autoRegister)
   {
-    // We are erasing T here: we must pass everything the builder need to know about t:
+    // We are erasing T here: we must pass everything the builder needs to know about:
     // - typeid
     // - cloner/deleter
     // - serializer, ...
-    // => wee need all TypeInterface* methods, but we do not want another TypeInterface*
-    // to anwser to typeOf<T>
-    xBuildFor(new DefaultTypeImpl<T>(), autoRegister, detail::getStrandAccessor<T>());
+    // => we need all TypeInterface* methods, but we do not want another TypeInterface*
+    // to answer to typeOf<T>
+    static DefaultTypeImpl<T> implTypeInterface;
+    xBuildFor(&implTypeInterface, autoRegister, detail::getStrandAccessor<T>());
 
     if (std::is_base_of<Actor, T>::value)
       setThreadingModel(ObjectThreadingModel_SingleThread);
