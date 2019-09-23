@@ -440,7 +440,6 @@ TYPED_TEST_CASE(ProductIterProjection, ka::test::container_triple_fn_types);
 TYPED_TEST(ProductIterProjection, Basic) {
   using namespace ka;
   using std::begin;
-  using std::next;
   auto c = test::fill_with<A>(std::get<0>(TypeParam{}));
   auto d = test::fill_with<A>(std::get<1>(TypeParam{}));
   auto e = test::fill_with<A>(std::get<2>(TypeParam{}));

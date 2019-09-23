@@ -92,6 +92,14 @@ namespace ka {
     return old_value;
   }
 
+  /// Helper type to avoid ODR violations.
+  template<typename T>
+  struct static_const_t {
+    static KA_CONSTEXPR T value{};
+  };
+
+  template<typename T> KA_CONSTEXPR
+  T static_const_t<T>::value;
 } // namespace ka
 
 #endif // KA_UTILITY_HPP

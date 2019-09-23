@@ -8,6 +8,7 @@ qi_create_gmock(
     "test_conceptpredicate.cpp"
     "test_empty.cpp"
     "test_errorhandling.cpp"
+    "test_functor.cpp"
     "test_functional.cpp"
     "test_functional_common.hpp"
     "test_integersequence.cpp"

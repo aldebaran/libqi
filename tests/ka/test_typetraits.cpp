@@ -851,3 +851,59 @@ TEST(TypeTraits, ConstantVoidInSfinaeNotAssignable) {
   try_set(n, 5);
   EXPECT_EQ("abc", n.value);
 }
+
+TEST(Rebind, Basic) {
+  using namespace ka;
+  using namespace std;
+  static_assert(Equal<array<bool, 3>, Rebind<array<int, 3>, bool>>::value, "");
+  static_assert(Equal<vector<bool>, Rebind<vector<int>, bool>>::value, "");
+  static_assert(Equal<deque<bool>, Rebind<deque<int>, bool>>::value, "");
+  static_assert(Equal<forward_list<bool>, Rebind<forward_list<int>, bool>>::value, "");
+  static_assert(Equal<list<bool>, Rebind<list<int>, bool>>::value, "");
+  static_assert(Equal<set<bool>, Rebind<set<int>, bool>>::value, "");
+  static_assert(Equal<multiset<bool>, Rebind<multiset<int>, bool>>::value, "");
+  static_assert(Equal<map<char, bool>, Rebind<map<char, int>, bool>>::value, "");
+  static_assert(Equal<multimap<char, bool>, Rebind<multimap<char, int>, bool>>::value, "");
+  static_assert(Equal<unordered_set<bool>,
+    Rebind<unordered_set<int>, bool>>::value, "");
+  static_assert(Equal<unordered_multiset<bool>,
+    Rebind<unordered_multiset<int>, bool>>::value, "");
+  static_assert(Equal<unordered_map<char, bool>, Rebind<unordered_map<char, int>, bool>>::value, "");
+  static_assert(Equal<unordered_multimap<char, bool>, Rebind<unordered_multimap<char, int>, bool>>::value, "");
+}
+
+namespace {
+  struct NoMemberFmap {
+  };
+  struct MemberFmap {
+    void fmap(int) const {
+    }
+  };
+  struct NonConstMemberFmap {
+    void fmap(int) {
+    }
+  };
+  struct NullaryMemberFmap {
+    void fmap() const {
+    }
+  };
+  struct BinaryMemberFmap {
+    void fmap(int, bool) const {
+    }
+  };
+  struct PolymorphicMemberFmap {
+    template<typename F>
+    void fmap(F) const {
+    }
+  };
+}
+
+TEST(HasMemberFmap, Basic) {
+  using namespace ka;
+  static_assert(!HasMemberFmap<NoMemberFmap>::value, "");
+  static_assert( HasMemberFmap<MemberFmap>::value, "");
+  static_assert(!HasMemberFmap<NonConstMemberFmap>::value, "");
+  static_assert(!HasMemberFmap<NullaryMemberFmap>::value, "");
+  static_assert(!HasMemberFmap<BinaryMemberFmap>::value, "");
+  static_assert( HasMemberFmap<PolymorphicMemberFmap>::value, "");
+}

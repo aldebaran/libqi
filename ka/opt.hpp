@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iterator>
 #include <boost/optional/optional.hpp>
+#include "functional.hpp"
 #include "macro.hpp"
 #include "macroregular.hpp"
 #include "scoped.hpp"
@@ -161,7 +162,7 @@ namespace ka
       opt = x.opt;
       return *this;
     }
-    opt_t(opt_t&& x) : opt(move(x.opt)) {
+    opt_t(opt_t&& x) : opt(std::move(x.opt)) {
     }
     opt_t& operator=(opt_t&& x) {
       opt = std::move(x.opt);
@@ -186,8 +187,8 @@ namespace ka
     }
 
   // ...:
-    T&& operator*() && {
-      return *opt;
+    T operator*() && {
+      return std::move(*opt);
     }
 #else
   // Readable:
@@ -212,8 +213,7 @@ namespace ka
     /// Procedure<T (Args...)> Proc
     template<typename Proc, typename... Args>
     opt_t& call_set(Proc&& p, Args&&... args) {
-      opt = fwd<Proc>(p)(fwd<Args>(args)...);
-      return *this;
+      return set(fwd<Proc>(p)(fwd<Args>(args)...));
     }
 
     T const* get_ptr() const KA_NOEXCEPT_EXPR(opt.get_ptr()) {
@@ -538,6 +538,17 @@ namespace ka
     const_reference at(size_type n) const {
       return const_cast<opt_t&>(*this).at(n);
     }
+  // Functor:
+    /// Function<U (T)> F
+    template<typename F>
+    auto fmap(F&& f) -> opt_t<CodomainFor<F, T>> {
+      using U = CodomainFor<F, T>;
+      if (empty()) {
+        return opt_t<U>{};
+      } else {
+        return opt_t<U>{}.call_set(fwd<F>(f), **this);
+      }
+    }
   };
 
   /// Constructs an optional set with the given parameter.
@@ -632,6 +643,29 @@ namespace ka
     bool empty() const KA_NOEXCEPT_EXPR(true) {
       return empty_;
     }
+  // Functor:
+    /// Procedure<_ ()> F
+    template<typename F>
+    opt_t<CodomainFor<F>> fmap(F&& f) {
+      return fmap_dispatch(Equal<void, CodomainFor<F>>{}, fwd<F>(f));
+    }
+  private:
+    template<typename F>
+    opt_t<void> fmap_dispatch(true_t /* VoidCodomain */, F&& f) {
+      if (!empty()) {
+        fwd<F>(f)();
+      }
+      return *this;
+    }
+
+    template<typename F>
+    opt_t<CodomainFor<F>> fmap_dispatch(false_t /* VoidCodomain */, F&& f) {
+      opt_t<CodomainFor<F>> o;
+      if (!empty()) {
+        o.call_set(fwd<F>(f));
+      }
+      return o;
+    }
   };
 
   /// Constructs a `void` optional that is set.
@@ -657,6 +691,66 @@ namespace ka
       return !static_cast<bool>(t);
     }
   } // namespace detail
+
+  namespace fmap_ns {
+  // model FunctorApp opt:
+    /// meaning(fmap(f, ka_opts...)) =
+    ///     all_are_set
+    ///       ? opt(f(src(ka_opts)...)) // set (void case handled)
+    ///       : opt_t<U>()              // empty
+    ///   where
+    ///     all_are_set = !ka_opts.empty() && ...
+    ///     U = typeof(f(ka_opts...))
+    ///
+    /// Function<U (T...)> F
+    template<typename F, typename T, typename... O>
+    auto fmap(F&& f, opt_t<T> const& x, O&&... o)
+        -> opt_t<CodomainFor<F, T, typename Decay<O>::value_type...>> {
+      // The pattern
+      //  ```
+      //  type res;
+      //  if (condition) res = value;
+      //  return res;
+      //  ```
+      //  sadly tends to generate more efficient code on current compilers
+      //  (gcc9, clang9), even with optimizations activated, than
+      //  ```
+      //  return condition
+      //    ? type(value)
+      //    : type();
+      //  ```
+      //  .
+      using U = CodomainFor<F, T, typename Decay<O>::value_type...>;
+      opt_t<U> res;
+
+      // TODO: Use fold expression when available.
+      std::array<bool, 1 + sizeof...(O)> empties = {x.empty(), o.empty()...};
+      if (std::none_of(empties.begin(), empties.end(), id_transfo_t{})) {
+        res.call_set(fwd<F>(f), src(x), src(fwd<O>(o))...);
+      }
+      return res;
+    }
+
+  // model FunctorApp boost::optional:
+    /// meaning(fmap(f, boost_opts...)) = meaning(fmap(f, as_ka_opt(boost_opts)...))
+    ///   where
+    ///     meaning(as_ka_opt(boost_opt)) = meaning(boost_opt)
+    ///
+    /// Function<U (T...)> F
+    template<typename F, typename T, typename... O>
+    auto fmap(F&& f, boost::optional<T> const& x, O&&... o)
+        -> boost::optional<CodomainFor<F, T, typename Decay<O>::value_type...>> {
+      using U = CodomainFor<F, T, typename Decay<O>::value_type...>;
+      boost::optional<U> res;
+
+      // TODO: Use fold expression when available.
+      std::array<bool, 1 + sizeof...(O)> empties = {!x, (!o)...};
+      if (std::none_of(empties.begin(), empties.end(), id_transfo_t{})) {
+        res = boost::optional<U>(fwd<F>(f)(x.value(), fwd<O>(o).value()...));
+      }
+      return res;
+    }
+  } // namespace fmap_ns
 } // namespace ka
 
 #endif // KA_OPT_HPP

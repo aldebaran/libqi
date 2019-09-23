@@ -56,8 +56,8 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_0(id_transfo_t)
   // PolymorphicTransformation:
     template<typename T>
-    inline T operator()(T const& t) const {
-      return t;
+    inline T operator()(T&& t) const {
+      return fwd<T>(t);
     }
   // Isomorphism:
     friend id_transfo_t retract(id_transfo_t x) {
@@ -980,6 +980,23 @@ namespace ka {
       return !static_cast<bool>(x);
     }
   } // namespace detail
+
+  namespace fmap_ns {
+    // std::function<_ (X...)> almost models `Functor`, except it is not
+    // `Regular` (equality is missing). `fmap` is nonetheless implemented as it
+    // can still be useful.
+
+    /// Transforms a function `X... -> A` to `X... -> B`, by post-composing the
+    /// function `A -> B`.
+    ///
+    /// Function<B (A)> F
+    template<typename F, typename A, typename... X>
+    auto fmap(F&& f, std::function<A (X...)> const& g)
+        -> std::function<CodomainFor<F, A> (X...)> {
+      using B = CodomainFor<F, A>;
+      return std::function<B (X...)>(compose(fwd<F>(f), g));
+    }
+  } // namespace fmap_ns
 
   /// Contructs a tuple from the given values.
   /// This is to uniformize with other kinds of product (iterators, etc.).

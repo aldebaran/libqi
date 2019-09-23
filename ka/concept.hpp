@@ -522,6 +522,53 @@ namespace ka {
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Typical models are: pointers, `std::shared_ptr`, `boost::shared_ptr`
 ///
+///
+/// ## Functor
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Functor(T) =
+///     Regular(T<A>)
+///  && fmap: F x T<A> -> T<B>, where Function<B (A)> F
+///  && With `g ∘ f` denoting `compose(g, f)`,
+///          `fmap(h)` denoting partial function application of `fmap`,
+///          id_transfo_t id,
+///          `==` denoting function extensional equality (i.e. two functions are
+///          equal if for all inputs they have the same output):
+///       fmap(id) == id                   (preservation of identity)
+///    && fmap(g ∘ f) == fmap(g) ∘ fmap(f) (preservation of composition)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// A functor is a projection of objects and morphisms (here resp., types
+/// and functions) that preserves identity and morphism composition (see
+/// contraints on `fmap` above).
+///
+/// The `Functor` concept implements the type projection through a template type
+/// (`T` above), and the function projection (also called sometimes 'lifting')
+/// through the `fmap` function.
+///
+/// Note: Projected functions are unary. See concept `FunctorApp` for n-ary
+/// functions.
+///
+/// The functor notion notably allows one to dissociate the work to apply to a
+/// value placed inside a data structure (the "what"), from how to actually
+/// apply it inside the data structure (the "how"). But beware that not all
+/// functor models are container-like, such as functions with a given domain, or
+/// futures.
+///
+/// Typical models are: std containers, std::optional, functions with a given
+/// domain, futures, etc.
+///
+///
+/// ## FunctorApp
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept FunctorApp(T) =
+///     Functor(T)
+///  && fmap: F x T<A> x ... -> T<Z>, where Function<Z (A x ...)> F
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Functor that allows one to apply a n-ary function. The name is reminiscent
+/// of the notion of `Applicative` functor found in other languages.
+///
+/// Typical models are: non-key/value std containers (e.g. this includes
+/// `std::set` but excludes `std::map`), std::optional, futures, etc.
+
 namespace concept { // To allow doc tools to extract this documentation.
 }
 } // namespace ka
