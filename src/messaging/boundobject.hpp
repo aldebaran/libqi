@@ -17,6 +17,7 @@
 #include "transportserver.hpp"
 #include <qi/atomic.hpp>
 #include <qi/strand.hpp>
+#include <ka/macroregular.hpp>
 
 #include "objecthost.hpp"
 
@@ -231,12 +232,20 @@ namespace qi
       class SocketBinding
       {
       public:
+      // DefaultConstructible:
+        SocketBinding() noexcept;
+
       // MoveOnly:
         SocketBinding(const SocketBinding&) = delete;
         SocketBinding& operator=(const SocketBinding&) = delete;
 
-        SocketBinding(SocketBinding&&);
-        SocketBinding& operator=(SocketBinding&&);
+        SocketBinding(SocketBinding&&) noexcept;
+        SocketBinding& operator=(SocketBinding&&) noexcept;
+
+        bool operator==(const SocketBinding& rhs) const noexcept;
+        bool operator<(const SocketBinding& rhs) const noexcept;
+
+        KA_GENERATE_FRIEND_REGULAR_DERIVED_OPS(SocketBinding)
 
       // SocketBinding:
         /// @pre `object != nullptr && socket != nullptr`

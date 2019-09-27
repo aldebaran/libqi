@@ -870,6 +870,8 @@ namespace qi
   {
     namespace boundObject
     {
+      SocketBinding::SocketBinding() noexcept = default;
+
       SocketBinding::SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept
         : _object(object)
         , _socket(socket)
@@ -881,9 +883,9 @@ namespace qi
         QI_ASSERT_TRUE(res);
       }
 
-      SocketBinding::SocketBinding(SocketBinding&&) = default;
+      SocketBinding::SocketBinding(SocketBinding&&) noexcept = default;
 
-      SocketBinding& SocketBinding::operator=(SocketBinding&& other)
+      SocketBinding& SocketBinding::operator=(SocketBinding&& other) noexcept
       {
         if (&other == this)
           return *this;
@@ -897,6 +899,19 @@ namespace qi
       SocketBinding::~SocketBinding()
       {
         reset();
+      }
+
+      bool SocketBinding::operator==(const SocketBinding& rhs) const noexcept
+      {
+        return _object == rhs._object
+          && !_socket.owner_before(rhs._socket)
+          && !rhs._socket.owner_before(_socket);
+      }
+
+      bool SocketBinding::operator<(const SocketBinding& rhs) const noexcept
+      {
+        return _object < rhs._object ||
+               (!(rhs._object < _object) && _socket.owner_before(rhs._socket));
       }
 
       void SocketBinding::reset() noexcept
