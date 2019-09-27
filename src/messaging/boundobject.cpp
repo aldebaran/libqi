@@ -114,7 +114,6 @@ namespace qi
 
   BoundObject::~BoundObject()
   {
-    _tracker.destroy();
     _cancelables.reset();
     ObjectHost::clear();
   }
@@ -508,7 +507,7 @@ namespace qi
                                                qi::AnyObject object,
                                                qi::MetaCallType mct)
   {
-    return boost::make_shared<BoundObject>(serviceId, Message::GenericObject_Main, object, mct);
+    return BoundObject::makePtr(serviceId, Message::GenericObject_Main, object, mct);
   }
 
   qi::Future<AnyValue> BoundObject::property(const AnyValue& prop)
@@ -567,7 +566,7 @@ namespace qi
       return false;
 
     MessageDispatcher::MessageHandler handler =
-      track([this, socket](const Message& msg) { return onMessage(msg, socket); }, &_tracker);
+      track([this, socket](const Message& msg) { return onMessage(msg, socket); }, weak_from_this());
     syncConnectionList->emplace_back(socket,
                                      MessageDispatcher::RecipientId{ _serviceId, _objectId },
                                      std::move(handler));
@@ -814,24 +813,6 @@ namespace qi
   std::atomic<unsigned int> BoundObject::_nextId(
     Message::GenericObject_Main + 1 // Start the object id values after the ones fixed by the protocol.
   );
-
-  Future<void> BoundObject::deferDestruction(BoundObjectPtr&& object)
-  {
-    if (!object)
-      return futurize();
-
-    QI_ASSERT_TRUE(object.use_count() == 1);
-
-    if (object->_owner)
-      object->_owner.reset();
-
-    return deferConsumeWhenReady<BoundObjectPtr>(
-      std::move(object), [](Future<void> ready, PtrHolder<BoundObjectPtr> holder) {
-        return ready.andThen(FutureCallbackType_Async, [=](void*) {
-          consumePtr(holder, [](BoundObjectPtr&& object) { object.reset(); });
-        });
-      });
-  }
 
   std::size_t BoundObject::removeConnections(const MessageSocketPtr& socket) noexcept
   {

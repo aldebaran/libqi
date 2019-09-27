@@ -62,13 +62,6 @@ namespace qi
     void clear() noexcept;
 
   private:
-    /// Sequentializes the destruction of objects to avoid trashing the eventloop with tons of
-    /// callbacks.
-    ///
-    /// Range<BoundObjectPtr> Range
-    template<typename Range>
-    static Future<void> sequentializeDeferDestruction(Range objects);
-
     const unsigned int _service;
     using ObjSocketBindingList = std::vector<detail::boundObject::SocketBinding>;
     boost::synchronized_value<ObjSocketBindingList> _objSockBindings;
