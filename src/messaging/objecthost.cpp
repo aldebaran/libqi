@@ -29,6 +29,9 @@ namespace qi
 
   unsigned int ObjectHost::addObject(BoundObjectPtr obj, MessageSocketPtr socket)
   {
+    QI_ASSERT_NOT_NULL(obj);
+    QI_ASSERT_NOT_NULL(socket);
+
     const auto id = obj->id();
     {
       auto syncObjSockBindings = _objSockBindings.synchronize();
@@ -51,47 +54,71 @@ namespace qi
 
   std::size_t ObjectHost::removeObjectsFromSocket(const MessageSocketPtr& socket) noexcept
   {
-    auto syncObjSockBindings = _objSockBindings.synchronize();
-    const auto bindingsEnd = syncObjSockBindings->end();
+    // Destroy the socket bindings outside of the lock.
+    ObjSocketBindingList bindings;
 
-    // Put all bindings related to the socket at the end of the vector. Do not use `std::remove_if`
-    // because values to remove are move-assigned into, effectively resulting in their immediate
-    // destruction preventing us to defer the destruction of the bound objects.
-    const auto bindingsWithSocketIt =
-      std::partition(syncObjSockBindings->begin(), bindingsEnd,
-                     [&](const detail::boundObject::SocketBinding& binding) {
-                       return binding.socket() != socket;
-                     });
+    { // Lock all bindings just to move the ones from the socket into the local storage.
+      // Do not destroy a binding while locking this object bindings storage, as it can induce a deadlock if
+      // the bound object of the binding locks a mutex while waiting for this object bindings to unlock.
+      auto syncObjSockBindings = _objSockBindings.synchronize();
+      const auto syncBindingsEnd = syncObjSockBindings->end();
 
-    const auto count = std::distance(bindingsWithSocketIt, bindingsEnd);
-    syncObjSockBindings->erase(bindingsWithSocketIt, bindingsEnd);
-    return count;
+      // Put all bindings related to the socket at the end of the vector. Do not use `std::remove_if`
+      // because values that are removed are move-assigned into, effectively resulting in their immediate
+      // destruction preventing us to defer the destruction of the bound objects.
+      const auto bindingsWithSocketIt =
+        std::partition(syncObjSockBindings->begin(), syncBindingsEnd,
+                       [&](const detail::boundObject::SocketBinding& binding) {
+                         return binding.socket() != socket;
+                       });
+
+      // Early return if no object exists for this socket to avoid unnecessary operations.
+      if (bindingsWithSocketIt == syncBindingsEnd)
+        return {};
+
+      // Move the socket bindings into the local storage.
+      bindings.reserve(static_cast<std::size_t>(std::distance(bindingsWithSocketIt, syncBindingsEnd)));
+      std::move(bindingsWithSocketIt, syncBindingsEnd, std::back_inserter(bindings));
+      syncObjSockBindings->erase(bindingsWithSocketIt, syncBindingsEnd);
+    }
+    return bindings.size();
   }
 
   bool ObjectHost::removeObject(unsigned int id) noexcept
   {
-    auto syncObjSockBindings = _objSockBindings.synchronize();
-    const auto bindingsEnd = syncObjSockBindings->end();
-    const auto it = std::find_if(syncObjSockBindings->begin(), bindingsEnd,
-                                 [&](const detail::boundObject::SocketBinding& binding) {
-                                   return binding.object()->id() == id;
-                                 });
-    if (it == bindingsEnd)
-    {
-      qiLogDebug() << this << " No match in host for " << id;
-      return false;
-    }
+    // Destroy the socket bindings outside of the lock.
+    detail::boundObject::SocketBinding binding;
 
-    syncObjSockBindings->erase(it);
-    qiLogDebug() << this << " Object " << id << " removed.";
+    { // Lock all bindings just to move the ones for this object into the local object.
+      // Do not destroy a binding while locking this object bindings storage, as it can induce a deadlock if
+      // the bound object of the binding locks a mutex while waiting for this object bindings to unlock.
+      auto syncObjSockBindings = _objSockBindings.synchronize();
+      const auto bindingsEnd = syncObjSockBindings->end();
+      const auto it = std::find_if(syncObjSockBindings->begin(), bindingsEnd,
+                                   [&](const detail::boundObject::SocketBinding& binding) {
+                                     return binding.object()->id() == id;
+                                   });
+      if (it == bindingsEnd)
+      {
+        qiLogDebug() << this << " No match in host for " << id;
+        return false;
+      }
+
+      // Move the socket binding into the local object.
+      binding = std::move(*it);
+      syncObjSockBindings->erase(it);
+      qiLogDebug() << this << " Object " << id << " removed.";
+    }
 
     return true;
   }
 
-  void ObjectHost::clear() noexcept
+  std::size_t ObjectHost::clear() noexcept
   {
+    // Destroy the socket bindings outside of the lock of this object storage.
     ObjSocketBindingList bindings;
     _objSockBindings.swap(bindings);
+    return bindings.size();
   }
 }
 
