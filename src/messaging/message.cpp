@@ -219,8 +219,7 @@ namespace qi
       }
 
       const unsigned int oid = host->nextId();
-      auto bo =
-        boost::make_shared<BoundObject>(sid, oid, object, MetaCallType_Queued, true, context);
+      auto bo = BoundObject::makePtr(sid, oid, object, MetaCallType_Queued, true, context);
       host->addObject(bo, socket);
       qiLogDebug() << "Hooking " << oid <<" on " << host.get();
       qiLogDebug() << "BoundObject " << bo << " obj " << object.asGenericObject();
