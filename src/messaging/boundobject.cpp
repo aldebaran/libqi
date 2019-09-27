@@ -915,7 +915,7 @@ namespace qi
         reset();
       }
 
-      void SocketBinding::reset()
+      void SocketBinding::reset() noexcept
       {
         if (!_object)
           return;

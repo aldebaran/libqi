@@ -337,7 +337,7 @@ namespace qi
         MessageSocketPtr socket() const noexcept { return _socket.lock(); }
 
       private:
-        void reset();
+        void reset() noexcept;
 
         BoundObjectPtr _object;
         MessageSocketWeakPtr _socket;
