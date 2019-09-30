@@ -14,20 +14,25 @@
 #include <chrono>
 #include <thread>
 #include <numeric>
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/optional.hpp>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <qi/log.hpp>
 #include <qi/application.hpp>
 #include <qi/session.hpp>
+#include <qi/testutils/testutils.hpp>
 
 #include "src/messaging/transportsocketcache.hpp"
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
 
 qiLogCategory("TestTransportSocketCache");
+
+using namespace test;
+using namespace testing;
 
 namespace {
 
@@ -105,35 +110,58 @@ TEST_F(TestTransportSocketCache, FirstUrlWillFail)
   ASSERT_TRUE(sock->isConnected());
 }
 
-TEST_F(TestTransportSocketCache, DifferentMachineIdLocalConnection)
+static const std::string fakeMachineId = "there is relatively low chances this \
+    could end being the same machineID than the actual one of this \
+    machine. Then again, one can't be too sure, and we should probably \
+    randomly generate it in order to guarantee this test will be consistent.\
+    But we can probably take this chance.";
+
+struct TestTransportSocketCacheDifferentMachineIdLocalConnection : TestTransportSocketCache
 {
-  qi::MessageSocketPtr socket = boost::make_shared<qi::TcpMessageSocket<>>();
-  const std::string& fakeMachineId = "there is relatively low chances this \
-      could end being the same machineID than the actual one of this \
-      machine. Then again, one can't be too sure, and we should probably \
-      randomly generate it in order to guarantee this test will be consistent.\
-      But we can probably take this chance.";
+  void SetUp() override
+  {
+    TestTransportSocketCache::SetUp();
 
-  ASSERT_NE(fakeMachineId, qi::os::getMachineId());
+    ASSERT_NE(fakeMachineId, qi::os::getMachineId());
 
-  server_.listen("tcp://127.0.0.1:0").wait();
-  qi::Url endpoint = server_.endpoints()[0];
+    server_.listen("tcp://127.0.0.1:0").wait();
+
+    // Forge a service info, change the machine ID
+    // TransportSocketCache only uses the machineID and the endpoints
+    // This will make the cache think the target and ourselves are not
+    // on the same machine
+    serviceInfo.setMachineId(fakeMachineId);
+    serviceInfo.setEndpoints(server_.endpoints());
+  }
+
+  qi::ServiceInfo serviceInfo;
+};
+
+TEST_F(TestTransportSocketCacheDifferentMachineIdLocalConnection, FailsByDefault)
+{
+  const auto tentativeSocketFuture = cache_.socket(serviceInfo, "");
+
+  std::string err;
+  ASSERT_TRUE(test::finishesWithError(tentativeSocketFuture, test::willAssignError(err)));
+  boost::algorithm::to_lower(err);
+
+  // It says something about reachable endpoint.
+  EXPECT_THAT(err, AllOf(HasSubstr("reachable"), HasSubstr("endpoint")));
+  // It's not a promise broken.
+  EXPECT_THAT(err, Not(AnyOf(HasSubstr("promise"), HasSubstr("broken"))));
+}
+
+TEST_F(TestTransportSocketCacheDifferentMachineIdLocalConnection, SuccessAfterInsertion)
+{
+  const auto endpoint = server_.endpoints()[0];
+  const auto socket = boost::make_shared<qi::TcpMessageSocket<>>();
   socket->connect(endpoint);
   cache_.insert(fakeMachineId, endpoint, socket);
 
-
-  // Forge a service info, change the machine ID
-  // TransportSocketCache only uses the machineID and the endpoints
-  qi::ServiceInfo serviceInfo;
-  // This will make the cache think the target and ourselves are not
-  // on the same machine
-  serviceInfo.setMachineId(fakeMachineId);
-  serviceInfo.setEndpoints(server_.endpoints());
-
-  qi::Future<qi::MessageSocketPtr> tentativeSocketFuture = cache_.socket(serviceInfo, "");
-
+  const auto tentativeSocketFuture = cache_.socket(serviceInfo, "");
   ASSERT_FALSE(tentativeSocketFuture.hasError());
   ASSERT_EQ(tentativeSocketFuture.value(), socket);
+
   socket->disconnect();
 }
 

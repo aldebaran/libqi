@@ -71,13 +71,20 @@ namespace qi
 
 
     boost::mutex _socketMutex;
-    struct ConnectionAttempt {
+    struct ConnectionAttempt
+    {
+      ConnectionAttempt() noexcept;
+      ~ConnectionAttempt();
+
+      ConnectionAttempt(const ConnectionAttempt&) = delete;
+      ConnectionAttempt& operator=(const ConnectionAttempt&) = delete;
+
       Promise<MessageSocketPtr> promise;
       MessageSocketPtr endpoint;
       UrlVector relatedUrls;
-      int attemptCount;
-      State state;
-      SignalLink disconnectionTracking;
+      int attemptCount = 0;
+      State state = State_Pending;
+      SignalLink disconnectionTracking = SignalBase::invalidSignalLink;
     };
     using ConnectionAttemptPtr = boost::shared_ptr<ConnectionAttempt>;
 
