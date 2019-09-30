@@ -14,7 +14,13 @@
 #include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
 
-qiLogCategory("qimessaging.transportsocketcache");
+static constexpr auto logCategory
+  = "qimessaging.transportsocketcache";
+
+static constexpr auto noReachableEndpointErrorMessage
+  = "No reachable endpoint was found for this service.";
+
+qiLogCategory(logCategory);
 
 namespace qi
 {
@@ -122,7 +128,7 @@ static UrlVector localhost_only(const UrlVector& input)
 Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo, const std::string& url)
 {
   const std::string& machineId = servInfo.machineId();
-  ConnectionAttemptPtr couple = boost::make_shared<ConnectionAttempt>();
+  auto couple = boost::make_shared<ConnectionAttempt>();
   couple->relatedUrls = servInfo.endpoints();
   bool local = machineId == os::getMachineId();
   UrlVector connectionCandidates;
@@ -136,8 +142,6 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
   if (connectionCandidates.size() == 0)
     connectionCandidates = servInfo.endpoints();
 
-  couple->endpoint = MessageSocketPtr();
-  couple->state = State_Pending;
   {
     // If we already have a pending connection to one of the urls, we return the future in question
     boost::mutex::scoped_lock lock(_socketMutex);
@@ -397,6 +401,26 @@ void TransportSocketCache::onSocketDisconnected(Url url, const ServiceInfo& info
   checkClear(attempt, info.machineId());
   auto syncDisconnectInfos = _disconnectInfos.synchronize();
   updateDisconnectInfos(*syncDisconnectInfos, attempt->endpoint);
+}
+
+
+TransportSocketCache::ConnectionAttempt::ConnectionAttempt() noexcept
+{
+}
+
+TransportSocketCache::ConnectionAttempt::~ConnectionAttempt()
+{
+  // A connection attempt that failed to terminate means no endpoint was reachable.
+  try
+  {
+    if (promise.future().isRunning())
+      promise.setError(noReachableEndpointErrorMessage);
+  }
+  catch (...)
+  {
+    qiLogDebug(std::string(logCategory) + ".connectionattempt")
+      << "Exception occurred but was ignored when trying to set promise in error in destructor";
+  }
 }
 
 }
