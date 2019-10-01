@@ -341,7 +341,7 @@ namespace qi {
     if (getStatus() == Status::Connected)
     {
       doDisconnect().async().wait();
-      QI_LOG_INFO_SOCKET(this) << "deleted";
+      QI_LOG_VERBOSE_SOCKET(this) << "deleted";
     }
   }
 
@@ -361,7 +361,7 @@ namespace qi {
       boost::recursive_mutex::scoped_lock lock(_stateMutex);
       if (getStatus() != Status::Connecting)
       {
-        QI_LOG_INFO_SOCKET(this) << "ensureReading: socket must be in connecting state.";
+        QI_LOG_VERBOSE_SOCKET(this) << "ensureReading: socket must be in connecting state.";
         return false;
       }
 

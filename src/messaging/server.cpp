@@ -403,6 +403,15 @@ namespace qi
     QI_ASSERT_NOT_NULL(socketPtr);
 
     auto authData = msg.value(typeOf<CapabilityMap>()->signature(), socketPtr).to<CapabilityMap>();
+
+    // Insert the IP of the remote endpoint.
+    auto maybeRemoteEndpoint = socketPtr->remoteEndpoint();
+    if(maybeRemoteEndpoint)
+    {
+      authData[AuthProvider::UserAuthPrefix + "remoteEndpoint"] =
+        AnyValue::from<Url>(*maybeRemoteEndpoint);
+    }
+
     auto authResult = socketInfo.authProvider()->processAuth(std::move(authData));
     const auto sendAuthResult = [&] {
       return sendAuthReply(std::move(authResult), socketInfo, std::move(reply));
@@ -474,7 +483,7 @@ namespace qi
                                                     MessageSocket& socket,
                                                     Message reply)
   {
-    qiLogInfo() << "Sending an authentication error '" << error << "' to socket " << &socket << ".";
+    qiLogVerbose() << "Sending an authentication error '" << error << "' to socket " << &socket << ".";
     reply.setType(Message::Type_Error);
     reply.setError(std::move(error));
     auto errorSent = socket.send(std::move(reply));

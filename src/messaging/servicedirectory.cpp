@@ -109,7 +109,7 @@ namespace qi
          it2 != ids.end();
          ++it2)
     {
-      qiLogInfo() << "Service #" << *it2 << " disconnected";
+      qiLogVerbose() << "Service #" << *it2 << " disconnected";
       try {
         unregisterService(*it2);
       } catch (std::runtime_error &) {
@@ -193,7 +193,7 @@ namespace qi
     }
     else
     {
-      qiLogInfo() << ss.str();
+      qiLogVerbose() << ss.str();
     }
 
     qi::UrlVector::const_iterator jt;
@@ -251,7 +251,7 @@ namespace qi
     }
     else
     {
-      qiLogInfo() << ss.str();
+      qiLogVerbose() << ss.str();
     }
 
     nameToIdx.erase(it);
@@ -380,7 +380,7 @@ namespace qi
       messInfo << " " << url.str();
       barrier.addFuture(_server->listen(url));
     }
-    qiLogInfo() << messInfo.str();
+    qiLogVerbose() << messInfo.str();
     auto f = barrier.future().andThen([&](const std::vector<Future<void>>& futures)
     {
       const auto error = [&]

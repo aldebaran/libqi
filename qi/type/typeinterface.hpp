@@ -104,6 +104,8 @@ namespace qi{
   class QI_API StringTypeInterface: public TypeInterface
   {
   public:
+    /// The generic representation of a string.
+    /// RawString is non null-terminated.
     using RawString = std::pair<char*, size_t>;
     using Deleter = boost::function<void(const RawString&)>;
     using ManagedRawString = std::pair<RawString, Deleter>;

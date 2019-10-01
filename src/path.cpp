@@ -19,7 +19,8 @@
 #include <boost/program_options.hpp>
 
 #ifdef _WIN32
-  #include <windows.h>
+#  include <windows.h>
+#  include "os_win32.hpp"
 #endif
 
 qiLogCategory("qi.path");
@@ -348,8 +349,10 @@ namespace qi
         length = GetShortPathNameW(path.wstring(qi::unicodeFacet()).c_str(), NULL, 0);
         if(length == 0)
         {
-          qiLogVerbose() << "Cannot retrieve short path for "
-                         << pathString.c_str();
+          const auto error = qi::os::lastErrorMessage();
+          qiLogVerbose() << "Cannot retrieve short path length for '"
+                         << pathString.c_str()
+                         << "', error: " << error;
           return std::string();
         }
 
@@ -358,8 +361,10 @@ namespace qi
         length = GetShortPathNameW(path.wstring(qi::unicodeFacet()).c_str(), buffer, length);
         if(length == 0)
         {
-          qiLogVerbose() << "Cannot retrieve short path for "
-                         << pathString.c_str();
+          const auto error = qi::os::lastErrorMessage();
+          qiLogVerbose() << "Cannot retrieve short path for '"
+                         << pathString.c_str()
+                         << "', error: " << error;
           return std::string();
         }
 

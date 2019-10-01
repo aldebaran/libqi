@@ -246,7 +246,7 @@ namespace qi {
         socket->socketEvent.disconnect(*old);
       const std::string error = "Invalid authentication state token.";
       setErrorAndRemoveRequest(sr->promise, error, requestId);
-      qiLogInfo() << error;
+      qiLogVerbose() << error;
       return;
     }
     if (authData[AuthProvider::State_Key].to<unsigned int>() == AuthProvider::State_Done)

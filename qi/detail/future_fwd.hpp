@@ -12,6 +12,7 @@
 # include <vector>
 
 # include <ka/functional.hpp>
+# include <ka/errorhandling.hpp>
 # include <qi/api.hpp>
 # include <qi/assert.hpp>
 # include <qi/atomic.hpp>
@@ -1050,6 +1051,34 @@ namespace qi {
    */
   template <typename T>
   qi::Future<T> makeFutureError(const std::string& error);
+
+  /// Polymorphic function that converts an exception to a future in error.
+  ///
+  /// The future error message is the exception message.
+  /// A transformation can be specified to change the error message before giving
+  /// it to the future. This transformation is the identity by default.
+  ///
+  /// Example: Calling an asynchronous function and returning an error in case
+  ///          of an exception.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// auto res = invoke_catch(
+  ///   futureErrorFromException<int>,
+  ///   []() -> Future<int> {
+  ///     throw std::runtime_error("error");
+  ///   }
+  /// );
+  /// assert(res.hasError());
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Transformation<std::string> F
+  template<typename T, typename F = ka::id_transfo_t>
+  auto futureErrorFromException(F errorMsgTransfo = {})
+    // TODO: Remove this when we can use C++14
+    -> decltype(ka::compose(ka::compose(makeFutureError<T>, errorMsgTransfo), ka::exception_message{}))
+  {
+    using ka::functional_ops::operator*; // Right-to-left function composition.
+    return makeFutureError<T> * errorMsgTransfo * ka::exception_message{};
+  }
 
   /// Helper function that does nothing on future cancelation
   ///

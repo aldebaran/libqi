@@ -464,7 +464,7 @@ namespace qi {
         if (maxThreads && workerCount >= maxThreads) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogInfo() << "Threadpool " << _name << " limit reached ("
+          qiLogVerbose() << "Threadpool " << _name << " limit reached ("
                       << nbTimeout << " timeouts / " << maxTimeouts << " max"
                       << ", number of tasks: " << _totalTask.load()
                       << ", number of active tasks: " << _activeTask.load()
@@ -493,7 +493,7 @@ namespace qi {
         else
         {
           const auto nextWorkerCount = workerCount + 1;
-          qiLogInfo() << _name << ": Spawning more threads (old -> new: "
+          qiLogVerbose() << _name << ": Spawning more threads (old -> new: "
                       << workerCount << " -> " << nextWorkerCount << ")";
 
           try

@@ -150,7 +150,7 @@ namespace qi {
     }
     switch (sigcount) {
       case 1:
-        qiLogInfo() << "Sending the stop command...";
+        qiLogVerbose() << "Sending the stop command...";
         //register the signal again to call exit the next time if stop did not succeed
         Application::atSignal(boost::bind<void>(&stop_handler, _1), signal_number);
         // Stop might immediately trigger application destruction, so it has
@@ -159,7 +159,7 @@ namespace qi {
         return;
       default:
         //even for SIGTERM this is an error, so return 1.
-        qiLogInfo() << "signal " << signal_number << " received a second time, calling exit(1).";
+        qiLogVerbose() << "signal " << signal_number << " received a second time, calling exit(1).";
         exit(1);
         return;
     }

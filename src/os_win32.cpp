@@ -4,6 +4,8 @@
  * found in the COPYING file.
  */
 
+#include "os_win32.hpp"
+
 #include <boost/filesystem.hpp>
 #include <locale>
 #include <cstdio>
@@ -261,25 +263,46 @@ namespace qi {
       return ret;
     }
 
-    // Function to get real string representation from
-    // GetLastError() and WSAGetLastError()
-    static std::string GetLastErrorMessage(DWORD lastError)
-    {
-      TCHAR errmsg[512];
 
-      if (!FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-                         0,
-                         lastError,
-                         0,
-                         errmsg,
-                         511,
-                         NULL))
+    std::string lastErrorMessage()
+    {
+      return translateSystemError(GetLastError());
+    }
+
+    std::string lastSocketErrorMessage()
+    {
+      return translateSystemError(WSAGetLastError());
+    }
+
+    std::string translateSystemError(DWORD errorCode)
+    {
+      LPVOID messageBufferPtr = nullptr;
+
+      if (!FormatMessage(
+          FORMAT_MESSAGE_ALLOCATE_BUFFER |
+          FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+          NULL,
+          errorCode,
+          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+          (LPTSTR)& messageBufferPtr,
+          0, NULL))
       {
         /* if we fail, call ourself to find out why and return that error */
-        return (GetLastErrorMessage(GetLastError()));
+        std::stringstream message;
+        message << "Failed to allocate message buffer for error '" << errorCode
+                << "' : " << lastErrorMessage();
+        return message.str();
       }
-
-      return errmsg;
+      auto scopedBuffer = ka::scoped(messageBufferPtr, [&](LPVOID buffer) {
+        if (LocalFree(buffer))
+        {
+          qiLogWarning() << "Failed to deallocate message buffer for error '" << errorCode
+                         << "', error: " << lastErrorMessage();
+        }
+      });
+      const std::string message = static_cast<const char*>(messageBufferPtr);
+      return message;
     }
 
     unsigned short findAvailablePort(unsigned short port)
@@ -342,9 +365,7 @@ namespace qi {
 
       if (unavailable)
       {
-        unavailable = WSAGetLastError();
-        std::string error = GetLastErrorMessage(unavailable);
-
+        const auto error = lastSocketErrorMessage();
         qiLogError() << "freePort Socket Bind Error: "
                      << error << std::endl;
         iPort = 0;
@@ -492,7 +513,8 @@ namespace qi {
 
       if (!ret)
       {
-        qiLogError() << GetLastErrorMessage(GetLastError());
+        const auto errorMessage = lastErrorMessage();
+        qiLogError() << errorMessage;
         return false;
       }
       return true;
@@ -546,7 +568,8 @@ namespace qi {
       PROCESS_MEMORY_COUNTERS counters;
       if (!GetProcessMemoryInfo(hProcess, &counters, sizeof(counters)))
       {
-        qiLogWarning() << "cannot get memory usage for PID " << pid << ": " << GetLastErrorMessage(GetLastError());
+        const auto errorMessage = lastErrorMessage();
+        qiLogWarning() << "cannot get memory usage for PID " << pid << ": " << errorMessage;
         CloseHandle(hProcess);
         return 0;
       }
