@@ -34,6 +34,11 @@ namespace qi {
 
   Future<bool> SignalBasePrivate::disconnect(const SignalLink& l)
   {
+    // The invalid signal link is never connected, therefore the disconnection
+    // is always successful.
+    if (!isValidSignalLink(l))
+      return Future<bool>{true};
+
     SignalSubscriber subscriber;
     Future<void> callingOnSubscribers{nullptr};
     SignalBase::OnSubscribers onSubscribersToCall;
@@ -78,10 +83,10 @@ namespace qi {
 
   Future<bool> SignalBasePrivate::disconnectAllStep(bool overallSuccess)
   {
-    SignalLink link;
     FutureBarrier<bool> barrier;
     while (true)
     {
+      auto link = SignalBase::invalidSignalLink;
       {
         boost::recursive_mutex::scoped_lock sl(mutex);
         SignalSubscriberMap::iterator it = subscriberMap.begin();
@@ -91,7 +96,8 @@ namespace qi {
       }
       // allow for multiple disconnects to occur at the same time, we must not
       // keep the lock
-      barrier.addFuture(disconnect(link));
+      if (isValidSignalLink(link))
+        barrier.addFuture(disconnect(link));
     }
     return barrier.future().andThen([](const std::vector<Future<bool>>& successes)
     {

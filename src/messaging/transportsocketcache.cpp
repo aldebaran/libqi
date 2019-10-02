@@ -86,7 +86,8 @@ void TransportSocketCache::close()
         if (endpoint)
         {
           endpoint->disconnect();
-          endpoint->disconnected.disconnect(connectionAttempt.disconnectionTracking);
+          endpoint->disconnected.disconnect(
+            exchangeInvalidSignalLink(connectionAttempt.disconnectionTracking));
         }
         else
         {

@@ -11,7 +11,7 @@ namespace detail
   {
     WaitTracking(qi::Signal<void>& signal) : trackedSignal(signal) {}
     qi::Signal<void>& trackedSignal;
-    SignalLink signalLink;
+    SignalLink signalLink = SignalBase::invalidSignalLink;
     Future<void> timingOut;
     Promise<bool> waitingPromise;
 
@@ -19,7 +19,9 @@ namespace detail
     {
       QI_ASSERT(!waitingPromise.future().isRunning()); // just a security
       timingOut.cancel();
-      return trackedSignal.disconnectAsync(signalLink).andThen([](bool){});
+
+      const auto link = exchangeInvalidSignalLink(signalLink);
+      return trackedSignal.disconnectAsync(link).andThen([](bool){});
     }
   };
 } // detail

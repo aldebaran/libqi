@@ -43,6 +43,7 @@ void testDelete(bool afirst, bool disconnectFirst, qi::Promise<void> end)
     b = new qi::AnyObject(obb.object());
   }
   qi::SignalLink linkId = (*a).connect(fireId, *b, onFireId).value();
+  ASSERT_TRUE(qi::isValidSignalLink(linkId));
   (*a).connect(fireId, *b, onFireId2);
   //std::vector<qi::SignalSubscriber> subs = (*a)->subscribers(fireId);
   //EXPECT_EQ(static_cast<unsigned int>(2), subs.size());

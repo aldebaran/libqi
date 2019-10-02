@@ -66,6 +66,11 @@ bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId,
                                                  unsigned int objectId,
                                                  SignalLink linkId) noexcept
 {
+  // The invalid signal link is never connected, therefore the disconnection
+  // is always successful.
+  if (!isValidSignalLink(linkId))
+    return true;
+
   auto state = _state.synchronize();
   const auto it = state->recipients.find(RecipientId{ serviceId, objectId });
   if (it == state->recipients.end())

@@ -8,6 +8,7 @@
 #include <qi/property.hpp>
 #include <qi/jsoncodec.hpp>
 #include <qi/strand.hpp>
+#include "signal_p.hpp"
 
 qiLogCategory("qitype.object");
 
@@ -197,7 +198,7 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
     return qi::makeFutureError<SignalLink>("Cant find signal");
   }
   SignalLink id = sb->connect(subscriber);
-  if (id == SignalBase::invalidSignalLink)
+  if (!isValidSignalLink(id))
     return qi::Future<SignalLink>(id);
   SignalLink link = ((SignalLink)event << 32) + id;
   QI_ASSERT(link >> 32 == event);
@@ -208,6 +209,11 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
 
 qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject context, SignalLink linkId)
 {
+  // The invalid signal link is never connected, therefore the disconnection
+  // is always successful.
+  if (!isValidSignalLink(linkId))
+    return futurize();
+
   qiLogDebug() << "Disconnect " << linkId;
   unsigned int event = linkId >> 32;
   unsigned int link = linkId & 0xFFFFFFFF;

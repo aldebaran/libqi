@@ -250,6 +250,7 @@ namespace
     callsync_ callsync(qi::Promise<int>(), value, 1);
     qi::Future<int> fut = callsync.prom_.future();
     qi::SignalLink callsyncOnEchoLink = service.connect("echoSignal", [&](int value){ callsync(value); }).value();
+    ASSERT_TRUE(qi::isValidSignalLink(callsyncOnEchoLink));
     service.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
@@ -265,6 +266,7 @@ namespace
     fut = witnessPromise.future();
     qi::SignalLink setValueOnEchoLink =
         service.connect("echoSignal", [&](int v){ witnessPromise.setValue(v); }).value();
+    ASSERT_TRUE(qi::isValidSignalLink(setValueOnEchoLink));
 
     service.post("echoSignal", value);
     fut.wait();
@@ -354,7 +356,9 @@ namespace
 
     qi::Promise<void> sync;
     qi::SignalLink shl = serviceHost->disconnected.connect(setPromiseIfCountEquals, sync, std::ref(count), 2);
+    ASSERT_TRUE(qi::isValidSignalLink(shl));
     qi::SignalLink cl = client->disconnected.connect(setPromiseIfCountEquals, sync, std::ref(count), 2);
+    ASSERT_TRUE(qi::isValidSignalLink(cl));
     serviceHost->registerService("my_service", makeBaseService());
     service = client->service("my_service").value();
     int value = randomValue();
@@ -398,6 +402,7 @@ namespace
     qi::AnyObject service = client->service("my_service").value();
     int value = randomValue();
     qi::SignalLink link = service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
+    ASSERT_TRUE(qi::isValidSignalLink(link));
     service.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
@@ -407,6 +412,7 @@ namespace
     ASSERT_FALSE(fut2.hasError());
 
     link = service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
+    ASSERT_TRUE(qi::isValidSignalLink(link));
     service.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
@@ -432,6 +438,7 @@ namespace
     // TestSignals
     value = randomValue();
     qi::SignalLink link = danglingObject.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
+    ASSERT_TRUE(qi::isValidSignalLink(link));
     danglingObject.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());
@@ -441,6 +448,7 @@ namespace
     ASSERT_FALSE(fut2.hasError());
     //qi::os::sleep(2);
     link = danglingObject.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
+    ASSERT_TRUE(qi::isValidSignalLink(link));
     danglingObject.post("echoSignal", value);
     fut.wait();
     ASSERT_FALSE(fut.hasError());

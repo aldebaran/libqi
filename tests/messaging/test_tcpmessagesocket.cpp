@@ -93,7 +93,7 @@ bool messageEqual(const qi::Message& m0, const qi::Message& m1)
 template<typename... Args>
 struct DisconnectSignal
 {
-  qi::SignalLink link = 0;
+  qi::SignalLink link = qi::SignalBase::invalidSignalLink;
   qi::Signal<Args...>* signal = nullptr;
 
   DisconnectSignal(qi::SignalLink link, qi::Signal<Args...>* signal)
@@ -103,7 +103,7 @@ struct DisconnectSignal
 
   void operator()()
   {
-    if (signal && link != 0)
+    if (signal && qi::isValidSignalLink(link))
       signal->disconnect(link);
   }
 };
@@ -144,10 +144,12 @@ SignalConnectionPtr connectSignals(const SocketPtr& socket)
 
   const qi::SignalLink linkConnected =
       socket->connected.connect([=]() { cptr->promises._connectedReceived.setValue(0); });
+  EXPECT_TRUE(qi::isValidSignalLink(linkConnected));
   DisconnectSignal<> disconnectConnected{ linkConnected, &socket->connected };
 
   const qi::SignalLink linkDisconnected = socket->disconnected.connect(
       [=](const std::string& msg) { cptr->promises._disconnectedReceived.setValue(msg); });
+  EXPECT_TRUE(qi::isValidSignalLink(linkDisconnected));
   DisconnectSignal<std::string> disconnectDisconnected{ linkDisconnected, &socket->disconnected };
 
   const auto lifetimeTransfo = ka::data_bound_transfo(socket);

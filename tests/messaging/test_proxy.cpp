@@ -62,6 +62,7 @@ public:
 void Foo::subscribe1()
 {
   _l1 = sig1.connect(boost::bind(&Foo::on1, this, _1, _2));
+  ASSERT_TRUE(qi::isValidSignalLink(_l1));
 }
 void Foo::unsubscribe1()
 {
@@ -70,6 +71,7 @@ void Foo::unsubscribe1()
 void Foo::subscribe2()
 {
   _l2 = sig2.connect(boost::bind(&Foo::on2, this));
+  ASSERT_TRUE(qi::isValidSignalLink(_l2));
 }
 void Foo::unsubscribe2()
 {
@@ -98,6 +100,7 @@ TEST(Proxy, Signal)
   // small hack, reuse foo function to test callback on proxy signal
   Foo foo2;
   qi::SignalLink l =  proxy1.connect(boost::bind(&Foo::on1, &foo2, _1, _2));
+  ASSERT_TRUE(qi::isValidSignalLink(l));
   proxy1(3, 4);
   PERSIST_ASSERT(, foo->count1() == 10, 500);
   PERSIST_ASSERT(, foo2.count1() == 7, 500);
@@ -122,6 +125,7 @@ public:
   void subscribe()
   {
     _link = prop.connect(boost::bind(&Bar::onProp, this, _1));
+    ASSERT_TRUE(qi::isValidSignalLink(_link));
   }
   void unsubscribe()
   {
@@ -166,6 +170,7 @@ TEST(Proxy, Property)
 
   Bar bar2;
   qi::SignalLink l = pp.connect(boost::bind(&Bar::onProp, &bar2, _1));
+  ASSERT_TRUE(qi::isValidSignalLink(l));
   bar->set(4);
   // this one is async (remote notify of local property set)
   PERSIST_ASSERT(, bar2.sum() == 4, 500);

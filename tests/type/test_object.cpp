@@ -931,6 +931,7 @@ TEST(TestObject, traceGeneric)
   qi::SignalLink id = obj.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1)).value();
+  ASSERT_TRUE(qi::isValidSignalLink(id));
   obj.call<void>("sleep", qi::MilliSeconds{ 100 });
   for (unsigned i=0; i<20; ++i) {
     {
@@ -991,6 +992,7 @@ TEST(TestObject, traceType)
   qi::SignalLink id = oa1.connect("traceObject",
     (boost::function<void(qi::EventTrace)>)
     boost::bind(&pushTrace, boost::ref(traces), boost::ref(mutex), _1)).value();
+  ASSERT_TRUE(qi::isValidSignalLink(id));
 
   EXPECT_EQ(3, oa1.call<int>("add", 2));
   for (unsigned i=0; i<20; ++i) {

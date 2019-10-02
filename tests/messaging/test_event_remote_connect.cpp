@@ -314,9 +314,13 @@ TEST_F(ObjectEventRemoteConnect, multipleConnect)
   std::chrono::milliseconds additional_timeout{ 5 };//time to wait after having received the correct number of callbacks
   i = 0;
   qi::SignalLink link1 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  ASSERT_TRUE(qi::isValidSignalLink(link1));
   qi::SignalLink link2 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  ASSERT_TRUE(qi::isValidSignalLink(link2));
   qi::SignalLink link3 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  ASSERT_TRUE(qi::isValidSignalLink(link3));
   qi::SignalLink link4 = oclient2.connect(se2, oserver1, callbackId).value(2000);
+  ASSERT_TRUE(qi::isValidSignalLink(link4));
 
   ASSERT_NE(link1, link2);
   ASSERT_NE(link2, link3);
