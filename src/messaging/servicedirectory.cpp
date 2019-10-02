@@ -80,7 +80,7 @@ namespace qi
   ServiceDirectory::~ServiceDirectory()
   {
     if (!connectedServices.empty())
-      qiLogWarning() << "Destroying while connected services remain";
+      qiLogVerbose() << "Destroying while connected services remain";
   }
 
   void ServiceDirectory::removeClientSocket(MessageSocketPtr socket)
