@@ -16,6 +16,7 @@
 #include <qi/signal.hpp>
 #include <qi/type/dynamicobject.hpp>
 #include <qi/strand.hpp>
+#include "signal_p.hpp"
 
 qiLogCategory("qitype.dynamicobject");
 
@@ -357,7 +358,7 @@ namespace qi
     if (!s)
       return qi::makeFutureError<SignalLink>("Cannot find signal");
     SignalLink l = s->connect(subscriber);
-    if (l == SignalBase::invalidSignalLink)
+    if (!isValidSignalLink(l))
       return qi::Future<SignalLink>(l);
     SignalLink link = ((SignalLink)event << 32) + l;
     QI_ASSERT(link >> 32 == event);
@@ -368,6 +369,11 @@ namespace qi
 
   qi::Future<void> DynamicObject::metaDisconnect(SignalLink linkId)
   {
+    // The invalid signal link is never connected, therefore the disconnection
+    // is always successful.
+    if (!isValidSignalLink(linkId))
+      return futurize();
+
     unsigned int event = linkId >> 32;
     unsigned int link = linkId & 0xFFFFFFFF;
     //TODO: weird to call createSignal in disconnect

@@ -69,6 +69,7 @@ public:
       qiLogInfo() << "Client has disconnected unexpectedly: " << what;
       FAIL();
     }).setCallType(MetaCallType_Direct);
+    ASSERT_TRUE(isValidSignalLink(_clientDisconnectionLink));
 
     // Wait for messages to be tracked before executing tests
     auto status = _messagesTrackedPromise.get_future().wait_for(usualTimeout);
@@ -97,7 +98,7 @@ private:
   std::promise<void> _messagesTrackedPromise;
   std::promise<qi::Message> _nextClientToServerMessagePromise;
   std::mutex _mutex;
-  qi::SignalLink _clientDisconnectionLink;
+  qi::SignalLink _clientDisconnectionLink = qi::SignalBase::invalidSignalLink;
 };
 
 TEST_F(RemoteObject, CallingAVoidMethodSendsACallMessage)

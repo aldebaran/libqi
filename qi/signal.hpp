@@ -35,7 +35,6 @@ namespace qi {
 
   using SignalLink = qi::uint64_t;
 
-
   /// SignalBase provides a signal subscription mechanism called "connection".
   /// Derived classes can customize the subscription step by setting
   /// an "onSubscribers" callback. @see onSubscriber.
@@ -100,6 +99,8 @@ namespace qi {
      * This method blocks until all the already running callbacks are
      * finished.
      * @return Returns true on success.
+     * @throws `std::runtime_error` if the `onSubscribers` callback is set and it
+     *         returned a future in error.
      */
     bool disconnect(const SignalLink& link);
 
@@ -108,7 +109,9 @@ namespace qi {
      * Same as disconnect, but this method does not block.
      * Though this is async, you are guaranteed that once the function returns
      * the future, your callback will not be called anymore.
-     * @return A future set to true on success.
+     * @return A future set to true on success, or set in error if the
+     *         `OnSubscribers` callback is set and it returned a future in
+     *         error.
      */
     Future<bool> disconnectAsync(const SignalLink& link);
 
@@ -164,6 +167,18 @@ namespace qi {
     boost::shared_ptr<SignalBasePrivate> _p;
     friend class SignalBasePrivate;
   };
+
+  inline bool isValidSignalLink(SignalLink l)
+  {
+    return l != SignalBase::invalidSignalLink;
+  }
+
+  /// Sets the link to an invalid value.
+  /// @returns The previous value of the signal link.
+  inline SignalLink exchangeInvalidSignalLink(SignalLink& l)
+  {
+    return ka::exchange(l, SignalBase::invalidSignalLink);
+  }
 
   template <typename... P> class Signal;
 

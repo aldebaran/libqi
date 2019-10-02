@@ -65,6 +65,7 @@ TEST_F(ObjectEvent, Simple)
   qi::AnyObject obj(ob.object());
   EXPECT_LE(1U, obj.metaObject().signalMap().size());
   qi::SignalLink linkId = obj.connect("fire", deprecatedBind<void(int)>(&ObjectEvent::onFire, this, _1)).value();
+  ASSERT_TRUE(qi::isValidSignalLink(linkId));
   obj.post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);
@@ -90,6 +91,7 @@ TEST_F(ObjectEvent, ConnectBind)
   ob.advertiseSignal<int, int>("fire2");
   qi::AnyObject obj(ob.object());
   qi::SignalLink link = obj.connect("fire", deprecatedBind<void(int)>(&ObjectEvent::onFire, this, _1)).value();
+  ASSERT_TRUE(qi::isValidSignalLink(link));
   obj.post("fire", 42);
   EXPECT_TRUE(pPayload.future().wait() != qi::FutureState_Running);
   EXPECT_EQ(42, lastPayload);

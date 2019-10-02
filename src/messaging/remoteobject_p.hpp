@@ -24,13 +24,10 @@ namespace qi {
 
   class ServerClient;
 
-  struct RemoteSignalLinks {
-    RemoteSignalLinks()
-      : remoteSignalLink(qi::SignalBase::invalidSignalLink)
-    {}
-
+  struct RemoteSignalLinks
+  {
     std::vector<qi::SignalLink> localSignalLink;
-    qi::SignalLink              remoteSignalLink;
+    qi::SignalLink remoteSignalLink = SignalBase::invalidSignalLink;
     qi::Future<qi::SignalLink>  future;
   };
 
@@ -100,8 +97,8 @@ namespace qi {
     unsigned int                                    _service;
     unsigned int                                    _object;
     boost::synchronized_value<std::map<int, qi::Promise<AnyReference>>> _promises;
-    qi::SignalLink                                  _linkMessageDispatcher;
-    qi::SignalLink                                  _linkDisconnected;
+    qi::SignalLink _linkMessageDispatcher = SignalBase::invalidSignalLink;
+    qi::SignalLink _linkDisconnected = SignalBase::invalidSignalLink;
     qi::AnyObject                                   _self;
     boost::recursive_mutex                          _localToRemoteSignalLinkMutex;
     LocalToRemoteSignalLinkMap                      _localToRemoteSignalLink;

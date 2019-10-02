@@ -42,7 +42,7 @@ namespace qi
         if (!sock)
           return;
 
-        if (_disconnected != SignalBase::invalidSignalLink)
+        if (isValidSignalLink(_disconnected))
         {
           const auto logExceptMsgWarning =
             ka::compose([](const std::string& msg) {

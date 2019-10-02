@@ -7,6 +7,7 @@
 
 #include <qi/anyobject.hpp>
 #include <qi/type/objecttypebuilder.hpp>
+#include <src/type/signal_p.hpp>
 #include "boundobject.hpp"
 
 const auto logCategory = "qimessaging.boundobject";
@@ -186,7 +187,13 @@ namespace qi
   }
 
   // Bound Method
-  qi::Future<void> BoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
+  qi::Future<void> BoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId)
+  {
+    // The invalid signal link is never connected, therefore the disconnection
+    // is always successful.
+    if (!isValidSignalLink(remoteSignalLinkId))
+      return futurize();
+
     ServiceSignalLinks&          sl = _links[_currentSocket];
     ServiceSignalLinks::iterator it = sl.find(remoteSignalLinkId);
 

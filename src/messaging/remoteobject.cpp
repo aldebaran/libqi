@@ -11,6 +11,7 @@ KA_WARNING_DISABLE(4355, )
 #include "remoteobject_p.hpp"
 #include "message.hpp"
 #include "messagesocket.hpp"
+#include <src/type/signal_p.hpp>
 #include <qi/log.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/eventloop.hpp>
@@ -48,7 +49,6 @@ namespace qi {
     , _socket()
     , _service(service)
     , _object(1)
-    , _linkMessageDispatcher(0)
     , _self(makeDynamicAnyObject(this, false, uid))
   {
     setUid(_self.uid()); // Make sure this object's uid and _self's uid are the same.
@@ -70,7 +70,6 @@ namespace qi {
     , _socket()
     , _service(service)
     , _object(object)
-    , _linkMessageDispatcher(0)
     , _self(makeDynamicAnyObject(this, false))
   {
     QI_LOG_DEBUG_REMOTEOBJECT() << "Constructing a RemoteObject for socket " << socket;
@@ -462,7 +461,7 @@ namespace qi {
     RemoteSignalLinks& rsl = _localToRemoteSignalLink[event];
     rsl.localSignalLink.push_back(uid);
 
-    if (rsl.remoteSignalLink == qi::SignalBase::invalidSignalLink)
+    if (!isValidSignalLink(rsl.remoteSignalLink))
     {
       /* Try to handle struct versionning.
       * Hypothesis: Everything in this address space uses the same struct
@@ -512,6 +511,11 @@ namespace qi {
 
   qi::Future<void> RemoteObject::metaDisconnect(SignalLink linkId)
   {
+    // The invalid signal link is never connected, therefore the disconnection
+    // is always successful.
+    if (!isValidSignalLink(linkId))
+      return futurize();
+
     unsigned int event = linkId >> 32;
     //disconnect locally
     Future<void> fut = DynamicObject::metaDisconnect(linkId);
@@ -533,7 +537,7 @@ namespace qi {
         return f;
       }
 
-      qi::SignalLink toDisco = qi::SignalBase::invalidSignalLink;
+      auto toDisco = SignalBase::invalidSignalLink;
       {
         RemoteSignalLinks &rsl = it->second;
         std::vector<SignalLink>::iterator vslit;
@@ -547,12 +551,13 @@ namespace qi {
 
         //only drop the remote connection when no more local connection are registered
         if (rsl.localSignalLink.size() == 0) {
-          toDisco = rsl.remoteSignalLink;
+          toDisco = exchangeInvalidSignalLink(rsl.remoteSignalLink);
           _localToRemoteSignalLink.erase(it);
         }
       }
 
-      if (toDisco != qi::SignalBase::invalidSignalLink) {
+      if (isValidSignalLink(toDisco))
+      {
         MessageSocketPtr sock = *_socket;
         if (sock && sock->isConnected())
           return _self.async<void>("unregisterEvent", _service, event, toDisco);
@@ -573,9 +578,11 @@ namespace qi {
     if (socket)
     { // Do not hold any lock when invoking signals.
       QI_LOG_DEBUG_REMOTEOBJECT() << "Removing connection from socket " << socket;
-      socket->messagePendingDisconnect(_service, _object, _linkMessageDispatcher);
+      socket->messagePendingDisconnect(_service, _object,
+        exchangeInvalidSignalLink(_linkMessageDispatcher));
       if (!fromSignal)
-        socket->disconnected.disconnectAsync(_linkDisconnected);
+        socket->disconnected.disconnectAsync(
+          exchangeInvalidSignalLink(_linkDisconnected));
     }
     std::map<int, qi::Promise<AnyReference> > promises;
     {
