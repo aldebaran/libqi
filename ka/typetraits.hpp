@@ -484,6 +484,9 @@ namespace ka {
   /// See `EnableIfInputIterator` for a usage example.
   template<typename T>
   using EnableIfNotInputIterator = EnableIf<!HasInputIteratorTag<T>::value>;
+
+  KA_GENERATE_TRAITS_HAS(HasMappedType, T,
+    std::declval<typename T::mapped_type>())
 } // namespace ka
 
 #endif // KA_TYPETRAITS_HPP

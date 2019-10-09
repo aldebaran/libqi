@@ -7,10 +7,20 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#include <vector>
+#include <list>
+#include <deque>
+#include <forward_list>
+#include <set>
+#include <unordered_set>
+#include <map>
+#include <unordered_map>
 #include "empty.hpp"
 #include "functional.hpp"
 #include "macro.hpp"
 #include "macroregular.hpp"
+#include "typetraits.hpp"
+#include "utility.hpp"
 
 namespace ka {
   namespace test {
@@ -25,6 +35,103 @@ namespace ka {
     KA_DERIVE_REGULAR_TEST_TYPE(H);
     KA_DERIVE_REGULAR_TEST_TYPE(I);
     KA_DERIVE_REGULAR_TEST_TYPE(J);
+
+    // Polymorphic function that creates an array from the given values.
+    // The value type is deduced from the first argument.
+    struct array_fn_t {
+      using example_type = std::array<int, 1>;
+    // Regular:
+      KA_GENERATE_FRIEND_REGULAR_OPS_0(array_fn_t)
+    // Function<std::array<A, 1 + sizeof(B...)> (A, B...)>:
+      template<typename A, typename... B>
+      std::array<Decay<A>, 1 + sizeof...(B)> operator()(A&& a, B&&... b) const {
+        return {{fwd<A>(a), fwd<B>(b)...}};
+      }
+    };
+    constexpr array_fn_t array_fn;
+
+  // Polymorphic function that creates a value-container (by opposition to a
+  // key/value-container) from the given values.
+  // The value type is deduced from the first argument.
+#define KA_TEST_DEFINE_CONTAINER_CTOR_FUN(NAME, TYPE)        \
+    struct NAME##_t {                                        \
+      using example_type = TYPE<int>;                        \
+    /* Regular: */                                           \
+      KA_GENERATE_FRIEND_REGULAR_OPS_0(NAME##_t)             \
+    /* Function<NAME##_t<A> (A, B...)>: */                   \
+      template<typename A, typename... B>                    \
+      TYPE<Decay<A>> operator()(A&& a, B&&... b) const {     \
+        return {fwd<A>(a), fwd<B>(b)...};                    \
+      }                                                      \
+    };                                                       \
+    constexpr NAME##_t NAME;
+
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(vector_fn, std::vector)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(list_fn, std::list)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(deque_fn, std::deque)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(forward_list_fn, std::forward_list)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(set_fn, std::set)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(multiset_fn, std::multiset)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(unordered_set_fn, std::unordered_set)
+    KA_TEST_DEFINE_CONTAINER_CTOR_FUN(unordered_multiset_fn, std::unordered_multiset)
+#undef KA_TEST_DEFINE_CONTAINER_CTOR_FUN
+
+  // Polymorphic function that creates a key/value-container (by opposition to a
+  // value-container) from the given values.
+  // The value type is deduced from the first argument.
+#define KA_TEST_DEFINE_ASSOCIATIVE_CONTAINER_CTOR_FUN(NAME, TYPE)       \
+    struct NAME##_t {                                                   \
+      using example_type = TYPE<int, int>;                              \
+    /* Regular: */                                                      \
+      KA_GENERATE_FRIEND_REGULAR_OPS_0(NAME##_t)                        \
+    /* Function<NAME##_t<A, B> (std::pair<A, B>, P...)>: */             \
+      template<typename A, typename B, typename... P>                   \
+      TYPE<A, B> operator()(std::pair<A, B> const& a, P&&... p) const { \
+        return {a, fwd<P>(p)...};                                       \
+      }                                                                 \
+    };                                                                  \
+    constexpr NAME##_t NAME;
+
+    KA_TEST_DEFINE_ASSOCIATIVE_CONTAINER_CTOR_FUN(map_fn, std::map)
+    KA_TEST_DEFINE_ASSOCIATIVE_CONTAINER_CTOR_FUN(multimap_fn, std::multimap)
+    KA_TEST_DEFINE_ASSOCIATIVE_CONTAINER_CTOR_FUN(unordered_map_fn, std::unordered_map)
+    KA_TEST_DEFINE_ASSOCIATIVE_CONTAINER_CTOR_FUN(unordered_multimap_fn, std::unordered_multimap)
+#undef KA_TEST_DEFINE_ASSOCIATIVE_CONTAINER_CTOR_FUN
+
+    // Creates a key/value pair from the given values.
+    template<typename T, typename U>
+    auto kv(T&& t, U&& u) -> std::pair<Decay<T>, Decay<U>> {
+      return {fwd<T>(t), fwd<U>(u)};
+    }
+
+    namespace detail {
+      // Function<AssociativeContainer<int, T> (std::pair<K, V>, P...)> F
+      template<typename T, typename F>
+      auto fill_with_dispatch(true_t /* HasMappedType */, F f)
+        -> decltype(f(kv(0, T{0}), kv(1, T{1}), kv(2, T{2}), kv(3, T{3}),
+                      kv(4, T{4}), kv(5, T{5}))) {
+        return f(kv(0, T{0}), kv(1, T{1}), kv(2, T{2}), kv(3, T{3}),
+                 kv(4, T{4}), kv(5, T{5}));
+      }
+
+      // Function<Container<T> (T, U...)> F
+      template<typename T, typename F>
+      auto fill_with_dispatch(false_t /* HasMappedType */, F f)
+          -> decltype(f(T{0}, T{1}, T{2}, T{3}, T{4}, T{5})) {
+        return f(T{0}, T{1}, T{2}, T{3}, T{4}, T{5});
+      }
+    } // namespace detail
+
+    // Fills a container with test values.
+    // F is a container constructor function such as `vector_fn_t{}`, `map_fn_t{}`, etc.
+    //
+    // Function<Container (T, U...)> F
+    template<typename T, typename F>
+    auto fill_with(F f)
+        -> decltype(detail::fill_with_dispatch<T>(HasMappedType<typename F::example_type>{}, f)) {
+      using C = typename F::example_type;
+      return detail::fill_with_dispatch<T>(HasMappedType<C>{}, f);
+    }
   } // namespace test
 
   /// Useful to test support for move-only types.
@@ -275,5 +382,23 @@ namespace ka {
     }
   };
 } // namespace ka
+
+namespace std {
+#define KA_TEST_DEFINE_HASH(TYPE)                     \
+  template<>                                          \
+  struct hash<TYPE> {                                 \
+    size_t operator()(TYPE const& x) const {          \
+      return std::hash<decltype(x.value)>()(x.value); \
+    }                                                 \
+  };
+  KA_TEST_DEFINE_HASH(ka::test::A)
+  KA_TEST_DEFINE_HASH(ka::test::B)
+  KA_TEST_DEFINE_HASH(ka::test::C)
+  KA_TEST_DEFINE_HASH(ka::test::D)
+  KA_TEST_DEFINE_HASH(ka::test::E)
+  KA_TEST_DEFINE_HASH(ka::test::F)
+  KA_TEST_DEFINE_HASH(ka::test::G)
+#undef KA_TEST_DEFINE_HASH
+} // namespace std
 
 #endif // KA_TESTUTILS_HPP
