@@ -157,3 +157,39 @@ TEST(InstrumentedRegular, LocalCounters) {
   T x5{std::move(x4)};
   ASSERT_EQ(2, counters[regular_op_move]);
 }
+
+TEST(ContainerCtorFunction, Basic) {
+  using namespace ka::test;
+
+  EXPECT_EQ((std::array<A, 1>{A{1}}), array_fn(A{1}));
+  EXPECT_EQ((std::vector<A>{A{1}}), vector_fn(A{1}));
+  EXPECT_EQ((std::vector<A>{A{1}, A{2}}), vector_fn(A{1}, A{2}));
+
+  EXPECT_EQ((std::list<B>{B{3}, B{4}}), list_fn(B{3}, B{4}));
+
+  EXPECT_EQ((std::deque<C>{C{3}, C{4}, C{5}}), deque_fn(C{3}, C{4}, C{5}));
+
+  EXPECT_EQ((std::forward_list<D>{D{4}, D{5}, D{6}}),
+                     forward_list_fn(D{4}, D{5}, D{6}));
+
+  EXPECT_EQ((std::set<E>{E{4}, E{5}}), set_fn(E{4}, E{5}));
+  EXPECT_EQ((std::multiset<F>{F{4}}), multiset_fn(F{4}));
+
+  EXPECT_EQ((std::unordered_set<G>{G{6}, G{7}}),
+                  unordered_set_fn(G{6}, G{7}));
+
+  EXPECT_EQ((std::unordered_multiset<A>{A{6}, A{7}}),
+                  unordered_multiset_fn(A{6}, A{7}));
+
+  EXPECT_EQ((std::map<A, B>{kv(A{2}, B{4}), kv(A{3}, B{5})}),
+                     map_fn(kv(A{2}, B{4}), kv(A{3}, B{5})));
+
+  EXPECT_EQ((std::multimap<C, D>{kv(C{4}, D{5}), kv(C{6}, D{7})}),
+                     multimap_fn(kv(C{4}, D{5}), kv(C{6}, D{7})));
+
+  EXPECT_EQ((std::unordered_map<E, F>{kv(E{4}, F{5}), kv(E{6}, F{7})}),
+                     unordered_map_fn(kv(E{4}, F{5}), kv(E{6}, F{7})));
+
+  EXPECT_EQ((std::unordered_multimap<G, A>{kv(G{4}, A{5}), kv(G{6}, A{7})}),
+                     unordered_multimap_fn(kv(G{4}, A{5}), kv(G{6}, A{7})));
+}
