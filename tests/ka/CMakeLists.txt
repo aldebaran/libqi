@@ -16,6 +16,7 @@ qi_create_gmock(
     "test_moveoncopy.cpp"
     "test_mutablestore.cpp"
     "test_opt.cpp"
+    "test_productiter.cpp"
     "test_range.cpp"
     "test_relationpredicate.cpp"
     "test_scoped.cpp"

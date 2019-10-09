@@ -24,6 +24,12 @@ namespace ka {
   using true_t  = std::true_type;
   using false_t = std::false_type;
 
+  template<int I>
+  using int_constant_t = std::integral_constant<int, I>;
+
+  template<bool B>
+  using bool_constant_t = std::integral_constant<bool, B>;
+
   template<typename A, typename B>
   using Equal = typename std::is_same<A, B>::type;
 
@@ -487,6 +493,9 @@ namespace ka {
 
   KA_GENERATE_TRAITS_HAS(HasMappedType, T,
     std::declval<typename T::mapped_type>())
+
+  KA_GENERATE_TRAITS_HAS(HasMemberSize, T,
+    std::declval<typename T::size_type>() = declcref<T>().size())
 } // namespace ka
 
 #endif // KA_TYPETRAITS_HPP

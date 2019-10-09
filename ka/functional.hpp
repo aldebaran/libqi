@@ -980,6 +980,25 @@ namespace ka {
       return !static_cast<bool>(x);
     }
   } // namespace detail
+
+  /// Contructs a tuple from the given values.
+  /// This is to uniformize with other kinds of product (iterators, etc.).
+  template<typename... A>
+  auto product(A&&... a) -> decltype(std::make_tuple(fwd<A>(a)...)) {
+    return std::make_tuple(fwd<A>(a)...);
+  }
+
+  /// Operators related to the category of types and functions.
+  namespace fn_cat_ops {
+    /// Returns the product of two values.
+    template<typename T, typename U,
+      typename = EnableIfNotInputIterator<Decay<T>>,
+      typename = EnableIfNotInputIterator<Decay<U>>
+    >
+    auto operator*(T&& t, U&& u) -> decltype(product(fwd<T>(t), fwd<U>(u))) {
+      return product(fwd<T>(t), fwd<U>(u));
+    }
+  } // namespace fn_cat_ops
 } // namespace ka
 
 // For ka::scope_lock_proc_t
