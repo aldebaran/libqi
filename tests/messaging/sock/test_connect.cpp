@@ -435,12 +435,12 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
     S::async_handshake,
     [&](S::handshake_type, N::_anyHandler h) {
       // We launch asynchronously to return immediately.
-      t = std::move(std::thread([=]{
+      t = std::thread([=]{
         // Wait for the object destruction.
         nukeObject.future().wait();
         // Now call the handler.
         h(operationAborted<ErrorCode<N>>());
-      }));
+      });
     }
   );
   ConnectFuture* p = nullptr;

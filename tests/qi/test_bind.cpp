@@ -1,5 +1,12 @@
 #include <gtest/gtest.h>
 #include <boost/thread.hpp>
+
+#include <ka/macro.hpp>
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads.
+#include <qi/trackable.hpp>
+KA_WARNING_POP()
+
 #include <qi/future.hpp>
 #include <qi/actor.hpp>
 #include "test_future.hpp"
@@ -31,9 +38,12 @@ void wrap(boost::function<void()> op, qi::MilliSeconds delay, std::atomic<int>& 
 TEST(TestBind, Simple)
 {
   int v = 0;
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads
   qi::bind<void(int)>(&exchange, std::ref(v), _1)(15);
   EXPECT_EQ(15, v);
   qi::bind<void(void)>(&exchange, std::ref(v), 16)();
+KA_WARNING_POP()
   EXPECT_EQ(16, v);
   qi::bind(&exchange, std::ref(v), _1)(15);
   EXPECT_EQ(15, v);
@@ -45,13 +55,13 @@ TEST(TestBind, MemFun)
 {
   std::atomic<int> v{0};
   SetValue s1(v);
-  qi::bind<void(int)>(&SetValue::exchange, &s1, _1)(1);
+  qi::bind(&SetValue::exchange, &s1, _1)(1);
   EXPECT_EQ(1, v);
-  qi::bind<void(void)>(&SetValue::exchange, &s1, 2)();
+  qi::bind(&SetValue::exchange, &s1, 2)();
   EXPECT_EQ(2, v);
-  qi::bind<void(int)>(&SetValue::exchange, boost::ref(s1), _1)(3);
+  qi::bind(&SetValue::exchange, boost::ref(s1), _1)(3);
   EXPECT_EQ(3, v);
-  qi::bind<void(void)>(&SetValue::exchange, boost::ref(s1), 4)();
+  qi::bind(&SetValue::exchange, boost::ref(s1), 4)();
   EXPECT_EQ(4, v);
 }
 
@@ -59,12 +69,12 @@ TEST(TestBind, SharedPtr)
 {
   std::atomic<int> v{0};
   boost::shared_ptr<SetValue> s(new SetValue(v));
-  qi::bind<void(int)>(&SetValue::exchange, s, _1)(1);
+  qi::bind(&SetValue::exchange, s, _1)(1);
   EXPECT_EQ(1, v);
-  qi::bind<void(void)>(&SetValue::exchange, s, 2)();
+  qi::bind(&SetValue::exchange, s, 2)();
   EXPECT_EQ(2, v);
 
-  boost::function<void(void)> f =  qi::bind<void(void)>(&SetValue::exchange, s, 3);
+  boost::function<void(void)> f =  qi::bind(&SetValue::exchange, s, 3);
   s.reset();
   f();
   EXPECT_EQ(3, v);
@@ -75,12 +85,12 @@ TEST(TestBind, WeakPtr)
   std::atomic<int> v{0};
   boost::shared_ptr<SetValue> s(new SetValue(v));
   boost::weak_ptr<SetValue> w(s);
-  qi::bind<void(int)>(&SetValue::exchange, w, _1)(1);
+  qi::bind(&SetValue::exchange, w, _1)(1);
   EXPECT_EQ(1, v);
-  qi::bind<void(void)>(&SetValue::exchange, w, 2)();
+  qi::bind(&SetValue::exchange, w, 2)();
   EXPECT_EQ(2, v);
 
-  boost::function<void(void)> f =  qi::bind<void(void)>(&SetValue::exchange, w, 3);
+  boost::function<void(void)> f =  qi::bind(&SetValue::exchange, w, 3);
   s.reset();
   EXPECT_ANY_THROW(f());
   EXPECT_EQ(2, v);
@@ -90,6 +100,8 @@ TEST(TestBind, Trackable)
 {
   std::atomic<int> v{0};
   {
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads
     SetValue2 s1(v);
     qi::bind<void(int)>(&SetValue2::exchange, &s1, _1)(1);
     EXPECT_EQ(1, v);
@@ -99,6 +111,7 @@ TEST(TestBind, Trackable)
     EXPECT_EQ(3, v);
     qi::bind<void(void)>(&SetValue2::exchange, boost::ref(s1), 4)();
     EXPECT_EQ(4, v);
+KA_WARNING_POP()
   }
   v = 0;
   {
@@ -116,7 +129,7 @@ TEST(TestBind, Trackable)
   boost::function<void(void)> f;
   {
     SetValue2 s1(v);
-    f = qi::bind<void(void)>(&SetValue2::exchange, &s1, 5);
+    f = qi::bind(&SetValue2::exchange, &s1, 5);
   }
   EXPECT_ANY_THROW(f()); // s1 is trackable, bound and deleted: callback not executed
   EXPECT_EQ(4, v);
@@ -125,10 +138,13 @@ TEST(TestBind, Trackable)
   std::atomic<int> notify{0};
   {
     SetValue2 s1(v);
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads
     boost::thread(wrap,
       qi::bind<void(void)>(&SetValue2::delayExchange, &s1, qi::MilliSeconds{100}, 10),
       qi::MilliSeconds{ 0 },
       std::ref(notify));
+KA_WARNING_POP()
     // wait enough for operation to start
     while (!notify)
       std::this_thread::sleep_for(std::chrono::milliseconds{10});
@@ -141,7 +157,7 @@ TEST(TestBind, Trackable)
     notify = 0;
     SetValue2 s1(v);
     boost::thread(wrap,
-      qi::bind<void(void)>(&SetValue2::delayExchange, &s1, qi::MilliSeconds{100}, 11),
+      qi::bind(&SetValue2::delayExchange, &s1, qi::MilliSeconds{100}, 11),
       qi::MilliSeconds{ 50 },
       std::ref(notify));
   }

@@ -32,10 +32,16 @@
 #include <boost/thread/mutex.hpp>
 #include <qi/atomic.hpp>
 #include <qi/anyvalue.hpp>
+#include <ka/macro.hpp>
 #include <ka/typetraits.hpp>
 
 namespace qi
 {
+
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4068, pragmas)
+KA_WARNING_DISABLE(, noexcept-type)
+
   namespace detail
   {
     /* General idea: code generated to make a function call taking a
@@ -716,6 +722,8 @@ namespace qi
     res.prependArgument((void*)(const void*)ptr);
     return res;
   }
+
+KA_WARNING_POP()
 
 }
 #endif  // _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_

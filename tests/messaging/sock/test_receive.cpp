@@ -16,6 +16,7 @@
 #include <src/messaging/sock/receive.hpp>
 #include <src/messaging/sock/accept.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <ka/macro.hpp>
 
 static const qi::MilliSeconds defaultTimeout{500};
 static const std::chrono::milliseconds defaultPostPauseInMs{20};
@@ -135,11 +136,15 @@ namespace mock
     // wait the ReceiveMessageContinuous object is destroyed.
     if (*ssl)
     {
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4068, pragmas)
+KA_WARNING_DISABLE(, undefined-var-template)
       N::SocketFunctions<S>::_async_read_socket
           = [&](S&, N::_mutable_buffer_sequence, N::_anyTransferHandler h) {
         // We launch asynchronously to return immediately.
         t = callInAnotherThreadAfterFutureIsSet(h, nukingObject);
       };
+KA_WARNING_POP()
     }
     else
     {

@@ -10,18 +10,17 @@
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/variant.hpp>
+#include <ka/macro.hpp>
 #include <ka/mutablestore.hpp>
 #include <qi/signal.hpp>
 #include <qi/future.hpp>
 #include <qi/strand.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-   // needs to have dll-interface to be used by clients
-#  pragma warning( disable: 4251 )
-   // non dll-interface class * used as base for dll-interface class
-#  pragma warning( disable: 4275 )
-#endif
+KA_WARNING_PUSH()
+// needs to have dll-interface to be used by clients
+KA_WARNING_DISABLE(4251, )
+// non dll-interface class * used as base for dll-interface class
+KA_WARNING_DISABLE(4275, )
 
 namespace qi
 {
@@ -369,8 +368,6 @@ namespace qi
 
 #include <qi/type/detail/property.hxx>
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_PROPERTY_HPP_

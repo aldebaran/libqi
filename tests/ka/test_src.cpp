@@ -2,6 +2,10 @@
 #include <atomic>
 #include <memory>
 #include <vector>
+#include <ka/macro.hpp>
+
+KA_WARNING_DISABLE(, unused-function)
+
 #include <boost/optional.hpp>
 #include <boost/thread/synchronized_value.hpp>
 #include <gtest/gtest.h>

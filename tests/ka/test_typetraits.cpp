@@ -19,7 +19,12 @@
 #include <ka/mutablestore.hpp>
 #include <ka/utility.hpp>
 #include <ka/macroregular.hpp>
+#include <ka/macro.hpp>
 #include "../ka/test_functional_common.hpp"
+
+KA_WARNING_DISABLE(, pragmas)
+KA_WARNING_DISABLE(, unused-function)
+KA_WARNING_DISABLE(, unneeded-internal-declaration)
 
 struct a_t {};
 
@@ -794,6 +799,10 @@ TEST(TypeTraits, ConstantVoid) {
   StaticAssertTypeEq<void, ConstantVoid<std::string, double, float>>();
 }
 
+// gcc 4 and below fails to apply SFINAE correctly in the code below, so we
+// just disable the tests on this compiler.
+#if !BOOST_COMP_GNUC || BOOST_COMP_GNUC > BOOST_VERSION_NUMBER(5, 0, 0)
+
 namespace {
   using namespace ka;
   template<typename T, typename = void>
@@ -851,6 +860,8 @@ TEST(TypeTraits, ConstantVoidInSfinaeNotAssignable) {
   try_set(n, 5);
   EXPECT_EQ("abc", n.value);
 }
+
+#endif
 
 TEST(Rebind, Basic) {
   using namespace ka;

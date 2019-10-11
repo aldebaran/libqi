@@ -13,17 +13,15 @@
 #include <qi/api.hpp>
 #include <qi/signature.hpp>
 #include <qi/type/fwd.hpp>
+#include <ka/macro.hpp>
 
 /* A lot of class are found in this headers... to kill circular dependencies.
    Futhermore we need that all "default template" types are registered (included)
    when type.hpp is used. (for typeOf to works reliably)
 */
 
-
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi {
 
@@ -215,9 +213,6 @@ namespace qi {
   QI_API TypeInterface* getRegisteredStruct(const qi::Signature& s);
 }
 
-
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_DETAIL_TYPEINTERFACE_HPP_

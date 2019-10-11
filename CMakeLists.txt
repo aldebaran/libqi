@@ -76,8 +76,6 @@ set(QI_H qi/detail/async.hxx
          qi/detail/mpl.hpp
          qi/detail/print.hpp
          qi/detail/trackable.hxx
-         qi/detail/warn_push_ignore_deprecated.hpp
-         qi/detail/warn_pop_ignore_deprecated.hpp
          qi/api.hpp
          qi/application.hpp
          qi/actor.hpp

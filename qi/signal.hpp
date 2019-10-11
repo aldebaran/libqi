@@ -15,13 +15,13 @@
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 
+#include <ka/macro.hpp>
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 // Macro to be more expressive when emitting a signal. Does nothing, it's normal.
 #define QI_EMIT
@@ -365,9 +365,7 @@ QI_WARNING_POP()
   };
 } // qi
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #include <qi/type/detail/signal.hxx>
 

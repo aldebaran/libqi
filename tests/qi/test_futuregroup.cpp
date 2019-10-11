@@ -16,10 +16,9 @@
 #include <thread>
 #include <chrono>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4355 )
-#endif
+#include <ka/macro.hpp>
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4355, )
 
 qiLogCategory("test_futuregroup");
 
@@ -133,6 +132,4 @@ TEST(TestScopedFutureGroup, cancelWhileProcessing)
   qi::waitForAll(futures);
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()

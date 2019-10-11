@@ -430,7 +430,7 @@ QI_WARNING_POP()
     QI_ASSERT(_p);
     // Check arity. Does not require to acquire weakLock.
     // We assume the number of children to int will never be bigger than INT_MAX.
-    QI_ASSERT_TRUE(signature().children().size() <= std::numeric_limits<int>::max());
+    QI_ASSERT_TRUE(signature().children().size() <= static_cast<std::size_t>(std::numeric_limits<int>::max()));
     const auto signalArity = qi::numericConvert<int>(signature().children().size());
     auto subscriberArity = -1;
     Signature subscriberSignature = src.signature();

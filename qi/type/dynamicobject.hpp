@@ -11,11 +11,10 @@
 #include <qi/property.hpp>
 #include <qi/objectuid.hpp>
 #include <boost/optional.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi
 {
@@ -111,8 +110,6 @@ QI_WARNING_POP()
   QI_API ObjectTypeInterface* getDynamicTypeInterface();
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_DYNAMICOBJECT_HPP_

@@ -10,6 +10,7 @@
 #include <deque>
 #include <atomic>
 #include <memory>
+#include <ka/macro.hpp>
 #include <ka/functional.hpp>
 #include <ka/mutablestore.hpp>
 #include <qi/assert.hpp>
@@ -22,10 +23,8 @@
 #include <boost/noncopyable.hpp>
 #include <boost/type_traits/function_traits.hpp>
 
-# ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
-# endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 
 namespace qi
 {
@@ -402,9 +401,7 @@ namespace detail
 } // detail
 } // qi
 
-# ifdef _MSC_VER
-#  pragma warning( pop )
-# endif
+KA_WARNING_POP()
 
 # include <qi/async.hpp>
 

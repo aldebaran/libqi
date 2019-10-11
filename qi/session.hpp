@@ -14,14 +14,13 @@
 #include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>
+#include <ka/macro.hpp>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi {
 
@@ -246,8 +245,6 @@ QI_GEN(genCall)
 
 QI_TYPE_ENUM(qi::Session::ServiceLocality);
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QIMESSAGING_SESSION_HPP_

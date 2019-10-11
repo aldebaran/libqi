@@ -4,6 +4,8 @@
 #include <ka/typetraits.hpp>
 #include <ka/utility.hpp>
 
+KA_WARNING_DISABLE(, unused-function)
+
 namespace {
 
 // non-template, 0 member

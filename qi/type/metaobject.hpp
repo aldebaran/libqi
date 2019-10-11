@@ -10,11 +10,10 @@
 #include <qi/type/metamethod.hpp>
 #include <qi/type/metasignal.hpp>
 #include <qi/type/metaproperty.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi {
 
@@ -190,9 +189,6 @@ namespace qi {
 
 }
 
-
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_METAOBJECT_HPP_

@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <boost/config.hpp>
 #include <ka/macroregular.hpp>
+#include <ka/macro.hpp>
 
 namespace test_functional {
   template<std::size_t N>
@@ -31,9 +32,14 @@ namespace test_functional {
 } // namespace test_functional
 
 namespace std {
+
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(, pragmas)
+KA_WARNING_DISABLE(, mismatched-tags)
   template<typename A, typename B, typename C>
   struct tuple_size<test_functional::x_t<A, B, C>> : integral_constant<size_t, 3> {
   };
+KA_WARNING_POP()
 
   template<size_t I, typename A, typename B, typename C>
   BOOST_CONSTEXPR auto get(test_functional::x_t<A, B, C>& x)

@@ -115,7 +115,7 @@ TEST(InstrumentedRegular, LocalCounters) {
   using namespace ka;
   using T = instrumented_regular_t<int, on_regular_op_local_t>;
 
-  regular_counters_t counters{};
+  regular_counters_t counters {{}};
   for (auto x: counters) {
     ASSERT_EQ(0, x);
   }

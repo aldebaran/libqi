@@ -12,8 +12,13 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/actor.hpp>
+#include <ka/macro.hpp>
 
 namespace qi {
+
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4068, pragmas)
+KA_WARNING_DISABLE(, noexcept-type)
 
   namespace detail {
     template <typename T>
@@ -279,6 +284,8 @@ namespace qi {
     detail::advertiseBounce(this, name, element, typename detail::Accessor<T>::is_accessor());
     return *this;
   }
+
+KA_WARNING_POP()
 
 }
 

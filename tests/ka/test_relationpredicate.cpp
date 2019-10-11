@@ -4,6 +4,9 @@
 #include <cmath>
 #include <cstdint>
 #include <ka/range.hpp>
+#include <ka/macro.hpp>
+
+KA_WARNING_DISABLE(, unused-function)
 
 /// @file
 /// This file tests predicates on relations (is_transitive, is_total_ordering, etc.).

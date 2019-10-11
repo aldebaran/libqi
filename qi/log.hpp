@@ -29,6 +29,7 @@
 # include <stdexcept>
 # include <boost/exception/exception.hpp>
 # include <boost/exception/diagnostic_information.hpp>
+# include <ka/macro.hpp>
 # include <ka/errorhandling.hpp>
 # include <ka/macroregular.hpp>
 # include <ka/typetraits.hpp>
@@ -580,15 +581,17 @@ namespace qi {
      */
     QI_API void flush();
 
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore LogLevel deprecation warnings
 
-    #include <qi/detail/warn_push_ignore_deprecated.hpp>
     /// \deprecated since 1.22. Use qi::log::setLogLevel(const qi::LogLevel, SubscriberId)
     QI_API_DEPRECATED_MSG(Use 'setLogLevel' instead)
     inline void setVerbosity(SubscriberId sub, const qi::log::LogLevel lv) { setLogLevel(static_cast<qi::LogLevel>(lv), sub); }
     /// \deprecated since 1.22. Use qi::log::addFilter(const std::string&, qi::LogLevel, SubscriberId)
     QI_API_DEPRECATED_MSG(Use 'addFilter' instead)
     inline void setCategory(SubscriberId sub, const std::string& cat, qi::log::LogLevel level) { addFilter(cat, static_cast<qi::LogLevel>(level), sub); }
-    #include <qi/detail/warn_pop_ignore_deprecated.hpp>
+
+KA_WARNING_POP()
 
     /**
      * \copydoc qi::log::level
