@@ -254,7 +254,8 @@ struct predicate_or_t {
 private:
   template<typename Preds, typename... T, std::size_t... Idx> constexpr
   static auto impl(Preds& preds, index_sequence<Idx...>, bool res, T&&... t) -> bool {
-    return std::initializer_list<bool>{ (res = res || std::get<Idx>(preds)(t...), res)... }, res;
+    return (void) std::initializer_list<bool>{ (res = res || std::get<Idx>(preds)(t...), res)... }
+           , res;
   }
 };
 
@@ -777,11 +778,11 @@ auto hier_part(ApplyIndexed<boost::variant,
     }
     // path-absolute / path-rootless
     auto operator()(std::string const& s) const -> Value {
-      return Value{ {}, lexically_normal_path(s) };
+      return Value{ ka::opt_t<uri_authority_t>(), lexically_normal_path(s) };
     }
     // path-empty
     auto operator()(ka::unit_t) const -> Value {
-      return Value{ {}, {} };
+      return Value{ ka::opt_t<uri_authority_t>(), {} };
     }
   };
   return boost::apply_visitor(visitor_t{}, v);

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <qi/eventloop.hpp>
 #include <src/eventloop_p.hpp>
+#include <ka/macro.hpp>
 #include "test_future.hpp"
 
 int ping(int v)
@@ -29,7 +30,10 @@ TEST(EventLoop, EventLoopCanPostWithDuration)
   qi::EventLoop loop{ gEventLoopName, 1 };
   {
     std::unique_lock<std::mutex> l{m};
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads.
     loop.post(cb, qi::MilliSeconds{1});
+KA_WARNING_POP()
     ASSERT_EQ(std::cv_status::no_timeout, cv.wait_for(l, std::chrono::milliseconds{100}));
   }
 }

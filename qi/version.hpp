@@ -8,11 +8,11 @@
 #ifndef _QI_VERSION_HPP_
 # define _QI_VERSION_HPP_
 
+# include <ka/macro.hpp>
+
 // scoped_ptr needs to have dll-interface to be used
-# ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-# endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 # include <qi/api.hpp>
 # include <vector>
@@ -120,8 +120,6 @@ namespace qi {
   }
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QI_VERSION_HPP_

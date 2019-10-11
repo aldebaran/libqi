@@ -15,6 +15,7 @@
 #include <ka/algorithm.hpp>
 #include <ka/conceptpredicate.hpp>
 #include <ka/functional.hpp>
+#include <ka/macro.hpp>
 #include <ka/memory.hpp>
 #include <ka/mutablestore.hpp>
 #include <ka/mutex.hpp>
@@ -22,6 +23,8 @@
 #include <ka/testutils.hpp>
 #include <ka/typetraits.hpp>
 #include <ka/utility.hpp>
+
+KA_WARNING_DISABLE(, unused-function)
 
 TEST(FunctionalPolymorphicConstantFunction, RegularNonVoid) {
   using namespace ka;

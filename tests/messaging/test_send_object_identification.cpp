@@ -12,9 +12,6 @@
 
 qiLogCategory("test");
 
-static const int timeoutMs = 300;
-static const qi::Duration timeout = qi::MilliSeconds(timeoutMs);
-
 namespace {
 
   struct NewObject

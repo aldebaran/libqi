@@ -18,11 +18,10 @@
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/signal.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 ) // dll interface
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, ) // dll interface
 
 namespace qi {
 
@@ -192,9 +191,7 @@ namespace qi {
   };
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 QI_TYPE_ENUM(qi::EventTrace::EventKind);
 #endif  // _QITYPE_MANAGEABLE_HPP_

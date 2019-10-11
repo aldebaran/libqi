@@ -291,7 +291,6 @@ TYPED_TEST(TestExceptionLog, Basic)
   const auto exceptionMsg = "this is not a string";
 
   // Expect a log only if not 'silent'.
-  using ::testing::_;
   using ::testing::Exactly;
   using ::testing::StrEq;
   auto LogApproxEq = [](std::string prefix, std::string msg) {

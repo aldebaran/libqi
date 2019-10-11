@@ -6,9 +6,9 @@
 
 #include <sys/syscall.h>
 #include <sys/wait.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
 #include <unistd.h>
 #include <cassert>
 #include <qi/os.hpp>
@@ -32,7 +32,7 @@ namespace qi
 
     int system(const char *command)
     {
-      return system(command);
+      return std::system(command);
     }
 
     int getpid()

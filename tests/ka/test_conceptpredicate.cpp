@@ -74,8 +74,9 @@ namespace test_conceptpredicate {
     int x = 0;
     bad_assignment_t(int x) : x(x) {}
   // Regular:
-    // Copy and destruction by default.
+    // Destruction by default.
     bad_assignment_t() = default;
+    bad_assignment_t(self const&) = default;
     void operator=(self const& a) {
       x = a.x + 1;
     }
@@ -91,12 +92,13 @@ namespace test_conceptpredicate {
     using self = bad_copy_t;
     int x = {};
   // Regular:
-    // Default constructor, copy and destruction by default.
+    // Default constructor, destruction by default.
     bad_copy_t() = default;
     bad_copy_t(int x) : x{x} {
     }
     bad_copy_t(self const& a) : x{a.x + 1} {
     }
+    bad_copy_t& operator=(self const& a) = default;
     friend bool operator==(self a, self b) {
       return a.x == b.x;
     }

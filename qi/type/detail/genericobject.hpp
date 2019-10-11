@@ -20,11 +20,10 @@
 #include <qi/signal.hpp>
 #include <qi/type/typeobject.hpp>
 #include <qi/objectuid.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi
 {
@@ -318,8 +317,6 @@ public:
 
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif

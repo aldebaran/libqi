@@ -6,7 +6,12 @@
 #define QI_TEST_OBJECT_HPP___
 #pragma once
 
+#include <ka/macro.hpp>
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4068, pragmas)
+KA_WARNING_DISABLE(, parentheses)
 #include <qi/anyfunction.hpp>
+KA_WARNING_POP()
 
 namespace {
 

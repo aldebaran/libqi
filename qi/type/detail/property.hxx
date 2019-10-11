@@ -135,7 +135,7 @@ namespace qi
   template<typename T>
   FutureSync<AnyValue> ReadOnlyProperty<T>::value() const
   {
-    return _source.get().async().then(FutureCallbackType_Sync, [](const T& v) {
+    return _source.get().async().andThen(FutureCallbackType_Sync, [](const T& v) {
       return AnyValue::from(v);
     });
   }

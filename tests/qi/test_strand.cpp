@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include <ka/errorhandling.hpp>
+#include <ka/macro.hpp>
 #include <qi/application.hpp>
 #include <qi/future.hpp>
 #include <qi/os.hpp>
@@ -219,7 +220,7 @@ TEST(TestStrand, StrandDestruction)
     futures.reserve(STRAND_NB_TRIES);
     for (unsigned int j = 0; j < STRAND_NB_TRIES; ++j)
     {
-      futures.push_back(strand.async([&, j]{
+      futures.push_back(strand.async([&]{
         increment(mutex, std::chrono::milliseconds{1}, i);
       }));
     }
@@ -438,8 +439,11 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncCallTypeErased)
     static_assert(std::is_same<decltype(prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished)).unwrap()), qi::Future<int>>::value, "andThen future type incorrect");
     static_assert(std::is_same<decltype(prom.future().then(qi::bind(&MyActor::f, obj.get(), TOTAL, finished)).unwrap()), qi::Future<int>>::value, "then future type incorrect");
 
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads.
     for (int i = 0; i < 25; ++i)
       prom.future().connect(&MyActor::f, obj.get(), TOTAL, finished);
+KA_WARNING_POP()
     for (int i = 0; i < 10; ++i)
       prom.future().andThen(qi::bind(&MyActor::f, obj.get(), TOTAL, finished));
     for (int i = 0; i < 5; ++i)
@@ -596,11 +600,11 @@ TEST(TestStrand, build_unwrappedSchedulerFor)
   (void) f2;
 
   // rvalue not convertible to function pointer
-  auto f3 = strand.unwrappedSchedulerFor([this](int) {});
+  auto f3 = strand.unwrappedSchedulerFor([](int) {});
   (void)f3;
 
   // lvalue not convertible to function pointer
-  auto bigfunc = [this](int) {};
+  auto bigfunc = [](int) {};
   auto f4 = strand.unwrappedSchedulerFor(bigfunc);
   (void)f4;
 }

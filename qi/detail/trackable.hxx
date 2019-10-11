@@ -83,7 +83,7 @@ namespace qi
     template <typename T>
     T defaultConstruct()
     {
-      return T{}; // Default constructor might be explicit, so we are forced to call it explicitly.
+      return T(); // Default constructor might be explicit, so we are forced to call it explicitly.
     }
 
     template <>
@@ -265,7 +265,7 @@ namespace qi
 
       static boost::shared_ptr<T> transform(boost::shared_ptr<T> arg)
       {
-        return std::move(arg);
+        return arg;
       }
 
       template <typename F>

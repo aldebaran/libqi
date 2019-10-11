@@ -201,12 +201,12 @@ TEST(Scoped, NoCopyNoAssignment) {
 }
 
 TEST(Scoped, NoCopyNoAssignmentVoid) {
-  auto print = []{std::cout << "end\n";};
-  using F = decltype(print);
-
 // is_copy_constructible and is_copy_assignable are broken on VS2013:
 // https://connect.microsoft.com/VisualStudio/feedback/details/819202
 #if QI_TRAITS_COPY_OK
+  auto print = []{std::cout << "end\n";};
+  using F = decltype(print);
+
   using namespace ka;
   static_assert(!std::is_copy_constructible<scoped_t<void, F>>::value, "");
   static_assert(!std::is_copy_assignable<scoped_t<void, F>>::value, "");

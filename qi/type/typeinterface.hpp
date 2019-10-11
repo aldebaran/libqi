@@ -20,15 +20,14 @@
 #include <qi/type/fwd.hpp>
 #include <qi/signature.hpp>
 #include <qi/type/detail/typeinterface.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-   // C4503 decorated name length exceeded, name was truncated
-   // The only workaround is to make structs to hide the template complexity
-   // We don't want to have to do that
-#  pragma warning( disable: 4503 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
+// C4503 decorated name length exceeded, name was truncated.
+// The only workaround is to make structs to hide the template complexity.
+// We don't want to have to do that.
+KA_WARNING_DISABLE(4503, )
 
 /* A lot of class are found in this headers... to kill circular dependencies.
    Futhermore we need that all "default template" types are registered (included)
@@ -444,10 +443,6 @@ namespace detail
 QI_NO_TYPE(qi::TypeInterface)
 QI_NO_TYPE(qi::TypeInterface*)
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-// restore the disabling of this warning
-#  pragma warning( disable: 4503 )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_TYPEINTERFACE_HPP_

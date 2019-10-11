@@ -232,7 +232,7 @@ namespace ka {
 
   /// Sets all regular operations counters to 0.
   inline void reset(regular_counters_t& c) KA_NOEXCEPT(true) {
-    c = regular_counters_t{};
+    c.fill(0);
   }
 
   /// Regular type that calls a callback for each performed regular operation
@@ -347,7 +347,7 @@ namespace ka {
   }
 
   inline regular_counters_t& regular_op_global_counters() KA_NOEXCEPT(true) {
-    static regular_counters_t c{};
+    static regular_counters_t c {{}};
     return c;
   }
 

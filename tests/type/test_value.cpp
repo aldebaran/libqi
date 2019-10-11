@@ -185,7 +185,7 @@ QI_TYPE_STRUCT_REGISTER(InstrumentedReg, value);
 TEST(ValueCounts, CopyCopiesUnderlyingValue)
 {
   using std::get;
-  ka::regular_counters_t counters{};
+  ka::regular_counters_t counters {{}};
   InstrumentedReg original;
   init_with_counters(&original, 5, &counters);
 
@@ -207,7 +207,7 @@ TEST(ValueCounts, CopyCopiesUnderlyingValue)
 TEST(ValueCounts, AssignCopiesUnderlyingValue)
 {
   using std::get;
-  ka::regular_counters_t counters{};
+  ka::regular_counters_t counters {{}};
   InstrumentedReg original;
   init_with_counters(&original, 6, &counters);
 
@@ -232,7 +232,7 @@ TEST(ValueCounts, AssignCopiesUnderlyingValue)
 TEST(ValueCounts, MoveDoesNotAffectUnderlyingValue)
 {
   using std::get;
-  ka::regular_counters_t counters{};
+  ka::regular_counters_t counters {{}};
   InstrumentedReg original;
   init_with_counters(&original, 7, &counters);
 
@@ -268,7 +268,7 @@ TEST(ValueCounts, MoveDoesNotAffectUnderlyingValue)
 TEST(ValueCounts, MoveAssignDoesNotAffectUnderlyingValue)
 {
   using std::get;
-  ka::regular_counters_t counters{};
+  ka::regular_counters_t counters {{}};
   InstrumentedReg original;
   init_with_counters(&original, 8, &counters);
 
@@ -1407,6 +1407,10 @@ TYPED_TEST_CASE(TypedAutoAnyReference, NonAnyReferenceTypes);
 
 TYPED_TEST(TypedAutoAnyReference, AutoAnyReferenceFromValueSharesItsType)
 {
-  AutoAnyReference autoRef{ TypeParam{} };
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4068, pragmas)
+KA_WARNING_DISABLE(, missing-field-initializers)
+  AutoAnyReference autoRef(TypeParam{});
+KA_WARNING_POP()
   EXPECT_EQ(typeOf<TypeParam>()->kind(), autoRef.kind());
 }

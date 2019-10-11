@@ -529,7 +529,7 @@ TEST_F(SyncLog, threadSafeness)
     std::atomic<int> count{0};
     for (int i = 0; i < 10; ++i)
     {
-      futures.emplace_back(std::async(std::launch::async, [&count, i] {
+      futures.emplace_back(std::async(std::launch::async, [&count] {
         for (int i = 0; i < 1000; ++i)
         {
           std::ostringstream s;

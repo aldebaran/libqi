@@ -7,9 +7,9 @@
 #ifndef _QI_EVENTLOOP_HPP_
 # define _QI_EVENTLOOP_HPP_
 
-# ifdef _MSC_VER
-#  pragma warning( disable: 4503 ) // decorated name length
-# endif
+#include <ka/macro.hpp>
+
+KA_WARNING_DISABLE(4503, ) // decorated name length
 
 # include <boost/thread/synchronized_value.hpp>
 # include <boost/function.hpp>
@@ -19,11 +19,9 @@
 # include <qi/clock.hpp>
 # include <qi/detail/executioncontext.hpp>
 
-# ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#  pragma warning( disable: 4996 ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
-# endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
+KA_WARNING_DISABLE(4996, ) // TODO: Reactivate this warning once msvc stop triggerring a warning on overloading a deprecated function
 
 namespace qi
 {
@@ -244,9 +242,7 @@ namespace qi
   }
 }
 
-# ifdef _MSC_VER
-#  pragma warning( pop )
-# endif
+KA_WARNING_POP()
 
 # include <qi/detail/eventloop.hxx>
 # include <qi/async.hpp>

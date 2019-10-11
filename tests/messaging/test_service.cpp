@@ -465,7 +465,7 @@ TEST(QiService, ExceptionFromPropertySetterSetsErrorOnFuture)
 {
   using CustomException = std::exception;
   const int initialValue = 12;
-  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [](int&, const int&)->bool
   {
     throw CustomException{};
   }};

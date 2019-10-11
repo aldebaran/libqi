@@ -966,8 +966,7 @@ namespace qi {
         "[VERB ]",
         "[DEBUG]"
       };
-      if (level < 0 || level > qi::LogLevel_Debug)
-        return "Invalid log level";
+      QI_ASSERT(level >= 0 && level <= qi::LogLevel_Debug);
       if (verbose)
         return verb[level];
       return sverb[level];

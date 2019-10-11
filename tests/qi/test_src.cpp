@@ -1,6 +1,13 @@
 #include <memory>
+
 #include <gtest/gtest.h>
+
+#include <ka/macro.hpp>
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads.
 #include <ka/src.hpp>
+KA_WARNING_POP()
+
 #include <qi/atomic.hpp>
 #include <qi/future.hpp>
 #include <src/messaging/sock/option.hpp>

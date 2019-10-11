@@ -80,18 +80,18 @@ namespace qi {
     //TransportSocket.disconnected
     void onSocketDisconnected(std::string error);
 
-    virtual void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& args);
-    virtual qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType, Signature returnSignature);
+    void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& args) override;
+    qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType, Signature returnSignature) override;
     void onFutureCancelled(unsigned int originalMessageId);
 
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
 
-    virtual qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub);
-    virtual qi::Future<void> metaDisconnect(SignalLink linkId);
+    qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub) override;
+    qi::Future<void> metaDisconnect(SignalLink linkId) override;
 
-    virtual qi::Future<AnyValue> metaProperty(qi::AnyObject context, unsigned int id);
-    virtual qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val);
+    qi::Future<AnyValue> metaProperty(qi::AnyObject context, unsigned int id) override;
+    qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val) override;
 
   protected:
     using LocalToRemoteSignalLinkMap = std::map<qi::uint64_t, RemoteSignalLinks>;

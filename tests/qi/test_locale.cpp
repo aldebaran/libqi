@@ -11,12 +11,11 @@
 
 #include <qi/application.hpp>
 #include <qi/path.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-# pragma warning( push )
+KA_WARNING_PUSH()
 // truncation of constant value when building char* objects
-# pragma warning( disable : 4309 )
-#endif
+KA_WARNING_DISABLE(4309, )
 
 #ifndef __APPLE__
 TEST(qiPathTests, pathUTF8)
@@ -130,6 +129,4 @@ int main(int argc, char* argv[])
 }
 #endif
 
-#ifdef _MSC_VER
-# pragma warning( pop )
-#endif
+KA_WARNING_POP()
