@@ -87,7 +87,10 @@ namespace qi
   template<typename T>
   inline AnyObject makeDynamicSharedAnyObject(DynamicObject *obj, boost::shared_ptr<T> other)
   {
+QI_WARNING_PUSH()
+QI_WARNING_DISABLE(4996, deprecated-declarations)
     return makeDynamicSharedAnyObjectImpl(obj, boost::shared_ptr<Empty>(other, 0));
+QI_WARNING_POP()
   }
 
 
