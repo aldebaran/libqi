@@ -42,7 +42,7 @@ TEST(MetaMethod, isDefaultConstructible)
 {
   ASSERT_TRUE(std::is_default_constructible<qi::MetaMethod>{}.value);
   qi::MetaMethod mm;
-  QI_UNUSED(mm);
+  QI_IGNORE_UNUSED(mm);
 }
 
 TEST(MetaMethod, constructVoidMethod)
