@@ -244,7 +244,10 @@ namespace qi {
 
 /**
  * \def QI_WARN_UNUSED_RESULT
- * \brief This macro tags a result as unused.
+ * \brief Warns if the return value of the function is discarded.
+ *
+ * If a function declared QI_WARN_UNUSED_RESULT is called from a discarded-value expression other
+ * than a cast to void, the compiler is encouraged to issue a warning.
  */
 #if defined(__GNUC__)
 # define QI_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
