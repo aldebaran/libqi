@@ -1,0 +1,4 @@
+[gerrit]
+host=gerrit.aldebaran.lan
+project=qi/libqi
+defaultbranch=team/platform/dev
