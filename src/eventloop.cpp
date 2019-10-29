@@ -438,6 +438,7 @@ namespace qi {
     const auto graceDuration = MilliSeconds{ qi::os::getEnvDefault(gGracePeriodEnvVar, 0u) };
     const auto maxTimeouts = qi::os::getEnvDefault(gMaxTimeoutsEnvVar, 20u);
     const auto maxIdle = maxIdleDuration();
+    const auto prefix = "Threadpool " + _name + ": ";
 
     unsigned int nbTimeout = 0;
     while (_work.load())
@@ -464,7 +465,7 @@ namespace qi {
         if (maxThreads && workerCount >= maxThreads) // we count in nThreads
         {
           ++nbTimeout;
-          qiLogVerbose() << "Threadpool " << _name << " limit reached ("
+          qiLogInfo() << prefix << "Size limit reached ("
                       << nbTimeout << " timeouts / " << maxTimeouts << " max"
                       << ", number of tasks: " << _totalTask.load()
                       << ", number of active tasks: " << _activeTask.load()
@@ -473,8 +474,8 @@ namespace qi {
 
           if (nbTimeout >= maxTimeouts)
           {
-            qiLogError() << "Threadpool " << _name <<
-              ": System seems to be deadlocked, sending emergency signal";
+            qiLogError() << prefix <<
+              "System seems to be deadlocked, sending emergency signal";
             {
               auto syncedEmergencyCallback = _emergencyCallback.synchronize();
               if (*syncedEmergencyCallback)
@@ -482,9 +483,9 @@ namespace qi {
                 try {
                   (*syncedEmergencyCallback)();
                 } catch (const std::exception& ex) {
-                  qiLogWarning() << "Emergency callback failed: " << ex.what();
+                  qiLogWarning() << prefix << "Emergency callback failed: " << ex.what();
                 } catch (...) {
-                  qiLogWarning() << "Emergency callback failed: unknown exception";
+                  qiLogWarning() << prefix << "Emergency callback failed: unknown exception";
                 }
               }
             }
@@ -493,8 +494,27 @@ namespace qi {
         else
         {
           const auto nextWorkerCount = workerCount + 1;
-          qiLogVerbose() << _name << ": Spawning more threads (old -> new: "
-                      << workerCount << " -> " << nextWorkerCount << ")";
+          const auto minThreads = _minThreads.load();
+          std::ostringstream details;
+          details << "min: " << minThreads << ", max: ";
+          if (maxThreads) details << maxThreads;
+          else            details << "no limit";
+          if (minThreads != 0)
+          {
+            const auto sizeRatioMin = 100*nextWorkerCount/minThreads;
+            details << ", size/min: " << sizeRatioMin << "%";
+          }
+          if (maxThreads != 0)
+          {
+            const auto sizeRatioMax = detail::posInBetween(0, nextWorkerCount, maxThreads);
+            details << ", size/max: " << sizeRatioMax << "%";
+            const auto growingCapacity = maxThreads - minThreads; // [min,max]
+            const auto growth = nextWorkerCount - minThreads;
+            const auto growingRate = detail::posInBetween(minThreads, nextWorkerCount, maxThreads);
+            details << ", growth ratio: " << growingRate << "%"
+                    << " (" << growth << "/" << growingCapacity << ")";
+          }
+          qiLogInfo() << prefix << "Spawning 1 more thread. New size: " << nextWorkerCount << " (" << details.str() << ")";
 
           try
           {
@@ -504,17 +524,17 @@ namespace qi {
           {
             // TODO: report some system info about memory usage etc. in this case.
             // One of the possible reason to fail here is that there is no memory available.
-            qiLogWarning() << _name << ": Spawning thread " << nextWorkerCount
+            qiLogWarning() << prefix << "Spawning thread " << nextWorkerCount
               << " failed with system error "<< ex.code() << " : " << ex.what();
           }
           catch (const std::exception& ex)
           {
-            qiLogWarning() << _name << ": Spawning thread " << nextWorkerCount
+            qiLogWarning() << prefix << "Spawning thread " << nextWorkerCount
               << " failed with error: " << ex.what();
           }
           catch (...)
           {
-            qiLogWarning() << _name << ": Spawning thread " << nextWorkerCount
+            qiLogWarning() << prefix << "Spawning thread " << nextWorkerCount
               << " failed with unknown error.";
           }
 
@@ -527,7 +547,7 @@ namespace qi {
         // maybe the future has been set in error, so just ignore the result and leave.
         if (!_work.load())
         {
-          qiLogDebug() << "Ignoring ping result, the event loop is being stopped";
+          qiLogDebug() << prefix << "Ignoring ping result, the event loop is being stopped";
           break;
         }
 
@@ -538,7 +558,7 @@ namespace qi {
         QI_IGNORE_UNUSED(idleThreadHasTerminated);
         QI_ASSERT(callState == FutureState_FinishedWithValue || idleThreadHasTerminated);
         nbTimeout = 0;
-        qiLogDebug() << "Ping ok";
+        qiLogDebug() << prefix << "Ping ok";
         boost::this_thread::sleep_for(timeoutDuration);
       }
     }
