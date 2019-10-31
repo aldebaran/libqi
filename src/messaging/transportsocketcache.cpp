@@ -14,13 +14,12 @@
 #include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
 
-static constexpr auto logCategory
-  = "qimessaging.transportsocketcache";
+#define LOG_CATEGORY "qimessaging.transportsocketcache"
 
 static constexpr auto noReachableEndpointErrorMessage
   = "No reachable endpoint was found for this service.";
 
-qiLogCategory(logCategory);
+qiLogCategory(LOG_CATEGORY);
 
 namespace qi
 {
@@ -418,7 +417,7 @@ TransportSocketCache::ConnectionAttempt::~ConnectionAttempt()
   }
   catch (...)
   {
-    qiLogDebug(std::string(logCategory) + ".connectionattempt")
+    qiLogDebug(LOG_CATEGORY ".connectionattempt")
       << "Exception occurred but was ignored when trying to set promise in error in destructor";
   }
 }
