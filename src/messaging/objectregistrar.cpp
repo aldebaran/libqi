@@ -13,7 +13,6 @@
 #include "servicedirectoryclient.hpp"
 #include "session_p.hpp"
 #include <ka/scoped.hpp>
-#include "src/type/objectuid_p.hpp"
 
 qiLogCategory("qimessaging.objectregistrar");
 
@@ -150,7 +149,7 @@ namespace qi {
       si.setMachineId(qi::os::getMachineId());
       si.setEndpoints(endpoints);
       si.setSessionId(_id);
-      si.setObjectUid(serialize(obj.uid()));
+      si.setObjectUid(serializeObjectUid<std::string>(obj.uid()));
 
       int id = ++_registerServiceRequestIndex;
       {

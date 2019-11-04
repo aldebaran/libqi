@@ -2,6 +2,8 @@
 #ifndef QI_OBJECTUID_HPP
 #define QI_OBJECTUID_HPP
 
+#include <boost/optional.hpp>
+#include <ka/utility.hpp>
 #include <qi/ptruid.hpp>
 
 namespace qi
@@ -14,6 +16,44 @@ namespace qi
   /// See ka/concept.hpp for a complete definition of Regular.
   /// The definition of ObjectUid may be changed in the future.
   using ObjectUid = PtrUid;
+
+  /// Deserializes an ObjectUid from a range of bytes.
+  /// @returns An ObjectUid or none if the range has the wrong size.
+  ///
+  /// Post-conditions (where empty(r) means begin(r) == end(r)):
+  ///   std::distance(begin(r), end(r)) == size(uid)) == !result.empty()
+  ///
+  /// Invariant: boost::range::equal(serializeObjectUid(*deserializeObjectUid(r)), r)
+  ///
+  /// ForwardRange<T> R, where T is implicitly convertible to uint8_t
+  template<typename R>
+  boost::optional<ObjectUid> deserializeObjectUid(const R& r)
+  {
+    using std::begin;
+    using std::end;
+    ObjectUid uid;
+    if (std::distance(begin(r), end(r)) == size(uid))
+    {
+      std::copy(begin(r), end(r), begin(uid));
+      return uid;
+    }
+    return {};
+  }
+
+  /// Serializes an ObjectUid into container (in a non human-readable way).
+  /// @remark This is useful for storing an ObjectUid in an arbitrary container.
+  ///         Do not use this function with string for printing for human readers.
+  ///         To print an ObjectUid's content, use `operator<<` instead.
+  ///
+  /// Requires SequenceContainer<T>
+  /// @returns A T object initialized with the ObjectUid's data.
+  ///
+  /// Invariant: *deserializeObjectUid(serializeObjectUid(x)) == x
+  template<typename T>
+  T serializeObjectUid(const ObjectUid& uid)
+  {
+    return T(begin(uid), end(uid));
+  }
 
 } // namespace qi
 
