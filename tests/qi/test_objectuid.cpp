@@ -10,7 +10,6 @@
 #include <ka/opt.hpp>
 #include <ka/empty.hpp>
 #include <qi/objectuid.hpp>
-#include "../../src/type/objectuid_p.hpp"
 
 namespace {
   const qi::ObjectUid& dummyValidObjectUid()
@@ -61,7 +60,7 @@ namespace {
 TEST(ObjectUid, SerializationDeserializationIsSymmetric)
 {
   using ka::functional_ops::operator*; // Mathematical function composition (right to left).
-  using qi::serialize;
+  auto const serialize = qi::serializeObjectUid<std::string>;
   auto const deserialize = Value{} * qi::deserializeObjectUid<std::string>;
 
   auto const id0 = serialize * deserialize; // string -> string

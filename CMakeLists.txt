@@ -286,7 +286,6 @@ set(QITYPE_C src/type/binarycodec.cpp
              src/type/type.cpp
              src/type/signature.cpp
              src/type/traceanalyzer.cpp
-             src/type/objectuid_p.hpp
              )
 
 

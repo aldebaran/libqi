@@ -14,7 +14,6 @@
 #include "servicedirectoryclient.hpp"
 #include "objectregistrar.hpp"
 #include "remoteobject_p.hpp"
-#include "src/type/objectuid_p.hpp"
 
 qiLogCategory("qimessaging.sessionservice");
 
