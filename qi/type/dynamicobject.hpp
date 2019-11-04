@@ -76,7 +76,7 @@ namespace qi
   /// Make an AnyObject of DynamicObject kind from a DynamicObject
   QI_API AnyObject     makeDynamicAnyObject(DynamicObject *obj,
     bool destroyObject = true,
-    const boost::optional<ObjectUid>& uid = {},
+    boost::optional<ObjectUid> uid = {},
     boost::function<void (GenericObject*)> onDelete = boost::function<void (GenericObject*)>());
 
   /// \deprecated This function is considered harmful. Use `makeDynamicAnyObject` instead and bind
