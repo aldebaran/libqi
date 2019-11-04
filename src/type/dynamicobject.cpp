@@ -483,13 +483,11 @@ namespace qi
   }
 
   AnyObject makeDynamicAnyObject(DynamicObject *obj, bool destroyObject,
-    const boost::optional<ObjectUid>& uid,
+    boost::optional<ObjectUid> uid,
     boost::function<void (GenericObject*)> onDelete)
   {
     QI_ASSERT_TRUE(obj);
     ObjectTypeInterface* type = getDynamicTypeInterface();
-
-    const auto genObjUid = uid ? *uid : obj->uid();
 
     auto deleter = [&]() -> boost::function<void(GenericObject*)> {
     if (destroyObject || onDelete)
@@ -497,6 +495,9 @@ namespace qi
     else
       return &AnyObject::deleteGenericObjectOnly;
     }();
+
+    if(!uid)
+      uid = obj->uid();
 
     return AnyObject(detail::ManagedObjectPtr(new GenericObject(type, obj, uid), std::move(deleter)));
   }
