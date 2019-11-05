@@ -173,7 +173,7 @@ Please consult the changelog for details. " #x)
 namespace qi {
   template <typename T>
   struct IsClonable;
-};
+}
 #endif
 
 /**
