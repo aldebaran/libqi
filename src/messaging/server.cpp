@@ -252,7 +252,7 @@ namespace qi
 
   void Server::closeImpl()
   {
-    auto strand = std::atomic_exchange(&_strand, {});
+    auto strand = boost::atomic_exchange(&_strand, {});
     if (!strand)
       return;
 
@@ -565,7 +565,7 @@ namespace qi
 
   Future<bool> Server::open()
   {
-    std::shared_ptr<Strand> empty;
-    return futurize(std::atomic_compare_exchange_strong(&_strand, &empty, std::make_shared<Strand>()));
+    boost::shared_ptr<Strand> empty;
+    return futurize(boost::atomic_compare_exchange(&_strand, &empty, boost::make_shared<Strand>()));
   }
 }
