@@ -9,6 +9,7 @@
 
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include "boundobject.hpp"
 #include "authprovider_p.hpp"
 
@@ -327,7 +328,7 @@ namespace qi
       BoundObjectSocketBinder binder;
     };
     State _state;
-    std::shared_ptr<Strand> _strand = std::make_shared<Strand>();
+    boost::shared_ptr<Strand> _strand = boost::make_shared<Strand>();
 
     struct Tracker : qi::Trackable<Tracker> { using Trackable::destroy; };
     Tracker _tracker;
@@ -344,7 +345,7 @@ namespace qi
       typename Proc2 = decltype(serverClosedError<Result>)>
       Future<Result> safeCall(Proc1&& proc, Proc2&& onFail = serverClosedError<Result>) const
     {
-      if (auto ptr = std::atomic_load(&_strand))
+      if (auto ptr = boost::atomic_load(&_strand))
         return ptr->async(std::forward<Proc1>(proc));
       else
         return std::forward<Proc2>(onFail)();
