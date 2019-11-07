@@ -24,7 +24,8 @@
 #ifndef _QI_MACRO_HPP_
 # define _QI_MACRO_HPP_
 
-# include <qi/preproc.hpp>
+#include <qi/preproc.hpp>
+#include <ka/macro.hpp>
 #include <boost/predef/compiler.h>
 #include <boost/config.hpp>
 
@@ -139,19 +140,8 @@
 
 //! \cond internal
 // Macros adapted from opencv2.2
-#if defined(_MSC_VER)
-#define QI_DO_PRAGMA(x) __pragma(x)
-#define __ALSTR2__(x) #x
-#define __ALSTR1__(x) __ALSTR2__(x)
-#define _ALMSVCLOC_ __FILE__ "("__ALSTR1__(__LINE__)") : "
-#define QI_MSG_PRAGMA(_msg) QI_DO_PRAGMA(message (_ALMSVCLOC_ _msg))
-#elif defined(__GNUC__)
-#define QI_DO_PRAGMA(x) _Pragma (BOOST_PP_STRINGIZE(x))
-#define QI_MSG_PRAGMA(_msg) QI_DO_PRAGMA(message (_msg))
-#else
-#define QI_DO_PRAGMA(x)
-#define QI_MSG_PRAGMA(_msg)
-#endif
+#define QI_DO_PRAGMA(x) KA_PRAGMA(x)
+#define QI_MSG_PRAGMA(msg) KA_PRAGMA_MESSAGE(msg)
 //! \endcond
 
 
@@ -160,10 +150,8 @@
  * \brief Generate a compiler warning.
  * \param x The string displayed as the warning.
  */
-#if defined(QI_NO_COMPILER_WARNING)
-# define QI_COMPILER_WARNING(x)
-#else
-# define QI_COMPILER_WARNING(x) QI_MSG_PRAGMA("Warning: " #x)
+#ifndef QI_NO_COMPILER_WARNING
+#  define QI_COMPILER_WARNING(x) KA_WARNING(x)
 #endif
 
 /**
@@ -174,7 +162,7 @@
 #if !defined(WITH_DEPRECATED) || defined(QI_NO_DEPRECATED_HEADER)
 # define QI_DEPRECATED_HEADER(x)
 #else
-# define QI_DEPRECATED_HEADER(x) QI_MSG_PRAGMA("\
+# define QI_DEPRECATED_HEADER(x) KA_PRAGMA_MESSAGE("\
 This file includes at least one deprecated or antiquated ALDEBARAN header \
 which may be removed without further notice in the next version. \
 Please consult the changelog for details. " #x)
@@ -332,41 +320,20 @@ namespace qi {
  * \def QI_WARNING_PUSH()
  * \brief Pushes the current state of warning flags so it can be retrieved later with QI_WARNING_POP.
  */
-#if BOOST_COMP_MSVC
-#  define QI_WARNING_PUSH() QI_DO_PRAGMA(warning(push))
-#elif BOOST_COMP_GNUC
-#  define QI_WARNING_PUSH() QI_DO_PRAGMA(GCC diagnostic push)
-#elif BOOST_COMP_CLANG
-#  define QI_WARNING_PUSH() QI_DO_PRAGMA(clang diagnostic push)
-#endif
+#define QI_WARNING_PUSH KA_WARNING_PUSH
 
 /**
  * \def QI_WARNING_DISABLE(msvcCode, gccName)
  * \brief Disables the warning that is identified by msvcCode under MSVC or gccName under GCC and
  * Clang.
  */
-#if BOOST_COMP_MSVC
-#  define QI_WARNING_DISABLE(code, _) \
-     QI_DO_PRAGMA(warning(disable: code))
-#elif BOOST_COMP_GNUC
-#  define QI_WARNING_DISABLE(_, name) \
-     QI_DO_PRAGMA(GCC diagnostic ignored BOOST_PP_STRINGIZE(BOOST_PP_CAT(-W, name)))
-#elif BOOST_COMP_CLANG
-#  define QI_WARNING_DISABLE(_, name) \
-     QI_DO_PRAGMA(clang diagnostic ignored BOOST_PP_STRINGIZE(BOOST_PP_CAT(-W, name)))
-#endif
+#define QI_WARNING_DISABLE KA_WARNING_DISABLE
 
 /**
  * \def QI_WARNING_POP()
  * \brief Pops the last state of warning flags that was pushed with QI_WARNING_PUSH().
  */
-#if BOOST_COMP_MSVC
-#  define QI_WARNING_POP() QI_DO_PRAGMA(warning(pop))
-#elif BOOST_COMP_GNUC
-#  define QI_WARNING_POP() QI_DO_PRAGMA(GCC diagnostic pop)
-#elif BOOST_COMP_CLANG
-#  define QI_WARNING_POP() QI_DO_PRAGMA(clang diagnostic pop)
-#endif
+#define QI_WARNING_POP KA_WARNING_POP
 
 /**
  * \def QI_FALLTHROUGH
