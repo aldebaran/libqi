@@ -1,9 +1,12 @@
 #include <forward_list>
 #include <sstream>
 #include <string>
+#include <cstring>
 #include <ka/base64.hpp>
 #include <gtest/gtest.h>
 #include <gtest/gtest-param-test.h>
+
+using std::strlen;
 
 struct Base64WithoutPadding : testing::TestWithParam<std::pair<char const*, char const*>> {
 };
@@ -80,7 +83,8 @@ TEST_P(Base64WithoutPadding, ForwardIteratorJumps) {
   std::forward_list<char> const l(non_encoded + 0, non_encoded + strlen(non_encoded));
   auto b = ka::base64_begin(l.begin(), l.end());
   auto e = ka::base64_end(l.begin(), l.end());
-  int min = 0, max = strlen(encoded);
+  auto max = strlen(encoded);
+  auto min = decltype(max)(0);
   while (b != e) {
     for (auto i = min; i != max; ++i) {
       ASSERT_EQ(*(encoded + i), *(std::next(b, i)));
@@ -126,7 +130,8 @@ TEST_P(Base64WithoutPadding, RandomAccessIteratorJumps) {
   auto const e0 = non_encoded + strlen(non_encoded);
   auto b = ka::base64_begin(b0, e0);
   auto e = ka::base64_end(b0, e0);
-  int min = 0, max = strlen(encoded);
+  auto max = strlen(encoded);
+  auto min = decltype(max)(0);
   while (b != e) {
     for (auto i = min; i != max; ++i) {
       ASSERT_EQ(*(encoded + i), *(b + i));

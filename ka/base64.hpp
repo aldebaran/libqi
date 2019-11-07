@@ -74,7 +74,7 @@ namespace detail {
     // offsets: 0     6     4     2
     auto const bits = offset + 6*sextets;
     if (bits >= 0) {
-      return {bits / 8, bits % 8};
+      return {static_cast<N>(bits / 8), static_cast<M>(bits % 8)};
     } else {
       // Return value is of the form
       //    {f(bits), g(sextets, offset)}
@@ -89,7 +89,7 @@ namespace detail {
       //   ...
       //   g's implementation relies on the fact that successive offsets from
       //   higher to lower addresses are repeatedly: 0, 2, 4, 6...
-      return {((bits + 1) / 8) - 1, (offset - 2*sextets) % 8};
+      return {static_cast<N>(((bits + 1) / 8) - 1), static_cast<M>((offset - 2*sextets) % 8)};
     }
   }
 } // namespace detail
@@ -324,6 +324,10 @@ struct counting_output_iter_t {
   }
   auto operator++(int) -> counting_output_iter_t {
     return {base++, count++};
+  }
+  // TODO: Remove operator+ after upgrading from VS2015.
+  auto operator+(std::size_t n) const -> counting_output_iter_t {
+    return {std::next(base, n), count + n};
   }
 };
 
