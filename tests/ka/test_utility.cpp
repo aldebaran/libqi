@@ -52,7 +52,7 @@ TEST(UtilityDeclref, Basic) {
   static_assert(Equal<decltype(declref<const int>()), const int&>::value, "");
 }
 
-namespace test {
+namespace test_utility {
   template<typename T>
   T& k(T& t);
 
@@ -63,11 +63,11 @@ namespace test {
   struct x_t {
     using type = decltype(k(ka::declref<T>()));
   };
-} // namespace test
+} // namespace test_utility
 
 TEST(UtilityDeclref, RealWorld) {
   using namespace ka;
-  using namespace test;
+  using namespace test_utility;
   static_assert(Equal<x_t<int>::type, int&>::value, "");
   static_assert(Equal<x_t<int [2]>::type, int*>::value, "");
 }

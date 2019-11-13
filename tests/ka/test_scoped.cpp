@@ -173,7 +173,7 @@ TEST(Scoped, DefaultCtor) {
   EXPECT_EQ("START|0, 1, 2|exit_of_scope|mufuu|exit_2nd_scope|youpi les amis|END", str_log);
 }
 
-namespace test {
+namespace test_scoped {
   /// Function object that increments by a given step when called.
   struct incr_t {
     int step;
@@ -182,7 +182,7 @@ namespace test {
       i += step;
     }
   };
-} // namespace test
+} // namespace test_scoped
 
 // is_copy_constructible and is_copy_assignable are buggy on MSVC 2013 and clang 6.5.
 // MSVC 19 is Visual Studio 2015.
@@ -195,8 +195,8 @@ TEST(Scoped, NoCopyNoAssignment) {
 // https://connect.microsoft.com/VisualStudio/feedback/details/819202
 #if QI_TRAITS_COPY_OK
   using namespace ka;
-  static_assert(!std::is_copy_constructible<scoped_t<int, test::incr_t>>::value, "");
-  static_assert(!std::is_copy_assignable<scoped_t<int, test::incr_t>>::value, "");
+  static_assert(!std::is_copy_constructible<scoped_t<int, test_scoped::incr_t>>::value, "");
+  static_assert(!std::is_copy_assignable<scoped_t<int, test_scoped::incr_t>>::value, "");
 #endif
 }
 
@@ -345,7 +345,7 @@ TEST(ScopedSetAndRestore, MoveOnly) {
 
 TEST(ScopedSetAndRestore, NewValueIsUntouched) {
   using namespace ka;
-  using namespace test;
+  using namespace test_scoped;
   const int initial_new_value = 2325895;
   move_aware_t old_value{8736363};
   move_aware_t new_value{initial_new_value};
@@ -372,7 +372,7 @@ TEST(ScopedApplyAndRetract, Action) {
   EXPECT_EQ(old_value, x.load());
 }
 
-namespace test {
+namespace test_scoped {
   template<typename T>
   struct half_t {
     void operator()(T& t) {
@@ -394,16 +394,15 @@ namespace test {
       return {};
     }
   };
-} // namespace test
+} // namespace test_scoped
 
 TEST(ScopedApplyAndRetract, RetractableAction) {
   using namespace ka;
-  using namespace test;
   const int old_value{7676};
   const int new_value{2 * old_value};
   int x = old_value;
   {
-    auto _ = scoped_apply_and_retract(x, twice_t<int>{});
+    auto _ = scoped_apply_and_retract(x, test_scoped::twice_t<int>{});
     EXPECT_EQ(new_value, x);
   }
   EXPECT_EQ(old_value, x);

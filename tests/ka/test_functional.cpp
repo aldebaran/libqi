@@ -268,7 +268,7 @@ TEST(FunctionalCompose, Multi) {
 
 TEST(FunctionalCompose, Retraction) {
   using namespace ka;
-  using namespace test;
+  using namespace test_functional;
   // We compose a function and its retraction and expect to get the identity
   // function.
   f_t f;
@@ -285,7 +285,7 @@ TEST(FunctionalCompose, Retraction) {
 
 TEST(FunctionalCompose, SeemsRetractionButNotQuite) {
   using namespace ka;
-  using namespace test;
+  using namespace test_functional;
   // Even if the two functions have retractions (even, are isomorphisms), and
   // can be composed (right domain and codomain), `g_inv_t` is _not_ a retraction
   // for `F`.
@@ -299,7 +299,7 @@ TEST(FunctionalCompose, SeemsRetractionButNotQuite) {
 TEST(FunctionalCompose, Identity) {
   using namespace ka;
   using namespace ka::functional_ops;
-  using namespace test;
+  using namespace test_functional;
   f_t f;
   id_transfo_t _1;
   static_assert(Equal<Decay<decltype(_1 * _1)>, decltype(_1)>::value, "");
@@ -311,8 +311,8 @@ TEST(FunctionalCompose, Identity) {
 // TODO: Remove this define (but keep the content) when get rid of VS2013.
 #if KA_COMPILER_VS2013_OR_BELOW
   // To avoid "unreferenced local variable" warnings.
-  f(test::e0_t::a);
-  _1(test::e0_t::a);
+  f(e0_t::a);
+  _1(e0_t::a);
 #endif
 }
 
@@ -322,7 +322,7 @@ TEST(FunctionalCompose, Simplification) {
 #if !KA_COMPILER_VS2013_OR_BELOW
   using namespace ka;
   using namespace ka::functional_ops;
-  using namespace test;
+  using namespace test_functional;
   // We expect chains of composition to be simplified in the right way.
   f_t f;
   auto g = retract(f);
@@ -480,7 +480,7 @@ TEST(FunctionalComposeAccu, Multi) {
 
 TEST(FunctionalComposeAccu, Retraction) {
   using namespace ka;
-  using namespace test;
+  using namespace test_functional;
   // We compose an action and its retraction and expect to get the identity
   // action.
   a_t f;
@@ -546,7 +546,7 @@ TEST(FunctionalComposeAccu, ComposeAction) {
 TEST(FunctionalComposeAccu, Identity) {
   using namespace ka;
   using ka::functional_ops_accu::operator*;
-  using namespace test;
+  using namespace test_functional;
   a_t f;
   id_action_t _1;
   static_assert(Equal<Decay<decltype(_1 * _1)>, decltype(_1)>::value, "");
@@ -592,7 +592,7 @@ TEST(FunctionalComposeAccu, OperatorPipe) {
 TEST(FunctionalComposeAccu, Simplification) {
   using namespace ka;
   using ka::functional_ops_accu::operator*;
-  using namespace test;
+  using namespace test_functional;
   // We expect chains of composition to be simplified in the right way.
   a_t f;
   auto g = retract(f);
@@ -1115,7 +1115,7 @@ TEST(FunctionalApply, Array) {
 
 TEST(FunctionalApply, Custom) {
   using namespace ka;
-  using X = test::x_t<int, char, float>;
+  using X = test_functional::x_t<int, char, float>;
   auto g = [](int i, char c, float f) {
     return X{i, c, f};
   };
