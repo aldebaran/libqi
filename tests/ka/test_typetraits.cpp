@@ -527,7 +527,7 @@ TEST(TypeTraits, IsList) {
   static_assert( IsList<my_list_t>::value, "");
 }
 
-namespace test {
+namespace test_typetraits {
   enum class ctor_t {
     default_, // `default` is not a valid name, as it is a C++ keyword.
     copy,
@@ -559,11 +559,11 @@ namespace test {
 
   struct derived_1_t : derived_0_t {
   };
-} // namespace test
+} // namespace test_typetraits
 
 TEST(TypeTraits, EnableIfNotBaseOf) {
   using namespace ka;
-  using namespace test;
+  using namespace test_typetraits;
   {
     int x;
     ASSERT_EQ(ctor_t::custom, base_t(x).ctor);
@@ -715,7 +715,7 @@ TEST(TypeTraits, HasTransfoF) {
 
 TEST(TypeTraits, IsRetract) {
   using namespace ka;
-  using namespace test;
+  using namespace test_functional;
   static_assert( IsRetract<one_, true_>::value, "");
   static_assert(!IsRetract<true_, one_>::value, "");
 

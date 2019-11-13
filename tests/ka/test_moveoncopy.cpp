@@ -96,7 +96,7 @@ TEST(MoveOnCopy, asTuple) {
   static_assert(std::is_same<decltype(as_tuple(move_on_copy(5, 'a', 3.14f))), std::tuple<int, char, float>&>::value, "");
 }
 
-namespace test {
+namespace test_moveoncopy {
   std::tuple<int, char, float> h(ka::move_only_t<int>&& i, ka::move_only_t<char>&& c, ka::move_only_t<float>&& f) {
     return std::make_tuple(*i, *c, *f);
   }
@@ -108,11 +108,11 @@ namespace test {
   std::tuple<int> l(int i) {
     return std::make_tuple(i);
   }
-} // namespace test
+} // namespace test_moveoncopy
 
 TEST(MoveOnCopy, MultipleArgumentsUnpack) {
   using namespace ka;
-  using namespace test;
+  using namespace test_moveoncopy;
   const int i = 5;
   const char c = 'a';
   const float f = 3.14f;
@@ -126,7 +126,7 @@ TEST(MoveOnCopy, MultipleArgumentsUnpack) {
 
 TEST(MoveOnCopy, NoArgumentUnpack) {
   using namespace ka;
-  using namespace test;
+  using namespace test_moveoncopy;
   auto m = move_on_copy();
   auto g = [=]() mutable {
     auto k2 = apply(k);
@@ -137,7 +137,7 @@ TEST(MoveOnCopy, NoArgumentUnpack) {
 
 TEST(MoveOnCopy, OneArgumentUnpack) {
   using namespace ka;
-  using namespace test;
+  using namespace test_moveoncopy;
   const int i = 5;
   auto m = move_on_copy(i);
   auto g = [=]() mutable {
