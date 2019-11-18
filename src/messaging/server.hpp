@@ -254,7 +254,6 @@ namespace qi
     /// @returns True if the socket started accepting messages.
     /// @throws
     ///   - A `std::invalid_argument` exception if the socket is null.
-    ///   - A `std::logic_error` exception if the server is dying.
     Future<bool> addOutgoingSocket(MessageSocketPtr socket);
 
     /// @see `TransportServer::endpoints`
@@ -271,25 +270,30 @@ namespace qi
     /// Adds an incoming socket (a socket created from a client connecting to the server),
     /// optionally requiring authentication.
     /// @returns True if the socket started accepting messages.
+    /// @pre The function is executed in the context of the strand.
     /// @throws
     ///   - A `std::invalid_argument` exception if the socket is null.
-    ///   - A `std::logic_error` exception if the server is dying.
     bool addIncomingSocket(MessageSocketPtr socket);
 
+    /// @pre The function is executed in the context of the strand.
     /// @returns true if a reply was sent to the client.
     bool handleServerMessage(const Message& msg, SocketInfo& socketInfo);
 
+    /// @pre The function is executed in the context of the strand.
     /// @pre `_enforceAuth == true`
     /// @returns true if a reply was sent to the client.
     bool handleServerMessageAuth(const Message& msg, SocketInfo& socketInfo);
 
+    /// @pre The function is executed in the context of the strand.
     /// @pre `_enforceAuth == false`
     /// @returns true if a reply was sent to the client.
     bool handleServerMessageNoAuth(const Message& msg, SocketInfo& socketInfo);
 
+    /// @pre The function is executed in the context of the strand.
     /// @returns true if a reply was sent to the client.
     bool authenticateSocket(const qi::Message& msg, SocketInfo& socketInfo, Message reply);
 
+    /// @pre The function is executed in the context of the strand.
     void finalizeSocketAuthentication(SocketInfo& socketInfo) noexcept;
 
     struct SendAuthErrorResult
@@ -319,9 +323,10 @@ namespace qi
     };
 
     /// @see `BoundObjectSocketBinder::removeSocket`
+    /// @pre `socket != nullptr`
+    /// @pre The function is executed in the context of the strand.
     /// @returns A struct containing a boolean stating if the socket existed in the server and was
     /// succesfully removed and a future of the socket disconnection result.
-    /// @pre `socket != nullptr`
     RemoveSocketResult removeSocket(const MessageSocketPtr& socket);
 
     // Mutable state of the object.
@@ -354,10 +359,9 @@ namespace qi
         return std::forward<Proc2>(onFail)();
     }
 
-    /// @pre The state value must be locked.
+    /// @pre The function is executed in the context of the strand.
     /// @throws
     ///   - A `std::invalid_argument` exception if the socket is null.
-    ///   - A `std::logic_error` exception if the server is dying.
     SocketInfo& addSocket(MessageSocketPtr socket);
 
   protected:
