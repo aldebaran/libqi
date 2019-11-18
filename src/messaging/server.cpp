@@ -36,6 +36,8 @@ namespace qi
 
       SocketInfo::~SocketInfo()
       {
+        tracker.destroy();
+
         auto sock = _socket.lock();
         if (!sock)
           return;
@@ -323,6 +325,19 @@ namespace qi
     });
   }
 
+  namespace
+  {
+    struct Track
+    {
+      template<typename F, typename T>
+      auto operator()(F&& f, T&& t) const
+        -> decltype(track(ka::fwd<F>(f), ka::fwd<T>(t)))
+      {
+        return track(ka::fwd<F>(f), ka::fwd<T>(t));
+      }
+    };
+  }
+
   bool Server::addIncomingSocket(MessageSocketPtr incomingSocket)
   {
     // The server is responsible for the socket that was given to him, so in case of error
@@ -338,16 +353,32 @@ namespace qi
 
     socketInfo.setAuthProvider(_state.authProviderFactory->newProvider());
 
-    // We capture the socket by reference because the socket is guaranteed to be alive when the
-    // callback is called. Also we assume that the socket message dispatcher synchronizes its
-    // handler such that a handler cannot be called concurrently for a single socket. This allows
-    // us to avoid using an additional synchronization mechanism here.
-    MessageDispatcher::MessageHandler serverMessageHandler = _strand->schedulerFor(
-      [=, &socketInfo](const Message& msg) mutable {
-        handleServerMessage(msg, socketInfo);
-        return DispatchStatus::MessageHandled;
-      });
-    socketInfo.setServerMessageHandler(std::move(serverMessageHandler));
+    auto serverLifetimeGuarded = std::bind(Track{}, std::placeholders::_1, &_tracker);
+    auto socketInfoLifetimeGuarded = std::bind(Track{}, std::placeholders::_1, &socketInfo.tracker);
+    auto asyncServerMessageHandler =
+      // Track the socketInfo to be able to retrack it in the callback, as tracking an object
+      // requires that it is alive.
+      serverLifetimeGuarded(socketInfoLifetimeGuarded(
+        [=, &socketInfo](const Message& msg) mutable {
+          return safeCall(socketInfoLifetimeGuarded([=, &socketInfo] {
+            handleServerMessage(msg, socketInfo);
+            return DispatchStatus::MessageHandled;
+          }));
+        }));
+
+    // MessageDispatcher does not accept yet asynchronous handlers, so we have to explicitly wait
+    // for the result.
+    socketInfo.setServerMessageHandler([=](const Message& msg) mutable noexcept {
+      auto logWarningReturnError = [](const std::string& errorMsg) {
+        qiLogWarning() << "Server message handler raised an exception: " << errorMsg;
+        return DispatchStatus::MessageHandled_WithError;
+      };
+      return ka::invoke_catch(
+        ka::compose(logWarningReturnError, ka::exception_message{}),
+        [&] {
+          return asyncServerMessageHandler(msg).value();
+        });
+    });
 
     // Start reading messages from this socket.
     const auto started = socket->ensureReading();

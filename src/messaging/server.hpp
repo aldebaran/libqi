@@ -52,6 +52,9 @@ namespace qi
         /// @throws A `std::logic_error` exception if an handler was already set.
         void setServerMessageHandler(MessageDispatcher::MessageHandler handler);
 
+        struct Tracker : qi::Trackable<Tracker> { using Trackable::destroy; };
+        Tracker tracker;
+
       private:
         const MessageSocketWeakPtr _socket;
         const qi::SignalLink _disconnected = qi::SignalBase::invalidSignalLink;
