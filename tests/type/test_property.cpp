@@ -3,8 +3,12 @@
 */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <qi/property.hpp>
+#include <qi/anyobject.hpp>
+#include <qi/type/proxyproperty.hpp>
 #include <qi/signalspy.hpp>
+#include <qi/testutils/testutils.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 #include <boost/container/static_vector.hpp>
@@ -91,6 +95,92 @@ namespace test
     EXPECT_EQ(42, k.get().value());
   }
 
+  template< template< class ... > class PropertyType >
+  void asyncAccessors()
+  {
+    Promise<int> prom;
+    const auto getter = [=](int val){ return val * 3; };
+    PropertyType<int> prop(
+      42,
+      [=](const int&){
+        return prom.future().andThen(getter);
+      },
+      [=](int&, const int& newValue) mutable {
+        return async([=]() mutable {
+          try
+          {
+            prom.setValue(newValue);
+            return true;
+          }
+          catch(...)
+          {
+            return false;
+          }
+        });
+      });
+
+    // Still running until the set.
+    auto getFut = prop.get();
+    EXPECT_TRUE(test::isStillRunning(getFut));
+
+    auto setFut = prop.set(15);
+    EXPECT_TRUE(test::finishesWithValue(setFut));
+
+    int getResult = 0;
+    EXPECT_TRUE(test::finishesWithValue(getFut, test::willAssignValue(getResult)));
+    EXPECT_EQ(getter(15), getResult);
+  }
+}
+
+TEST(TestPropertyIsNowhereDefined, EmptyBoostFunction)
+{
+  boost::function<void()> func;
+  EXPECT_TRUE(qi::details_property::isNowhereDefined(func));
+}
+
+TEST(TestPropertyIsNowhereDefined, NonEmptyBoostFunction)
+{
+  boost::function<void()> func = []{ /* does nothing */ };
+  EXPECT_FALSE(qi::details_property::isNowhereDefined(func));
+}
+
+TEST(TestPropertyIsNowhereDefined, EmptyStdFunction)
+{
+  std::function<void()> func;
+  EXPECT_TRUE(qi::details_property::isNowhereDefined(func));
+}
+
+TEST(TestPropertyIsNowhereDefined, NonEmptyStdFunction)
+{
+  std::function<void()> func = []{ /* does nothing */ };
+  EXPECT_FALSE(qi::details_property::isNowhereDefined(func));
+}
+
+namespace
+{
+  void doesNothing() {}
+}
+
+TEST(TestPropertyIsNowhereDefined, NullFunctionPtr)
+{
+  EXPECT_TRUE(qi::details_property::isNowhereDefined(nullptr));
+}
+
+TEST(TestPropertyIsNowhereDefined, FunctionPtr)
+{
+  EXPECT_FALSE(qi::details_property::isNowhereDefined(&doesNothing));
+}
+
+TEST(TestPropertyIsNowhereDefined, Lambda)
+{
+  const auto func = []{ /* does nothing */ };
+  EXPECT_FALSE(qi::details_property::isNowhereDefined(func));
+}
+
+TEST(TestPropertyIsNowhereDefined, FunctionObject)
+{
+  const auto func = ka::constant_function();
+  EXPECT_FALSE(qi::details_property::isNowhereDefined(func));
 }
 
 TEST(TestUnsafeProperty, SetDuringCreation)
@@ -118,6 +208,10 @@ TEST(TestUnsafeProperty, dispatchAssignedValue)
   test::dispatchAssignedValue<qi::UnsafeProperty>();
 }
 
+TEST(TestUnsafeProperty, WithAsyncAccessors)
+{
+  test::asyncAccessors<qi::UnsafeProperty>();
+}
 
 TEST(TestProperty, SetDuringCreation)
 {
@@ -142,6 +236,11 @@ TEST(TestProperty, dispatchValue)
 TEST(TestProperty, dispatchAssignedValue)
 {
   test::dispatchAssignedValue<qi::Property>();
+}
+
+TEST(TestProperty, WithAsyncAccessors)
+{
+  test::asyncAccessors<qi::Property>();
 }
 
 TEST(TestProperty, customSetter)
@@ -269,4 +368,52 @@ TEST(TestReadOnlyProperty, SetThroughAdaptedProperty)
   EXPECT_EQ(42, prop.get().value());
   source.set(51).value();
   EXPECT_EQ(51, prop.get().value());
+}
+
+struct ObjectWithProperty
+{
+  ObjectWithProperty()
+    : prop(AnyReference::from(0),
+           [&](int v){ return getter.Call(v); },
+           [&](int& v, int nv) { return setter.Call(v, nv); })
+  {
+  }
+
+  testing::MockFunction<Future<int>(int)> getter;
+  testing::MockFunction<Future<bool>(int&, int)> setter;
+  Property<int> prop;
+};
+
+QI_REGISTER_OBJECT(ObjectWithProperty, prop)
+
+TEST(TestProxyProperty, CallsSourceGetter)
+{
+  using namespace testing;
+  auto* const objectImpl = new ObjectWithProperty;
+  Object<ObjectWithProperty> object(objectImpl);
+  ProxyProperty<int> proxyProp(object, "prop");
+
+  EXPECT_CALL(objectImpl->getter, Call(0)).WillOnce(Return(futurize(42)));
+  const auto futRes = proxyProp.get();
+  ASSERT_TRUE(test::finishesWithValue(futRes));
+  EXPECT_EQ(futurize(42), futRes);
+}
+
+TEST(TestProxyProperty, CallsSourceSetter)
+{
+  using namespace testing;
+  auto* const objectImpl = new ObjectWithProperty;
+  Object<ObjectWithProperty> object(objectImpl);
+  ProxyProperty<int> proxyProp(object, "prop");
+
+  EXPECT_CALL(objectImpl->setter, Call(_, _))
+    .WillOnce(DoAll(Invoke([](int& v, int nv){ v = nv; }), Return(futurize(true))));
+  const auto futSet = object->prop.setValue(32);
+  ASSERT_TRUE(test::finishesWithValue(futSet));
+
+  auto refToIntEqualTo32 = SafeMatcherCast<int&>(Eq(32));
+  EXPECT_CALL(objectImpl->setter, Call(refToIntEqualTo32, 12))
+    .WillOnce(Return(futurize(true)));
+  const auto futRes = proxyProp.set(12);
+  ASSERT_TRUE(test::finishesWithValue(futRes));
 }
