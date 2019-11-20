@@ -31,9 +31,15 @@ namespace qi {
   class ManageablePrivate;
   class SignalSubscriber;
 
+  class SignalBase;
   class SignalBasePrivate;
 
   using SignalLink = qi::uint64_t;
+
+  namespace details_proxysignal
+  {
+    void setUpProxy(SignalBase&, AnyWeakObject, const std::string&);
+  }
 
   /// SignalBase provides a signal subscription mechanism called "connection".
   /// Derived classes can customize the subscription step by setting
@@ -153,9 +159,10 @@ namespace qi {
 
     static const SignalLink invalidSignalLink;
     void _setSignature(const Signature &s);
+
   protected:
-    using Trigger = boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)>;
     void callSubscribers(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    using Trigger = boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)>;
     void setTriggerOverride(Trigger trigger);
     void callOnSubscribe(bool v);
     void createNewTrackLink(int& id, SignalLink*& trackLink);
@@ -166,6 +173,7 @@ namespace qi {
   protected:
     boost::shared_ptr<SignalBasePrivate> _p;
     friend class SignalBasePrivate;
+    friend void details_proxysignal::setUpProxy(SignalBase&, AnyWeakObject, const std::string&);
   };
 
   inline bool isValidSignalLink(SignalLink l)
