@@ -556,7 +556,7 @@ TEST(TestSignal, SignalSubscriberDoesNotUnsubscribeAtDestruction)
   {
     auto subscriber = signal.connect([&]{ ++count; })
         .setCallType(qi::MetaCallType_Direct);
-    QI_UNUSED(subscriber); // we are just keeping it alive for a moment
+    QI_IGNORE_UNUSED(subscriber); // we are just keeping it alive for a moment
 
     signal();
     ASSERT_EQ(1, count);

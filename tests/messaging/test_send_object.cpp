@@ -621,7 +621,7 @@ TEST(SendObject, object_referenced_by_remote_only_is_destroyed_on_disconnection)
 
   qiLogInfo() << "Getting a cookie!";
   auto cookie = cookieBoxRemote.call<qi::AnyObject>("makeCookie", true);
-  QI_UNUSED(cookie);
+  QI_IGNORE_UNUSED(cookie);
   qi::SignalSpy cookieLostSpy{cookieBox->cookieLost};
 
   qiLogInfo() << "Closing the session.";

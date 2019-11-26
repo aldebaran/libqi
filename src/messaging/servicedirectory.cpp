@@ -80,7 +80,7 @@ namespace qi
   ServiceDirectory::~ServiceDirectory()
   {
     if (!connectedServices.empty())
-      qiLogWarning() << "Destroying while connected services remain";
+      qiLogVerbose() << "Destroying while connected services remain";
   }
 
   void ServiceDirectory::removeClientSocket(MessageSocketPtr socket)
@@ -193,7 +193,7 @@ namespace qi
     }
     else
     {
-      qiLogVerbose() << ss.str();
+      qiLogInfo() << ss.str();
     }
 
     qi::UrlVector::const_iterator jt;
@@ -251,7 +251,7 @@ namespace qi
     }
     else
     {
-      qiLogVerbose() << ss.str();
+      qiLogInfo() << ss.str();
     }
 
     nameToIdx.erase(it);

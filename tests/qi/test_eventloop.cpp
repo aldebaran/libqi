@@ -245,3 +245,45 @@ TEST(EventLoopAsio, DynamicShrinking)
   // We must have gone down to the minimum thread count.
   ASSERT_EQ(minThreadCount, *(e-1));
 }
+
+TEST(EventLoop, posInBetween)
+{
+  using qi::detail::posInBetween;
+
+  // percent
+  ASSERT_EQ(  0, posInBetween(   0,       0,     100));
+  ASSERT_EQ( 10, posInBetween(   0+3,    10+3,   100+3));
+  ASSERT_EQ( 50, posInBetween(   0,      50,     100));
+  ASSERT_EQ( 90, posInBetween(   0+35,   90+35,  100+35));
+  ASSERT_EQ(100, posInBetween(   0,     100,     100));
+  ASSERT_EQ(100, posInBetween(   0-100, 100-100, 100-100));
+
+  // range of a single value
+  ASSERT_EQ(100, posInBetween( 0, 0, 0));
+  ASSERT_EQ(100, posInBetween(10,10,10));
+  ASSERT_EQ(100, posInBetween(-3,-3,-3));
+
+  // small ranges
+  ASSERT_EQ(  0, posInBetween(0,   0,   2));
+  ASSERT_EQ( 50, posInBetween(0,   1,   2));
+  ASSERT_EQ(100, posInBetween(0,   2,   2));
+  ASSERT_EQ(  0, posInBetween(0+5, 0+5, 2+5));
+  ASSERT_EQ( 50, posInBetween(0-7, 1-7, 2-7));
+  ASSERT_EQ(100, posInBetween(0+5, 2+5, 2+5));
+
+  ASSERT_EQ(  0, posInBetween(0,   0,   3));
+  ASSERT_EQ( 33, posInBetween(0,   1,   3));
+  ASSERT_EQ( 66, posInBetween(0+7, 2+7, 3+7));
+  ASSERT_EQ(100, posInBetween(0,   3,   3));
+
+  ASSERT_EQ(  0, posInBetween( 0,    0,    4));
+  ASSERT_EQ( 25, posInBetween( 0,    1,    4));
+  ASSERT_EQ( 50, posInBetween( 0,    2,    4));
+  ASSERT_EQ( 75, posInBetween( 0,    3,    4));
+  ASSERT_EQ(100, posInBetween( 0+12, 4+12, 4+12));
+
+  ASSERT_EQ( 20, posInBetween(0,   1,   5));
+  ASSERT_EQ( 80, posInBetween(0,   4,   5));
+  ASSERT_EQ( 20, posInBetween(0-6, 1-6, 5-6));
+  ASSERT_EQ( 80, posInBetween(0+6, 4+6, 5+6));
+}

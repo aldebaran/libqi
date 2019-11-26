@@ -149,20 +149,24 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
     return true;
   }
 
-  // The callback takes ownership of the value. After that, the old reference will be in a invalid
-  // state.
+  // The callback participates in the ownerships of the future and its generic object that it
+  // captures and releases these participations after the first call. Calling it can therefore have
+  // a destructive effect.
   // TODO: Remove use of a shared_ptr once we can initialize captures of the lambda (C++14).
   auto spVal = std::make_shared<UniqueAnyReference>(std::move(uval));
   boost::function<void()> cb = [=]() mutable {
       if (!spVal || !(*spVal)->isValid() || !ao)
         throw std::logic_error{"Future is either invalid or has already been adapted."};
 
-      // Transfer the value to a local UniqueAnyReference.
-      // Also reset the shared ptr to break the cycle.
-      auto localRef = ka::exchange(spVal, nullptr);
-      futureAdapterGeneric<T>(**localRef, promise, ka::exchange(ao, nullptr));
+      // In the case that these copies of the shared_ptrs are the last, destroy the GenericObject
+      // before the AnyReference as it depends on it.
+      auto localSpVal = ka::exchange(spVal, nullptr);
+      auto localAo = ka::exchange(ao, nullptr);
+      futureAdapterGeneric<T>(**localSpVal, promise, localAo);
     };
-  spVal.reset();
+
+  const auto weakVal = ka::weak_ptr(ka::exchange(spVal, nullptr));
+  const auto weakAo = ka::weak_ptr(ao);
 
   // Careful, gfut will die at the end of this block, but it is
   // stored in call data. So call must finish before we exit this block,
@@ -170,12 +174,18 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
   try
   {
     ao->call<void>("_connect", cb);
+
     promise.setOnCancel(
-        qi::bindSilent(
-          static_cast<void(GenericObject::*)(const std::string&)>(
-            &GenericObject::call<void>),
-          boost::weak_ptr<GenericObject>(ao),
-          "cancel"));
+      [=](Promise<T>& promise) {
+        // Keep the reference to the future alive until we're done using it as a GenericObject.
+        if (auto val = weakVal.lock())
+        {
+          QI_IGNORE_UNUSED(val);
+          if (auto g = weakAo.lock())
+            g->call<void>("cancel");
+        }
+      }
+    );
   }
   catch (std::exception& e)
   {

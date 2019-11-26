@@ -226,6 +226,21 @@ namespace qi
         return message();
       }
     };
+
+    using IntPercent = int;
+
+    // Percent of `n` in `[a, b]` (i.e. `a` and `b` included).
+    // In other words: distance between a and n relative to the distance betwen a and b.
+    // Precondition: (a <= n <= b) && (b-a <= INT_MAX/100)
+    // Postcondition: 0 <= posInBetween(a, n, b) <= 100
+    inline IntPercent posInBetween(int a, int n, int b)
+    {
+      QI_ASSERT(a <= n && n <= b);
+      const int ab = b-a;
+      const int an = n-a;
+      QI_ASSERT(an < std::numeric_limits<int>::max()/100);
+      return ab == 0 ? 100 : (100*an)/ab;
+    }
   }
 }
 
