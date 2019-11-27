@@ -33,6 +33,40 @@ namespace ka {
   template<typename A, typename B>
   using Equal = typename std::is_same<A, B>::type;
 
+  /// meaning(ConstantVoid<T...>) = meaning(void)
+  ///
+  /// This type is  useful to create type predicates based on expressions. It is an alternative to
+  /// the `KA_GENERATE_TRAITS_HAS` macro.
+  ///
+  /// Example: Defining a type predicate true iff a value of the type can be
+  ///   assigned with an `int`, and using it to dispatch a function call.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// template<typename T, typename = void>
+  /// struct IsIntAssignable : false_t {};
+  ///
+  /// template<typename T>
+  /// struct IsIntAssignable<
+  ///   T, ConstantVoid<decltype(declref<T>() = 1)>> : true_t {};
+  ///
+  /// void try_set_impl(T& t, int i, true_t /* is int-assignable */) {
+  ///   t = i;
+  /// }
+  ///
+  /// template<typename T>
+  /// void try_set_impl(T& t, int i, false_t /* is NOT int-assignable */) {
+  ///   // nothing.
+  /// }
+  ///
+  /// template<typename T>
+  /// void try_set(T& t, int i) {
+  ///   try_set_impl(t, i, typename IsIntAssignable<T>::type{});
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Equivalent to the std::void_t of C++17.
+  template<typename... Tn>
+  using ConstantVoid = void;
+
   namespace detail {
     template<typename A>
     struct RemoveCvImpl : std::remove_cv<A> {

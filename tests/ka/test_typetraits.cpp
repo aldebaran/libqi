@@ -784,3 +784,70 @@ TEST(TypeTraits, EnableIfInputIterator) {
     static_assert(Equal<non_iterator_t, decltype(my::f(x))>::value, "");
   }
 }
+
+TEST(TypeTraits, ConstantVoid) {
+  using namespace ka;
+  using testing::StaticAssertTypeEq;
+  StaticAssertTypeEq<void, ConstantVoid<>>();
+  StaticAssertTypeEq<void, ConstantVoid<short>>();
+  StaticAssertTypeEq<void, ConstantVoid<int, char>>();
+  StaticAssertTypeEq<void, ConstantVoid<std::string, double, float>>();
+}
+
+namespace {
+  using namespace ka;
+  template<typename T, typename = void>
+  struct IsIntAndFloatAssignable : false_t {};
+
+  template <typename T>
+  struct IsIntAndFloatAssignable<
+    T, ConstantVoid<decltype(declref<T>() = 1), decltype(declref<T>() = 1.1f)>>
+    : true_t {};
+
+  struct int_float_assignable_t {
+    int value;
+    void operator=(int x) {value = x;}
+    void operator=(float x) {value = x;}
+  };
+
+  struct string_assignable_t {
+    std::string value;
+    void operator=(std::string x) {value = std::move(x);}
+  };
+
+  template<typename T>
+  void try_set_impl(T& t, int i, true_t /* is int/float-assignable */) {
+    t = i;
+  }
+
+  template<typename T>
+  void try_set_impl(T& t, int i, false_t /* is NOT int/float-assignable */) {
+    // nothing.
+  }
+
+  template<typename T>
+  void try_set(T& t, int i) {
+    try_set_impl(t, i, typename IsIntAndFloatAssignable<T>::type{});
+  }
+} // namespace
+
+TEST(TypeTraits, ConstantVoidInTypePredicate) {
+  using namespace ka;
+  static_assert(!IsIntAndFloatAssignable<std::vector<int>>::value, "");
+  static_assert( IsIntAndFloatAssignable<int_float_assignable_t>::value, "");
+}
+
+TEST(TypeTraits, ConstantVoidInSfinaeAssignable) {
+  using namespace ka;
+  auto n = int_float_assignable_t{0};
+  EXPECT_EQ(0, n.value);
+  try_set(n, 5);
+  EXPECT_EQ(5, n.value);
+}
+
+TEST(TypeTraits, ConstantVoidInSfinaeNotAssignable) {
+  auto n = string_assignable_t{"abc"};
+  EXPECT_EQ("abc", n.value);
+  try_set(n, 5);
+  EXPECT_EQ("abc", n.value);
+}
