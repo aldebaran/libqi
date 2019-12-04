@@ -134,5 +134,4 @@ Maintainers
 
  - Joël Lamotte <jlamotte@aldebaran.com>
  - Jérémy Monnon <jmonnon@aldebaran.com>
- - Matthieu Paindavoine <matthieu.paindavoine@softbankrobotics.com>
  - Vincent Palancher <vincent.palancher@external.softbankrobotics.com>
