@@ -813,11 +813,6 @@ TEST(FunctionalComposeAccu, Id) {
   }
 }
 
-namespace {
-  struct unit_t {
-  };
-}
-
 TEST(FunctionalComposeAccu, NonVoidReturn) {
   using namespace ka;
 
@@ -842,7 +837,7 @@ namespace {
   };
 
   template<typename T>
-  struct constant_unit_t {
+  struct constant_default_t {
     T operator()() const {
       return T{};
     }
@@ -898,7 +893,7 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomain) {
 
   auto noop = [](int) {
   };
-  constant_unit_t<T> unit;
+  constant_default_t<T> unit;
   auto f = semilift(noop, unit);
 
   static_assert(Equal<T, decltype(f(0))>::value, "");
@@ -911,7 +906,7 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain) {
 
   auto noop = [] {
   };
-  constant_unit_t<T> unit;
+  constant_default_t<T> unit;
   auto f = semilift(noop, unit);
 
   static_assert(Equal<T, decltype(f())>::value, "");

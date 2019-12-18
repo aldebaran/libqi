@@ -106,3 +106,41 @@ TEST(UtilityExchange, MoveOnly) {
   EXPECT_EQ(33, *a);
   EXPECT_EQ(42, *b);
 }
+
+namespace test_utility {
+  int op(ka::type_t<ka::test::A>, int i) {
+    return i + 1;
+  }
+  int op(ka::type_t<ka::test::B>, int i) {
+    return i * 2;
+  }
+}
+
+// Example of `type_t` used as dispatch facility.
+TEST(Utility, TypeTDispatch) {
+  using namespace ka;
+  using namespace ka::test;
+  using test_utility::op;
+  auto const i = 32;
+  EXPECT_EQ(i + 1, op(type_t<A>{}, i));
+  EXPECT_EQ(i * 2, op(type_t<B>{}, i));
+}
+
+TEST(Utility, TypeTAsProduct) {
+  using namespace ka;
+  using namespace ka::test;
+  using testing::StaticAssertTypeEq;
+  StaticAssertTypeEq<A, std::tuple_element<0, type_t<A>>::type>();
+  StaticAssertTypeEq<B, std::tuple_element<1, type_t<A, B>>::type>();
+  StaticAssertTypeEq<C, std::tuple_element<2, type_t<A, B, C>>::type>();
+  StaticAssertTypeEq<D, std::tuple_element<3, type_t<A, B, C, D>>::type>();
+  StaticAssertTypeEq<E, std::tuple_element<4, type_t<A, B, C, D, E>>::type>();
+  StaticAssertTypeEq<F, std::tuple_element<5, type_t<A, B, C, D, E, F>>::type>();
+
+  StaticAssertTypeEq<A, std::tuple_element<0, type_t<A, B, C, D, E, F>>::type>();
+  StaticAssertTypeEq<B, std::tuple_element<1, type_t<A, B, C, D, E, F>>::type>();
+  StaticAssertTypeEq<C, std::tuple_element<2, type_t<A, B, C, D, E, F>>::type>();
+  StaticAssertTypeEq<D, std::tuple_element<3, type_t<A, B, C, D, E, F>>::type>();
+  StaticAssertTypeEq<E, std::tuple_element<4, type_t<A, B, C, D, E, F>>::type>();
+  StaticAssertTypeEq<F, std::tuple_element<5, type_t<A, B, C, D, E, F>>::type>();
+}
