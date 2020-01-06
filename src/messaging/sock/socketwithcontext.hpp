@@ -30,20 +30,16 @@ namespace qi { namespace sock {
     using lowest_layer_type = Lowest<socket_t>;
     using executor_type = typename socket_t::executor_type;
 
-    SocketWithContext(io_service_t& io, const SslContextPtr<N>& ctx)
-      : context(ctx)
-      , socket(io, *ctx)
+    template<typename Arg>
+    SocketWithContext(Arg&& arg, SslContextPtr<N> ctx)
+      : context(std::move(ctx))
+      , socket(std::forward<Arg>(arg), *context)
     {
     }
 
     executor_type get_executor()
     {
       return socket.get_executor();
-    }
-
-    void set_verify_mode(decltype(N::sslVerifyNone()) x)
-    {
-      socket.set_verify_mode(x);
     }
 
     template<typename H>

@@ -70,7 +70,7 @@ struct ConnectSocketFun
     Promise<ErrorCode<N>> promise;
     ConnectSocket<N, SslSocket<N>> connect{io};
     SslContext<N> context { Method<SslContext<N>>::tlsv12 };
-    connect(url, SslEnabled{true}, [&]{ return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{false},
+    connect(url, [&]{ return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{false},
       HandshakeSide<SslSocket<N>>::client,
       [=](ErrorCode<N> err, SslSocketPtr<N>) mutable {
         promise.setValue(err);
@@ -88,7 +88,7 @@ struct ConnectSocketFutureFun
   {
     ConnectSocketFuture<N, SslSocket<N>> connect{io};
     SslContext<N> context { Method<SslContext<N>>::tlsv12 };
-    connect(url, SslEnabled{ true }, [&] { return makeSslSocketPtr<N>(io, context); },
+    connect(url, [&] { return makeSslSocketPtr<N>(io, context); },
             IpV6Enabled{ false }, HandshakeSide<SslSocket<N>>::client);
     return stringToError(connect.complete().error());
   }

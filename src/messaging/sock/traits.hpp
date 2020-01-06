@@ -22,6 +22,9 @@ namespace qi { namespace sock {
   using SslSocket = typename N::ssl_socket_type;
 
   template<typename N>
+  using SslVerifyMode = typename N::ssl_verify_mode_type;
+
+  template<typename N>
   using SocketOptionNoDelay = typename N::socket_option_no_delay_type;
 
   template<typename N>
@@ -48,8 +51,11 @@ namespace qi { namespace sock {
   using Flag = typename Q::flags;
 
   // NetSslContext-related traits
-  template<typename S>
-  using Method = typename S::method;
+  template<typename C>
+  using Method = typename C::method;
+
+  template<typename C>
+  using Options = typename C::options;
 
   // NetSslSocket-related traits
   template<typename S>

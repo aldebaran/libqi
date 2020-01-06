@@ -94,8 +94,8 @@ TEST(TestTestSession, TestTestSessionOnly)
   qi::Future<void> f = sd->listenStandalone("tcp://0.0.0.0:0");
   f.wait(3000);
   ASSERT_TRUE(!f.hasError());
-  TestSession          client(sd->endpoints()[0].str(), false);
-  TestSession          server(sd->endpoints()[0].str(), true, TestMode::getTestMode());
+  TestSession          client(test::url(*sd).str(), false);
+  TestSession          server(test::url(*sd).str(), true, TestMode::getTestMode());
 
   // #3 Build a dumb service
   qi::DynamicObjectBuilder ob;

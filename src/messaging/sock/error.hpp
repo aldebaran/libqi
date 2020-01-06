@@ -124,7 +124,8 @@ namespace qi { namespace sock {
   /// Socket-related applicative errors.
   enum SocketErrors
   {
-    cannotCreateSocket
+    // 0 means success
+    cannotCreateSocket = 1
   };
 
   /// Error category for socket errors.

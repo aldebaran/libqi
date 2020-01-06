@@ -11,6 +11,7 @@
 #include <ka/moveoncopy.hpp>
 #include <ka/utility.hpp>
 #include <ka/macroregular.hpp>
+#include <qi/messaging/ssl/ssl.hpp>
 #include <src/messaging/sock/traits.hpp>
 #include <src/messaging/sock/error.hpp>
 #include <src/messaging/sock/common.hpp>
@@ -102,20 +103,35 @@ namespace mock
       return defaultIoService();
     }
 
+    struct ssl_verify_mode_type
+    {
+      enum class ValueType
+      {
+        verifyNone = 0,
+        verifyPeer = 1,
+        verifyFailIfNoPeerCert = 2,
+      };
+      ValueType value;
+      ssl_verify_mode_type operator|(ssl_verify_mode_type o) const
+      {
+        return { static_cast<ValueType>(static_cast<int>(value) | static_cast<int>(o.value)) };
+      }
+    };
+    struct verify_context {};
     struct ssl_context_type
     {
       enum class method {tlsv12};
-      enum option {no_sslv2, no_sslv3, no_tlsv1, no_tlsv1_1};
-      friend option operator|(option a, option b) {
-        return option(static_cast<int>(a) | static_cast<int>(b));
+      enum options {no_sslv2, no_sslv3, no_tlsv1, no_tlsv1_1};
+      friend options operator|(options a, options b) {
+        return options(static_cast<int>(a) | static_cast<int>(b));
       }
       method m;
       ssl_context_type() = default;        // The 2 ctors are to avoid the
       ssl_context_type(method m) : m(m) {} // "not initialized" warning about m.
-      void set_options(option) {}
-    };
-    struct ssl_verify_mode_type
-    {
+      void set_options(options) {}
+
+      using _anyVerifyModeSetter = std::function<void(ssl_verify_mode_type)>;
+      static _anyVerifyModeSetter set_verify_mode;
     };
     struct _endpoint
     {
@@ -188,7 +204,6 @@ namespace mock
       };
       io_service_type* _io;
       ssl_socket_type(io_service_type& io, ssl_context_type) : _io(&io) {}
-      void set_verify_mode(ssl_verify_mode_type) {}
 
       using _anyAsyncHandshaker = std::function<void (handshake_type, _anyHandler)>;
       static _anyAsyncHandshaker async_handshake;
@@ -264,10 +279,9 @@ KA_WARNING_POP()
       return io;
     }
 
-    static ssl_verify_mode_type sslVerifyNone()
-    {
-      return {};
-    }
+    static ssl_verify_mode_type sslVerifyNone() { return { ssl_verify_mode_type::ValueType::verifyNone }; }
+    static ssl_verify_mode_type sslVerifyPeer() { return { ssl_verify_mode_type::ValueType::verifyPeer }; }
+    static ssl_verify_mode_type sslVerifyFailIfNoPeerCert() { return { ssl_verify_mode_type::ValueType::verifyFailIfNoPeerCert }; }
 
     using H = ssl_socket_type::lowest_layer_type::_native_handle;
     static void setSocketNativeOptions(H, int) {}
@@ -361,6 +375,22 @@ KA_WARNING_POP()
       ssl_context_type&, const char* /* cipherList */)
     {
       return resultOfTrySetCipherListTls12AndBelow.load();
+    }
+
+    using _anyApplyClientConfig = std::function<void (ssl_context_type&, const qi::ssl::ClientConfig&, const std::string&)>;
+    static _anyApplyClientConfig _applyClientConfig;
+    static void applyConfig(ssl_context_type& ctx,
+                            const qi::ssl::ClientConfig& cfg,
+                            const std::string& hostname)
+    {
+      _applyClientConfig(ctx, cfg, hostname);
+    }
+
+    static void applyConfig(ssl_context_type& ctx,
+                            const qi::ssl::ServerConfig& cfg,
+                            ssl_socket_type::lowest_layer_type::endpoint_type)
+    {
+      // Unused at the moment in our tests.
     }
   };
 
@@ -520,6 +550,14 @@ namespace mock
     std::thread{[=] {
       h(N::error_code_type{}, 0u);
     }}.detach();
+  }
+
+  inline void defaultVerifyModeSetter(N::ssl_verify_mode_type)
+  {
+  }
+
+  inline void defaultApplyClientConfig(N::ssl_context_type&, const qi::ssl::ClientConfig&, const std::string&)
+  {
   }
 
 } // namespace mock

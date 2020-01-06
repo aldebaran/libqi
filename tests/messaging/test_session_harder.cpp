@@ -260,6 +260,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   TestSessionPair constellation1;
   TestSessionPair constellation2;
   TestSessionPair constellation3;
+
   auto traveler = qi::makeSession();
 
   qi::AnyObject obj = newObject();
@@ -268,7 +269,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   constellation3.server()->registerService("test3", obj);
 
   qi::Future<void> f;
-  f = traveler->connect(constellation1.serviceDirectoryEndpoints()[0].str());
+  f = traveler->connect(test::url(*constellation1.sd()));
   f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
   qi::AnyObject proxy = constellation1.server()->service("test1").value();
@@ -276,7 +277,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler->close();
 
-  f = traveler->connect(constellation2.serviceDirectoryEndpoints()[0].str());
+  f = traveler->connect(test::url(*constellation2.sd()));
   f.waitFor(callTimeout);
   ASSERT_TRUE(!f.hasError());
   proxy = constellation2.server()->service("test2").value();
@@ -285,7 +286,7 @@ TEST(TestSession, ConnectToMultipleConstellation)
   ASSERT_TRUE(res.compare("plaf") == 0);
   traveler->close();
 
-  f = traveler->connect(constellation3.serviceDirectoryEndpoints()[0].str());
+  f = traveler->connect(test::url(*constellation3.sd()));
   f.waitFor(callTimeout);
   if (f.hasError())
     qiLogError() << f.error();

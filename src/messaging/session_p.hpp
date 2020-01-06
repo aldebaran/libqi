@@ -22,7 +22,7 @@ namespace qi {
   class SessionPrivate : public qi::Trackable<SessionPrivate>
   {
   public:
-    SessionPrivate(Session* session, bool enforceAuth = false, SessionConfig config = {});
+    SessionPrivate(Session* session, SessionConfig config);
     virtual ~SessionPrivate();
 
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
@@ -42,16 +42,17 @@ namespace qi {
     // internal, add sd socket to socket cache
     void addSdSocketToCache(Future<void>, const qi::Url& url, qi::Promise<void> p);
 
+    const SessionConfig _config; // Keep it const for thread-safety.
+
     //ServiceDirectoryClient have a transportsocket not belonging to transportsocketcache
     ServiceDirectoryClient _sdClient;
 
     ObjectRegistrar      _serverObject;
+    TransportSocketCache _socketsCache;
     Session_Service      _serviceHandler;
     Session_Services     _servicesHandler;
     Session_SD           _sd;
-    TransportSocketCache _socketsCache;
     std::atomic<bool>    _sdClientClosedByThis;
-    const SessionConfig  _config; // Keep it const for thread-safety.
   };
 }
 

@@ -47,7 +47,10 @@ namespace qi {
   class Session_Service: public qi::Trackable<Session_Service>
   {
   public:
-    Session_Service(TransportSocketCache* socketCache, ServiceDirectoryClient* sdClient, ObjectRegistrar* server, bool enforceAuth = false);
+    Session_Service(TransportSocketCache* socketCache,
+                    ServiceDirectoryClient* sdClient,
+                    ObjectRegistrar* server,
+                    boost::optional<ClientAuthenticatorFactoryPtr> clientAuthenticatorFactory);
     ~Session_Service();
 
     void close();

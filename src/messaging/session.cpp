@@ -11,13 +11,17 @@ KA_WARNING_DISABLE(4355, )
 #include <sstream>
 #include <qi/session.hpp>
 #include <ka/scoped.hpp>
+#include <ka/functorcontainer.hpp>
+#include <ka/functor.hpp>
 #include "message.hpp"
 #include "messagesocket.hpp"
 #include <qi/anyobject.hpp>
 #include <qi/messaging/serviceinfo.hpp>
+#include <qi/messaging/ssl/ssl.hpp>
 #include "remoteobject_p.hpp"
 #include "session_p.hpp"
 #include <qi/anymodule.hpp>
+#include <qi/path.hpp>
 
 #include "authprovider_p.hpp"
 #include "clientauthenticator_p.hpp"
@@ -29,15 +33,15 @@ qiLogCategory("qimessaging.session");
 
 namespace qi {
   SessionPrivate::SessionPrivate(qi::Session* session,
-                                 bool enforceAuth,
                                  SessionConfig config)
-    : _sdClient(enforceAuth)
-    , _serverObject(&_sdClient, enforceAuth)
-    , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, enforceAuth)
+    : _config(std::move(config))
+    , _sdClient(_config.clientSslConfig, _config.clientAuthenticatorFactory)
+    , _serverObject(&_sdClient, _config.serverSslConfig, _config.authProviderFactory)
+    , _socketsCache(_config.clientSslConfig)
+    , _serviceHandler(&_socketsCache, &_sdClient, &_serverObject, _config.clientAuthenticatorFactory)
     , _servicesHandler(&_sdClient, &_serverObject)
     , _sd(&_serverObject)
     , _sdClientClosedByThis{ false }
-    , _config(std::move(config))
   {
     session->connected.setCallType(qi::MetaCallType_Queued);
     session->disconnected.setCallType(qi::MetaCallType_Queued);
@@ -49,8 +53,6 @@ namespace qi {
     _sdClient.disconnected.connect(session->disconnected);
     _sdClient.serviceAdded.connect(session->serviceRegistered);
     _sdClient.serviceRemoved.connect(session->serviceUnregistered);
-    setAuthProviderFactory(AuthProviderFactoryPtr(new NullAuthProviderFactory));
-    setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr(new NullClientAuthenticatorFactory));
   }
 
   SessionPrivate::~SessionPrivate()
@@ -174,8 +176,6 @@ namespace qi {
     return _sdClient.isConnected();
   }
 
-  SessionConfig::SessionConfig() = default;
-
   Url SessionConfig::defaultConnectUrl()
   {
     static const Url url("tcp://127.0.0.1:9559");
@@ -191,14 +191,25 @@ namespace qi {
   }
 
   // ###### Session
-  Session::Session(bool enforceAuthentication, SessionConfig config)
-    : _p(new SessionPrivate(this, enforceAuthentication, std::move(config)))
+  Session::Session()
+    : _p(new SessionPrivate(this, {}))
   {
-
   }
 
-  Session::Session(SessionConfig defaultConfig)
-    : Session(false, std::move(defaultConfig))
+  Session::Session(bool enforceAuthentication, SessionConfig config)
+    : Session([&] {
+          // Merge the authentication boolean into the configuration.
+          if (!enforceAuthentication && config.authProviderFactory)
+            config.authProviderFactory = {};
+          else if (enforceAuthentication && !config.authProviderFactory)
+            config.authProviderFactory = boost::make_shared<NullAuthProviderFactory>();
+          return std::move(config);
+        }())
+  {
+  }
+
+  Session::Session(SessionConfig config)
+    : _p(new SessionPrivate(this, std::move(config)))
   {
   }
 
@@ -260,7 +271,7 @@ namespace qi {
 
   qi::Url Session::url() const {
     if (_p->_sdClient.isLocal())
-      return endpoints()[0];
+      return endpoints().front();
     else
       return _p->_sdClient.url();
   }
@@ -406,11 +417,6 @@ namespace qi {
     }
   }
 
-  bool Session::setIdentity(const std::string& key, const std::string& crt)
-  {
-    return _p->_serverObject.setIdentity(key, crt).value();
-  }
-
   qi::FutureSync<unsigned int> Session::registerService(const std::string &name, qi::AnyObject obj)
   {
     if (!obj)
@@ -440,7 +446,7 @@ namespace qi {
 
   std::vector<qi::Url> Session::endpoints() const
   {
-    return _p->_serverObject.endpoints().value();
+    return ka::fmap(toUrl, _p->_serverObject.endpoints().value());
   }
 
   qi::FutureSync<unsigned int> Session::loadService(const std::string &moduleName, const std::string& renameModule, const AnyReferenceVector& args)

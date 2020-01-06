@@ -140,6 +140,7 @@ TEST(QiService, RemoteObjectCacheABAUnregister)
 TEST(QiService, RemoteObjectCacheABANewServer)
 {
   TestSessionPair p;
+
   auto ses = qi::makeSession();
   if (p.server() == p.client()) // we close and not unregister, so does not work in direct mode
     return;
@@ -341,7 +342,7 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   // Disconnect the provider, it should unregister any related services
   server->close();
   qiLogVerbose() << "close finished";
-  qi::Future<void> fc = server->connect(p.serviceDirectoryEndpoints()[0]);
+  qi::Future<void> fc = server->connect(test::url(*p.sd()));
   fc.wait(3000);
   if (fc.hasError())
     qiLogError() << fc.error();

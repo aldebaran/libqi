@@ -13,14 +13,11 @@
 using namespace qi;
 
 TestSession::TestSession(const std::string &serviceDirectoryUrl, bool listen, TestMode::Mode mode)
+  : _p(new TestSessionPrivate(serviceDirectoryUrl, mode, listen))
 {
-  _p = new TestSessionPrivate(serviceDirectoryUrl, mode, listen);
 }
 
-TestSession::~TestSession()
-{
-  delete _p;
-}
+TestSession::~TestSession() = default;
 
 qi::SessionPtr TestSession::session()
 {

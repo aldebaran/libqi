@@ -14,23 +14,19 @@ qiLogCategory("TestSession");
 TestSessionPrivate::TestSessionPrivate(const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
 {
   _mode = mode;
-  _session = qi::makeSession();
-  _manager = new SessionInitializer();
-  _manager->setUp(_session, serviceDirectoryUrl, _mode, listen);
+  _session = _manager.setUp(serviceDirectoryUrl, _mode, listen);
 }
 
 TestSessionPrivate::~TestSessionPrivate()
 {
   try
   {
-    _manager->tearDown(_session, _mode);
+    _manager.tearDown(_session, _mode);
   }
   catch (const std::exception& e)
   {
     qiLogError() << "Error closing the session: " << e.what();
   }
-
-  delete _manager;
 }
 
 qi::SessionPtr TestSessionPrivate::session()

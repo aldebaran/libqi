@@ -12,6 +12,8 @@ namespace mock
   _LowestLayer::_anyCanceler _LowestLayer::cancel = defaultCancel;
   _LowestLayer::_anyShutdowner _LowestLayer::_shutdown = defaultShutdown;
   _LowestLayer::_anyCloser _LowestLayer::close = defaultClose;
+  N::ssl_context_type::_anyVerifyModeSetter N::ssl_context_type::set_verify_mode
+    = defaultVerifyModeSetter;
   N::ssl_socket_type::_anyAsyncHandshaker N::ssl_socket_type::async_handshake = defaultAsyncHandshake;
   N::acceptor_type::_anyAsyncAccepter N::acceptor_type::async_accept = defaultAsyncAccept;
   std::atomic_bool N::resultOfTrySetCipherListTls12AndBelow(true);
@@ -35,4 +37,6 @@ namespace mock
       N::SocketFunctions<qi::sock::SocketWithContext<N>>::_async_write_socket =
           defaultAsyncWriteSocket<qi::sock::SocketWithContext<N>>;
   N::_anyAsyncWriterNextLayer N::_async_write_next_layer = defaultAsyncWriteNextLayer;
+
+  N::_anyApplyClientConfig N::_applyClientConfig = defaultApplyClientConfig;
 } // namespace mock

@@ -77,8 +77,8 @@ namespace qi
     ///
     /// Usage:
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Connecting c{ioService, Url("tcp://1.2.3.4:9876"), SslEnabled{true},
-    ///   IpV6Enabled{true}, HandshakeSide::client};
+    /// Connecting c{ioService, Url("tcps://1.2.3.4:9876"), IpV6Enabled{true},
+    ///   HandshakeSide::client};
     /// auto socketPtr = c.complete().value();
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ///
@@ -92,8 +92,8 @@ namespace qi
     /// The object must be alive until the connecting process is complete.
     /// That is, you must not write:
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// Future<SocketPtr<S>> connectNonSsl(IoService& io, Url url) {
-    ///   return Connecting(io, url, SslEnabled{false}, IpV6Enabled{true}).complete();
+    /// Future<SocketPtr<S>> connect(IoService& io, Url url) {
+    ///   return Connecting(io, url, IpV6Enabled{true}).complete();
     /// }
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     /// because the connecting process could exceed the ConnectSocket object lifetime.
@@ -219,12 +219,12 @@ namespace qi
         }
 
         template<typename Proc0, typename Proc1 = ka::constant_function_t<void>>
-        void start(const Url& url, SslEnabled ssl, Proc0&& makeSocket,
+        void start(const Url& url, Proc0&& makeSocket,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {},
           Proc1 setupCancel = Proc1{})
         {
           setContinuation();
-          _connect(url, ssl, ka::fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout, setupCancel);
+          _connect(url, ka::fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout, setupCancel);
         }
 
         template<typename Proc = ka::constant_function_t<void>>
@@ -236,13 +236,13 @@ namespace qi
       };
 
       template<typename Proc0>
-      Connecting(IoService<N>& io, const Url& url, SslEnabled ssl, Proc0&& makeSocket,
+      Connecting(IoService<N>& io, const Url& url, Proc0&& makeSocket,
           IpV6Enabled ipV6, Handshake side, const boost::optional<Seconds>& tcpPingTimeout = {})
         : _impl(std::make_shared<Impl>(io))
       {
         using namespace ka;
         const auto implWeakPtr = weak_ptr(_impl);
-        _impl->start(url, ssl, fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout,
+        _impl->start(url, fwd<Proc0>(makeSocket), ipV6, side, tcpPingTimeout,
                      scope_lock_proc(makeSetupConnectionStop<N, S>(_impl->_promiseStop.future(),
                                                                  scope_lock_transfo(
                                                                  mutable_store(implWeakPtr)),

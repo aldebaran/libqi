@@ -38,7 +38,9 @@ namespace qi {
   {
 
   public:
-    ObjectRegistrar(ServiceDirectoryClient *sdClient, bool enforceAuth = false);
+    ObjectRegistrar(ServiceDirectoryClient* sdClient,
+                    ssl::ServerConfig sslConfig,
+                    boost::optional<AuthProviderFactoryPtr> authProviderFactory);
     virtual ~ObjectRegistrar();
 
     void close();
@@ -57,7 +59,6 @@ namespace qi {
 
     using Server::setAuthProviderFactory;
     using Server::listen;
-    using Server::setIdentity;
     using Server::endpoints;
     using Server::addOutgoingSocket;
 

@@ -235,8 +235,13 @@ namespace qi
 
   using namespace detail::server;
 
-  Server::Server(bool enforceAuth)
-    : _enforceAuth(enforceAuth)
+  Server::Server(ssl::ServerConfig sslConfig,
+                 boost::optional<AuthProviderFactoryPtr> authProviderFactory)
+    // Even if authentication is disabled, the factory is used to instantiate an authentication provider.
+    // We initialize the factory with one that creates authentication providers that do nothing.
+    : _state{ authProviderFactory.value_or_eval(boost::make_shared<NullAuthProviderFactory>), {} }
+    , _enforceAuth(authProviderFactory.has_value())
+    , _server(std::move(sslConfig))
     , _defaultCallType(qi::MetaCallType_Queued)
   {
     _server.newConnection.connect(track(
@@ -580,14 +585,7 @@ namespace qi
         .unwrap();
   }
 
-  Future<bool> Server::setIdentity(const std::string& key, const std::string& crt)
-  {
-    return safeCall([=] {
-      return _server.setIdentity(key, crt);
-    });
-  }
-
-  Future<UrlVector> Server::endpoints() const
+  Future<std::vector<qi::Uri>> Server::endpoints() const
   {
     return safeCall([=] {
       return _server.endpoints();

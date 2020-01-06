@@ -97,8 +97,8 @@ TEST_F(AppSessionReconfigureWithUrl, EmptyConfigEmptyParamsReturnsHardcodedValue
                     .setConnectUrl(SessionConfig::defaultConnectUrl())
                     .setListenUrls({ SessionConfig::defaultListenUrl() });
   const auto actual = reconfigureWithUrl(Config{}, {}, {});
-
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithUrl, ConfigWithEmptyParamsIsUntouched)
@@ -107,7 +107,8 @@ TEST_F(AppSessionReconfigureWithUrl, ConfigWithEmptyParamsIsUntouched)
   const auto expected = config;
   const auto actual = reconfigureWithUrl(config, {}, {});
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithUrl, EmptyConfigWithParamsReturnsParams)
@@ -115,7 +116,8 @@ TEST_F(AppSessionReconfigureWithUrl, EmptyConfigWithParamsReturnsParams)
   const auto expected = Config{}.setConnectUrl(paramConnectUrl).setListenUrls(paramListenUrl);
   const auto actual = reconfigureWithUrl(Config{}, paramConnectUrl, paramListenUrl);
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithUrl, ConfigWithParamsIsOverwritten)
@@ -123,7 +125,8 @@ TEST_F(AppSessionReconfigureWithUrl, ConfigWithParamsIsOverwritten)
   const auto expected = Config{}.setConnectUrl(paramConnectUrl).setListenUrls(paramListenUrl);
   const auto actual = reconfigureWithUrl(baseConfig(), paramConnectUrl, paramListenUrl);
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithUrl, IncompleteConfigWithEmptyParamsIsCompleted)
@@ -242,7 +245,8 @@ TEST_F(AppSessionReconfigureWithProgOpts, NoParametersUsesHardcodedUrls)
                           .setListenUrls({ SessionConfig::defaultListenUrl() });
   const auto actual = reconfigureWithProgramOptions(Config{}, opts);
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithProgOpts, ConfigHasPriorityOverHardcoded)
@@ -253,7 +257,8 @@ TEST_F(AppSessionReconfigureWithProgOpts, ConfigHasPriorityOverHardcoded)
   const auto expected = config;
   const auto actual = reconfigureWithProgramOptions(config, opts);
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithProgOpts, EnvHasPriorityOverConfig)
@@ -264,7 +269,8 @@ TEST_F(AppSessionReconfigureWithProgOpts, EnvHasPriorityOverConfig)
   const auto expected = env.config();
   const auto actual = reconfigureWithProgramOptions(baseConfig(), opts);
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }
 
 TEST_F(AppSessionReconfigureWithProgOpts, ArgsHasPriorityOverAll)
@@ -275,5 +281,6 @@ TEST_F(AppSessionReconfigureWithProgOpts, ArgsHasPriorityOverAll)
   const auto expected = argsConfig();
   const auto actual = reconfigureWithProgramOptions(baseConfig(), opts);
 
-  EXPECT_EQ(expected, actual);
+  EXPECT_EQ(expected.connectUrl(), actual.connectUrl());
+  EXPECT_EQ(expected.listenUrls(), actual.listenUrls());
 }

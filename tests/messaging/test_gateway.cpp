@@ -43,6 +43,43 @@ namespace
 
   using qi::SessionPtr;
 
+
+  struct TestGatewayWithInvalidConnectUrl : testing::TestWithParam<qi::Url>{};
+
+  INSTANTIATE_TEST_SUITE_P(
+    InvalidUrls,
+    TestGatewayWithInvalidConnectUrl,
+    testing::Values(
+      qi::Url("localhost:9559"),
+      qi::Url("tcp://:9559"),
+      qi::Url("tcp://localhost")));
+
+  TEST_P(TestGatewayWithInvalidConnectUrl, FinishesWithError)
+  {
+    qi::Gateway::Config cfg;
+    cfg.serviceDirectoryUrl = GetParam();
+    EXPECT_TRUE(test::finishesWithError(qi::Gateway::create(cfg)));
+  }
+
+  struct TestGatewayWithInvalidListenUrl : testing::TestWithParam<qi::Url>{};
+
+  INSTANTIATE_TEST_SUITE_P(
+    InvalidUrls,
+    TestGatewayWithInvalidListenUrl,
+    testing::Values(
+      qi::Url("localhost:0"),
+      qi::Url("tcp://:0"),
+      qi::Url("tcp://localhost")));
+
+  TEST_P(TestGatewayWithInvalidListenUrl, FinishesWithError)
+  {
+    qi::Gateway::Config cfg;
+    cfg.serviceDirectoryUrl = "tcp://localhost:9559";
+    // Even with a good listen URL, it still throws because of the bad one.
+    cfg.listenUrls = { "tcp://localhost:0", GetParam() };
+    EXPECT_TRUE(test::finishesWithError(qi::Gateway::create(cfg)));
+  }
+
   class TestGateway : public ::testing::Test
   {
   public:
@@ -58,9 +95,13 @@ namespace
     void SetUp()
     {
       sd_->listenStandalone("tcp://127.0.0.1:0");
-      gw_.attachToServiceDirectory(sd_->url()).value(); // throw on error
-      const auto listenStatus = gw_.listenAsync("tcp://127.0.0.1:0").value();
-      ASSERT_EQ(listenStatus, qi::Gateway::ListenStatus::Listening);
+
+      qi::Gateway::Config cfg;
+      cfg.serviceDirectoryUrl = sd_->url();
+      cfg.listenUrls = { "tcp://127.0.0.1:0" };
+      const auto gwFut = qi::Gateway::create(std::move(cfg));
+      ASSERT_TRUE(test::finishesWithValue(gwFut));
+      gw_ = gwFut.value();
     }
 
     int randomValue()
@@ -68,12 +109,12 @@ namespace
       return intDistrib(randEngine);
     }
 
-    qi::SessionPtr connectClientToSd();
-    qi::SessionPtr connectClientToGw();
+    qi::SessionPtr connectClientToSd(qi::Session::Config cfg = {});
+    qi::SessionPtr connectClientToGw(qi::Session::Config cfg = {});
 
     std::default_random_engine randEngine;
     std::uniform_int_distribution<int> intDistrib;
-    qi::Gateway gw_;
+    qi::GatewayPtr gw_;
     qi::SessionPtr sd_;
   };
 
@@ -99,17 +140,19 @@ namespace
     return ob.object();
   }
 
-  qi::SessionPtr TestGateway::connectClientToSd()
+  qi::SessionPtr TestGateway::connectClientToSd(qi::Session::Config cfg)
   {
-    qi::SessionPtr session = qi::makeSession();
-    session->connect(sd_->url());
+    cfg.connectUrl = sd_->url();
+    qi::SessionPtr session = qi::makeSession(std::move(cfg));
+    session->connect();
     return session;
   }
 
-  qi::SessionPtr TestGateway::connectClientToGw()
+  qi::SessionPtr TestGateway::connectClientToGw(qi::Session::Config cfg)
   {
-    qi::SessionPtr session = qi::makeSession();
-    session->connect(gw_.endpoints().at(0));
+    cfg.connectUrl = gw_->endpoints().at(0);
+    qi::SessionPtr session = qi::makeSession(std::move(cfg));
+    session->connect();
     return session;
   }
 
@@ -377,15 +420,15 @@ namespace
 
     {
       qi::Promise<void> sync;
-      gw_.status.connect([&](const qi::Gateway::Status& status){
-        if(status.isReady())
+      gw_->status().connect([sync](const qi::Gateway::Status& status) mutable {
+        if (status == qi::Gateway::Status::Ready)
           sync.setValue(nullptr);
       });
       nextSD->listenStandalone(origUrl);
       sync.future().wait();
     }
 
-    const auto gatewayEndpoints = gw_.endpoints();
+    const auto gatewayEndpoints = gw_->endpoints();
     ASSERT_FALSE(gatewayEndpoints.empty());
     const auto& firstEndpoint = gatewayEndpoints[0];
     serviceHost->connect(firstEndpoint);
@@ -569,16 +612,27 @@ namespace
 
   TEST(TestGatewayLateSD, AttachesToSDWhenAvailable)
   {
-    qi::Gateway gw;
-    auto futAttach = gw.attachToServiceDirectory("tcp://127.0.0.1:59345");
-    ASSERT_TRUE(test::isStillRunning(futAttach, test::willDoNothing(), qi::Seconds{ 2 }));
+    qi::Gateway::Config cfg;
+    cfg.serviceDirectoryUrl = "tcp://127.0.0.1:59345";
+    const auto gwFut = qi::Gateway::create(std::move(cfg));
+
+    const qi::Seconds maxConnectionDelay { 2 };
+    ASSERT_TRUE(test::isStillRunning(gwFut, test::willDoNothing(), maxConnectionDelay));
 
     auto sd = qi::makeSession();
     sd->listenStandalone("tcp://127.0.0.1:59345");
 
-    // It can take a while for the gateway to reconnect if the service directory has not be found
-    // after a long time, so wait for a while.
-    ASSERT_TRUE(test::finishesWithValue(futAttach, test::willDoNothing(), qi::Minutes{ 5 }));
-    ASSERT_EQ(qi::Gateway::ConnectionStatus::Connected, gw.status.get().value().connection);
+    ASSERT_TRUE(test::finishesWithValue(gwFut, test::willDoNothing(), maxConnectionDelay));
+  }
+
+  TEST(TestGatewayCreation, CancelFuture)
+  {
+    qi::Gateway::Config cfg;
+    cfg.serviceDirectoryUrl = "tcp://127.0.0.1:59345";
+    cfg.listenUrls = { "tcp://127.0.0.1:0" };
+    auto gwFut = qi::Gateway::create(std::move(cfg));
+    ASSERT_TRUE(test::isStillRunning(gwFut));
+    gwFut.cancel();
+    ASSERT_TRUE(test::finishesAsCanceled(gwFut));
   }
 }

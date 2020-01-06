@@ -13,6 +13,7 @@
 # include <qi/signal.hpp>
 # include <qi/binarycodec.hpp>
 # include <qi/messaging/messagesocket_fwd.hpp>
+# include <qi/messaging/ssl/ssl.hpp>
 # include <string>
 # include "messagedispatcher.hpp"
 # include "streamcontext.hpp"
@@ -82,8 +83,6 @@ namespace qi
     virtual Status status() const = 0;
     virtual boost::optional<qi::Url> remoteEndpoint() const = 0;
 
-    virtual qi::Url url() const = 0;
-
     bool isConnected() const;
 
     qi::SignalLink messagePendingConnect(unsigned int serviceId,
@@ -118,7 +117,8 @@ namespace qi
   };
 
   using MessageSocketWeakPtr = boost::weak_ptr<MessageSocket>;
-  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop = getNetworkEventLoop());
+  MessageSocketPtr makeMessageSocket(ssl::ClientConfig sslConfig = {},
+                                     qi::EventLoop* eventLoop = getNetworkEventLoop());
 
   /// A connection to the message dispatch of a socket that acts as a RAII helper to connect and
   /// disconnect the object as a message handler. Instances do not own their underlying socket.

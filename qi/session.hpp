@@ -12,6 +12,7 @@
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/messaging/authproviderfactory.hpp>
 #include <qi/messaging/clientauthenticatorfactory.hpp>
+#include <qi/messaging/ssl/ssl.hpp>
 #include <qi/future.hpp>
 #include <qi/anyobject.hpp>
 #include <ka/macro.hpp>
@@ -38,13 +39,26 @@ namespace qi {
     static Url defaultConnectUrl();
     static Url defaultListenUrl();
 
-  // Regular:
-    SessionConfig();
-    KA_GENERATE_FRIEND_REGULAR_OPS_2(SessionConfig, connectUrl, listenUrls)
-
-  // SessionConfig:
     boost::optional<Url> connectUrl;
     std::vector<Url> listenUrls;
+
+    /// Client side configuration for SSL/TLS. This is used when the session tries to connect
+    /// to a remote service (including a service directory), through `connect` or `service(s)`.
+    ssl::ClientConfig clientSslConfig;
+
+    /// Server side configuration for SSL/TLS. This is used when the session runs a TCP server,
+    // through either `listen`, `listenStandalone` or `registerService`.
+    ssl::ServerConfig serverSslConfig;
+
+    /// If set, enables client side authentication on the session, using
+    /// this client authenticator factory.
+    /// If not set, disables client side authentication on the session.
+    boost::optional<ClientAuthenticatorFactoryPtr> clientAuthenticatorFactory;
+
+    /// If set, enables server side authentication on the session, using
+    /// this authentication provider factory.
+    /// If not set, disables server side authentication on the session.
+    boost::optional<AuthProviderFactoryPtr> authProviderFactory;
   };
 
   /** A Session allows you to interconnect services on the same machine or over
@@ -54,8 +68,25 @@ namespace qi {
    */
   class QI_API Session : boost::noncopyable, public ::boost::enable_shared_from_this<Session> {
   public:
-    Session(bool enforceAuthentication = false, SessionConfig config = {});
-    explicit Session(SessionConfig defaultConfig);
+    using Config = SessionConfig;
+
+    Session();
+
+    /// This constructor merges the boolean into the configuration as such:
+    ///   - if the boolean is true and the authentication provider factory is not set
+    ///   in the configuration, then it is set with a default authentication provider
+    ///   factory that creates authentication providers that authorize any client.
+    ///   - if the boolean is false and the authentication provider factory is set in
+    ///   the configuration, then it is reset and the previous value is discarded (it
+    ///   would have been ignored anyway as the authentication would have been disabled).
+    /// @deprecated Enforcing the authentication is now done by setting the
+    ///             authentication provider factory of the session configuration.
+    QI_API_DEPRECATED_MSG(enforcing the authentication is now done by setting the
+                          authentication provider factory and the client authenticator
+                          factory of the session configuration)
+    Session(bool enforceAuthentication, Config config = {});
+
+    explicit Session(Config config);
 
     virtual ~Session();
 
@@ -80,6 +111,13 @@ namespace qi {
     qi::FutureSync<void> connect(const qi::Url &serviceDirectoryURL);
 
     bool isConnected() const;
+
+    /// Returns the URL of the service directory used by this session.
+    ///
+    /// If the session is standalone, returns the first of the endpoints
+    /// ordered by preference as defined by the `qi::isPreferredEndpoint`
+    /// predicate. Otherwise, returns the URL that was used to connect to the
+    /// service directory.
     qi::Url url() const;
 
     qi::FutureSync< std::vector<ServiceInfo> > services(ServiceLocality locality = ServiceLocality_All);
@@ -123,8 +161,10 @@ namespace qi {
     /// empty, uses the hardcoded default listen URL.
     qi::FutureSync<void> listen(const std::vector<qi::Url>& addresses);
 
+    /// Returns the list of endpoints for this session. Returns an empty list
+    /// if the session is not listening. The list of endpoints is ordered by
+    /// preference as defined by the `qi::isPreferredEndpoint` binary predicate.
     std::vector<qi::Url> endpoints() const;
-    bool    setIdentity(const std::string& key, const std::string& crt);
 
     //close both client and server side
     qi::FutureSync<void>    close();

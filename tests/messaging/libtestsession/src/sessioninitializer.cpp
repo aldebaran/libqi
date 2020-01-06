@@ -9,6 +9,7 @@
 #include "defaultservice.hpp"
 #include "populationgenerator.hpp"
 #include "sessioninitializer.hpp"
+#include <testssl/testssl.hpp>
 
 static int defaultTimeoutMs = 1000;
 
@@ -21,7 +22,7 @@ SessionInitializer::SessionInitializer() :
   _setUps[TestMode::Mode_SSL] = &SessionInitializer::setUpSSL;
   _setUps[TestMode::Mode_Direct] = &SessionInitializer::setUpSD;
   _setUps[TestMode::Mode_Nightmare] = &SessionInitializer::setUpNightmare;
-  _setUps[TestMode::Mode_Gateway] = &SessionInitializer::setUpSD;
+  _setUps[TestMode::Mode_Gateway] = &SessionInitializer::setUpGateway;
 
   _tearDowns[TestMode::Mode_SD] = &SessionInitializer::tearDownSD;
   _tearDowns[TestMode::Mode_SSL] = &SessionInitializer::tearDownSD;
@@ -34,13 +35,13 @@ SessionInitializer::~SessionInitializer()
 {
 }
 
-void SessionInitializer::setUp(qi::SessionPtr session, const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
+qi::SessionPtr SessionInitializer::setUp(const std::string &serviceDirectoryUrl, TestMode::Mode mode, bool listen)
 {
   if (_setUps.find(mode) == _setUps.end())
     throw TestSessionError("[Internal] setUp mode not handled.");
 
   _listen = listen;
-  (this->*_setUps[mode])(session, serviceDirectoryUrl);
+  return (this->*_setUps[mode])(serviceDirectoryUrl);
 }
 
 void SessionInitializer::tearDown(qi::SessionPtr session, TestMode::Mode mode)
@@ -51,23 +52,48 @@ void SessionInitializer::tearDown(qi::SessionPtr session, TestMode::Mode mode)
   (this->*_tearDowns[mode])(session);
 }
 
-void SessionInitializer::setUpSD(qi::SessionPtr session, const std::string &serviceDirectoryUrl)
+qi::SessionPtr SessionInitializer::setUpSD(const std::string &serviceDirectoryUrl)
 {
-  session->connect(serviceDirectoryUrl);
-  if (_listen == true)
-    session->listen("tcp://0.0.0.0:0");
+  qi::Session::Config cfg;
+  cfg.connectUrl = serviceDirectoryUrl;
+  cfg.listenUrls = { "tcp://0.0.0.0:0" };
+  const auto session = qi::makeSession(cfg);
+  session->connect().value(defaultTimeoutMs);
+  if (_listen)
+    session->listen().value(defaultTimeoutMs);
+  return session;
 }
 
-void SessionInitializer::setUpSSL(qi::SessionPtr session, const std::string &serviceDirectoryUrl)
+qi::SessionPtr SessionInitializer::setUpSSL(const std::string &serviceDirectoryUrl)
 {
-  session->connect(serviceDirectoryUrl).value(defaultTimeoutMs);
+  qi::Session::Config cfg;
+  cfg.connectUrl = serviceDirectoryUrl;
+  cfg.listenUrls = { "tcps://0.0.0.0:0" };
+  cfg.serverSslConfig = test::ssl::serverConfig(test::ssl::server());
+  const auto session = qi::makeSession(cfg);
+  session->connect().value(defaultTimeoutMs);
+  if (_listen)
+    session->listen().value(defaultTimeoutMs);
+  return session;
+}
 
-  if (_listen == true)
-  {
-    session->setIdentity(qi::path::findData("qi", "server.key"),
-                         qi::path::findData("qi", "server.crt"));
-    session->listen("tcps://0.0.0.0:0");
-  }
+qi::SessionPtr SessionInitializer::setUpGateway(const std::string &serviceDirectoryUrl)
+{
+  // In gateway mode, certificates are verified both ways (mTLS).
+  // In clients, we prefer pinning the gateway certificate instead of checking its root CA.
+  auto clientSslCfg = test::ssl::clientConfig(test::ssl::gateway::client(),
+                                              test::ssl::gateway::server());
+  clientSslCfg.verifyPartialChain = true;
+
+  qi::Session::Config cfg;
+  cfg.connectUrl = serviceDirectoryUrl;
+  cfg.listenUrls = { "tcp://0.0.0.0:0" };
+  cfg.clientSslConfig = clientSslCfg;
+  const auto session = qi::makeSession(cfg);
+  session->connect().value(defaultTimeoutMs);
+  if (_listen)
+    session->listen().value(defaultTimeoutMs);
+  return session;
 }
 
 void SessionInitializer::tearDownSD(qi::SessionPtr session)
@@ -76,16 +102,16 @@ void SessionInitializer::tearDownSD(qi::SessionPtr session)
     session->close().value(defaultTimeoutMs);
 }
 
-void SessionInitializer::setUpNightmare(qi::SessionPtr session, const std::string &serviceDirectoryUrl)
+qi::SessionPtr SessionInitializer::setUpNightmare(const std::string &serviceDirectoryUrl)
 {
-  std::string serviceName;
+  const auto session = qi::makeSession();
 
   // #1 Connect session to service directory.
   session->connect(serviceDirectoryUrl).value(defaultTimeoutMs);
 
   // #1.1 If session is a client session, that's it.
   if (_listen == false)
-    return;
+    return session;
 
   // #1.2 Make session listen.
   session->listen("tcp://0.0.0.0:0");
@@ -95,6 +121,7 @@ void SessionInitializer::setUpNightmare(qi::SessionPtr session, const std::strin
   _trafficGenerator = new TrafficGenerator();
 
   // #3 Generate an unique name for hidder service
+  std::string serviceName;
   if (DefaultService::generateUniqueServiceName(serviceName) == false)
     throw TestSessionError("[Internal] Cannot generate unique service name.");
 
@@ -107,6 +134,8 @@ void SessionInitializer::setUpNightmare(qi::SessionPtr session, const std::strin
 
   if (_trafficGenerator->generateCommonTraffic(_populationGenerator->clientPopulation(), serviceName) == false)
     throw std::runtime_error("failed to produce traffic");
+
+  return session;
 }
 
 void SessionInitializer::tearDownNightmare(qi::SessionPtr session)

@@ -8,6 +8,7 @@
 
 #include <testsession/testsession.hpp>
 #include <testsession/testsessionpair.hpp>
+#include <testssl/testssl.hpp>
 
 qiLogCategory("test.sessionpair");
 
@@ -15,11 +16,10 @@ const TestSessionPair::ShareServiceDirectory_tag TestSessionPair::ShareServiceDi
 
 TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
   : _mode(mode)
-  , _sd(qi::makeSession())
-  , _gw(_mode == TestMode::Mode_Gateway ? new qi::Gateway : nullptr)
 {
   const bool gatewayMode = _mode == TestMode::Mode_Gateway;
   std::string gwUrl;
+  qi::Session::Config sdConfig;
   if (gatewayMode)
   {
     gwUrl = std::move(sdUrl);
@@ -27,34 +27,45 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
   }
   else if (_mode == TestMode::Mode_SSL)
   {
-    _sd->setIdentity(qi::path::findData("qi", "server.key"),
-                     qi::path::findData("qi", "server.crt"));
+    sdConfig.serverSslConfig = test::ssl::serverConfig(test::ssl::server());
   }
   gwUrl = test::adaptScheme(gwUrl, mode);
   sdUrl = test::adaptScheme(sdUrl, mode);
 
-  qi::UrlVector endpoints;
+  _sd = qi::makeSession(sdConfig);
   _sd->listenStandalone(std::move(sdUrl));
-  qiLogInfo() << "ServiceDirectory listening on endpoint '" << _sd->endpoints()[0].str() << "'";
-  if (gatewayMode)
-  {
-    _gw->attachToServiceDirectory(_sd->url()).wait();
-    auto listenStatus = _gw->listenAsync(std::move(gwUrl)).value();
-    QI_IGNORE_UNUSED(listenStatus);
-    QI_ASSERT_FALSE(listenStatus == qi::Gateway::ListenStatus::NotListening);
-    qiLogInfo() << "Gateway listening on endpoint '" << _gw->endpoints()[0].str() << "'";
-    endpoints = _gw->endpoints();
-  }
-  else
-  {
-    endpoints = _sd->endpoints();
-  }
+  const auto sdEndpoint = test::url(*_sd);
+  qiLogInfo() << "ServiceDirectory listening on endpoint '" << sdEndpoint << "'";
+  const auto endpoint = [&]{
+    if (gatewayMode)
+    {
+      // The gateway accepts any client signed by its root CA.
+      // We could also pin the client certificate, but we let the client
+      // do that. This way we cover both cases (pinning and not pinning).
+      auto serverSslConfig = test::ssl::serverConfig(test::ssl::gateway::server(),
+                                                     test::ssl::gateway::rootCA());
+      serverSslConfig.verifyPartialChain = false;
 
-  qiLogInfo() << "Server and client will connect to endpoint '" << endpoints[0].str() << "'";
-  _server.reset(new TestSession(endpoints[0].str(), true, _mode));
+      qi::Gateway::Config gwConfig;
+      gwConfig.serviceDirectoryUrl = sdEndpoint;
+      gwConfig.listenUrls = { gwUrl };
+      gwConfig.serverSslConfig = std::move(serverSslConfig);
+      _gw = qi::Gateway::create(std::move(gwConfig)).value();
+      const auto endpoint = test::url(*_gw);
+      qiLogInfo() << "Gateway listening on endpoint '" << endpoint << "'";
+      return endpoint;
+    }
+    else
+    {
+      return sdEndpoint;
+    }
+  }();
+
+  qiLogInfo() << "Server and client will connect to endpoint '" << endpoint << "'";
+  _server.reset(new TestSession(endpoint.str(), true, _mode));
   if (_mode != TestMode::Mode_Direct) // no client in direct mode
   {
-    _client.reset(new TestSession(endpoints[0].str(), false, _mode));
+    _client.reset(new TestSession(endpoint.str(), false, _mode));
   }
 }
 
@@ -62,8 +73,8 @@ TestSessionPair::TestSessionPair(ShareServiceDirectory_tag t,
                                  const TestSessionPair& other,
                                  TestMode::Mode mode)
   : TestSessionPair(mode == TestMode::Mode_Gateway ?
-                        other.gateway().endpoints().front() :
-                        other.sd()->endpoints().front(),
+                        test::url(other.gateway()) :
+                        test::url(*other.sd()),
                     mode)
 {
 }

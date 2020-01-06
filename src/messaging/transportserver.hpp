@@ -13,6 +13,7 @@
 # include <qi/eventloop.hpp>
 # include <qi/signal.hpp>
 # include <qi/messaging/messagesocket_fwd.hpp>
+# include <qi/messaging/ssl/ssl.hpp>
 # include <vector>
 # include <boost/asio/ip/tcp.hpp>
 # include <boost/asio/ssl/stream.hpp>
@@ -38,7 +39,7 @@ namespace qi {
     boost::mutex                            mutexCallback;
     qi::EventLoop                          *context;
     boost::mutex                            _endpointsMutex;
-    qi::UrlVector                           _endpoints;
+    std::vector<qi::Uri>                    _endpoints;
     qi::Promise<void>                       _connectionPromise;
   };
 
@@ -58,15 +59,16 @@ namespace qi {
   class TransportServer : private boost::noncopyable
   {
   public:
-    TransportServer();
+    TransportServer(ssl::ServerConfig sslConfig = {});
     virtual ~TransportServer();
 
     qi::Future<void> listen(const qi::Url &url,
                             qi::EventLoop* ctx = qi::getNetworkEventLoop());
-    bool setIdentity(const std::string& key, const std::string& crt);
     void close();
 
-    std::vector<qi::Url> endpoints() const;
+    /// Endpoints ordered by preference.
+    /// @see `qi::isPreferredEndpoint`.
+    std::vector<qi::Uri> endpoints() const;
 
   public:
     /** Emitted each time a new connection happens. startReading must be
@@ -77,8 +79,7 @@ namespace qi {
     // C4251
     qi::Signal<int>                acceptError;
     qi::Signal<void>               endpointsChanged;
-    std::string                           _identityKey;
-    std::string                           _identityCertificate;
+    const ssl::ServerConfig _sslConfig;
     std::vector<TransportServerImplPtr>   _impl;
     mutable boost::mutex                 _implMutex;
   };

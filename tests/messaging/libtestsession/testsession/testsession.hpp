@@ -73,9 +73,11 @@
 #define _TESTS_LIBTESTSESSION_TESTSESSION_HPP_
 
 #include <stdexcept>
+#include <memory>
 #include <boost/utility/string_ref.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <qi/session.hpp>
+#include <qi/messaging/gateway.hpp>
 #include <ka/typetraits.hpp>
 
 #define ENVIRON_VARIABLE "TESTMODE"
@@ -127,7 +129,7 @@ public:
   qi::SessionPtr session();
 
 private:
-  TestSessionPrivate *_p;
+  std::unique_ptr<TestSessionPrivate> _p;
 };
 
 extern TestMode::Mode testMode;
@@ -155,6 +157,14 @@ namespace test
   inline qi::Url url(const qi::Session& sess)
   {
     const auto& endpoints = sess.endpoints();
+    if (endpoints.empty())
+      throw std::runtime_error("Session has no endpoint to connect to");
+    return endpoints.front();
+  }
+
+  inline qi::Url url(const qi::Gateway& gw)
+  {
+    const auto& endpoints = gw.endpoints();
     if (endpoints.empty())
       throw std::runtime_error("Session has no endpoint to connect to");
     return endpoints.front();

@@ -11,7 +11,9 @@
 #include <chrono>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <boost/optional.hpp>
+#include <boost/filesystem.hpp>
 
 #include <qi/session.hpp>
 #include <qi/anyobject.hpp>
@@ -250,21 +252,22 @@ TEST(TestSession, MultipleConnectSuccess)
   auto server = qi::makeSession();
   ASSERT_TRUE(finishesWithValue(server->listenStandalone(test::defaultListenUrl())));
   ASSERT_FALSE(server->endpoints().empty());
+  auto endpoint = test::url(*server);
 
   auto client = qi::makeSession();
-  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(finishesWithValue(client->connect(endpoint)));
   ASSERT_TRUE(client->isConnected());
 
   ASSERT_TRUE(finishesWithValue(client->close()));
   ASSERT_FALSE(client->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(finishesWithValue(client->connect(endpoint)));
   ASSERT_TRUE(client->isConnected());
 
   ASSERT_TRUE(finishesWithValue(client->close()));
   ASSERT_FALSE(client->isConnected());
 
-  ASSERT_TRUE(finishesWithValue(client->connect(test::url(*server))));
+  ASSERT_TRUE(finishesWithValue(client->connect(endpoint)));
   ASSERT_TRUE(client->isConnected());
 }
 
@@ -441,6 +444,7 @@ TEST(TestSession, GetCallInConnect)
   TestSessionPair sessionPair;
   auto& sd = *sessionPair.sd();
   auto& server = *sessionPair.server();
+  auto client = sessionPair.client();
 
   auto obj = dummyDynamicObject();
   ASSERT_TRUE(finishesWithValue(server.registerService(dummyServiceName, obj)));
@@ -449,13 +453,13 @@ TEST(TestSession, GetCallInConnect)
   ASSERT_TRUE(finishesWithValue(server.service(dummyServiceName), willAssignValue(object)));
   ASSERT_TRUE(object);
 
-  auto session = makeSession();
+  client->close();
   Promise<bool> callbackFinishedPromise;
-  session->connected.connect([=]() mutable {
-    const bool result = session->services().hasValue();
+  client->connected.connect([=]() mutable {
+    const bool result = client->services().hasValue();
     callbackFinishedPromise.setValue(result);
   });
-  ASSERT_TRUE(finishesWithValue(session->connect(test::url(sd))));
+  ASSERT_TRUE(finishesWithValue(client->connect(test::url(sd))));
 
   auto futureResult = callbackFinishedPromise.future();
   ASSERT_TRUE(finishesWithValue(futureResult) && futureResult.value());
@@ -629,4 +633,19 @@ TEST(TestSession, WaitForServiceCanceled)
   auto future = client.waitForService(dummyServiceName);
   future.cancel();
   ASSERT_TRUE(finishesAsCanceled(future));
+}
+
+TEST(TestSession, EndpointsAreOrderedByPreference)
+{
+  using namespace testing;
+  auto session = qi::makeSession();
+  session->listen("tcp://0.0.0.0:0");
+  // We expect more than one endpoint, otherwise the test is pointless and it
+  // might fail silently.
+  EXPECT_GT(session->endpoints().size(), 1u);
+  const auto endpoints = session->endpoints();
+  const auto isPreferredEndpoint = [](const qi::Url& u1, const qi::Url& u2) {
+    return qi::isPreferredEndpoint(*toUri(u1), *toUri(u2));
+  };
+  EXPECT_THAT(endpoints, WhenSortedBy(isPreferredEndpoint, Eq(endpoints)));
 }

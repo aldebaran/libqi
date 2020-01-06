@@ -22,7 +22,8 @@ namespace qi {
 
   class ServiceDirectoryClient: public qi::Trackable<ServiceDirectoryClient> {
   public:
-    ServiceDirectoryClient(bool enforceAuth = false);
+    ServiceDirectoryClient(ssl::ClientConfig sslConfig,
+                           boost::optional<ClientAuthenticatorFactoryPtr> clientAuthFactory = {});
     ~ServiceDirectoryClient();
 
     // Connect to a remote service directory service
@@ -101,6 +102,7 @@ namespace qi {
       SignalLink addSignalLink = SignalBase::invalidSignalLink;
       SignalLink removeSignalLink = SignalBase::invalidSignalLink;
       bool localSd = false; // true if sd is local (no socket)
+      Url url;
     };
 
     StateData _stateData; // protected by _mutex
@@ -108,6 +110,7 @@ namespace qi {
     // _object is a remote object of serviceDirectory
     AnyObject _object;
     ClientAuthenticatorFactoryPtr _authFactory;
+    const ssl::ClientConfig _sslConfig;
     bool _enforceAuth;
     mutable boost::mutex _mutex;
   };
