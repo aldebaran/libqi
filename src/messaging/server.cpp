@@ -36,6 +36,8 @@ namespace qi
 
       SocketInfo::~SocketInfo()
       {
+        tracker.destroy();
+
         auto sock = _socket.lock();
         if (!sock)
           return;
@@ -237,68 +239,103 @@ namespace qi
     : _enforceAuth(enforceAuth)
     , _defaultCallType(qi::MetaCallType_Queued)
   {
-    _server.newConnection.connect(track([this](const std::pair<MessageSocketPtr, Url>& socketUrl)
-                                          -> void { this->addIncomingSocket(socketUrl.first); },
-                                        &_tracker));
+    _server.newConnection.connect(track(
+      [=](const std::pair<MessageSocketPtr, Url>& socketUrl) {
+        safeCall([=] { this->addIncomingSocket(socketUrl.first); });
+      },
+      &_tracker));
   }
 
   Server::~Server()
   {
     _tracker.destroy();
-    close();
+    closeImpl();
   }
 
-  bool Server::addObject(unsigned int serviceId, qi::AnyObject obj)
+  void Server::closeImpl()
+  {
+    auto strand = boost::atomic_exchange(&_strand, {});
+    if (!strand)
+      return;
+
+    strand->join();
+
+    qiLogVerbose() << "Closing server...";
+
+    // Objects are not removed from the server, they will become available again if the server
+    // is reopen.
+    _state.binder.clearSockets();
+
+    _server.close();
+  }
+
+  Future<bool> Server::addObject(unsigned int serviceId, qi::AnyObject obj)
   {
     if (!obj)
-      return false;
+      return futurize(false);
     return addObject(serviceId, makeServiceBoundObjectPtr(serviceId, obj, _defaultCallType));
   }
 
-  bool Server::addObject(unsigned int serviceId, qi::BoundObjectPtr obj)
+  Future<bool> Server::addObject(unsigned int serviceId, qi::BoundObjectPtr obj)
   {
     if (!obj)
-      return false;
-    return _state->binder.addObject(serviceId, obj);
+      return futurize(false);
+    return safeCall([=]{
+      return _state.binder.addObject(serviceId, obj);
+    });
   }
 
-  bool Server::removeObject(unsigned int idx)
+  Future<bool> Server::removeObject(unsigned int idx)
   {
-    return _state->binder.removeObject(idx);
+    return safeCall([=]{
+      return _state.binder.removeObject(idx);
+    });
   }
 
-  void Server::setAuthProviderFactory(AuthProviderFactoryPtr factory)
+  Future<void> Server::setAuthProviderFactory(AuthProviderFactoryPtr factory)
   {
-    _state->authProviderFactory = factory;
+    return safeCall([=]{
+      _state.authProviderFactory = factory;
+    });
   }
 
-  SocketInfo& Server::addSocket(MessageSocketPtr socket, State& state)
+  SocketInfo& Server::addSocket(MessageSocketPtr socket)
   {
     if (!socket)
       // TODO: Throw a domain specific error.
       throw std::invalid_argument("The socket that was added to the server is null.");
 
-    if (state.dying)
-      // TODO: Throw a domain specific error.
-      throw std::logic_error(
-        "Cannot add a socket to a dying server.");
-
     qiLogVerbose() << this << " - New socket " << socket << " added to the server.";
 
     boost::function<void(const std::string&)> disconnectionHandler =
-      track([=](const std::string&) { removeSocket(socket); }, &_tracker);
+      track([=](const std::string&) { safeCall([=] { removeSocket(socket); }); }, &_tracker);
     auto disconnectionHandlerAnyFunc = AnyFunction::from(std::move(disconnectionHandler));
 
-    return state.binder.addSocketPendingValidation(socket, std::move(disconnectionHandlerAnyFunc));
+    return _state.binder.addSocketPendingValidation(socket, std::move(disconnectionHandlerAnyFunc));
   }
 
-  bool Server::addOutgoingSocket(MessageSocketPtr socket)
+  Future<bool> Server::addOutgoingSocket(MessageSocketPtr socket)
   {
-    addSocket(socket, *_state);
+    return safeCall([=]{
+      addSocket(socket);
 
-    // Nothing more to do to start this socket, as it is outgoing, it's already receiving message
-    // and there's no need to authenticate it.
-    return true;
+      // Nothing more to do to start this socket, as it is outgoing, it's already receiving message
+      // and there's no need to authenticate it.
+      return true;
+    });
+  }
+
+  namespace
+  {
+    struct Track
+    {
+      template<typename F, typename T>
+      auto operator()(F&& f, T&& t) const
+        -> decltype(track(ka::fwd<F>(f), ka::fwd<T>(t)))
+      {
+        return track(ka::fwd<F>(f), ka::fwd<T>(t));
+      }
+    };
   }
 
   bool Server::addIncomingSocket(MessageSocketPtr incomingSocket)
@@ -312,22 +349,36 @@ namespace qi
     });
     auto& socket = scopedSocket.value;
 
-    auto syncState = _state.synchronize();
-    auto& socketInfo = addSocket(socket, *syncState);
+    auto& socketInfo = addSocket(socket);
 
-    socketInfo.setAuthProvider(syncState->authProviderFactory->newProvider());
+    socketInfo.setAuthProvider(_state.authProviderFactory->newProvider());
 
-    // We capture the socket by reference because the socket is guaranteed to be alive when the
-    // callback is called. Also we assume that the socket message dispatcher synchronizes its
-    // handler such that a handler cannot be called concurrently for a single socket. This allows
-    // us to avoid using an additional synchronization mechanism here.
-    MessageDispatcher::MessageHandler serverMessageHandler = track(
-      [=, &socketInfo](const Message& msg) mutable {
-        handleServerMessage(msg, socketInfo);
-        return DispatchStatus::MessageHandled;
-      },
-      &_tracker);
-    socketInfo.setServerMessageHandler(std::move(serverMessageHandler));
+    auto serverLifetimeGuarded = std::bind(Track{}, std::placeholders::_1, &_tracker);
+    auto socketInfoLifetimeGuarded = std::bind(Track{}, std::placeholders::_1, &socketInfo.tracker);
+    auto asyncServerMessageHandler =
+      // Track the socketInfo to be able to retrack it in the callback, as tracking an object
+      // requires that it is alive.
+      serverLifetimeGuarded(socketInfoLifetimeGuarded(
+        [=, &socketInfo](const Message& msg) mutable {
+          return safeCall(socketInfoLifetimeGuarded([=, &socketInfo] {
+            handleServerMessage(msg, socketInfo);
+            return DispatchStatus::MessageHandled;
+          }));
+        }));
+
+    // MessageDispatcher does not accept yet asynchronous handlers, so we have to explicitly wait
+    // for the result.
+    socketInfo.setServerMessageHandler([=](const Message& msg) mutable noexcept {
+      auto logWarningReturnError = [](const std::string& errorMsg) {
+        qiLogWarning() << "Server message handler raised an exception: " << errorMsg;
+        return DispatchStatus::MessageHandled_WithError;
+      };
+      return ka::invoke_catch(
+        ka::compose(logWarningReturnError, ka::exception_message{}),
+        [&] {
+          return asyncServerMessageHandler(msg).value();
+        });
+    });
 
     // Start reading messages from this socket.
     const auto started = socket->ensureReading();
@@ -435,7 +486,7 @@ namespace qi
         if (authResult.find(AuthProvider::Error_Reason_Key) != authResult.end())
         {
           builder << ": " << authResult[AuthProvider::Error_Reason_Key].to<std::string>();
-          auto authProviderFactory = _state->authProviderFactory;
+          auto authProviderFactory = _state.authProviderFactory;
           builder << " [" << authProviderFactory->authVersionMajor() << "."
                   << authProviderFactory->authVersionMinor() << "]";
         }
@@ -451,7 +502,7 @@ namespace qi
     // We must validate the socket (and bind the objects to the socket) before returning the success
     // of the authentication to the client, otherwise it might send us a request for the object
     // before we could bind it, which would make it a dangling request.
-    _state->binder.validateSocket(socketInfo.socket());
+    _state.binder.validateSocket(socketInfo.socket());
     socketInfo.setAuthenticated();
   }
 
@@ -507,48 +558,45 @@ namespace qi
   Server::RemoveSocketResult Server::removeSocket(const MessageSocketPtr& socket)
   {
     QI_ASSERT_NOT_NULL(socket);
-    const auto removed = _state->binder.removeSocket(socket);
+    const auto removed = _state.binder.removeSocket(socket);
     const auto disconnected = socket->disconnect().async();
     return { removed, disconnected };
   }
 
-  void Server::close()
+  Future<void> Server::close()
   {
-    {
-      auto syncState = _state.synchronize();
-      if (ka::exchange(syncState->dying, true))
-        return;
-
-      qiLogVerbose() << "Closing server...";
-
-      // Objects are not removed from the server, they will become available again if the server
-      // is reopen.
-      syncState->binder.clearSockets();
-    }
-
-    _server.close();
+    closeImpl();
+    return futurize();
   }
 
   qi::Future<void> Server::listen(const qi::Url& address)
   {
     // Assume this means we are back on-line.
-    _state->dying = false;
-    return _server.listen(address);
+    return open()
+        .andThen(FutureCallbackType_Sync,
+                 [=](bool) {
+                   return _server.listen(address);
+                 })
+        .unwrap();
   }
 
-  bool Server::setIdentity(const std::string& key, const std::string& crt)
+  Future<bool> Server::setIdentity(const std::string& key, const std::string& crt)
   {
-    return _server.setIdentity(key, crt);
+    return safeCall([=] {
+      return _server.setIdentity(key, crt);
+    });
   }
 
-  qi::UrlVector Server::endpoints() const
+  Future<UrlVector> Server::endpoints() const
   {
-    return _server.endpoints();
+    return safeCall([=] {
+      return _server.endpoints();
+    });
   }
 
-  void Server::open()
+  Future<bool> Server::open()
   {
-    _state->dying = false;
+    boost::shared_ptr<Strand> empty;
+    return futurize(boost::atomic_compare_exchange(&_strand, &empty, boost::make_shared<Strand>()));
   }
-
 }

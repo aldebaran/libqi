@@ -9,6 +9,7 @@
 
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include "boundobject.hpp"
 #include "authprovider_p.hpp"
 
@@ -50,6 +51,9 @@ namespace qi
         /// Adds a message handler for server specific messages.
         /// @throws A `std::logic_error` exception if an handler was already set.
         void setServerMessageHandler(MessageDispatcher::MessageHandler handler);
+
+        struct Tracker : qi::Trackable<Tracker> { using Trackable::destroy; };
+        Tracker tracker;
 
       private:
         const MessageSocketWeakPtr _socket;
@@ -227,22 +231,22 @@ namespace qi
 
     /// @see `TransportServer::close`
     /// @post The server is dying.
-    void close();
+    Future<void> close();
 
     /// Notifies the server that it's up again.
     /// @post The server is not dying.
-    void open();
+    Future<bool> open();
 
     /// @see `TransportServer::setIdentity`
-    bool setIdentity(const std::string& key, const std::string& crt);
+    Future<bool> setIdentity(const std::string& key, const std::string& crt);
 
     /// @returns True if the object is not null, an object did not exist already for this service id
     /// and the object was succesfully added.
-    bool addObject(unsigned int serviceId, qi::AnyObject obj);
-    bool addObject(unsigned int serviceId, qi::BoundObjectPtr obj);
+    Future<bool> addObject(unsigned int serviceId, qi::AnyObject obj);
+    Future<bool> addObject(unsigned int serviceId, qi::BoundObjectPtr obj);
 
     /// @returns True if an object existed for this service id and it was succesfully removed.
-    bool removeObject(unsigned int idx);
+    Future<bool> removeObject(unsigned int idx);
 
     /// Adds an outgoing socket (a socket that was connected to a remote server endpoint instead of
     /// the usual listening server sockets). This allows service bounds objects to process messages
@@ -251,16 +255,18 @@ namespace qi
     /// @throws
     ///   - A `std::invalid_argument` exception if the socket is null.
     ///   - A `std::logic_error` exception if the server is dying.
-    bool addOutgoingSocket(MessageSocketPtr socket);
+    Future<bool> addOutgoingSocket(MessageSocketPtr socket);
 
     /// @see `TransportServer::endpoints`
-    std::vector<qi::Url> endpoints() const;
+    Future<UrlVector> endpoints() const;
 
-    void setAuthProviderFactory(AuthProviderFactoryPtr factory);
+    Future<void> setAuthProviderFactory(AuthProviderFactoryPtr factory);
 
   private:
     using SocketInfo = detail::server::SocketInfo;
     using BoundObjectSocketBinder = detail::server::BoundObjectSocketBinder;
+
+    void closeImpl();
 
     /// Adds an incoming socket (a socket created from a client connecting to the server),
     /// optionally requiring authentication.
@@ -322,20 +328,37 @@ namespace qi
     struct State
     {
       AuthProviderFactoryPtr authProviderFactory;
-      bool dying = false;
       BoundObjectSocketBinder binder;
     };
-    using SyncState = boost::synchronized_value<State>;
-    SyncState _state;
+    State _state;
+    boost::shared_ptr<Strand> _strand = boost::make_shared<Strand>();
 
     struct Tracker : qi::Trackable<Tracker> { using Trackable::destroy; };
     Tracker _tracker;
+
+    template<typename R>
+    static Future<R> serverClosedError()
+    {
+      return makeFutureError<R>("The server is closed.");
+    }
+
+    template<
+      typename Proc1,
+      typename Result = ka::Decay<decltype(std::declval<Proc1>()())>,
+      typename Proc2 = decltype(serverClosedError<Result>)>
+      Future<Result> safeCall(Proc1&& proc, Proc2&& onFail = serverClosedError<Result>) const
+    {
+      if (auto ptr = boost::atomic_load(&_strand))
+        return ptr->async(std::forward<Proc1>(proc));
+      else
+        return std::forward<Proc2>(onFail)();
+    }
 
     /// @pre The state value must be locked.
     /// @throws
     ///   - A `std::invalid_argument` exception if the socket is null.
     ///   - A `std::logic_error` exception if the server is dying.
-    SocketInfo& addSocket(MessageSocketPtr socket, State& state);
+    SocketInfo& addSocket(MessageSocketPtr socket);
 
   protected:
     const bool _enforceAuth;

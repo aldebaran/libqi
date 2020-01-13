@@ -582,13 +582,13 @@ namespace qi
     QI_LOG_DEBUG_BOUNDOBJECT() << "Unbinding from socket " << socket;
 
     // We consider that this method was a success if any of the following actions had an effect.
-    bool success = removeConnections(socket) != 0;
-    success = removeCancelables(socket) != 0 || success;
-    success = removeLinks(socket) != 0 || success;
+    const auto removedConnections = removeConnections(socket);
+    const auto removedCancelables = removeCancelables(socket);
+    const auto removedLinks = removeLinks(socket);
 
     // Remove all hosted objects that were created in the context of this socket for this object.
     QI_LOG_DEBUG_BOUNDOBJECT() << "Removing children objects from socket " << socket;
-    success = removeObjectsFromSocket(socket) || success;
+    const auto removedObjects = removeObjectsFromSocket(socket);
 
     QI_LOG_DEBUG_BOUNDOBJECT() << "Calling callback of socket disconnection";
     ka::invoke_catch(
@@ -602,7 +602,10 @@ namespace qi
           callback(socket);
       });
 
-    return success;
+    return removedConnections != 0
+        || removedCancelables != 0
+        || removedLinks != 0
+        || removedObjects != 0;
   }
 
   void BoundObject::_removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id)
