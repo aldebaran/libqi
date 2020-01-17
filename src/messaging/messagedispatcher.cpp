@@ -68,14 +68,17 @@ bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId,
 {
   auto state = _state.synchronize();
   const auto it = state->recipients.find(RecipientId{ serviceId, objectId });
-  if (it != state->recipients.end())
-  {
-    QI_LOG_DEBUG_MSGDISPATCHER()
-      << "Disconnecting a handler (linkId=" << linkId
-      << ") for message dispatch for service=" << serviceId << ", object=" << objectId;
-    return it->second.erase(linkId) > 0;
-  }
-  return false;
+  if (it == state->recipients.end())
+    return false;
+
+  QI_LOG_DEBUG_MSGDISPATCHER()
+    << "Disconnecting a handler (linkId=" << linkId
+    << ") for message dispatch for service=" << serviceId << ", object=" << objectId;
+  auto& handlers = it->second;
+  const auto disconnectedCount = handlers.erase(linkId);
+  if (handlers.empty())
+    state->recipients.erase(it);
+  return disconnectedCount == 1;
 }
 
 bool MessageDispatcher::tryDispatch(const MessageHandlerList& handlers, const Message& msg)
