@@ -189,6 +189,23 @@ namespace qi
     *_asyncEndpoints = updateEP();
   }
 
+  // Diffie-Hellman parameters of size 3072 bits at `PEM` format.
+  //
+  // Generation example: `openssl dhparam -outform PEM -out dhparams.pem 3072`
+  static char const* diffieHellmanParameters()
+  {
+    // Hardcoded for security reasons.
+    return
+      "-----BEGIN DH PARAMETERS-----\n"
+      "MIIBCAKCAQEAxtYYmi/o+PGc1/j5SLb/kPRjSJj2ZlnFHI6OxYjU1sr36KuOz6x+\n"
+      "MuRYnUcHChATpZ88lbhyw7w/L+R+E9uuOkkU78zNXv5xsElsKfl2BQpdO8N+h3y4\n"
+      "SlN3P8F8TmAgmRG/LZaABycWONSeRXGPZ76dE79z+0UE+Ae7jHqRCfjsudpb/DfB\n"
+      "JnnMYOsONQnpYywEjIJ6H5voGoYR5QLZPqBRHZuZTb8cBg5psPzIIHB3h77f6Xe8\n"
+      "irSYKhLmM3WqwDPnIZq+NdBrYZOziOrQqTdtcuPTtxYhhodIHhDK9213/onRSqft\n"
+      "mOEHq1J6vhjsv1mCAcZDvJYRQEFN3/gSywIBAg==\n"
+      "-----END DH PARAMETERS-----";
+  }
+
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)
   {
     _listenUrl = url;
@@ -286,11 +303,25 @@ namespace qi
         return qi::makeFutureError<void>(s);
       }
 
+      setCipherListTls12AndBelow<sock::NetworkAsio>(*_sslContext);
+
+      // Protocols are explicitly forbidden to allow TLS 1.2 only.
+      // A white list interface would be preferable, but `Asio` lets us no
+      // choice.
       _sslContext->set_options(
-        boost::asio::ssl::context::default_workarounds
-        | boost::asio::ssl::context::no_sslv2);
+          boost::asio::ssl::context::default_workarounds
+        | boost::asio::ssl::context::no_sslv2
+        | boost::asio::ssl::context::no_sslv3
+        | boost::asio::ssl::context::no_tlsv1
+        | boost::asio::ssl::context::no_tlsv1_1
+      );
       _sslContext->use_certificate_chain_file(self->_identityCertificate.c_str());
       _sslContext->use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
+
+      _sslContext->use_tmp_dh(boost::asio::const_buffer(
+        diffieHellmanParameters(),
+        std::strlen(diffieHellmanParameters())
+      ));
     }
 
     _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
@@ -328,7 +359,7 @@ namespace qi
     , _acceptor(new boost::asio::ip::tcp::acceptor(*asIoServicePtr(ctx)))
     , _live(true)
     , _sslContext(sock::makeSslContextPtr<sock::NetworkAsio>(*asIoServicePtr(ctx),
-                                                             sock::SslContext<sock::NetworkAsio>::sslv23))
+                                                             sock::SslContext<sock::NetworkAsio>::tlsv12))
     , _s()
     , _ssl(false)
     , _port(0)

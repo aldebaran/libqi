@@ -14,6 +14,7 @@ namespace mock
   _LowestLayer::_anyCloser _LowestLayer::close = defaultClose;
   N::ssl_socket_type::_anyAsyncHandshaker N::ssl_socket_type::async_handshake = defaultAsyncHandshake;
   N::acceptor_type::_anyAsyncAccepter N::acceptor_type::async_accept = defaultAsyncAccept;
+  std::atomic_bool N::resultOfTrySetCipherListTls12AndBelow(true);
 
   template <>
   N::_anyAsyncReaderSocket<N::ssl_socket_type>

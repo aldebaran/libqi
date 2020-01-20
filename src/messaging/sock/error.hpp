@@ -111,6 +111,46 @@ namespace qi { namespace sock {
     return system::error_code{asio::error::shut_down, system::system_category()};
   }
 
+  /// Socket-related applicative errors.
+  enum SocketErrors
+  {
+    cannotCreateSocket
+  };
+
+  /// Error category for socket errors.
+  struct SocketCategory : boost::system::error_category
+  {
+    const char* name() const noexcept override
+    {
+      return "socket category";
+    }
+    std::string message(int ev) const override
+    {
+      switch (ev) {
+      case SocketErrors::cannotCreateSocket:
+        return "cannot create socket";
+      default:
+        return "unknown";
+      }
+    }
+  };
+
+  inline const SocketCategory& socketCategory()
+  {
+    static SocketCategory c;
+    return c;
+  }
+
+  template<typename Error>
+  Error socketCreationFailed();
+
+  template<>
+  inline boost::system::error_code socketCreationFailed<boost::system::error_code>()
+  {
+    using namespace boost;
+    return system::error_code{SocketErrors::cannotCreateSocket, socketCategory()};
+  }
+
 }} // namespace qi::sock
 
 #endif // _QI_SOCK_ERROR_HPP

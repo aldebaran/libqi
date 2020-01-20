@@ -43,7 +43,7 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
   {
     using Side = HandshakeSide<S>;
     ConnectSocket<N, S> connect{io};
-    SslContext<N> context { Method<SslContext<N>>::sslv23 };
+    SslContext<N> context { Method<SslContext<N>>::tlsv12 };
     connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false},
       [&] { return makeSslSocketPtr<N>(io, context); },
       IpV6Enabled{false}, Side::client,
@@ -152,7 +152,7 @@ TYPED_TEST(NetConnectFuture, FailsOnResolve)
   const Url url{"tcp://10.11.12.13:1234"};
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(url, SslEnabled{ false }, [&] { return makeSslSocketPtr<N>(io, context); },
           IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
@@ -194,7 +194,7 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
   {
     using Side = HandshakeSide<S>;
     ConnectFuture connect{io};
-    SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+    SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
     connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
             [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
@@ -242,7 +242,7 @@ TYPED_TEST(NetConnectFuture, ResolvedBySkippingIpV6)
   static const std::string host = "1.2.3.4";
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{ "tcp://" + host + ":9876" }, SslEnabled{ false },
           [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
@@ -272,7 +272,7 @@ TYPED_TEST(NetConnectFuture, OnlyIpV6EndpointsResolvedButIpV6NotAllowed)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
           [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
@@ -313,7 +313,7 @@ TYPED_TEST(NetConnectFuture, ConnectCalledAfterParentHasBeenDestroyed)
   {
     using Side = HandshakeSide<S>;
     ConnectFuture connect{io};
-    SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+    SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
     connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
             [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
@@ -349,7 +349,7 @@ TYPED_TEST(NetConnectFuture, FailsOnConnect)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
           [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
@@ -376,7 +376,7 @@ TYPED_TEST(NetConnectFuture, SucceedsNonSsl)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
           [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
@@ -407,7 +407,7 @@ TYPED_TEST(NetConnectFuture, FailsOnHandshake)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
           [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasError());
@@ -449,7 +449,7 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
   {
     using Side = HandshakeSide<S>;
     ConnectFuture connect{io};
-    SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+    SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
     connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
             [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
@@ -489,7 +489,7 @@ TYPED_TEST(NetConnectFuture, SucceedsSsl)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectFuture connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
           [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
   ASSERT_TRUE(connect.complete().hasValue());
@@ -566,7 +566,7 @@ TEST(NetConnectFutureStop, WhileResolving)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectSocketFuture<N, S> connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true},
     [&] { return makeSslSocketPtr<N>(io, context); },
     IpV6Enabled{false}, Side::client, Seconds{100},
@@ -617,7 +617,7 @@ TEST(NetConnectFutureStop, WhileConnecting)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectSocketFuture<N, S> connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true},
     [&] { return makeSslSocketPtr<N>(io, context); },
     IpV6Enabled{false}, Side::client, Seconds{100},
@@ -668,7 +668,7 @@ TEST(NetConnectFutureStop, WhileHandshaking)
   IoService<N>& io = N::defaultIoService();
   using Side = HandshakeSide<S>;
   ConnectSocketFuture<N, S> connect{io};
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{true},
     [&] { return makeSslSocketPtr<N>(io, context); },
     IpV6Enabled{false}, Side::client, Seconds{100},

@@ -31,6 +31,21 @@
 
 namespace qi {
 
+  /// Sets cipher list.
+  ///
+  /// Throws `std::runtime_error` if the cipher list couldn't be set.
+  ///
+  /// Network N
+  template<typename N>
+  void setCipherListTls12AndBelow(sock::SslContext<N>& c)
+  {
+    if (!N::trySetCipherListTls12AndBelow(c))
+    {
+      throw std::runtime_error(
+        std::string("SSL context: Could not set cipher list: ") + N::cipherList());
+    }
+  }
+
   boost::optional<Seconds> getTcpPingTimeout(Seconds defaultTimeout);
 
   template<typename N, typename S>
@@ -408,14 +423,25 @@ namespace qi {
     }
     // This changes the status so that concurrent calls will return in error.
     using Side = sock::HandshakeSide<S>;
+
+    auto makeSocket = std::bind(
+      InvokeCatchLogRethrowError{},
+      sock::logCategory(),       // log category
+      "could not create socket", // log prefix
+      [&]() {
+        // Other protocols (TLS 1.1, SSL 3.0, etc.) are not explicitly
+        // forbidden and thus can be used, to let client connect to an older
+        // server. It is the server, not the client, that forces a specific
+        // protocol (see for instance see `TransportServer` implementations).
+        auto contextPtr = sock::makeSslContextPtr<N>(Method::tlsv12);
+        setCipherListTls12AndBelow<N>(*contextPtr);
+        return sock::makeSocketWithContextPtr<N>(_ioService, contextPtr);
+      }
+    );
+
     _state =
-        ConnectingState{ _ioService, url, _ssl,
-                         [&] {
-                           return sock::makeSocketWithContextPtr<N>(
-                                 _ioService, sock::makeSslContextPtr<N>(Method::sslv23));
-                         },
-                         !disableIpV6, Side::client,
-                         getTcpPingTimeout(Seconds{ sock::defaultTimeoutInSeconds }) };
+        ConnectingState{ _ioService, url, _ssl, makeSocket, !disableIpV6, Side::client,
+          getTcpPingTimeout(Seconds{ sock::defaultTimeoutInSeconds }) };
     _url = url;
     auto self = shared_from_this();
 

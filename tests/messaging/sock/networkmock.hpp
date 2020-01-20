@@ -48,9 +48,9 @@ namespace mock
         fault,
         messageSize,
         shutdown,
+        socketCreationFailed,
         unknown
       } _value;
-      std::string _message;
       error_code_type(value_type c = success) : _value(c) {}
       explicit operator bool() const {return _value != success;}
       value_type value() const {return _value;}
@@ -69,11 +69,12 @@ namespace mock
         case fault: return "fault";
         case messageSize: return "messageSize";
         case shutdown: return "shutdown";
+        case socketCreationFailed: return "socketCreationFailed";
         case unknown: return "unknown";
         }
         throw std::runtime_error("error_code_type::message(): unknown code.");
       }
-      KA_GENERATE_FRIEND_REGULAR_OPS_2(error_code_type, _value, _message)
+      KA_GENERATE_FRIEND_REGULAR_OPS_1(error_code_type, _value)
     };
     struct io_service_type
     {
@@ -93,7 +94,7 @@ namespace mock
     };
     struct ssl_context_type
     {
-      enum class method {sslv23};
+      enum class method {tlsv12};
       method m;
       ssl_context_type() = default;        // The 2 ctors are to avoid the
       ssl_context_type(method m) : m(m) {} // "not initialized" warning about m.
@@ -316,6 +317,18 @@ namespace mock
     {
       _async_write_next_layer(s, b, h);
     }
+
+    static const char* cipherList()
+    {
+      return "";
+    }
+
+    static std::atomic_bool resultOfTrySetCipherListTls12AndBelow;
+
+    static bool trySetCipherListTls12AndBelow(ssl_context_type&)
+    {
+      return resultOfTrySetCipherListTls12AndBelow.load();
+    }
   };
 
 } // namespace mock
@@ -381,6 +394,12 @@ template<>
 inline ErrorCode<mock::Network> shutdown<ErrorCode<mock::Network>>()
 {
   return {ErrorCode<mock::Network>::shutdown};
+}
+
+template<>
+inline ErrorCode<mock::Network> socketCreationFailed<ErrorCode<mock::Network>>()
+{
+  return {ErrorCode<mock::Network>::socketCreationFailed};
 }
 
 }} // namespace qi::sock
