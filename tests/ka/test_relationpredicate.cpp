@@ -1,6 +1,7 @@
 #include <ka/relationpredicate.hpp>
 #include "test_relations.hpp"
 #include <gtest/gtest.h>
+#include <cmath>
 #include <cstdint>
 #include <ka/range.hpp>
 
@@ -213,6 +214,42 @@ TEST(RelationPredicate, IsEquivalence) {
     EXPECT_FALSE(is_equivalence(reflexive_not_symmetric_transitive_t{}, entities));
     EXPECT_FALSE(is_equivalence(not_reflexive_symmetric_transitive_t{}, entities));
     EXPECT_FALSE(is_equivalence(not_reflexive_not_symmetric_transitive_t{}, entities));
+  }
+}
+
+TEST(RelationPredicate, AreComplement) {
+  using namespace ka;
+  using namespace test;
+  using N = int;
+  auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
+  {
+    auto eq = [](N a, N b) {return a == b;};
+    auto ne = [](N a, N b) {return a != b;};
+    auto lt = [](N a, N b) {return a < b;};
+    auto ge = [](N a, N b) {return a >= b;};
+    auto gt = [](N a, N b) {return a > b;};
+    EXPECT_TRUE(are_complement(eq, ne, ints_0_to_9));
+    EXPECT_TRUE(are_complement(ne, eq, ints_0_to_9));
+    EXPECT_FALSE(are_complement(eq, eq, ints_0_to_9));
+    EXPECT_FALSE(are_complement(ne, ne, ints_0_to_9));
+    EXPECT_TRUE(are_complement(lt, ge, ints_0_to_9));
+    EXPECT_TRUE(are_complement(ge, lt, ints_0_to_9));
+    EXPECT_FALSE(are_complement(lt, lt, ints_0_to_9));
+    EXPECT_FALSE(are_complement(ge, ge, ints_0_to_9));
+    EXPECT_FALSE(are_complement(lt, gt, ints_0_to_9));
+  }
+  auto dist = [](N a, N b) -> N {return std::abs(b - a);};
+  auto dist_odd = [=](N a, N b) -> bool {return dist(a, b) % 2 == 1;};
+  {
+    auto dist_even = [=](N a, N b) -> bool {return dist(a, b) % 2 == 0;};
+    EXPECT_TRUE(are_complement(dist_even, dist_odd, ints_0_to_9));
+  }
+  {
+    auto pseudo_dist_even = [=](N a, N b) {
+      return dist(a, b) % 2 == 0 || (a == 2 && b == 9);
+    };
+    // Relations both hold for `(2, 9)`.
+    EXPECT_FALSE(are_complement(pseudo_dist_even, dist_odd, ints_0_to_9));
   }
 }
 
