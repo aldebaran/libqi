@@ -168,9 +168,14 @@ namespace qi {
   template <typename... P> class Signal;
 
   template<typename T>
-  class SignalF: public SignalBase, public boost::function<T>
+  class SignalF: public SignalBase, private boost::function<T>
   {
+    using BoostFunctionBase = boost::function<T>;
+
   public:
+    using FunctionType = T;
+    using typename BoostFunctionBase::result_type;
+
     /** Signal constructor
      * @param onSubscribers invoked each time number of subscribers switch
      * between 0 and 1, with argument '!subscribers.empty()'
@@ -178,9 +183,9 @@ namespace qi {
     */
     SignalF(OnSubscribers onSubscribers = OnSubscribers());
     SignalF(ExecutionContext* execContext, OnSubscribers onSubscribers);
-    using FunctionType = T;
     virtual qi::Signature signature() const;
-    using boost::function<T>::operator();
+
+    using BoostFunctionBase::operator();
 
 #ifdef DOXYGEN
     /** Connect a subscriber to this signal.
@@ -237,14 +242,16 @@ namespace qi {
   class Signal: public SignalF<void(P...)>
   {
   public:
-    typedef void(FunctionType)(P...); // FIXME: VS2013 fails if this is replaced by `using`
-    using ParentType = SignalF<FunctionType>;
+    using ParentType = SignalF<void(P...)>;
+    using typename ParentType::FunctionType;
+
     using OnSubscribers = typename ParentType::OnSubscribers;
     Signal(OnSubscribers onSubscribers = OnSubscribers())
       : ParentType(onSubscribers) {}
     explicit Signal(ExecutionContext* execContext, OnSubscribers onSubscribers = OnSubscribers())
       : ParentType(execContext, onSubscribers) {}
-    using boost::function<FunctionType>::operator();
+
+    using ParentType::operator();
   };
 
   template <>

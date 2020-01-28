@@ -211,7 +211,7 @@ TEST(Optional, CallAndSetGenericMoveOnly) {
   using M = move_only_t<int>;
   const auto f = [](M x) {
     *x += 1;
-    return std::move(x);
+    return x;
   };
   int const i = 3;
   {
@@ -288,7 +288,7 @@ TEST(Optional, GenericMoveOnly) {
   using M = ka::move_only_t<int>;
   const auto f = [](M x) {
     *x += 1;
-    return std::move(x);
+    return x;
   };
   int const i = 3;
   {
@@ -679,7 +679,9 @@ TEST(Optional, SequenceContainerEraseQ1Q2) {
   int const x = 5;
   o.set(x);
   ASSERT_EQ(src(o), x);
-  ASSERT_EQ(o.erase(o.begin(), o.begin()+1), o.begin()+1);
+  auto const b = o.begin();
+  auto const e = b + 1;
+  ASSERT_EQ(o.erase(b, e), e);
   ASSERT_TRUE(o.empty());
 }
 

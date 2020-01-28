@@ -93,6 +93,8 @@ namespace qi {
     /// Return an AnyObject that shares life type with \p other.
     template<typename T> qi::AnyObject object(boost::shared_ptr<T> other);
     void markProperty(unsigned int ev, unsigned int getter, unsigned int setter);
+
+    void setOptionalUid(boost::optional<ObjectUid> maybeUid);
   private:
     DynamicObject* bareObject();
     void setManageable(DynamicObject* obj, Manageable* m);

@@ -195,4 +195,9 @@ namespace qi
   {
     _p->_object->setThreadingModel(model);
   }
+
+  void DynamicObjectBuilder::setOptionalUid(boost::optional<ObjectUid> maybeUid)
+  {
+    return _p->_object->setUid(maybeUid);
+  }
 }

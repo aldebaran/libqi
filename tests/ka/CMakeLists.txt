@@ -1,8 +1,10 @@
 qi_create_gmock(
   test_ka
   SRC
+    "ark/test_inputiter.cpp"
     "ark/test_mutable.cpp"
     "test_algorithm.cpp"
+    "test_base64.cpp"
     "test_conceptpredicate.cpp"
     "test_empty.cpp"
     "test_errorhandling.cpp"
@@ -14,6 +16,7 @@ qi_create_gmock(
     "test_moveoncopy.cpp"
     "test_mutablestore.cpp"
     "test_opt.cpp"
+    "test_productiter.cpp"
     "test_range.cpp"
     "test_relationpredicate.cpp"
     "test_scoped.cpp"

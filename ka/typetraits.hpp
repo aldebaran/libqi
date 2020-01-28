@@ -24,8 +24,48 @@ namespace ka {
   using true_t  = std::true_type;
   using false_t = std::false_type;
 
+  template<int I>
+  using int_constant_t = std::integral_constant<int, I>;
+
+  template<bool B>
+  using bool_constant_t = std::integral_constant<bool, B>;
+
   template<typename A, typename B>
   using Equal = typename std::is_same<A, B>::type;
+
+  /// meaning(ConstantVoid<T...>) = meaning(void)
+  ///
+  /// This type is  useful to create type predicates based on expressions. It is an alternative to
+  /// the `KA_GENERATE_TRAITS_HAS` macro.
+  ///
+  /// Example: Defining a type predicate true iff a value of the type can be
+  ///   assigned with an `int`, and using it to dispatch a function call.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// template<typename T, typename = void>
+  /// struct IsIntAssignable : false_t {};
+  ///
+  /// template<typename T>
+  /// struct IsIntAssignable<
+  ///   T, ConstantVoid<decltype(declref<T>() = 1)>> : true_t {};
+  ///
+  /// void try_set_impl(T& t, int i, true_t /* is int-assignable */) {
+  ///   t = i;
+  /// }
+  ///
+  /// template<typename T>
+  /// void try_set_impl(T& t, int i, false_t /* is NOT int-assignable */) {
+  ///   // nothing.
+  /// }
+  ///
+  /// template<typename T>
+  /// void try_set(T& t, int i) {
+  ///   try_set_impl(t, i, typename IsIntAssignable<T>::type{});
+  /// }
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Equivalent to the std::void_t of C++17.
+  template<typename... Tn>
+  using ConstantVoid = void;
 
   namespace detail {
     template<typename A>
@@ -484,6 +524,12 @@ namespace ka {
   /// See `EnableIfInputIterator` for a usage example.
   template<typename T>
   using EnableIfNotInputIterator = EnableIf<!HasInputIteratorTag<T>::value>;
+
+  KA_GENERATE_TRAITS_HAS(HasMappedType, T,
+    std::declval<typename T::mapped_type>())
+
+  KA_GENERATE_TRAITS_HAS(HasMemberSize, T,
+    std::declval<typename T::size_type>() = declcref<T>().size())
 } // namespace ka
 
 #endif // KA_TYPETRAITS_HPP

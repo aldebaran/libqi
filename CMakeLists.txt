@@ -395,6 +395,8 @@ set(QIPERF_C
 
 set(KA_H
   ka/algorithm.hpp
+  ka/base64.hpp
+  ka/ark/inputiter.hpp
   ka/ark/mutable.hpp
   ka/concept.hpp
   ka/conceptpredicate.hpp
@@ -409,6 +411,7 @@ set(KA_H
   ka/mutablestore.hpp
   ka/mutex.hpp
   ka/opt.hpp
+  ka/productiter.hpp
   ka/range.hpp
   ka/relationpredicate.hpp
   ka/scoped.hpp

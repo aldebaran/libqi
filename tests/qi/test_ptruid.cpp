@@ -2,12 +2,13 @@
 ** Copyright (C) 2010, 2016 Aldebaran Robotics
 */
 
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <qi/ptruid.hpp>
 #include <qi/os.hpp>
 #include <ka/conceptpredicate.hpp>
 #include <qi/application.hpp>
-#include <gtest/gtest.h>
 #include <boost/core/ignore_unused.hpp>
 #include <unordered_map>
 

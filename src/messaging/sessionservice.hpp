@@ -28,17 +28,20 @@ namespace qi {
 
   struct ServiceRequest
   {
+    explicit ServiceRequest(const std::string &service = "")
+    {
+      serviceInfo.setName(service);
+    }
 
-    ServiceRequest(const std::string &service = "")
-      : name(service)
-      , serviceId(0)
-      , remoteObject(0)
-    {}
+    ServiceRequest(const ServiceRequest&) = delete;
+    ServiceRequest& operator=(const ServiceRequest&) = delete;
+
+    ServiceRequest(ServiceRequest&&) = default;
+    ServiceRequest& operator=(ServiceRequest&&) = default;
 
     qi::Promise<qi::AnyObject>    promise;
-    std::string                   name;
-    unsigned int                  serviceId;
-    RemoteObject                 *remoteObject;
+    ServiceInfo                   serviceInfo;
+    RemoteObjectPtr               remoteObject;
   };
 
   class Session_Service: public qi::Trackable<Session_Service>
@@ -70,7 +73,7 @@ namespace qi {
 
   private:
     boost::recursive_mutex         _requestsMutex;
-    std::map<int, ServiceRequest*> _requests;
+    std::map<int, std::unique_ptr<ServiceRequest>> _requests;
     qi::Atomic<int>                _requestsIndex;
 
     //maintain a cache of remote object
@@ -108,3 +111,4 @@ namespace qi {
 
 }
 #endif  // _SRC_SESSIONSERVICE_HPP_
+

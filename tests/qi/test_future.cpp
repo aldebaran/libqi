@@ -630,6 +630,13 @@ TEST(FutureTestCancel, Canceleable)
   EXPECT_THROW(f.hasValue(qi::FutureTimeout_None), qi::FutureException);
 }
 
+TEST(FutureTestCancel, CancelCannotThrow) // If this test fails, it can result in aborting the whole program.
+{
+  qi::Promise<void> promise([](qi::Promise<void>&) { throw 42; });
+  auto future = promise.future();
+  EXPECT_NO_THROW(future.cancel());
+}
+
 TEST(TestFutureCancel, CanceledDelayed)
 {
   // We can't guarantee when it will be cancelled but we can guarantee it will be

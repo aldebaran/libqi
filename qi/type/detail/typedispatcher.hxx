@@ -69,8 +69,13 @@ namespace qi {
           // Create our own shared_ptr, that holds p and delete it on destruction
           qiLogDebug("qitype.typedispatcher") << "Detected object shared ptr";
           AnyReference shared_ptr = value.clone();
-          AnyObject ao(new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type()), pointee.rawValue()),
-            boost::bind(&AnyObject::deleteCustomDeleter, _1, (boost::function<void(Empty*)>)boost::bind(&AnyReference::destroy, shared_ptr)));
+          auto go = detail::ManagedObjectPtr(
+            new GenericObject(static_cast<ObjectTypeInterface*>(pointee.type()),
+                              pointee.rawValue()),
+            boost::bind(&AnyObject::deleteCustomDeleter, _1,
+                        (boost::function<void(Empty*)>)boost::bind(&AnyReference::destroy,
+                                                                   shared_ptr)));
+          AnyObject ao(std::move(go));
           v.visitAnyObject(ao);
         }
         else

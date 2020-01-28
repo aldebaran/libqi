@@ -11,11 +11,11 @@ namespace ka {
   /// `void` specialization in generic code.
   ///
   /// Theoretically, it corresponds to the terminal object in the category of
-  /// sets and functions, which is the empty set. It also happens to be
-  /// (isomorphic to) the product of no set, hence the definition as an
-  /// empty tuple.
+  /// sets and functions, which is the singleton set (i.e. the set with a single
+  /// element). It also happens to be (isomorphic to) the product of no set,
+  /// hence the definition as an empty tuple.
   ///
-  /// See <https://en.wikipedia.org/wiki/Unit_type>
+  /// See [unit type](https://en.wikipedia.org/wiki/Unit_type)
   using unit_t = std::tuple<>;
 
   /// Unique value of `unit_t`.
