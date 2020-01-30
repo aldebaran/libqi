@@ -1313,7 +1313,8 @@ TEST(Value, OptionalTuple)
   AnyReferenceVector refVec;
   std::string str("cornflakes");
   refVec.push_back(AutoAnyReference(str)); // has to explicitly be a std::string, a string literal won't do
-  refVec.push_back(AutoAnyReference(6.9847));
+  double dbl = 6.9847;
+  refVec.push_back(AutoAnyReference(dbl));
   v.content().setTuple(refVec);
   EXPECT_EQ(str, v.content().element<std::string>(0));
 
