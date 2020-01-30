@@ -37,12 +37,14 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
       }};
     }
   );
-  ConnectSocket<N, S>* p = nullptr;
+  using C = ConnectSocket<N, S>;
+  typename std::aligned_storage<sizeof(C), alignof(C)>::type storage;
+  auto& connect = reinterpret_cast<C&>(storage);
   Promise<ErrorCode<N>> promiseError;
   IoService<N>& io = N::defaultIoService();
   {
     using Side = HandshakeSide<S>;
-    ConnectSocket<N, S> connect{io};
+    auto _ = ka::scoped(new (&connect) C{io}, [](C* p){ p->~C(); });
     SslContext<N> context { Method<SslContext<N>>::tlsv12 };
     connect(Url{"tcp://10.11.12.13:1234"}, SslEnabled{false},
       [&] { return makeSslSocketPtr<N>(io, context); },
@@ -51,10 +53,9 @@ TEST(NetConnectSocket, ResolveCalledAfterParentHasBeenDestroyed)
         promiseError.setValue(e);
       }
     );
-    p = &connect;
   }
   // The connecting object is now destroyed and on top of that we wipe out its memory.
-  overwrite(p);
+  overwrite(&connect);
   // Now we unblock the resolve handler.
   nukeObject.setValue(0);
   // We wait for an error to occur.
@@ -188,21 +189,22 @@ TYPED_TEST(NetConnectFuture, ResolveCalledAfterParentHasBeenDestroyed)
       }};
     }
   );
-  ConnectFuture* p = nullptr;
+
+  using C = ConnectFuture;
+  typename std::aligned_storage<sizeof(C), alignof(C)>::type storage;
+  auto& connect = reinterpret_cast<C&>(storage);
   qi::Future<SocketPtr<S>> connected;
   IoService<N>& io = N::defaultIoService();
   {
     using Side = HandshakeSide<S>;
-    ConnectFuture connect{io};
+    auto _ = ka::scoped(new (&connect) C{io}, [](C* p){ p->~C(); });
     SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
     connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ false },
             [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
-    p = &connect;
   }
   // The connecting object is now destroyed and on top of that we wipe out its memory.
-  // cppcheck-suppress deadpointer
-  overwrite(p);
+  overwrite(&connect);
   // Now we unblock the resolve handler.
   nukeObject.setValue(0);
   // We wait for an error to occur.
@@ -443,21 +445,21 @@ TYPED_TEST(NetConnectFuture, HandshakeHandlerCalledAfterParentHasBeenDestroyed)
       });
     }
   );
-  ConnectFuture* p = nullptr;
+  using C = ConnectFuture;
+  typename std::aligned_storage<sizeof(C), alignof(C)>::type storage;
+  auto& connect = reinterpret_cast<C&>(storage);
   qi::Future<SocketPtr<S>> connected;
   IoService<N>& io = N::defaultIoService();
   {
     using Side = HandshakeSide<S>;
-    ConnectFuture connect{io};
+    auto _ = ka::scoped(new (&connect) C{io}, [](C* p){ p->~C(); });
     SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
     connect(Url{ "tcp://10.11.12.13:1234" }, SslEnabled{ true },
             [&] { return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{ false }, Side::client);
     connected = connect.complete();
-    p = &connect;
   }
   // The connecting object is now destroyed and on top of that we wipe out its memory.
-  // cppcheck-suppress deadpointer
-  overwrite(p);
+  overwrite(&connect);
   // Now we unblock the handler.
   nukeObject.setValue(0);
   // We wait for an error to occur.

@@ -153,23 +153,24 @@ KA_WARNING_POP()
         t = callInAnotherThreadAfterFutureIsSet(h, nukingObject);
       };
     }
-    ReceiveMessageContinuousTrack<N>* p = nullptr;
+
+    using R = ReceiveMessageContinuousTrack<N>;
+    typename std::aligned_storage<sizeof(R), alignof(R)>::type storage;
+    auto& receive = reinterpret_cast<R&>(storage);
     qi::Promise<ErrorCode<N>> promiseError;
     qi::Future<ErrorCode<N>> futureError = promiseError.future();
     {
       SslContext<N> context;
       auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
       const size_t maxPayload = 10000;
-      ReceiveMessageContinuousTrack<N> receive;
+      auto _ = ka::scoped(new (&receive) R, [](R* p){ p->~R(); });
       receive(socket, ssl, maxPayload, [&](ErrorCode<N> e, const Message*) {
         promiseError.setValue(e);
         return true; // continue receiving messages
       });
-      p = &receive;
     }
     // The connecting object is now destroyed and on top of that we wipe out its memory.
-    // cppcheck-suppress deadpointer
-    overwrite(p);
+    overwrite(&receive);
     // Now we unblock the handler.
     nukingObject.setValue(0);
     // We wait for an error to occur.
@@ -228,23 +229,24 @@ namespace mock
         readHeaderThenDataAfterParentHasBeenDestroyed(buf, h);
       };
     }
-    ReceiveMessageContinuousTrack<N>* p = nullptr;
+
+    using R = ReceiveMessageContinuousTrack<N>;
+    typename std::aligned_storage<sizeof(R), alignof(R)>::type storage;
+    auto& receive = reinterpret_cast<R&>(storage);
     Promise<ErrorCode<N>> promiseError;
     Future<ErrorCode<N>> futureError = promiseError.future();
     {
       SslContext<N> context;
       auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
       const size_t maxPayload = 10000;
-      ReceiveMessageContinuousTrack<N> receive;
+      auto _ = ka::scoped(new (&receive) R, [](R* p){ p->~R(); });
       receive(socket, ssl, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
         promiseError.setValue(e);
         return true;
       });
-      p = &receive;
     }
     // The connecting object is now destroyed and on top of that we wipe out its memory.
-    // cppcheck-suppress deadpointer
-    overwrite(p);
+    overwrite(&receive);
     // Now we unblock the handler.
     nukingObject.setValue(0);
     // We wait for an error to occur.
