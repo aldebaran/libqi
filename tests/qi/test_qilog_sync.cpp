@@ -19,6 +19,8 @@
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
 #include <thread>
+#include <ka/conceptpredicate.hpp>
+#include <ka/functional.hpp>
 
 using namespace qi;
 using ::testing::_;
@@ -27,20 +29,6 @@ using ::testing::StrEq;
 
 namespace
 {
-class SyncLog : public ::testing::Test
-{
-protected:
-  void SetUp() override
-  {
-    qi::log::setSynchronousLog(true);
-  }
-
-  void TearDown() override
-  {
-    qi::log::flush();
-  }
-};
-}
 
 TEST_F(SyncLog, logsync)
 {
@@ -579,4 +567,6 @@ TEST_F(SyncLog, threadSafeness)
     for (auto& fut : futures)
       fut.wait();
   }
+}
+
 }

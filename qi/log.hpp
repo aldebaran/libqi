@@ -25,10 +25,11 @@
 
 # include <qi/os.hpp>
 
-// For ExceptionLogError:
+// For ExceptionLog:
 # include <stdexcept>
 # include <boost/exception/exception.hpp>
 # include <boost/exception/diagnostic_information.hpp>
+# include <ka/errorhandling.hpp>
 # include <ka/macroregular.hpp>
 # include <ka/typetraits.hpp>
 # include <ka/utility.hpp>
@@ -625,40 +626,94 @@ namespace qi {
 
 namespace qi
 {
-  /// Logs an exception in the error log, distinguishing
+
+  namespace detail {
+
+#define QI_DERIVE_EXCEPTIONLOGIMPL(LEVEL)                                \
+    /* Logs data for level #LEVEL */                                     \
+    /* TODO: Make variadic when C++ version >= 17. */                    \
+    template<typename T, typename U, typename V, typename W>             \
+    void exceptionLogImpl(ka::int_constant_t<LogLevel_ ## LEVEL> x,      \
+      const T& category, const U& prefix, const V& except, const W& msg) \
+    {                                                                    \
+      qiLog ## LEVEL(category) << prefix << except << msg;               \
+    }
+
+    // Empty version for the 'silent' log level.
+    template<typename T, typename U, typename V, typename W>
+    void exceptionLogImpl(ka::int_constant_t<LogLevel_Silent>, const T&,
+      const U&, const V&, const W&)
+    {
+    }
+
+    QI_DERIVE_EXCEPTIONLOGIMPL(Fatal)
+    QI_DERIVE_EXCEPTIONLOGIMPL(Error)
+    QI_DERIVE_EXCEPTIONLOGIMPL(Warning)
+    QI_DERIVE_EXCEPTIONLOGIMPL(Info)
+    QI_DERIVE_EXCEPTIONLOGIMPL(Verbose)
+    QI_DERIVE_EXCEPTIONLOGIMPL(Debug)
+#undef QI_DERIVE_EXCEPTIONLOGIMPL
+  } // namespace detail
+
+  /// Logs an exception in the log at the specified level, distinguishing
   /// std::exception, boost::exception and unknown exception
   /// (typically for the `catch (...)` case).
   ///
   /// You can provide a log category and a prefix to the log.
   ///
   /// OStreamable O, ConvertibleTo<const char*> S
-  template<typename O, typename S = char const*>
-  struct ExceptionLogError
+  template<LogLevel L, typename O, typename S = char const*>
+  struct ExceptionLog
   {
     S category;
     O prefix;
   // Regular (if S and O are):
-    KA_GENERATE_FRIEND_REGULAR_OPS_2(ExceptionLogError, category, prefix)
+    explicit ExceptionLog(S category = {}, O prefix = {})
+      : category(category), prefix(prefix)
+    {
+    }
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(ExceptionLog, category, prefix)
   // Custom:
     void operator()(const std::exception& e) const
     {
-      qiLogError(category) << prefix << ": standard exception: " << e.what();
+      detail::exceptionLogImpl(ka::int_constant_t<L>{}, category, prefix,
+        ": standard exception: ", e.what());
     }
     void operator()(const boost::exception& e) const
     {
-      qiLogError(category) << prefix <<": boost exception: " << boost::diagnostic_information(e);
+      detail::exceptionLogImpl(ka::int_constant_t<L>{}, category, prefix,
+        ": boost exception: ", boost::diagnostic_information(e));
     }
     void operator()() const
     {
-      qiLogError(category) << prefix << ": unknown exception";
+      detail::exceptionLogImpl(ka::int_constant_t<L>{}, category, prefix,
+        ": unknown exception.", "");
     }
   };
 
-  /// Helper-function to deduce types for `ExceptionLogError`.
+  // Defines specialization of `ExceptionLog` for each log level.
+  // E.g. `ExceptionLogError` for `ExceptionLog<LogLevel_Error>`.
+#define QI_DERIVE_EXCEPTIONLOG(LEVEL)                                   \
+  /** Binds a log level to `ExceptionLog`. See `ExceptionLog`. */       \
+  template<typename O, typename S = char const*>                        \
+  using ExceptionLog ## LEVEL = ExceptionLog<LogLevel_ ## LEVEL, O, S>;
+
+  QI_DERIVE_EXCEPTIONLOG(Silent)
+  QI_DERIVE_EXCEPTIONLOG(Fatal)
+  QI_DERIVE_EXCEPTIONLOG(Error)
+  QI_DERIVE_EXCEPTIONLOG(Warning)
+  QI_DERIVE_EXCEPTIONLOG(Info)
+  QI_DERIVE_EXCEPTIONLOG(Verbose)
+  QI_DERIVE_EXCEPTIONLOG(Debug)
+
+#undef QI_DERIVE_EXCEPTIONLOG
+
+  /// Helper-function to deduce types for `ExceptionLog`.
   ///
   /// Example: Using catch-clauses.
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// const auto logError = qi::exceptionLogError("myapp", "The function that could throw threw");
+  /// const auto logError = qi::exceptionLog<LogLevel_Error>(
+  ///   "myapp", "The function that could throw threw");
   /// try
   /// {
   ///   functionThatMightThrow();
@@ -680,18 +735,103 @@ namespace qi
   /// Example: Using ka::invoke_catch.
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// ka::invoke_catch(
-  ///   qi::exceptionLogError("myapp", "The function that could throw threw"),
+  ///   qi::exceptionLog<LogLevel_Error>(
+  ///     "myapp", "The function that could throw threw"),
   ///   functionThatMightThrow
   /// );
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// OStreamable O, ConvertibleTo<const char*> S
-  template<typename O, typename S>
-  ExceptionLogError<ka::Decay<O>, ka::Decay<S>> exceptionLogError(S&& category, O&& prefix)
+  template<LogLevel level, typename O, typename S>
+  ExceptionLog<level, ka::Decay<O>, ka::Decay<S>> exceptionLog(S&& category, O&& prefix)
   {
-    return ExceptionLogError<ka::Decay<O>, ka::Decay<S>>{ ka::fwd<S>(category),
-                                                          ka::fwd<O>(prefix) };
+    return ExceptionLog<level, ka::Decay<O>, ka::Decay<S>>{
+      ka::fwd<S>(category), ka::fwd<O>(prefix)
+    };
   }
+
+  // Defines variants of `exceptionLog` for each log level.
+  // E.g. `exceptionLogError` for `exceptionLog<LogLevel_Error>`.
+#define QI_DERIVE_EXCEPTIONLOG_FN(LEVEL)                          \
+  /** Binds a log level to `exceptionLog`. See `exceptionLog`. */ \
+  template<typename O, typename S>                                \
+  auto exceptionLog ## LEVEL(S&& category, O&& prefix)            \
+    -> decltype(exceptionLog<LogLevel_ ## LEVEL>(                 \
+         ka::fwd<S>(category), ka::fwd<O>(prefix)))               \
+  {                                                               \
+    return exceptionLog<LogLevel_ ## LEVEL>(                      \
+      ka::fwd<S>(category), ka::fwd<O>(prefix));                  \
+  }
+
+  QI_DERIVE_EXCEPTIONLOG_FN(Silent)
+  QI_DERIVE_EXCEPTIONLOG_FN(Fatal)
+  QI_DERIVE_EXCEPTIONLOG_FN(Error)
+  QI_DERIVE_EXCEPTIONLOG_FN(Warning)
+  QI_DERIVE_EXCEPTIONLOG_FN(Info)
+  QI_DERIVE_EXCEPTIONLOG_FN(Verbose)
+  QI_DERIVE_EXCEPTIONLOG_FN(Debug)
+#undef QI_DERIVE_EXCEPTIONLOG_FN
+
+  /// Polymorphic procedure that invokes a procedure, catching any exception,
+  /// logging details, and rethrowing the exception, if any.
+  ///
+  /// Example: Creating a resource, logging in error any exception and rethrowing it.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// InvokeCatchLogRethrow<LogLevel_Error> call; // Or `InvokeCatchLogRethrowError call;`
+  /// auto resource = call(
+  ///   "resource creation",             // log category
+  ///   "could not create the resource", // log prefix
+  ///   createResource,                  // auto (string, Mode)
+  ///   name,                            // first argument of `createResource`
+  ///   readOnly                         // second argument of `createResource`
+  ///  );
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// TODO: Remove decltype when C++ version >= 14.
+  template<LogLevel L>
+  struct InvokeCatchLogRethrow
+  {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(InvokeCatchLogRethrow)
+  // PolymorphicProcedure:
+    /// ConvertibleTo<const char*> S, OStreamable O, Procedure<_ (Args...)> Proc
+    template<typename S, typename O, typename Proc, typename... Args>
+    auto operator()(S&& logCategory, O&& logPrefix, Proc&& proc, Args&&... args)
+      -> decltype(ka::invoke_catch(
+                    ka::handle_exception_rethrow(
+                      exceptionLog<L>(ka::fwd<S>(logCategory), ka::fwd<O>(logPrefix)),
+                      ka::type_t<ka::CodomainFor<Proc, Args...>>{}
+                    ),
+                    ka::fwd<Proc>(proc),
+                    ka::fwd<Args>(args)...
+                  ))
+    {
+      using namespace ka;
+      return invoke_catch(
+        handle_exception_rethrow(
+          exceptionLog<L>(fwd<S>(logCategory), fwd<O>(logPrefix)),
+          type_t<CodomainFor<Proc, Args...>>{} // force return type to match Proc's one
+        ),
+        fwd<Proc>(proc),
+        fwd<Args>(args)...
+      );
+    }
+  };
+
+  // Defines type aliases of `InvokeCatchLogRethrow` for each log level.
+  // E.g. `InvokeCatchLogRethrowError` for `InvokeCatchLogRethrow<LogLevel_Error>`.
+#define QI_DERIVE_INVOKECATCHLOGRETHROW(LEVEL)                                      \
+  /** Binds a log level to `InvokeCatchLogRethrow`. See `InvokeCatchLogRethrow` **/ \
+  using InvokeCatchLogRethrow ## LEVEL = InvokeCatchLogRethrow<LogLevel_ ## LEVEL>;
+
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Silent)
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Fatal)
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Error)
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Warning)
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Info)
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Verbose)
+  QI_DERIVE_INVOKECATCHLOGRETHROW(Debug)
+#undef QI_DERIVE_INVOKECATCHLOGRETHROW
 
 } // namespace qi
 
