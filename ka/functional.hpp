@@ -55,6 +55,32 @@ namespace ka {
     return x;
   }
 
+  /// Procedure that ignores its arguments and always calls a nullary
+  /// sub-procedure.
+  ///
+  /// meaning(constant_procedure) = (forall Type T)
+  ///   (unit -> T) -> (forall Type... U)(U... -> T)
+  ///
+  /// Procedure<T ()> Proc
+  template<typename Proc>
+  struct constant_procedure_t {
+    Proc proc;
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(constant_procedure_t, proc)
+  // Procedure<T (_ const&...)>:
+    template<typename... T>
+    auto operator()(T const&...) -> decltype(proc()) {
+      return proc();
+    }
+    template<typename... T>
+    auto operator()(T const&...) const -> decltype(proc()) {
+      return proc();
+    }
+  };
+
+  /// Constructs a `constant_procedure_t`, performing type deduction.
+  KA_DERIVE_CTOR_FUNCTION_TEMPLATE(constant_procedure)
+
   /// A polymorphic transformation that takes a value and returns it as-is.
   ///
   /// A transformation is a unary function from a type to itself.

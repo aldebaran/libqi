@@ -93,6 +93,40 @@ TEST(FunctionalPolymorphicConstantFunction, Retraction) {
   ASSERT_NO_THROW(g());
 }
 
+namespace test_constant_procedure_ns {
+  using ka::test::A;
+
+  auto f() -> A {
+    return A{1};
+  }
+  auto g() -> A {
+    return A{2};
+  }
+  auto h() -> A {
+    return A{3};
+  }
+} // namespace test_constant_procedure_ns
+
+TEST(Functional, ConstantProcedureRegular) {
+  using namespace ka;
+  using namespace test_constant_procedure_ns;
+  ASSERT_TRUE(is_regular({
+    constant_procedure(f),
+    constant_procedure(g),
+    constant_procedure(h)
+  }));
+}
+
+TEST(Functional, ConstantProcedure) {
+  using namespace ka::test;
+  using namespace test_constant_procedure_ns;
+  auto g = ka::constant_procedure(f);
+  ASSERT_EQ(f(), g());
+  ASSERT_EQ(f(), g(B{5}));
+  ASSERT_EQ(f(), g(B{5}, C{6}));
+  ASSERT_EQ(f(), g(B{5}, C{6}, D{7}));
+}
+
 namespace {
   template<typename F>
   void testIdTransfo() {
