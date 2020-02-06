@@ -195,7 +195,7 @@ namespace detail {
         return {};
       };
 
-      if (auto const maybeError = ka::invoke_catch(ka::exception_message{}, cancelImpl))
+      if (auto const maybeError = ka::invoke_catch(ka::exception_message_t{}, cancelImpl))
       {
         qiLogError("qi.future") << "Future/Promise cancel handler threw an exception: " << maybeError.value();
       }

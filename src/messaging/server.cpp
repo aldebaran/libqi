@@ -47,7 +47,7 @@ namespace qi
           const auto logExceptMsgWarning =
             ka::compose([](const std::string& msg) {
               qiLogWarning() << "Failed to disconnect from socket `disconnected` signal: " << msg;
-            }, ka::exception_message{});
+            }, ka::exception_message_t{});
           ka::invoke_catch(logExceptMsgWarning, [&]{
             sock->disconnected.disconnectAsync(_disconnected);
           });
@@ -374,7 +374,7 @@ namespace qi
         return DispatchStatus::MessageHandled_WithError;
       };
       return ka::invoke_catch(
-        ka::compose(logWarningReturnError, ka::exception_message{}),
+        ka::compose(logWarningReturnError, ka::exception_message_t{}),
         [&] {
           return asyncServerMessageHandler(msg).value();
         });

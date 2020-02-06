@@ -1074,10 +1074,10 @@ namespace qi {
   template<typename T, typename F = ka::id_transfo_t>
   auto futureErrorFromException(F errorMsgTransfo = {})
     // TODO: Remove this when we can use C++14
-    -> decltype(ka::compose(ka::compose(makeFutureError<T>, errorMsgTransfo), ka::exception_message{}))
+    -> decltype(ka::compose(ka::compose(makeFutureError<T>, errorMsgTransfo), ka::exception_message_t{}))
   {
     using ka::functional_ops::operator*; // Right-to-left function composition.
-    return makeFutureError<T> * errorMsgTransfo * ka::exception_message{};
+    return makeFutureError<T> * errorMsgTransfo * ka::exception_message_t{};
   }
 
   /// Helper function that does nothing on future cancelation
