@@ -837,7 +837,7 @@ Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync(Seconds lastDelay)
         if (attachFuture.hasError())
         {
           auto newDelay = std::min(lastDelay * delayIncreaseFactor, maxTryDelay());
-          qiLogWarning() << "Could not attach to the ServiceDirectory at URL '" << _sdUrl.str()
+          qiLogVerbose() << "Could not attach to the ServiceDirectory at URL '" << _sdUrl.str()
                          << "', reason: '" << attachFuture.error() << "'";
           return delayTryAttach(newDelay);
         }

@@ -6,6 +6,8 @@
 #include <ka/opt.hpp>
 #include <ka/testutils.hpp>
 #include <ka/typetraits.hpp>
+#include <ka/functor.hpp>
+#include <ka/testutils.hpp>
 
 TEST(Optional, Regular) {
   using namespace ka;
@@ -944,4 +946,114 @@ TEST(Optional, SequenceContainerAt) {
     ASSERT_EQ(p.at(0), x+1);
   }
   ASSERT_THROW(o.at(1), std::out_of_range);
+}
+
+namespace {
+  auto const g = [](ka::test::C c) {
+    return ka::test::D{2 * c.value};
+  };
+  auto const g_void = [](ka::test::C) -> void {
+  };
+}
+
+TEST(Optional, FunctorBoostOptional) {
+  using namespace ka::test;
+  using OptC = boost::optional<C>;
+  using OptD = boost::optional<D>;
+  auto c = C{3};
+
+  // g: C -> D
+  EXPECT_EQ(OptD(g(c)), ka::fmap(g, OptC(c))); // not empty
+  EXPECT_EQ(OptD(), ka::fmap(g, OptC())); // empty
+}
+
+TEST(Optional, FunctorKaOptMemberFmapNonVoidToNonVoid) {
+  using namespace ka;
+  using namespace ka::test;
+  auto c = C{3};
+
+  // g: C -> D
+  EXPECT_EQ(opt(g(c)), opt(c).fmap(g)); // not empty
+  EXPECT_EQ(opt_t<D>(), opt_t<C>().fmap(g)); // empty
+}
+
+TEST(Optional, FunctorKaOptMemberFmapNonVoidToVoid) {
+  using namespace ka;
+  using namespace ka::test;
+  auto c = C{3};
+
+  // g_void: C -> void
+  EXPECT_EQ(opt_t<void>().set(), opt(c).fmap(g_void)); // not empty
+  EXPECT_EQ(opt_t<void>(), opt_t<C>().fmap(g_void)); // empty
+}
+
+// "Mapping on void" implies executing a side-effect procedure.
+TEST(Optional, FunctorKaOptMemberFmapVoidToVoid) {
+  using namespace ka;
+  using namespace ka::test;
+  using test::A;
+
+  int i = 0;
+  std::vector<A> v;
+  auto h = [&](void) -> void {
+    v.push_back(A{i++}); // side-effect
+  };
+
+  EXPECT_TRUE(v.empty());
+  EXPECT_EQ(opt(), opt().fmap(h));    // not empty
+  EXPECT_EQ(v, std::vector<A>{A{0}}); // procedure executed
+
+  v.clear();
+  EXPECT_TRUE(v.empty());
+  EXPECT_EQ(opt_t<void>(), opt_t<void>().fmap(h)); // empty
+  EXPECT_TRUE(v.empty());                          // procedure not executed
+}
+
+TEST(Optional, FunctorKaOptMemberFmapVoidToNonVoid) {
+  using namespace ka;
+  using ka::test::A;
+  auto h = [](void) -> A {
+    return A{4};
+  };
+  EXPECT_EQ(opt(A{4}), opt().fmap(h));    // not empty
+  EXPECT_EQ(opt_t<A>(), opt_t<void>().fmap(h)); // empty
+}
+
+TEST(Optional, FunctorAppKaOptNonVoidToNonVoid) {
+  using namespace ka;
+  using namespace ka::test;
+  auto const h = [](ka::test::C c, ka::test::D d) -> ka::test::E {
+    return ka::test::E{c.value * d.value};
+  };
+  auto c = C{3};
+  auto d = D{4};
+
+  // h: C x D -> E
+  EXPECT_EQ(opt(h(c, d)), fmap(h, opt(c), opt(d))); // not empty
+  EXPECT_EQ(opt_t<E>(), fmap(h, opt_t<C>(), opt(d))); // first empty
+  EXPECT_EQ(opt_t<E>(), fmap(h, opt(c), opt_t<D>())); // second empty
+  EXPECT_EQ(opt_t<E>(), fmap(h, opt_t<C>(), opt_t<D>())); // both empty
+}
+
+TEST(Optional, FunctorAppKaOptNonVoidToVoid) {
+  using namespace ka;
+  using namespace ka::test;
+  std::vector<A> v;
+  auto const h_void = [&](ka::test::C c, ka::test::D d) -> void {
+    v.push_back(A{c.value * d.value}); // side-effect
+  };
+  auto c = C{3};
+  auto d = D{4};
+
+  // h_void: C x D -> void
+  EXPECT_TRUE(v.empty());
+  EXPECT_EQ(opt_t<void>().set(), fmap(h_void, opt(c), opt(d))); // not empty
+  EXPECT_EQ(v, std::vector<A>{A{c.value * d.value}}); // procedure executed
+  v.clear();
+  EXPECT_EQ(opt_t<void>(), fmap(h_void, opt_t<C>(), opt(d))); // first empty
+  EXPECT_TRUE(v.empty()); // procedure not executed
+  EXPECT_EQ(opt_t<void>(), fmap(h_void, opt(c), opt_t<D>())); // second empty
+  EXPECT_TRUE(v.empty()); // procedure not executed
+  EXPECT_EQ(opt_t<void>(), fmap(h_void, opt_t<C>(), opt_t<D>())); // both empty
+  EXPECT_TRUE(v.empty()); // procedure not executed
 }

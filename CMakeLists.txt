@@ -403,6 +403,8 @@ set(KA_H
   ka/empty.hpp
   ka/errorhandling.hpp
   ka/functional.hpp
+  ka/functor.hpp
+  ka/functorcontainer.hpp
   ka/integersequence.hpp
   ka/macro.hpp
   ka/macroregular.hpp

@@ -43,8 +43,6 @@ namespace
 
   using qi::SessionPtr;
 
-  static const auto timeout = qi::MilliSeconds{ 1000 };
-
   class TestGateway : public ::testing::Test
   {
   public:
@@ -208,13 +206,12 @@ namespace
     }
 
     qi::AnyObject service;
-    int value;
+    const int value = randomValue();
     {
       qi::Promise<int> sync;
       auto fut = sync.future();
-      ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(timeout));
+      ASSERT_TRUE(test::finishesWithValue(client->waitForService( "my_service" )));
       service = client->service("my_service").value();
-      value = randomValue();
       service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value)));
       service.post("echoSignal", value);
       fut.wait();
@@ -234,7 +231,7 @@ namespace
     ASSERT_ANY_THROW(service = client->service("my_service").value());
 
     const auto id = serviceHost->registerService("my_service", makeBaseService()).value();
-    ASSERT_EQ(qi::FutureState_FinishedWithValue, client->waitForService("my_service").wait(timeout));
+    ASSERT_TRUE(test::finishesWithValue(client->waitForService("my_service")));
     service = client->service("my_service").value();
     ASSERT_EQ(service.call<int>("echoValue", 44), 44);
     serviceHost->unregisterService(id);

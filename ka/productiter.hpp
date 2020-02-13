@@ -368,7 +368,7 @@ struct product_iter_t<> : boost::iterator_facade<
     std::tuple<>,
     std::random_access_iterator_tag,
     std::tuple<>,
-    std::size_t
+    std::ptrdiff_t
   >
 {
 // InputIterator:

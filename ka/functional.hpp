@@ -48,6 +48,13 @@ namespace ka {
 
   KA_DERIVE_CTOR_FUNCTION_TEMPLATE_VOID(constant_function)
 
+  /// This makes sense only when called with no argument, which means the
+  /// logical signature `void -> void`. In this case, `constant_function_t<void>`
+  /// is its own inverse.
+  inline auto retract(constant_function_t<void> x) -> decltype(x) {
+    return x;
+  }
+
   /// A polymorphic transformation that takes a value and returns it as-is.
   ///
   /// A transformation is a unary function from a type to itself.
@@ -56,8 +63,8 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_0(id_transfo_t)
   // PolymorphicTransformation:
     template<typename T>
-    inline T operator()(T const& t) const {
-      return t;
+    inline T operator()(T&& t) const {
+      return fwd<T>(t);
     }
   // Isomorphism:
     friend id_transfo_t retract(id_transfo_t x) {
@@ -256,15 +263,15 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_2(composition_accu_t, g, f)
   // Accumulation<T, Args...>:
     template<typename T, typename... Args>
-    void operator()(T& t, Args const&... args) {
+    auto operator()(T& t, Args const&... args) -> decltype(g(t, args...)) {
       f(t, args...);
-      g(t, args...);
+      return g(t, args...);
     }
 
     template<typename T, typename... Args>
-    void operator()(T& t, Args const&... args) const {
+    auto operator()(T& t, Args const&... args) const -> decltype(g(t, args...)){
       f(t, args...);
-      g(t, args...);
+      return g(t, args...);
     }
   // IsomorphismAccu (if `F` and `G` are):
     // TODO: Add it when switching to C++14.
@@ -385,6 +392,23 @@ namespace ka {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
   } // namespace functional_ops_accu
+
+  // model RetractableFunction composition_t<G, F>
+  //  if RetractableFunction(F) && RetractableFunction(G):
+    /// A composition can be interpreted as a sequence of two steps (say, `putSocks`
+    /// then `putShoes`). Retracting (i.e. undoing) this sequence means retracting the
+    /// second step (`removeShoes`), then the first (`removeSocks`).
+    template<typename G, typename F>
+    auto retract(composition_t<G, F> const& x) -> decltype(compose(retract(x.f), retract(x.g))) {
+      return compose(retract(x.f), retract(x.g));
+    }
+
+  // model IsomorphicAction composition_accu_t<G, F>:
+  //  if IsomorphicAction(F) && IsomorphicAction(G):
+    template<typename G, typename F>
+    auto retract(composition_accu_t<G, F> const& x) -> decltype(compose_accu(retract(x.f), retract(x.g))) {
+      return compose_accu(retract(x.f), retract(x.g));
+    }
 
   /// Function that transforms the codomain (return type) of the given procedure
   /// into an "enriched" type.
@@ -980,6 +1004,23 @@ namespace ka {
       return !static_cast<bool>(x);
     }
   } // namespace detail
+
+  namespace fmap_ns {
+    // std::function<_ (X...)> almost models `Functor`, except it is not
+    // `Regular` (equality is missing). `fmap` is nonetheless implemented as it
+    // can still be useful.
+
+    /// Transforms a function `X... -> A` to `X... -> B`, by post-composing the
+    /// function `A -> B`.
+    ///
+    /// Function<B (A)> F
+    template<typename F, typename A, typename... X>
+    auto fmap(F&& f, std::function<A (X...)> const& g)
+        -> std::function<CodomainFor<F, A> (X...)> {
+      using B = CodomainFor<F, A>;
+      return std::function<B (X...)>(compose(fwd<F>(f), g));
+    }
+  } // namespace fmap_ns
 
   /// Contructs a tuple from the given values.
   /// This is to uniformize with other kinds of product (iterators, etc.).

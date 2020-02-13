@@ -1,6 +1,8 @@
 #ifndef KA_TYPETRAITS_HPP
 #define KA_TYPETRAITS_HPP
 #pragma once
+#include <functional>
+#include <memory>
 #include <iterator>
 #include <type_traits>
 #include <boost/container/container_fwd.hpp>
@@ -171,21 +173,21 @@ namespace ka {
   ///
   /// Note: Useful functions to "produce" value in the expression are:
   /// `std::declval`, `declref` and `declcref` (see utility.hpp).
-  #define KA_GENERATE_TRAITS_HAS(TRAIT_NAME, TYPE_PARAM, EXPR) \
-    namespace detail {                                         \
-      template<typename TYPE_PARAM##_>                         \
-      struct TRAIT_NAME {                                      \
-        template<typename TYPE_PARAM>                          \
-        static std::true_type test(decltype((EXPR), 0));       \
-                                                               \
-        template<typename>                                     \
-        static std::false_type test(...);                      \
-                                                               \
-        using type = decltype(test<TYPE_PARAM##_>(0));         \
-      };                                                       \
-    }                                                          \
-    template<typename T>                                       \
-    using TRAIT_NAME = typename detail::TRAIT_NAME<T>::type;
+  #define KA_GENERATE_TRAITS_HAS(TRAIT_NAME, TYPE_PARAM, EXPR)      \
+    namespace detail {                                              \
+      template<typename TYPE_PARAM##_>                              \
+      struct TRAIT_NAME##Impl {                                     \
+        template<typename TYPE_PARAM>                               \
+        static std::true_type test(decltype((EXPR), 0));            \
+                                                                    \
+        template<typename>                                          \
+        static std::false_type test(...);                           \
+                                                                    \
+        using type = decltype(test<TYPE_PARAM##_>(0));              \
+      };                                                            \
+    }                                                               \
+    template<typename T>                                            \
+    using TRAIT_NAME = typename detail::TRAIT_NAME##Impl<T>::type;
 
   KA_GENERATE_TRAITS_HAS(HasMemberOperatorCall, T, &T::operator())
 
@@ -428,20 +430,20 @@ namespace ka {
 // TODO: Removes this workaround when get rid of VS2013.
 #if KA_COMPILER_VS2013_OR_BELOW
   namespace detail {
-    template<> struct HasOperatorStar<bool> : false_t {};
-    template<> struct HasOperatorStar<char> : false_t {};
-    template<> struct HasOperatorStar<short> : false_t {};
-    template<> struct HasOperatorStar<int> : false_t {};
-    template<> struct HasOperatorStar<long> : false_t {};
-    template<> struct HasOperatorStar<long long> : false_t {};
-    template<> struct HasOperatorStar<float> : false_t {};
-    template<> struct HasOperatorStar<double> : false_t {};
-    template<> struct HasOperatorStar<long double> : false_t {};
-    template<> struct HasOperatorStar<unsigned char> : false_t {};
-    template<> struct HasOperatorStar<unsigned short> : false_t {};
-    template<> struct HasOperatorStar<unsigned int> : false_t {};
-    template<> struct HasOperatorStar<unsigned long> : false_t {};
-    template<> struct HasOperatorStar<unsigned long long> : false_t {};
+    template<> struct HasOperatorStarImpl<bool> : false_t {};
+    template<> struct HasOperatorStarImpl<char> : false_t {};
+    template<> struct HasOperatorStarImpl<short> : false_t {};
+    template<> struct HasOperatorStarImpl<int> : false_t {};
+    template<> struct HasOperatorStarImpl<long> : false_t {};
+    template<> struct HasOperatorStarImpl<long long> : false_t {};
+    template<> struct HasOperatorStarImpl<float> : false_t {};
+    template<> struct HasOperatorStarImpl<double> : false_t {};
+    template<> struct HasOperatorStarImpl<long double> : false_t {};
+    template<> struct HasOperatorStarImpl<unsigned char> : false_t {};
+    template<> struct HasOperatorStarImpl<unsigned short> : false_t {};
+    template<> struct HasOperatorStarImpl<unsigned int> : false_t {};
+    template<> struct HasOperatorStarImpl<unsigned long> : false_t {};
+    template<> struct HasOperatorStarImpl<unsigned long long> : false_t {};
   } // namespace detail
 
   /// Returns the retraction of a (retractable) function.
@@ -530,6 +532,132 @@ namespace ka {
 
   KA_GENERATE_TRAITS_HAS(HasMemberSize, T,
     std::declval<typename T::size_type>() = declcref<T>().size())
+
+  /// Rebinds from an allocator of `U` to an allocator of `T`.
+  template<typename Alloc, typename T>
+  using RebindAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
+
+  namespace detail {
+    template<typename T, typename B>
+    struct RebindImpl;
+  } // namespace detail
+
+  /// Rebinds from a "type of `T`" to a "type of `U`", such as standard
+  /// containers.
+  template<typename T, typename B>
+  using Rebind = typename detail::RebindImpl<T, B>::type;
+
+  namespace detail {
+    // `array` specialization:
+    template<template<class, std::size_t> class T, typename A, std::size_t N, typename B>
+    struct RebindImpl<T<A, N>, B> {
+      using type = T<B, N>;
+    };
+
+    // `vector`, `deque`, `forward_list`, `list` specialization:
+    template<template<class, class> class T, typename A, typename Alloc, typename B>
+    struct RebindImpl<T<A, Alloc>, B> {
+      using type = T<B, RebindAlloc<Alloc, B>>;
+    };
+
+    // `set`, `multiset` specialization:
+    template<template<class, class, class> class T, typename A, typename Cmp, typename Alloc, typename B>
+    struct RebindImpl<T<A, Cmp, Alloc>, B> {
+      using type = T<B, Rebind<Cmp, B>, RebindAlloc<Alloc, B>>;
+    };
+
+    template<typename HasMappedTypeT, typename T, typename B>
+    struct RebindImpl4Types;
+
+    // `map`, `multimap`:
+    template<template<class, class, class, class> class T,
+      typename A, typename Value, typename Cmp, typename Alloc, typename B>
+    struct RebindImpl4Types<
+        true_t /* HasMappedType */, T<A, Value, Cmp, Alloc>, B> {
+      using type = T<A, B, Cmp, RebindAlloc<Alloc, std::pair<A const, B>>>;
+    };
+
+    // unordered_set, unordered_multiset:
+    template<template<class, class, class, class> class T,
+      typename A, typename Hash, typename KeyEqual, typename Alloc, typename B>
+    struct RebindImpl4Types<
+        false_t /* HasMappedType */, T<A, Hash, KeyEqual, Alloc>, B> {
+      using type =
+        T<B, Rebind<Hash, B>, Rebind<KeyEqual, B>, RebindAlloc<Alloc, B>>;
+    };
+
+    // `map`, `multimap`, unordered_set, unordered_multiset specialization:
+    template<template<class, class, class, class> class T,
+      typename A, typename ValueOrHash, typename CmpOrKeyEqual, typename Alloc, typename B>
+    struct RebindImpl<T<A, ValueOrHash, CmpOrKeyEqual, Alloc>, B>
+      : RebindImpl4Types<HasMappedType<T<A, ValueOrHash, CmpOrKeyEqual, Alloc>>,
+                         T<A, ValueOrHash, CmpOrKeyEqual, Alloc>, B>
+    {
+    };
+
+    // unordered_map, unordered_multimap specialization:
+    template<template<class, class, class, class, class> class T,
+      typename A, typename Value, typename Hash, typename KeyEqual,
+      typename Alloc, typename B>
+    struct RebindImpl<T<A, Value, Hash, KeyEqual, Alloc>, B> {
+      using type =
+        T<A, B, Hash, KeyEqual, RebindAlloc<Alloc, std::pair<A const, B>>>;
+    };
+
+    // `less` specialization:
+    template<typename A, typename B>
+    struct RebindImpl<std::less<A>, B> {
+      using type = std::less<B>;
+    };
+
+    // `equal_to` specialization:
+    template<typename A, typename B>
+    struct RebindImpl<std::equal_to<A>, B> {
+      using type = std::equal_to<B>;
+    };
+
+    // `hash` specialization:
+    template<typename A, typename B>
+    struct RebindImpl<std::hash<A>, B> {
+      using type = std::hash<B>;
+    };
+  } // namespace detail
+
+  namespace detail {
+    // Helper type that can convert to anything.
+    struct AnyArg {
+      template<typename T>
+      operator T() const;
+
+      // Argument can be a function object.
+      template<typename... T>
+      int operator()(T&&...) const;
+    };
+  } // namespace detail
+
+  KA_GENERATE_TRAITS_HAS(HasMemberFmap, T, declcref<T>().fmap(detail::AnyArg{}))
+
+  KA_GENERATE_TRAITS_HAS(HasMemberReserve, T,
+    declref<T>().reserve(std::declval<typename T::size_type>()))
+
+  // The two "range" iterators can be arbitrary as long as their value type
+  // matches. Here, we test with container iterators themselves.
+  KA_GENERATE_TRAITS_HAS(HasPositionalInsertRange, T,
+    declref<T>().insert(std::declval<typename T::const_iterator>(),
+      std::declval<typename T::const_iterator>(),
+      std::declval<typename T::const_iterator>()))
+
+  // TODO: Remove this when VS2015 is not used anymore.
+  namespace workaround_vs2015 {
+    template<typename F, typename... T>
+    struct CodomainForImpl {
+      using type = decltype(std::declval<F>()(std::declval<T>()...));
+    };
+  } // namespace workaround_vs2015
+
+  /// Codomain (i.e. output type) of a function type for the given domain.
+  template<typename F, typename... T>
+  using CodomainFor = Decay<typename workaround_vs2015::CodomainForImpl<F,T...>::type>;
 } // namespace ka
 
 #endif // KA_TYPETRAITS_HPP

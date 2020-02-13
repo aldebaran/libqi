@@ -79,7 +79,18 @@
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Example: "has same parents"
 ///
-/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Property(Relation R0, Relation R1)
+///   requires(Domain(R0) = Domain(R1))
+/// are_complement: R0 x R1
+///  (r0, r1) |-> (forall a, b in the domain of R0) r0(a, b) != r1(a, b)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// A relation r0 is the complement of another relation r1 iff for all pairs of
+/// element exactly one of these two relations hold at a time.
+///
+/// Example: "equal" and "different", "less than" and "greater or equal"
+///
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Property(Relation R)
 /// totalOrdering: R
 ///  r |-> transitive(r)
@@ -187,6 +198,24 @@ namespace ka {
   template<typename R, typename T>
   bool is_equivalence(R r, std::initializer_list<T> values) {
     return is_equivalence(r, bounded_range(values));
+  }
+
+  /// Checks that the relations are complement of one another for all values in
+  /// the given range.
+  /// See the file comment for an explanation of what a "complement" means.
+  /// For this test to be exact, 'values' must contain all values in the domain
+  /// of R0.
+  /// Relation<T> R0, Relation<T> R1, ReadableForwardRange<T> Rng
+  template<typename R0, typename R1, typename Rng>
+  bool are_complement(R0 r0, R1 r1, Rng values) {
+    for (auto v0 = values; !is_empty(v0); pop(v0)) {
+      auto const& a = front(v0);
+      for (auto v1 = values; !is_empty(v1); pop(v1)) {
+        auto const& b = front(v1);
+        KA_TRUE_OR_RETURN_FALSE(r0(a, b) != r1(a, b));
+      }
+    }
+    return true;
   }
 
   /// Checks that the relation is weak trichotomic for all values in the given range.

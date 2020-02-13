@@ -76,15 +76,6 @@ namespace detail {
 /// Predicate that calls the `empty` free function through ADL.
 using detail::empty_fn_t;
 
-// Helper type to avoid ODR violations.
-template<typename T>
-struct static_const_t {
-  static KA_CONSTEXPR T value{};
-};
-
-template<typename T> KA_CONSTEXPR
-T static_const_t<T>::value;
-
 namespace {
   static auto const& empty = static_const_t<empty_fn_t>::value;
 }

@@ -12,7 +12,7 @@
 namespace
 {
   template<typename T>
-  struct ConstantUnit
+  struct ConstantDefault
   {
     T operator()() const
     {
@@ -21,7 +21,7 @@ namespace
   };
 
   template<>
-  struct ConstantUnit<qi::Future<void>>
+  struct ConstantDefault<qi::Future<void>>
   {
     qi::Future<void> operator()() const
     {
@@ -90,7 +90,7 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomain)
 
   auto noop = [](int) {
   };
-  ConstantUnit<T> unit;
+  ConstantDefault<T> unit;
   auto f = semilift(noop, unit);
 
   static_assert(Equal<T, decltype(f(0))>::value, "");
@@ -104,7 +104,7 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain)
 
   auto noop = [] {
   };
-  ConstantUnit<T> unit;
+  ConstantDefault<T> unit;
   auto f = semilift(noop, unit);
 
   static_assert(Equal<T, decltype(f())>::value, "");
