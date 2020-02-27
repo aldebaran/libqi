@@ -12,6 +12,7 @@ qi_create_gmock(
     "test_functor.cpp"
     "test_functional.cpp"
     "test_functional_common.hpp"
+    "test_indexed.cpp"
     "test_integersequence.cpp"
     "test_macro.cpp"
     "test_macroregular.cpp"
