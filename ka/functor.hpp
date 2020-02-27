@@ -94,7 +94,7 @@ namespace fmap_ns {
 
   // Type has a member fmap: call it.
   // Function<B (A)> F
-  template<typename F, typename T>
+  template<typename F, typename T> KA_CONSTEXPR
   auto fmap_dispatch(true_t /* HasMemberFmap<C> */, F&& f, T&& t)
       -> decltype(fwd<T>(t).fmap(fwd<F>(f))) {
     return fwd<T>(t).fmap(fwd<F>(f));
