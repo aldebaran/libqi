@@ -425,6 +425,11 @@ set(KA_H
   ka/testutils.hpp
   ka/typetraits.hpp
   ka/unit.hpp
+  ka/uri.hpp
+  ka/uri/io.hpp
+  ka/uri/uri_fwd.hpp
+  ka/uri/uri.hpp
+  ka/uri/parsing.hpp
   ka/utility.hpp
 )
 

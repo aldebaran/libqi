@@ -30,6 +30,8 @@ qi_create_gmock(
     "test_testutils.cpp"
     "test_typetraits.cpp"
     "test_unit.cpp"
+    "test_uri.cpp"
+    "test_uri_parsing.cpp"
     "test_utility.cpp"
     "test_zero.cpp"
   DEPENDS
