@@ -466,7 +466,7 @@ QI_WARNING_POP()
     if (first && _p->onSubscribers)
     {
       qiLogDebug() << this << " calling onSubscribers";
-      callingOnSubscribers = _p->onSubscribers(true).andThen([&](void*)
+      callingOnSubscribers = _p->onSubscribers(true).andThen(FutureCallbackType_Sync, [&](void*)
       {
         qiLogDebug() << this << " onSubscribers called";
       });
@@ -478,7 +478,7 @@ QI_WARNING_POP()
 
     // Return a copy asynchronously. Too bad it makes few allocations.
     SignalSubscriber subscriberToReturn = subscriberInMap;
-    return callingOnSubscribers.andThen([=](void*)
+    return callingOnSubscribers.andThen(FutureCallbackType_Sync, [=](void*)
     {
       qiLogDebug() << this << " connected";
       return subscriberToReturn;
