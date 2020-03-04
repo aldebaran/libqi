@@ -27,7 +27,7 @@ namespace ka {
   // Regular:
     KA_GENERATE_FRIEND_REGULAR_OPS_1(constant_function_t, ret)
   // PolymorphicFunction<Ret (Args...)>:
-    template<typename... Args>
+    template<typename... Args> constexpr
     Ret operator()(Args const&...) const {
       return ret;
     }
@@ -51,7 +51,8 @@ namespace ka {
   /// This makes sense only when called with no argument, which means the
   /// logical signature `void -> void`. In this case, `constant_function_t<void>`
   /// is its own inverse.
-  inline auto retract(constant_function_t<void> x) -> decltype(x) {
+  inline constexpr
+  auto retract(constant_function_t<void> x) -> decltype(x) {
     return x;
   }
 
@@ -88,12 +89,13 @@ namespace ka {
   // Regular:
     KA_GENERATE_FRIEND_REGULAR_OPS_0(id_transfo_t)
   // PolymorphicTransformation:
-    template<typename T>
-    inline T operator()(T&& t) const {
+    template<typename T> inline constexpr
+    T operator()(T&& t) const {
       return fwd<T>(t);
     }
   // Isomorphism:
-    friend id_transfo_t retract(id_transfo_t x) {
+    friend constexpr
+    id_transfo_t retract(id_transfo_t x) {
       return x;
     }
   };
@@ -107,8 +109,8 @@ namespace ka {
   // Regular:
     KA_GENERATE_FRIEND_REGULAR_OPS_0(id_action_t)
   // PolymorphicAction:
-    template<typename T>
-    inline void operator()(T&) const {
+    template<typename T> inline
+    void operator()(T&) const {
     }
   };
 
@@ -222,18 +224,18 @@ namespace ka {
     return {fwd<G>(g), fwd<F>(f)};
   }
 
-  template<typename F, typename = EnableIf<std::is_empty<F>::value>>
+  template<typename F, typename = EnableIf<std::is_empty<F>::value>> constexpr
   id_transfo_t compose(Retract<Decay<F>> const&, F const&) {
     return {};
   }
 #endif
 
-  template<typename F>
+  template<typename F> constexpr
   F&& compose(id_transfo_t, F&& f) {
     return fwd<F>(f);
   }
 
-  template<typename F>
+  template<typename F> constexpr
   F&& compose(F&& f, id_transfo_t) {
     return fwd<F>(f);
   }
@@ -241,7 +243,8 @@ namespace ka {
   // This one could be theoretically handled by the simplifying overload
   // (because `id_transfo_t` is its own retraction/inverse). But removing this
   // overload causes overload resolution to fail because of ambiguities.
-  inline id_transfo_t compose(id_transfo_t, id_transfo_t) {
+  inline constexpr
+  id_transfo_t compose(id_transfo_t, id_transfo_t) {
     return {};
   }
 
@@ -312,22 +315,22 @@ namespace ka {
   ///
   /// Accumulation<T...> G, Accumulation<T...> F
   template<typename G, typename F, typename = EnableIf<
-    !detail::IsCompositionIdentity<Decay<G>, Decay<F>>::value>>
+    !detail::IsCompositionIdentity<Decay<G>, Decay<F>>::value>> constexpr
   composition_accu_t<Decay<G>, Decay<F>> compose_accu(G&& g, F&& f) {
     return {fwd<G>(g), fwd<F>(f)};
   }
 
-  template<typename F, typename = EnableIf<std::is_empty<F>::value>>
+  template<typename F, typename = EnableIf<std::is_empty<F>::value>> constexpr
   id_action_t compose_accu(Retract<F> const&, F const&) {
     return {};
   }
 
-  template<typename F>
+  template<typename F> constexpr
   F&& compose_accu(id_action_t, F&& f) {
     return fwd<F>(f);
   }
 
-  template<typename F>
+  template<typename F> constexpr
   F&& compose_accu(F&& f, id_action_t) {
     return fwd<F>(f);
   }
@@ -335,7 +338,8 @@ namespace ka {
   // This one could be theoretically handled by the simplifying overload
   // (because `id_action_t` is its own inverse). But removing this overload causes
   // overload resolution to fail because of ambiguities.
-  inline id_action_t compose_accu(id_action_t, id_action_t) {
+  inline constexpr
+  id_action_t compose_accu(id_action_t, id_action_t) {
     return {};
   }
 
@@ -363,7 +367,7 @@ namespace ka {
     /// assert(_1 * f == f);
     /// assert(_1 * _1 == _1);
     /// ```
-    template<typename G, typename F>
+    template<typename G, typename F> constexpr
     auto operator*(G&& g, F&& f) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
       return compose(fwd<G>(g), fwd<F>(f));
     }
@@ -383,7 +387,7 @@ namespace ka {
     /// auto max_heat = std::max_element(motor_names.begin(), motor_names.end(),
     ///   motor | heat); // `motor | heat` gets the motor, then its heat
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    template<typename F, typename G>
+    template<typename F, typename G> constexpr
     auto operator|(F&& f, G&& g) -> decltype(compose(fwd<G>(g), fwd<F>(f))) {
       return compose(fwd<G>(g), fwd<F>(f));
     }
@@ -406,14 +410,14 @@ namespace ka {
     /// assert((_1 * a) == a);
     /// assert((_1 * _1) == _1);
     /// ```
-    template<typename G, typename F>
+    template<typename G, typename F> constexpr
     auto operator*(G&& g, F&& f) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
 
     /// Performs a accumulation composition in reverse order of that of traditional
     /// mathematical function composition, that is `f | g == g * f`.
-    template<typename F, typename G>
+    template<typename F, typename G> constexpr
     auto operator|(F&& f, G&& g) -> decltype(compose_accu(fwd<G>(g), fwd<F>(f))) {
       return compose_accu(fwd<G>(g), fwd<F>(f));
     }
@@ -424,14 +428,14 @@ namespace ka {
     /// A composition can be interpreted as a sequence of two steps (say, `putSocks`
     /// then `putShoes`). Retracting (i.e. undoing) this sequence means retracting the
     /// second step (`removeShoes`), then the first (`removeSocks`).
-    template<typename G, typename F>
+    template<typename G, typename F> constexpr
     auto retract(composition_t<G, F> const& x) -> decltype(compose(retract(x.f), retract(x.g))) {
       return compose(retract(x.f), retract(x.g));
     }
 
   // model IsomorphicAction composition_accu_t<G, F>:
   //  if IsomorphicAction(F) && IsomorphicAction(G):
-    template<typename G, typename F>
+    template<typename G, typename F> constexpr
     auto retract(composition_accu_t<G, F> const& x) -> decltype(compose_accu(retract(x.f), retract(x.g))) {
       return compose_accu(retract(x.f), retract(x.g));
     }
@@ -497,7 +501,7 @@ namespace ka {
   /// only the codomain is enriched.
   ///
   /// Procedure Proc
-  template<typename Proc, typename F>
+  template<typename Proc, typename F> constexpr
   auto semilift(Proc&& p, F&& unit) -> decltype(compose(fwd<F>(unit), fwd<Proc>(p))) {
     return compose(fwd<F>(unit), fwd<Proc>(p));
   }
@@ -600,19 +604,23 @@ namespace ka {
     }
 
     // TODO: Remove this when get rid of VS2013.
+    constexpr
     move_assign_t(Src&& s)
       : s(std::move(s)) {
     }
 
     // TODO: Remove this when get rid of VS2013.
+    constexpr
     move_assign_t(Src const& s)
       : s(s) {
     }
 
     // TODO: Remove this when get rid of VS2013.
+    constexpr
     move_assign_t(move_assign_t const& other) = default;
 
     // TODO: Remove this when get rid of VS2013.
+    constexpr
     move_assign_t(move_assign_t&& x)
       : s(std::move(x.s)) {
     }
@@ -646,8 +654,8 @@ namespace ka {
       --x;
     }
   // IsomorphicAction<Integral || BidirectionalIterator>:
-    template<typename U>
-    friend incr_mono_t<U> retract(decr_mono_t<U>);
+    template<typename U> friend constexpr
+    incr_mono_t<U> retract(decr_mono_t<U>);
   };
 
   /// Isomorphic action that increments its parameter.
@@ -678,12 +686,13 @@ namespace ka {
     // TODO: Remove this when get rid of VS2013.
     using retract_type = decr_mono_t<T>;
 
-    friend decr_mono_t<T> retract(incr_mono_t) {
+    friend constexpr
+    decr_mono_t<T> retract(incr_mono_t) {
       return {};
     }
   };
 
-  template<typename T>
+  template<typename T> constexpr
   incr_mono_t<T> retract(decr_mono_t<T>) {
     return {};
   }
@@ -697,12 +706,13 @@ namespace ka {
     // TODO: Remove this when get rid of VS2013.
     using retract_type = incr_t;
 
-    template<typename T>
-    inline void operator()(T& x) const {
+    template<typename T> inline
+    void operator()(T& x) const {
       --x;
     }
   // IsomorphicAction<Integral || BidirectionalIterator>:
-    inline friend incr_t retract(decr_t);
+    inline friend constexpr
+    incr_t retract(decr_t);
   };
 
   KA_DERIVE_CTOR_FUNCTION(decr)
@@ -711,28 +721,29 @@ namespace ka {
   // Regular:
     KA_GENERATE_FRIEND_REGULAR_OPS_0(incr_t)
   // Action<Arithmetic || InputIterator>:
-    template<typename T>
-    inline void operator()(T& x) const {
+    template<typename T> inline
+    void operator()(T& x) const {
       ++x;
     }
   // IsomorphicAction<Integral || BidirectionalIterator>:
     // TODO: Remove this when get rid of VS2013.
     using retract_type = decr_t;
 
-    inline friend decr_t retract(incr_t) {
+    inline friend constexpr
+    decr_t retract(incr_t) {
       return {};
     }
   };
 
-  inline incr_t retract(decr_t) {
+  constexpr inline incr_t retract(decr_t) {
     return {};
   }
 
   KA_DERIVE_CTOR_FUNCTION(incr)
 
   namespace detail {
-    template<typename Proc, typename Args, std::size_t... I>
-    BOOST_CONSTEXPR auto apply_impl(Proc&& proc, Args&& args, index_sequence<I...>)
+    template<typename Proc, typename Args, std::size_t... I> constexpr
+    auto apply_impl(Proc&& proc, Args&& args, index_sequence<I...>)
       // TODO: Guess what, remove this when c++14 is available.
         -> decltype(proc(std::get<I>(fwd<Args>(args))...)) {
       return proc(std::get<I>(fwd<Args>(args))...);
@@ -812,15 +823,15 @@ namespace ka {
   ///   struct tuple_size<test::X<A, B, C>> : integral_constant<size_t, 3> {
   ///   };
   ///
-  ///   template<size_t I, typename A, typename B, typename C>
-  ///   BOOST_CONSTEXPR auto get(test::X<A, B, C>& x)
+  ///   template<size_t I, typename A, typename B, typename C> constexpr
+  ///   auto get(test::X<A, B, C>& x)
   ///     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
   ///       -> decltype(x.get(integral_constant<size_t, I>{})) {
   ///     return x.get(integral_constant<size_t, I>{});
   ///   }
   ///
-  ///   template<size_t I, typename A, typename B, typename C>
-  ///   BOOST_CONSTEXPR auto get(test::X<A, B, C> const& x)
+  ///   template<size_t I, typename A, typename B, typename C> constexpr
+  ///   auto get(test::X<A, B, C> const& x)
   ///     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
   ///       -> decltype(x.get(integral_constant<size_t, I>{})) {
   ///     return x.get(integral_constant<size_t, I>{});
@@ -839,8 +850,8 @@ namespace ka {
   /// See `apply_t` to transform a function into an equivalent tuple-accepting function.
   ///
   /// Procedure Proc, Tuple Args
-  template<typename Proc, typename Args>
-  BOOST_CONSTEXPR auto apply(Proc&& proc, Args&& args)
+  template<typename Proc, typename Args> constexpr
+  auto apply(Proc&& proc, Args&& args)
     // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
       -> decltype(detail::apply_impl(fwd<Proc>(proc), fwd<Args>(args),
         make_index_sequence<std::tuple_size<Decay<Args>>::value>{})) {
@@ -882,7 +893,7 @@ namespace ka {
       return apply(proc, fwd<Args>(args));
     }
 
-    template<typename Args>
+    template<typename Args> constexpr
     auto operator()(Args&& args) const KA_NOEXCEPT_EXPR(apply(proc, fwd<Args>(args)))
         // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
         -> decltype(apply(proc, fwd<Args>(args))) {
@@ -911,7 +922,7 @@ namespace ka {
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Procedure Proc
-  template<typename Proc>
+  template<typename Proc> constexpr
   apply_t<Decay<Proc>> apply(Proc&& proc) {
     return {fwd<Proc>(proc)};
   }
@@ -1025,7 +1036,7 @@ namespace ka {
 
   namespace detail {
   // model EmptyProcedure std::function<A (B...)>:
-    template<typename A, typename... B> KA_CONSTEXPR
+    template<typename A, typename... B> constexpr
     bool empty(std::function<A (B...)> const& x) {
       return !static_cast<bool>(x);
     }
@@ -1075,7 +1086,7 @@ namespace ka {
     template<typename T, typename U,
       typename = EnableIfNotInputIterator<Decay<T>>,
       typename = EnableIfNotInputIterator<Decay<U>>
-    >
+    > constexpr
     auto operator*(T&& t, U&& u) -> decltype(product(fwd<T>(t), fwd<U>(u))) {
       return product(fwd<T>(t), fwd<U>(u));
     }
