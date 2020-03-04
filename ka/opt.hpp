@@ -541,7 +541,7 @@ namespace ka
   // Functor:
     /// Function<U (T)> F
     template<typename F>
-    auto fmap(F&& f) -> opt_t<CodomainFor<F, T>> {
+    auto fmap(F&& f) const -> opt_t<CodomainFor<F, T>> {
       using U = CodomainFor<F, T>;
       if (empty()) {
         return opt_t<U>{};
@@ -646,12 +646,12 @@ namespace ka
   // Functor:
     /// Procedure<_ ()> F
     template<typename F>
-    opt_t<CodomainFor<F>> fmap(F&& f) {
+    opt_t<CodomainFor<F>> fmap(F&& f) const {
       return fmap_dispatch(Equal<void, CodomainFor<F>>{}, fwd<F>(f));
     }
   private:
     template<typename F>
-    opt_t<void> fmap_dispatch(true_t /* VoidCodomain */, F&& f) {
+    opt_t<void> fmap_dispatch(true_t /* VoidCodomain */, F&& f) const {
       if (!empty()) {
         fwd<F>(f)();
       }
@@ -659,7 +659,7 @@ namespace ka
     }
 
     template<typename F>
-    opt_t<CodomainFor<F>> fmap_dispatch(false_t /* VoidCodomain */, F&& f) {
+    opt_t<CodomainFor<F>> fmap_dispatch(false_t /* VoidCodomain */, F&& f) const {
       opt_t<CodomainFor<F>> o;
       if (!empty()) {
         o.call_set(fwd<F>(f));
