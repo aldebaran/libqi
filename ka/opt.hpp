@@ -14,6 +14,22 @@
 
 namespace ka
 {
+  namespace detail {
+    /// Flattens an `opt_t<opt_t<T>>` into a `opt_t<T>`.
+    ///
+    /// Returns the internal optional value if it exists, empty otherwise.
+    template<typename T> constexpr
+    auto flatten_impl(opt_t<opt_t<T>> const& o) noexcept -> opt_t<T> {
+      return o.empty() ? opt_t<T>{} : *o;
+    }
+
+    /// Rvalue-ref overload of `flatten` of `opt_t`.
+    template<typename T> constexpr
+    auto flatten_impl(opt_t<opt_t<T>>&& o) noexcept -> opt_t<T> {
+      return o.empty() ? opt_t<T>{} : std::move(*o);
+    }
+  } // namespace detail
+
   /// Contains a value or nothing.
   ///
   /// This type is similar to `std::optional` but has two distinctive features:
@@ -549,6 +565,15 @@ namespace ka
         return opt_t<U>{}.call_set(fwd<F>(f), **this);
       }
     }
+
+    constexpr
+    auto flatten() const& noexcept -> T {
+      return detail::flatten_impl(*this);
+    }
+
+    auto flatten() && noexcept -> T {
+      return detail::flatten_impl(std::move(*this));
+    }
   };
 
   /// Constructs an optional set with the given parameter.
@@ -751,6 +776,25 @@ namespace ka
       return res;
     }
   } // namespace fmap_ns
+
+  namespace detail {
+    // Overloads are defined here and available for `flatten_fn_t`.
+
+    /// Flattens a `boost::optional<boost::optional<T>>` into a `boost::optional<T>`.
+    ///
+    /// Returns the internal optional value if it exists, empty otherwise.template<typename T>
+    template<typename T> constexpr
+    auto flatten(boost::optional<boost::optional<T>> const& o) noexcept
+      -> boost::optional<T> {
+      return o ? *o : boost::optional<T>{};
+    }
+
+    /// Rvalue-ref overload of `flatten` of `boost::optional`.
+    template<typename T>
+    auto flatten(boost::optional<boost::optional<T>>&& o) noexcept -> boost::optional<T> {
+      return o ? std::move(*o) : boost::optional<T>{};
+    }
+  } // namespace detail
 } // namespace ka
 
 #endif // KA_OPT_HPP

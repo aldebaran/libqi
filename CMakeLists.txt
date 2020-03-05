@@ -402,6 +402,7 @@ set(KA_H
   ka/conceptpredicate.hpp
   ka/empty.hpp
   ka/errorhandling.hpp
+  ka/flatten.hpp
   ka/functional.hpp
   ka/functor.hpp
   ka/functorcontainer.hpp
