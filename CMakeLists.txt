@@ -302,6 +302,7 @@ set(QIM_H qi/api.hpp
           qi/messaging/serviceinfo.hpp
           qi/applicationsession.hpp
           qi/session.hpp
+          qi/uri.hpp
           qi/url.hpp
 )
 
@@ -352,6 +353,7 @@ set(QIM_C
   src/messaging/transportsocketcache.hpp
   src/messaging/tcpmessagesocket.cpp
   src/messaging/tcpmessagesocket.hpp
+  src/messaging/uri.cpp
   src/messaging/url.cpp
   src/registration.cpp
 )

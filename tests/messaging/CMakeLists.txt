@@ -41,6 +41,7 @@ if(QI_WITH_TESTS)
     "test_messaging.cpp" # main
     "test_metavalue_argument.cpp"
     "test_sd.cpp"
+    "test_uri.cpp"
     "test_url.cpp"
 #    "test_with_gateway.cpp" # TODO: repair
     "test_without_gateway.cpp"
