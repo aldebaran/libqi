@@ -1048,12 +1048,26 @@ namespace ka {
     }
   } // namespace fmap_ns
 
-  /// Contructs a tuple from the given values.
-  /// This is to uniformize with other kinds of product (iterators, etc.).
+  /// Categorical product of n types.
+  ///
+  /// This corresponds to cartesian product.
+  /// Associated projections are `std::get<n>`, for n >= 0.
+  ///
+  /// meaning(product_t<A0, A1, ...>) = A0 x A1 x ...
+  ///
+  /// Alias to uniformize product definitions.
   template<typename... A>
-  auto product(A&&... a) -> decltype(std::make_tuple(fwd<A>(a)...)) {
-    return std::make_tuple(fwd<A>(a)...);
-  }
+  using product_t = std::tuple<A...>;
+
+  /// Contructs a tuple from the given values.
+  /// This is to uniformize with other kinds of product (iterators, parsers, etc.).
+  struct product_fn_t {
+    template<typename... A> constexpr
+    auto operator()(A&&... a) const -> product_t<Decay<A>...> {
+      return std::make_tuple(fwd<A>(a)...);
+    }
+  };
+  static constexpr auto& product = static_const_t<product_fn_t>::value;
 
   /// Operators related to the category of types and functions.
   namespace fn_cat_ops {

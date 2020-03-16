@@ -1592,3 +1592,61 @@ TEST(FunctionalEqual, Polymorphic) {
   ASSERT_TRUE(equal(B{3}, B{3}));
   ASSERT_TRUE(equal(A{3}, Y{3})); // Different types with no common type.
 }
+
+TEST(FunctionalProductT, Regular) {
+  using namespace ka;
+  using namespace ka::test;
+  {
+    auto const f = product_t<>{};
+    ASSERT_TRUE(is_regular({f, f, f})); // only one possible value because no state
+  } {
+    auto const f = product_t<D, B, A>{};
+    ASSERT_TRUE(is_regular({f, f, f})); // only one possible value because no state
+  }
+}
+
+TEST(FunctionalProductT, ProductType) {
+  using namespace ka;
+  using namespace ka::test;
+  using std::get;
+
+  // Product of no type is unit.
+  EXPECT_EQ(unit, product_t<>{});
+
+  // Product comes with projections.
+  auto const a = A{12};
+  auto const b = B{-3};
+  auto const c = C{982};
+  auto const p = product_t<A, B, C>{a, b, c};
+  EXPECT_EQ(a, get<0>(p));
+  EXPECT_EQ(b, get<1>(p));
+  EXPECT_EQ(c, get<2>(p));
+}
+
+TEST(FunctionalProduct, PolymorphicVariadicFunction) {
+  using namespace ka;
+  using namespace ka::test;
+
+  // 0 argument.
+  EXPECT_EQ(product_t<>{}, product());
+
+  // 1 argument.
+  auto const a = A{12};
+  EXPECT_EQ(product_t<A>{a}, product(a));
+
+  // n arguments.
+  auto const b = B{-3};
+  auto const c = C{982};
+  EXPECT_EQ((product_t<A, B, C>{a, b, c}), product(a, b, c));
+  EXPECT_EQ((product_t<B, C, B, A>{b, c, b, a}), product(b, c, b, a));
+}
+
+TEST(FunctionalProduct, FunctionObject) {
+  using namespace ka;
+  using namespace ka::test;
+  using ka::functional_ops::operator*; // Mathematical function composition.
+  auto f = [](A a) -> B {return B{-2 * a.value};};
+  auto g = product * f;
+  EXPECT_EQ(product_t<B>{B{0}}, g(A{0}));
+  EXPECT_EQ(product_t<B>{B{-6}}, g(A{3}));
+}
