@@ -25,6 +25,17 @@ namespace ka {
     return static_cast<T&&>(t);
   }
 
+  /// Less noisy equivalent to `std::move`.
+  ///
+  /// The only purpose is to reduce the noise in generic code:
+  /// occurrences of `std::move(t)` can be replaced by `mv(t)`.
+  ///
+  /// See `n3690/20.2.4/6`.
+  template<typename T> constexpr
+  auto mv(T&& t) noexcept -> typename std::remove_reference<T>::type&& {
+    return static_cast<typename std::remove_reference<T>::type&&>(t);
+  }
+
   /// Produces an L-value reference in a non-evaluated context.
   ///
   /// Note: Because of the non-evaluated context, the function need not be defined.
