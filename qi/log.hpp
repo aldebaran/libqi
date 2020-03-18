@@ -800,7 +800,7 @@ namespace qi
       -> decltype(ka::invoke_catch(
                     ka::handle_exception_rethrow(
                       exceptionLog<L>(ka::fwd<S>(logCategory), ka::fwd<O>(logPrefix)),
-                      ka::type_t<ka::CodomainFor<Proc, Args...>>{}
+                      ka::type_t<ka::CodomainFor<ka::Decay<Proc>, Args...>>{}
                     ),
                     ka::fwd<Proc>(proc),
                     ka::fwd<Args>(args)...
@@ -810,7 +810,7 @@ namespace qi
       return invoke_catch(
         handle_exception_rethrow(
           exceptionLog<L>(fwd<S>(logCategory), fwd<O>(logPrefix)),
-          type_t<CodomainFor<Proc, Args...>>{} // force return type to match Proc's one
+          type_t<CodomainFor<ka::Decay<Proc>, Args...>>{} // force return type to match Proc's one
         ),
         fwd<Proc>(proc),
         fwd<Args>(args)...
