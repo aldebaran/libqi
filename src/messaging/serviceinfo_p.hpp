@@ -18,7 +18,7 @@ public:
   unsigned int serviceId;
   std::string machineId;
   unsigned int processId;
-  qi::UrlVector endpoints;
+  std::vector<Uri> endpoints;
   std::string sessionId;
   std::string objectUid; // TODO: Revert to use `boost::optional<qi::ObjectUid>` once retro-compatibility is not an issue anymore.
 };

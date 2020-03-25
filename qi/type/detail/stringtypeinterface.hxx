@@ -108,20 +108,6 @@ namespace qi
       _QI_BOUNCE_TYPE_METHODS_NOCLONE(Methods);
   };
 
-  template<class Func, class... Args >
-  auto callWithInstance(Func&& f, Args&&... args)
-    -> decltype(std::forward<Func>(f)(std::forward<Args>(args)...))
-  {
-    return std::forward<Func>(f)(std::forward<Args>(args)...);
-  }
-
-  template<class Func, class Obj, class... Args >
-  auto callWithInstance(Func&& f, Obj&& o, Args&&... args)
-  -> decltype((std::forward<Obj>(o).*std::forward<Func>(f))(std::forward<Args>(args)...))
-  {
-    return (std::forward<Obj>(o).*std::forward<Func>(f))(std::forward<Args>(args)...);
-  }
-
   inline StringTypeInterface::ManagedRawString makeManagedString(const std::string& s)
   {
     return StringTypeInterface::ManagedRawString(StringTypeInterface::RawString(const_cast<char*>(s.c_str()), s.size()),
@@ -138,47 +124,75 @@ namespace qi
                                                  [=](const StringTypeInterface::RawString&){ delete ms; });
   }
 
-  /** Declare a Type for T of Kind string.
-  *
-  * T must be default-constructible, copy-constructible, and
-  * provide a constructor accepting a string.
-  * F must be a member function pointer, member object pointer, or free function
-  * returning a const string&.
-  */
-  template<typename T, typename F> class TypeEquivalentString: public StringTypeInterface
+  namespace detail
+  {
+    template<typename T>
+    T constructFromStr(const std::string& str)
+    {
+      return T(str);
+    }
+  }
+
+  /// Declare a Type for T of Kind string.
+  ///
+  /// T must be default-constructible, copy-constructible.
+  /// Function<std::string (T)> ToStr
+  /// Function<T (std::string)> FromStr
+  template<typename T, typename ToStr, typename FromStr>
+  class TypeEquivalentString: public StringTypeInterface
   {
   public:
-    TypeEquivalentString(F f): _getter(f) {}
+    TypeEquivalentString(ToStr toStr, FromStr fromStr)
+      : _toStr(std::move(toStr))
+      , _fromStr(std::move(fromStr))
+    {}
+
     using Impl = DefaultTypeImplMethods<T, TypeByPointerPOD<T>>;
 
     void set(void** storage, const char* ptr, size_t sz) override
     {
-      T* inst = (T*)ptrFromStorage(storage);
-      *inst = T(std::string(ptr, sz));
+      auto* const inst = reinterpret_cast<T*>(ptrFromStorage(storage));
+      *inst = _fromStr(std::string(ptr, sz));
     }
 
     ManagedRawString get(void* storage) override
     {
-      T* ptr = (T*)Impl::ptrFromStorage(&storage);
-      return makeManagedString(callWithInstance(_getter, *ptr));
+      auto* const ptr = reinterpret_cast<T*>(Impl::ptrFromStorage(&storage));
+      return makeManagedString(std::bind(_toStr, std::ref(*ptr))());
     }
 
     _QI_BOUNCE_TYPE_METHODS(Impl);
-    F _getter;
+    ToStr _toStr;
+    FromStr _fromStr;
   };
 
-  template<typename T, typename F>
-  StringTypeInterface* makeTypeEquivalentString(T*, F f)
+  /// T must be default-constructible, copy-constructible.
+  /// Function<std::string (T)> ToStr
+  /// Function<T (std::string)> FromStr
+  template<typename T, typename ToStr, typename FromStr = T (*)(const std::string&)>
+  StringTypeInterface* makeTypeEquivalentString(ToStr&& toStr,
+                                                FromStr&& fromStr = &detail::constructFromStr<T>)
   {
-    return new TypeEquivalentString<T, F>(f);
+    return new TypeEquivalentString<T, ka::Decay<ToStr>, ka::Decay<FromStr>>(
+      std::forward<ToStr>(toStr), std::forward<FromStr>(fromStr));
   }
 }
 
-/** Register type \p type in the type system as string kind, using constructor
- * for setter, and function \p func for getter
+/** Register type \p in the type system as string kind, using constructor
+ * for setter, and function \p tostr for getter
  */
-#define QI_EQUIVALENT_STRING_REGISTER(type, func) \
+#define QI_EQUIVALENT_STRING_REGISTER(type, tostr) \
   static bool BOOST_PP_CAT(__qi_registration, __COUNTER__) QI_ATTR_UNUSED \
-    = qi::registerType(qi::typeId<type>(),  qi::makeTypeEquivalentString((type*)0, func))
+    = qi::registerType(qi::typeId<type>(), \
+                       qi::makeTypeEquivalentString<type>(tostr))
+
+/** Register type \p in the type system as string kind, using \p tostr for getter, and
+ * \p fromstr for setter.
+ */
+#define QI_EQUIVALENT_STRING_REGISTER2(type, tostr, fromstr) \
+  static bool BOOST_PP_CAT(__qi_registration, __COUNTER__) QI_ATTR_UNUSED \
+    = qi::registerType(qi::typeId<type>(), \
+                       qi::makeTypeEquivalentString<type>(tostr, fromstr))
+
 
 #endif  // _QITYPE_DETAIL_TYPESTRING_HXX_
