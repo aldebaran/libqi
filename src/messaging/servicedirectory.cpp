@@ -46,9 +46,13 @@ namespace qi
       ob = new qi::ObjectTypeBuilder<ServiceDirectory>();
       ob->setThreadingModel(ObjectThreadingModel_MultiThread);
       unsigned int id = 0;
-      id = ob->advertiseMethod("service", &ServiceDirectory::service);
+      id = ob->advertiseMethod("service",
+                               static_cast<ServiceInfo (ServiceDirectory::*)(const std::string&)>(
+                                 &ServiceDirectory::service));
       QI_ASSERT(id == qi::Message::ServiceDirectoryAction_Service);
-      id = ob->advertiseMethod("services", &ServiceDirectory::services);
+      id = ob->advertiseMethod("services",
+                               static_cast<std::vector<ServiceInfo> (ServiceDirectory::*)()>(
+                                 &ServiceDirectory::services));
       QI_ASSERT(id == qi::Message::ServiceDirectoryAction_Services);
       id = ob->advertiseMethod("registerService", &ServiceDirectory::registerService);
       QI_ASSERT(id == qi::Message::ServiceDirectoryAction_RegisterService);
@@ -119,40 +123,140 @@ namespace qi
     socketToIdx.erase(it);
   }
 
+  ka::opt_t<RelativeEndpointsUriEnabled> ServiceDirectory::relativeEndpointsUriEnabled() const
+  {
+    const auto bo = serviceBoundObject.lock();
+    if (!bo)
+      return {};
+    const auto socket = bo->currentSocket();
+    if (!socket)
+      return {};
+    return ka::opt(static_cast<RelativeEndpointsUriEnabled>(
+      socket->sharedCapability(capabilityname::relativeEndpointUri, false)));
+  }
+
+  namespace
+  {
+    /// @pre `std::is_sorted(epBegin, epEnd)`
+    /// ForwardIterator<ServiceInfo> It1
+    /// ForwardIterator<Uri> It2
+    /// OutputIterator<Uri> OutIt
+    template<typename It1, typename It2, typename OutIt>
+    OutIt copyRelativeEndpoints(It1 siBegin, It1 siEnd, It2 epBegin, It2 epEnd, OutIt out)
+    {
+      QI_ASSERT_TRUE(std::is_sorted(epBegin, epEnd));
+
+      // "5.1. For each service service_candidate Server knows of (including the
+      // "ServiceDirectory service):"
+      for (; siBegin != siEnd; ++siBegin)
+      {
+        // "5.1.1. If all endpoints of service_candidate are included in the "
+        // "endpoints service_requested_endpoints, then:"
+        const auto& candidate = siBegin->second;
+        auto candEp = candidate.uriEndpoints();
+        std::sort(candEp.begin(), candEp.end());
+        candEp.erase(std::unique(candEp.begin(), candEp.end()), candEp.end());
+        if (std::includes(epBegin, epEnd, candEp.begin(), candEp.end()))
+        {
+          // "5.1.1.1 Server MAY add a relative endpoint qi:<service_candidate>"
+          // "to service_requested_endpoints (with case insensitive scheme)."
+          const auto epUri = uri(std::string(uriQiScheme()) + ":" + candidate.name());
+          QI_ASSERT_FALSE(epUri.empty());
+          *out++ = *epUri;
+        }
+      }
+      return out;
+    }
+  }
+
+  ServiceInfo ServiceDirectory::finalize(ServiceInfo info,
+                                         RelativeEndpointsUriEnabled relativeEndpointsUri) const
+  {
+    // The following comments between double quotes are excerpts from the
+    // algorithm in `spec:2020/b`.
+
+    auto endpoints = info.uriEndpoints();
+    // "4. Server filters out any relative endpoints from service_requested_endpoints."
+    {
+      auto newEnd = std::remove_if(endpoints.begin(), endpoints.end(), isRelativeEndpoint);
+      std::sort(endpoints.begin(), newEnd);
+      newEnd = std::unique(endpoints.begin(), newEnd);
+      endpoints.erase(newEnd, endpoints.end());
+    }
+
+    // "5. If the relative-endpoint-uri capability is set on socket, then:"
+    if (relativeEndpointsUri == RelativeEndpointsUriEnabled::Yes)
+    {
+      // "5.1. For each service service_candidate Server knows of (including the
+      // "ServiceDirectory service):"
+      //   "5.1.1. If all endpoints of service_candidate are included in the "
+      //   "endpoints service_requested_endpoints, then:
+      //     "5.1.1.1 Server MAY add a relative endpoint qi:<service_candidate>"
+      //     "to service_requested_endpoints (with case insensitive scheme)."
+      const auto baseEndpoints = endpoints;
+      copyRelativeEndpoints(connectedServices.begin(), connectedServices.end(),
+                            baseEndpoints.begin(), baseEndpoints.end(),
+                            std::back_inserter(endpoints));
+    }
+    // "6. Server orders service_requested_endpoints."
+    std::sort(endpoints.begin(), endpoints.end(), isPreferredEndpoint);
+
+    // "7. Server returns service_requested_endpoints back to Client."
+    info.setEndpoints(endpoints);
+    return info;
+  }
+
   std::vector<ServiceInfo> ServiceDirectory::services()
+  {
+    const auto optFeature = relativeEndpointsUriEnabled();
+    RelativeEndpointsUriEnabled feature = RelativeEndpointsUriEnabled::No; // Disabled by default.
+    if (!optFeature.empty())
+      feature = *optFeature;
+    return services(feature);
+  }
+
+  std::vector<ServiceInfo> ServiceDirectory::services(RelativeEndpointsUriEnabled relativeEndpointsUri)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
     std::vector<ServiceInfo> result;
     std::map<unsigned int, ServiceInfo>::const_iterator it;
 
     for (it = connectedServices.begin(); it != connectedServices.end(); ++it)
-      result.push_back(it->second);
+      result.push_back(finalize(it->second, relativeEndpointsUri));
 
     return result;
   }
 
-  ServiceInfo ServiceDirectory::service(const std::string &name)
+  ServiceInfo ServiceDirectory::service(const std::string& name)
+  {
+    const auto optFeature = relativeEndpointsUriEnabled();
+    RelativeEndpointsUriEnabled feature = RelativeEndpointsUriEnabled::No; // Disabled by default.
+    if (!optFeature.empty())
+      feature = *optFeature;
+    return service(name, feature);
+  }
+
+  ServiceInfo ServiceDirectory::service(const std::string& name,
+                                        RelativeEndpointsUriEnabled relativeEndpointsUri)
   {
     boost::recursive_mutex::scoped_lock lock(mutex);
-    std::map<unsigned int, ServiceInfo>::const_iterator servicesIt;
-    std::map<std::string, unsigned int>::const_iterator it;
 
-    it = nameToIdx.find(name);
-    if (it == nameToIdx.end()) {
+    const auto indexIt = nameToIdx.find(name);
+    if (indexIt == nameToIdx.end()) {
       std::stringstream ss;
       ss << "Cannot find service '" << name << "' in index";
       throw std::runtime_error(ss.str());
     }
 
-    unsigned int idx = it->second;
-
-    servicesIt = connectedServices.find(idx);
+    const auto idx = indexIt->second;
+    const auto servicesIt = connectedServices.find(idx);
     if (servicesIt == connectedServices.end()) {
       std::stringstream ss;
       ss << "Cannot find ServiceInfo for service '" << name << "'";
       throw std::runtime_error(ss.str());
     }
-    return servicesIt->second;
+
+    return finalize(servicesIt->second, relativeEndpointsUri);
   }
 
   unsigned int ServiceDirectory::registerService(const ServiceInfo &svcinfo)
@@ -196,10 +300,9 @@ namespace qi
       qiLogInfo() << ss.str();
     }
 
-    qi::UrlVector::const_iterator jt;
-    for (jt = svcinfo.endpoints().begin(); jt != svcinfo.endpoints().end(); ++jt)
+    for (const auto& ep : svcinfo.uriEndpoints())
     {
-      qiLogDebug() << "Service \"" << svcinfo.name() << "\" is now on " << jt->str();
+      qiLogDebug() << "Service \"" << svcinfo.name() << "\" is now on " << ep;
     }
 
     return idx;
@@ -289,7 +392,7 @@ namespace qi
     {
       if (svcinfo.sessionId() == itService->second.sessionId())
       {
-        itService->second.setEndpoints(svcinfo.endpoints());
+        itService->second.setEndpoints(svcinfo.uriEndpoints());
       }
     }
 

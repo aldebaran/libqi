@@ -117,6 +117,8 @@ set(MESSAGING_SOURCES
   "../../src/messaging/transportserverasio_p.cpp"
   "../../src/messaging/messagesocket.cpp"
   "../../src/messaging/transportsocketcache.cpp"
+  "../../src/messaging/servicedirectory.cpp"
+  "../../src/messaging/server.cpp"
 )
 
 qi_create_gmock(
@@ -136,6 +138,7 @@ qi_create_gmock(
   "sock/test_send.cpp"
   "test_tcpmessagesocket.cpp"
   "test_appsession_internal.cpp"
+  "test_servicedirectory.cpp"
   ${MESSAGING_SOURCES}
 
   DEPENDS

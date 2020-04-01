@@ -37,7 +37,18 @@ using CapabilityMap = std::map<std::string, AnyValue>;
 
     // Capability: Objects allow unique identification using Ptruid/ObjectUid.
     QI_API extern char const * const objectPtrUid;
+
+    // Capability: ServiceDirectory may add relative endpoints to services to the list of endpoints
+    // in service information.
+    QI_API extern char const * const relativeEndpointUri;
   }
+
+  /// State of the `RelativeEndpointsUri` capability.
+  enum class RelativeEndpointsUriEnabled : bool
+  {
+    No = false,
+    Yes = true,
+  };
 
 /** Store contextual data associated to one point-to-point point transport.
  *

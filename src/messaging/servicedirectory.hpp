@@ -25,7 +25,10 @@ namespace qi
   public:
     //Public Bound API
     std::vector<ServiceInfo> services();
+    std::vector<ServiceInfo> services(RelativeEndpointsUriEnabled relativeEndpointsUri);
     ServiceInfo              service(const std::string &name);
+    ServiceInfo              service(const std::string &name,
+                                     RelativeEndpointsUriEnabled relativeEndpointsUri);
     unsigned int             registerService(const ServiceInfo &svcinfo);
     void                     unregisterService(const unsigned int &idx);
     void                     serviceReady(const unsigned int &idx);
@@ -39,6 +42,22 @@ namespace qi
 
   private:
     void removeClientSocket(MessageSocketPtr socket);
+
+    // The state of the relative endpoints URI feature.
+    //
+    // To be effective, this function must be called within one of the advertised methods, i.e.
+    // when the service bound object is treating an incoming call request, as this function will
+    // attempt to get the current socket on which the message was received.
+    //
+    // If the bound object cannot be accessed or has no current socket associated with, returns
+    // an empty value.
+    ka::opt_t<RelativeEndpointsUriEnabled> relativeEndpointsUriEnabled() const;
+
+    // Finalizes a service info, first by removing any existing relative endpoints and removing
+    // duplicate endpoints. Then, if the feature is enabled, adds relative endpoints according to
+    // existing registered services. Finally, sorts the endpoints by preference
+    // (see spec:/sbre/framework/2020/b).
+    ServiceInfo finalize(ServiceInfo info, RelativeEndpointsUriEnabled relativeEndpointsUri) const;
 
   public:
     std::map<unsigned int, ServiceInfo>                       pendingServices;

@@ -535,7 +535,7 @@ namespace qi {
           }
         }
         //empty serviceInfo
-        if (!si.endpoints().size()) {
+        if (!si.uriEndpoints().size()) {
           std::stringstream ss;
           ss << "No endpoints returned for service:" << sr->serviceInfo.name()
              << " (id:" << sr->serviceInfo.serviceId() << ")";
