@@ -4,6 +4,8 @@
 #include <array>
 #include <ka/conceptpredicate.hpp>
 #include <ka/macroregular.hpp>
+#include <ka/testutils.hpp>
+#include <ka/ark/inputiter.hpp>
 
 /// Archetype to ensure that only forward iterator's operations are used.
 struct forward_iter_t {
@@ -305,6 +307,66 @@ TEST(Range, IncrBoundedRangeActionHelperTerse) {
   EXPECT_EQ(N{-2}, front(rng));  // [-2, 0, 2, 4]
   pop(rng);
   EXPECT_EQ(N{0}, front(rng));  // [0, 2, 4, 6]
+}
+
+struct RangeBoundedRangeLinearizableBeginEnd
+  : testing::TestWithParam<std::vector<ka::test::A>> {
+};
+
+namespace detail {
+  using std::vector;
+  using ka::test::A;
+
+  auto boundedRangeLinearizableBeginEndTestingValues =
+    testing::Values(
+      vector<A>{},
+      vector<A>{A{62}},
+      vector<A>{A{62}, A{926}},
+      vector<A>{A{62}, A{926}, A{-3}},
+      vector<A>{A{62}, A{926}, A{-3}, A{0}, A{52720}}
+    );
+} // namespace detail
+
+INSTANTIATE_TEST_CASE_P(
+  DefaultInstantiation,
+  RangeBoundedRangeLinearizableBeginEnd,
+  detail::boundedRangeLinearizableBeginEndTestingValues
+);
+
+TEST_P(RangeBoundedRangeLinearizableBeginEnd, Basic) {
+  using namespace ka;
+  using test::A;
+  auto const values = GetParam();
+  auto b = ark::input_iter(values.begin());
+  auto e = ark::input_iter(values.end());
+  auto const rng = bounded_range(b, e);
+  EXPECT_EQ(b, begin(rng));
+  EXPECT_EQ(e, end(rng));
+  EXPECT_EQ(values.empty(), empty(rng));
+  EXPECT_EQ(values.size(), size(rng));
+  for (auto i = 0; i != size(rng); ++i) {
+    EXPECT_EQ(values[i], rng[i]);
+  }
+}
+
+TEST_P(RangeBoundedRangeLinearizableBeginEnd, Mutable) {
+  using namespace ka;
+  using test::A;
+  auto values = GetParam(); // Copy.
+  auto b = ark::input_iter(values.begin());
+  auto e = ark::input_iter(values.end());
+  auto rng = bounded_range(b, e);
+  auto succ = [](A a) -> A {
+    return A{a.value + 1};
+  };
+  // Mutates values through the range.
+  for (auto i = 0; i != size(rng); ++i) {
+    rng[i] = succ(rng[i]);
+  }
+  // Checks the values against the original ones.
+  for (auto i = 0; i != size(rng); ++i) {
+    EXPECT_EQ(succ(GetParam()[i]), values[i]);
+  }
 }
 
 TEST(Range, RepeatRangeBasic) {

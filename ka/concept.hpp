@@ -492,6 +492,24 @@ namespace ka {
 ///  && (forall r in R where front(r) is defined) front(r) = x establishes front(r) == x
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+/// ## Linearizable
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Linearizable(L) =
+///     Regular(L)
+///  && With InputIterator<T> I, Integral N:
+///       begin: L -> I
+///    && end: L -> I
+///    && size: L -> N
+///         l |-> end(l) - begin(l)
+///    && empty: L -> bool
+///         l |-> begin(l) == end(l)
+///    && []: L x N -> T
+///         (l, n) |-> src(begin(l) + n)
+///    && constant_time(empty)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Range of iterators. Underlying values are not necessarily owned. Equality
+/// tests iterators themselves, not underlying values.
+///
 ///
 /// ## Empty
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
