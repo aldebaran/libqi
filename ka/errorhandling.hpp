@@ -5,43 +5,75 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/exception.hpp>
 #include "macroregular.hpp"
+#include "typetraits.hpp"
 #include "utility.hpp"
 
 namespace ka {
   /// Polymorphic procedure that handles an exception through a dedicated handler
   /// and rethrows the exception as-is.
   ///
-  /// Warning: Must be called in a `catch` clause, otherwise `std::terminate` will
-  ///   be called (because there is no exception to rethrow).
+  /// Warning: Must be called in a `catch` clause, otherwise `std::terminate`
+  ///   will be called (because there is no exception to rethrow).
   ///
-  /// Example: Logs in error log and rethrows the exception.
+  /// Example: Invoking a procedure, catching any exception, logging details,
+  ///   and rethrowing the exception, if any.
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// using Log = ExceptionLogError<std::string>;
-  /// handle_exception_rethrow<Log> log_rethrow{Log{"logCategory", "doStuff"}};
-  /// // ...
-  /// auto res = invoke_catch(log_rethrow, doStuff, arg0, arg1)
-  /// // ...
+  /// // Constructs an applicative procedure that logs an exception, with a
+  /// // category and a prefix.
+  /// auto log = exceptionLogError("logCategory", "doStuff");
+  ///
+  /// // Transforms the procedure to make it rethrow the exception.
+  /// auto log_rethrow = handle_exception_rethrow(log);
+  ///
+  /// // Invokes `doStuff(arg0, arg1)`, catching any exception, logging details,
+  /// // and rethrowing the exception, if any.
+  /// // Note that `doStuff` and `log_rethrow` have same codomain.
+  /// auto res = invoke_catch(log_rethrow, doStuff, arg0, arg1);
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ///
+  /// Example: Idem, setting the codomain to match the one of invoked procedure.
+  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  /// // See previous example for details.
+  /// auto log = exceptionLogError("logCategory", "doStuff");
+  ///
+  /// // Set `log_rethrow`'s codomain to `int`, because this is the codomain of
+  /// // the procedure we are going to invoke.
+  /// auto log_rethrow = handle_exception_rethrow(log, type_t<int>{});
+  ///
+  /// // Ok: `doStuff` and `log_rethrow` both return `int`.
+  /// auto res = invoke_catch(log_rethrow, doStuff, arg0, arg1);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Note: Members are public because there's no invariant to maintain.
   ///
-  /// PolymorphicProcedure<void (T), void ()> Proc
-  template<typename Proc>
-  struct handle_exception_rethrow {
+  /// PolymorphicProcedure<_ (_), _ ()> Proc
+  template<typename Proc, typename T = void>
+  struct handle_exception_rethrow_t {
     Proc handle_exception;
   // Regular:
-    KA_GENERATE_FRIEND_REGULAR_OPS_1(handle_exception_rethrow, handle_exception)
-  // PolymorphicProcedure<void (T), void()>:
-    template<typename T>
-    void operator()(T&& e) const {
-      handle_exception(std::forward<T>(e));
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(handle_exception_rethrow_t, handle_exception)
+  // PolymorphicProcedure<T (_), T ()>:
+    template<typename U>
+    T operator()(U&& e) const {
+      handle_exception(fwd<U>(e));
       throw;
     }
-    void operator()() const {
+    T operator()() const {
       handle_exception();
       throw;
     }
   };
+
+  /// Constructs a `handle_exception_rethrow_t`, performing type deduction.
+  ///
+  /// Codomain can be specified through the second parameter.
+  ///
+  /// PolymorphicProcedure<_ (_), _ ()> Proc
+  template<typename Proc, typename Ret = void>
+  auto handle_exception_rethrow(Proc&& proc, type_t<Ret> = {})
+      -> handle_exception_rethrow_t<Decay<Proc>, Ret> {
+    return {fwd<Proc>(proc)};
+  }
 
   /// Polymorphic function that maps an exception type to an arbitrary value.
   ///
@@ -59,10 +91,10 @@ namespace ka {
   ///
   /// There is no constraint on T.
   template<typename T>
-  struct exception_value {
+  struct exception_value_t {
     T std_value, boost_value, unknown_value;
   // Regular (if T is):
-    KA_GENERATE_FRIEND_REGULAR_OPS_3(exception_value, std_value, boost_value, unknown_value)
+    KA_GENERATE_FRIEND_REGULAR_OPS_3(exception_value_t, std_value, boost_value, unknown_value)
   // PolymorphicFunction<T (std::exception), T (boost::exception), T ()>:
     T operator()(std::exception const&) const {
       return std_value;
@@ -89,16 +121,16 @@ namespace ka {
   ///
   /// auto f = []() {my_function(); return boost::optional<std::string>{};};
   ///
-  /// if (auto const error = invoke_catch(exception_message{}, f)) {
+  /// if (auto const error = invoke_catch(exception_message_t{}, f)) {
   ///   // handle error
   /// }
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  struct exception_message {
+  struct exception_message_t {
     static char const* unknown_error() {
       return "unknown error";
     }
   // Regular:
-    KA_GENERATE_FRIEND_REGULAR_OPS_0(exception_message)
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(exception_message_t)
   // PolymorphicFunction<std::string (std::exception), std::string (boost::exception), std::string ()>:
     std::string operator()(std::exception const& e) const {
       return e.what();
@@ -121,7 +153,7 @@ namespace ka {
   /// translate the exception to a value (useful to compose functions in a
   /// purely functional manner), etc.
   ///
-  /// See exception_value, handle_exception_rethrow.
+  /// See exception_value_t, handle_exception_rethrow_t.
   ///
   /// Note: The exception types are hardcoded instead of specifying them via
   ///   a variadic list because, in a variadic template approach catching the
@@ -175,6 +207,30 @@ namespace ka {
     }
   }
 
+  /// Procedure that invokes a procedure in a try-catch clause and delegates
+  /// exception handling to a dedicated handler.
+  ///
+  /// PolymorphicProcedure<Ret (std::exception const&), Ret (boost::exception const&), Ret ()> Proc,
+  /// Procedure<Ret (_...)> F
+  template<typename Proc, typename F>
+  struct invoke_catch_fn_t {
+    Proc handle_exception;
+    F f;
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_2(invoke_catch_fn_t, handle_exception, f)
+  // Procedure<Ret (_...)>:
+    template<typename... Args>
+    auto operator()(Args&&... args) -> decltype(invoke_catch(handle_exception, f, fwd<Args>(args)...)) {
+      return invoke_catch(handle_exception, f, fwd<Args>(args)...);
+    }
+    template<typename... Args>
+    auto operator()(Args&&... args) const -> decltype(invoke_catch(handle_exception, f, fwd<Args>(args)...)) {
+      return invoke_catch(handle_exception, f, fwd<Args>(args)...);
+    }
+  };
+
+  /// Constructs a `invoke_catch_fn_t`, performing type deduction.
+  KA_DERIVE_CTOR_FUNCTION_TEMPLATE(invoke_catch_fn)
 } // namespace ka
 
 #endif // KA_ERRORHANDLING_HPP

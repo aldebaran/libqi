@@ -185,8 +185,20 @@ namespace qi { namespace sock {
             onComplete(hostNotFound<ErrorCode<N>>(), {});
             return;
           }
-          auto socket = createSocket<N>(ssl, makeSocket);
-          connect<N>(socket, entry.value(), onComplete, ssl, side, tcpPingTimeout, setupStop);
+          auto createAndConnectSocket = [&]() {
+            auto socket = createSocket<N>(ssl, makeSocket);
+            connect<N>(socket, entry.value(), onComplete, ssl, side, tcpPingTimeout, setupStop);
+          };
+
+          // This code layer doesn't log, but communicate results through error
+          // codes. These do not allow for custom error messages, so we must
+          // discard any thrown exception, and replace it with a unique error
+          // code. No information is lost though, if upper-layer code such as
+          // `makeSocket` does log.
+          auto notifyError = ka::constant_procedure([&]() {
+            onComplete(socketCreationFailed<ErrorCode<N>>(), {});
+          });
+          ka::invoke_catch(notifyError, createAndConnectSocket);
         },
         setupStop
       );

@@ -36,7 +36,7 @@ namespace
   template<class Proc>
   Strand::OptionalErrorMessage safeInvoke(Proc&& proc) noexcept
   {
-    return ka::invoke_catch(ka::exception_message{}, [&] {
+    return ka::invoke_catch(ka::exception_message_t{}, [&] {
       std::forward<Proc>(proc)();
       return Strand::OptionalErrorMessage{};
     });
@@ -140,7 +140,7 @@ StrandPrivate::StrandPrivate(qi::ExecutionContext& executor)
 
 
 StrandPrivate::~StrandPrivate() {
-  const auto error = ka::invoke_catch(ka::exception_message{}, [this]{
+  const auto error = ka::invoke_catch(ka::exception_message_t{}, [this]{
     join();
     return Strand::OptionalErrorMessage{};
   });
@@ -486,7 +486,7 @@ void Strand::join() QI_NOEXCEPT(true)
 Strand::OptionalErrorMessage Strand::join(std::nothrow_t) QI_NOEXCEPT(true)
 {
   // Catch any exception and return its message.
-  return ka::invoke_catch(ka::exception_message{}, [this]() {join(); return OptionalErrorMessage{};});
+  return ka::invoke_catch(ka::exception_message_t{}, [this]() {join(); return OptionalErrorMessage{};});
 }
 
 Future<void> Strand::async(const boost::function<void()>& cb,
@@ -536,7 +536,7 @@ void Strand::postImpl(boost::function<void()> callback, ExecutionOptions options
     prv->enqueue(prv->createCallback([=] {
       auto errorLogger = ka::compose([](const std::string& msg) {
         qiLogWarning() << "Uncaught error in task posted in a strand: " << msg;
-      }, ka::exception_message{});
+      }, ka::exception_message_t{});
 
       ka::invoke_catch(std::move(errorLogger), callback);
     }, options), options);

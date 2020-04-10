@@ -14,6 +14,7 @@
 #include <boost/optional.hpp>
 #include <qi/atomic.hpp>
 #include <qi/types.hpp>
+#include <ka/macroregular.hpp>
 
 namespace qi
 {
@@ -28,7 +29,10 @@ namespace qi
     const unsigned char* data() const;
     bool            resize(size_t size = 0x100000);
     boost::optional<size_t> indexOfSubBuffer(size_t offset) const;
-    friend bool operator==(const BufferPrivate& a, const BufferPrivate& b);
+
+    bool operator==(const BufferPrivate& o) const;
+
+    friend KA_GENERATE_REGULAR_OP_DIFFERENT(BufferPrivate)
 
   public:
     unsigned char*  _bigdata = nullptr;

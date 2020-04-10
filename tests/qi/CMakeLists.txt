@@ -43,6 +43,7 @@ qi_create_gmock(
   "test_qilog.cpp"
   "test_qilog_async.cpp"
   "test_qilog_sync.cpp"
+  "test_qilog_sync_invokecatch.cpp"
   "test_qios.cpp"
   "test_src.cpp"
   "test_strand.cpp"

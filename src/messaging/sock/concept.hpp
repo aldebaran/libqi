@@ -149,7 +149,7 @@ namespace qi { namespace sock {
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// concept NetSslContextMethod(M) =
 ///   The following is valid:
-///     M m = M::sslv23;
+///     M m = M::tlsv12;
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// The method to use for the SSL context.
 ///
@@ -286,10 +286,13 @@ namespace qi { namespace sock {
 ///   && With Lowest<SslSocket<N>> lowest,
 ///           decltype(s.native_handle()) handle,
 ///           int i,
+///           bool ok,
 ///           void* data,
 ///           const void* const_data,
+///           const char* const_cstr,
 ///           std::size_t maxSizeInBytes,
 ///           SslSocket<N> sslSocketLValue,
+///           SslContext<N> sslContextLValue,
 ///           NetTransferHandler transferHandler, the following is valid:
 ///        IoService<N>& io = N::defaultIoService();
 ///        Regular v = N::sslVerifyNone();
@@ -304,6 +307,8 @@ namespace qi { namespace sock {
 ///     && N::async_read(sslSocketLValue.next_layer(), mutable_bufs, transferHandler)
 ///     && N::async_write(sslSocketLValue, const_bufs, transferHandler)
 ///     && N::async_write(sslSocketLValue.next_layer(), const_bufs, transferHandler)
+///     && const_cstr = N::cipherList()
+///     && ok = N::trySetCipherListTls12AndBelow(sslContextLValue)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Gives access to all types and functions handling low-level network operations:
 /// - SSL socket

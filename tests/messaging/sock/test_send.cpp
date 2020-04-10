@@ -284,7 +284,7 @@ TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreadsAsio)
   using namespace qi::sock;
   using N = NetworkAsio;
 
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
   using I = std::list<Message>::const_iterator;
   const unsigned sendThreadCount = 100u;

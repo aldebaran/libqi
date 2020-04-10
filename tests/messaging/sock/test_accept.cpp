@@ -32,7 +32,7 @@ TEST(NetAcceptConnectionContinuous, Success)
   );
 
   auto& io = N::defaultIoService();
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   Promise<SocketPtr<S>> promiseAcceptFinished;
   Endpoint<Lowest<S>> endpoint;
 
@@ -64,7 +64,7 @@ TEST(NetAcceptConnectionContinuous, AcceptFailed)
   );
 
   auto& io = N::defaultIoService();
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   Promise<SocketPtr<S>> promiseAcceptFinished;
   Endpoint<Lowest<S>> endpoint;
 
@@ -91,7 +91,7 @@ TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
   using E = Endpoint<Lowest<S>>;
 
   auto& io = N::defaultIoService();
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
   Promise<SocketPtr<S>> promiseAcceptFinished;
   Promise<E> localEndpoint;
 

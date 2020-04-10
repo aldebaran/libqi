@@ -62,4 +62,18 @@ inline void dummyHandler(qi::LogLevel,
   // do nothing
 }
 
+class SyncLog : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    qi::log::setSynchronousLog(true);
+  }
+
+  void TearDown() override
+  {
+    qi::log::flush();
+  }
+};
+
 #endif // QI_TEST_QILOG_HPP

@@ -447,7 +447,7 @@ TEST(NetReceiveMessage, Asio)
   using E = Endpoint<Lowest<S>>;
 
   auto& io = N::defaultIoService();
-  SslContext<N> context{ Method<SslContext<N>>::sslv23 };
+  SslContext<N> context{ Method<SslContext<N>>::tlsv12 };
 
   Promise<SocketPtr<S>> promiseConnect;
   Promise<E> localEndpoint;

@@ -12,8 +12,10 @@
 #include <stdexcept>
 #include <iomanip>
 #include <ctype.h>
+#include <algorithm>
 
 #include <boost/make_shared.hpp>
+#include <boost/utility/compare_pointees.hpp>
 
 #include "buffer_p.hpp"
 
@@ -86,19 +88,26 @@ namespace qi
     return {};
   }
 
-  bool operator==(const BufferPrivate& a, const BufferPrivate& b)
+  namespace
   {
-    if (a.used != b.used) return false;
+    bool dataEqual(const unsigned char* aData, std::size_t aSize,
+                   const unsigned char* bData, std::size_t bSize)
+    {
+      if (aSize != bSize) return false;
+      const bool aIsNull = (aData == nullptr);
+      const bool bIsNull = (bData == nullptr);
+      if (aIsNull != bIsNull) return false;
+      if (aIsNull) return true;  // Both are null.
+      // Neither a nor b are null. We also know that their size are equal.
+      return std::equal(aData, aData + aSize, bData);
+    }
+  }
+
+  bool BufferPrivate::operator==(const BufferPrivate& o) const
+  {
     // The "available" member is ignored as it does not affect the behavior of the object.
     // Idem for _cachedSubBufferTotalSize which is a cached data.
-    const auto aData = a.data();
-    const auto bData = b.data();
-    const bool aIsNull = (aData == nullptr);
-    const bool bIsNull = (bData == nullptr);
-    if (aIsNull != bIsNull) return false;
-    if (aIsNull) return true; // Both are null.
-    // Neither a nor b are null. We also know that a.used == b.used.
-    return std::equal(aData, aData + a.used, bData) && a._subBuffers == b._subBuffers;
+    return dataEqual(data(), used, o.data(), o.used) && _subBuffers == o._subBuffers;
   }
 
   unsigned char* BufferPrivate::data()
@@ -278,9 +287,7 @@ namespace qi
 
   bool Buffer::operator==(const Buffer& b) const
   {
-    const bool aHasBuffer = (_p.get() != nullptr);
-    const bool bHasBuffer = (b._p.get() != nullptr);
-    return (aHasBuffer == bHasBuffer) && (!aHasBuffer || *_p == *b._p);
+    return boost::equal_pointees(_p, b._p);
   }
 
   namespace detail {

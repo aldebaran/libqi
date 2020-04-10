@@ -29,8 +29,8 @@ namespace qi { namespace sock {
   /// Example: accepting connections until an error occurs
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// acceptConnection(acceptor, [&] {
-  ///     return makeSocketWithContextPtr<N>(io_service,
-  ///                                        makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///     return makeSocketWithContextPtr<N>(
+  ///       io_service, makeSslContextPtr<N>(SslContext<N>::tlsv12));
   ///   },
   ///   [](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
   ///   if (erc)
@@ -53,8 +53,8 @@ namespace qi { namespace sock {
   ///   void acceptOne()
   ///   {
   ///     acceptConnection(_acceptor, [&] {
-  ///           return makeSocketWithContextPtr<N>(io_service,
-  ///                                              makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///           return makeSocketWithContextPtr<N>(
+  ///             io_service, makeSslContextPtr<N>(SslContext<N>::tlsv12));
   ///         },
   ///         [=](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
   ///         if (erc)
@@ -167,7 +167,8 @@ namespace qi { namespace sock {
   ///
   /// auto& io = N::defaultIoService();
   /// AcceptConnectionContinuous<N> accept{io, [&] {
-  ///     return makeSocketWithContextPtr<N>(io, makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///     return makeSocketWithContextPtr<N>(
+  ///       io, makeSslContextPtr<N>(SslContext<N>::tlsv12));
   ///   },
   ///   endpoint, ReuseAddressEnabled{false},
   ///   [&](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {
@@ -192,7 +193,8 @@ namespace qi { namespace sock {
   /// auto& io = N::defaultIoService();
   /// AcceptConnectionContinuous<N> accept{io};
   /// accept([&] {
-  ///     return makeSocketWithContextPtr<N>(io, makeSslContextPtr<N>(SslContext<N>::sslv23));
+  ///     return makeSocketWithContextPtr<N>(
+  ///       io, makeSslContextPtr<N>(SslContext<N>::tlsv12));
   ///   },
   ///   url, IpV6Enabled{false}, ReuseAddressEnabled{false},
   ///   [&](ErrorCode<N> erc, SocketWithContextPtr<N> socket) {

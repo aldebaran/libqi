@@ -1,4 +1,5 @@
 #include <chrono>
+#include <functional>
 #include <numeric>
 #include <random>
 #include <gtest/gtest.h>
@@ -598,6 +599,49 @@ TYPED_TEST(NetMessageSocket, DisconnectWhileDisconnecting)
 
   for (auto& t: readThreads) t.join();
   for (auto& t: writeThreads) t.join();
+}
+
+namespace {
+  // Stores a value into a `Mutable` (i.e. pointer, reference, iterator, etc.).
+  template<typename T>
+  struct store_mutable_t {
+    T t;
+  // Procedure<void (Mutable U)>:
+    template<typename U>
+    void operator()(U&& u) const {
+      using ka::src;
+      src(u).store(t);
+    }
+  };
+  KA_DERIVE_CTOR_FUNCTION_TEMPLATE(store_mutable)
+
+} // namespace
+
+// Failure of setting the cipher list results in a failed connection.
+TYPED_TEST(NetMessageSocket, trySetCipherListTls12AndBelowFails)
+{
+  using namespace qi;
+  using namespace qi::sock;
+  using N = mock::Network;
+
+  auto socket = boost::make_shared<TcpMessageSocket<N>>();
+
+  // Next try to set the cipher list will fail.
+  auto p = &N::resultOfTrySetCipherListTls12AndBelow;
+  auto _ = ka::scoped_apply_and_retract(
+    p,
+    store_mutable(false),    // Store `false` to make fail.
+    store_mutable(p->load()) // Restore original value on scope exit.
+  );
+
+  Future<void> futConnect = socket->connect(Url{"tcp://10.11.12.13:1234"});
+
+  // Failed connection.
+  ASSERT_EQ(FutureState_FinishedWithError, futConnect.wait(defaultTimeout));
+
+  // Expected error.
+  const auto errorMsg = ErrorCode<N>{ErrorCode<N>::socketCreationFailed}.message();
+  ASSERT_TRUE(futConnect.error().find(errorMsg) != std::string::npos);
 }
 
 // Stress test for disconnections.

@@ -69,7 +69,7 @@ struct ConnectSocketFun
   {
     Promise<ErrorCode<N>> promise;
     ConnectSocket<N, SslSocket<N>> connect{io};
-    SslContext<N> context { Method<SslContext<N>>::sslv23 };
+    SslContext<N> context { Method<SslContext<N>>::tlsv12 };
     connect(url, SslEnabled{true}, [&]{ return makeSslSocketPtr<N>(io, context); }, IpV6Enabled{false},
       HandshakeSide<SslSocket<N>>::client,
       [=](ErrorCode<N> err, SslSocketPtr<N>) mutable {
@@ -87,7 +87,7 @@ struct ConnectSocketFutureFun
   ErrorCode<N> operator()(IoService<N>& io, const Url& url) const
   {
     ConnectSocketFuture<N, SslSocket<N>> connect{io};
-    SslContext<N> context { Method<SslContext<N>>::sslv23 };
+    SslContext<N> context { Method<SslContext<N>>::tlsv12 };
     connect(url, SslEnabled{ true }, [&] { return makeSslSocketPtr<N>(io, context); },
             IpV6Enabled{ false }, HandshakeSide<SslSocket<N>>::client);
     return stringToError(connect.complete().error());
