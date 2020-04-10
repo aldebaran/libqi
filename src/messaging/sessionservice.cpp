@@ -567,7 +567,7 @@ namespace qi {
       }
       qiLogVerbose() << "Requesting socket from cache. service = '" << service << "', "
         "requestId = " << *requestId;
-      Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value(), protocol);
+      Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value());
       f.connect(track(boost::bind(&Session_Service::onTransportSocketResult, this, _1, *requestId), this));
       mustSetPromise = false;
     }, this));
