@@ -31,6 +31,9 @@ namespace qi {
     qi::Future<qi::SignalLink>  future;
   };
 
+  class RemoteObject;
+  using RemoteObjectPtr = boost::shared_ptr<RemoteObject>;
+
   /// This class represents the interface to a remote (potentially in a different process or host)
   /// `qi::Object`.
   ///
@@ -46,17 +49,17 @@ namespace qi {
   class RemoteObject
     : public DynamicObject
     , public ObjectHost
-    , public Trackable<RemoteObject>
+    , public boost::enable_shared_from_this<RemoteObject>
   {
+    RemoteObject(unsigned int service, unsigned int object = Message::GenericObject_Main,
+                 boost::optional<ObjectUid> uid = boost::none);
+
   public:
-    RemoteObject();
-    RemoteObject(unsigned int service, qi::MessageSocketPtr socket = qi::MessageSocketPtr(),
-      boost::optional<ObjectUid> uid = boost::none);
-    //deprecated
-    RemoteObject(unsigned int service,
-                 unsigned int object,
-                 qi::MetaObject metaObject,
-                 qi::MessageSocketPtr socket = qi::MessageSocketPtr());
+    template<typename... Args>
+    static RemoteObjectPtr makePtr(Args&&... args)
+    {
+      return RemoteObjectPtr(new RemoteObject(std::forward<Args>(args)...));
+    }
 
     ~RemoteObject() override;
 
@@ -71,24 +74,31 @@ namespace qi {
     unsigned int service() const { return _service; }
     unsigned int object() const { return _object; }
 
-  protected:
-    //TransportSocket.messagePending
-    DispatchStatus onMessagePending(const qi::Message &msg);
-    //TransportSocket.disconnected
-    void onSocketDisconnected(std::string error);
-
-    void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& args) override;
-    qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType, Signature returnSignature) override;
-    void onFutureCancelled(unsigned int originalMessageId);
-
-    //metaObject received
-    void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
+    void metaPost(AnyObject context,
+                  unsigned int event,
+                  const GenericFunctionParameters& args) override;
+    qi::Future<AnyReference> metaCall(AnyObject context,
+                                      unsigned int method,
+                                      const GenericFunctionParameters& args,
+                                      qi::MetaCallType callType = MetaCallType_Auto,
+                                      Signature returnSignature = {}) override;
 
     qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub) override;
     qi::Future<void> metaDisconnect(SignalLink linkId) override;
 
     qi::Future<AnyValue> metaProperty(qi::AnyObject context, unsigned int id) override;
     qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val) override;
+
+  protected:
+    //TransportSocket.messagePending
+    DispatchStatus onMessagePending(const qi::Message &msg);
+    //TransportSocket.disconnected
+    void onSocketDisconnected(std::string error);
+
+    void onFutureCancelled(unsigned int originalMessageId);
+
+    //metaObject received
+    void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
 
   protected:
     using LocalToRemoteSignalLinkMap = std::map<qi::uint64_t, RemoteSignalLinks>;
@@ -106,8 +116,6 @@ namespace qi {
   private:
     static qi::Atomic<unsigned int> _nextId;
   };
-
-  using RemoteObjectPtr = boost::shared_ptr<RemoteObject>;
 
 }
 
