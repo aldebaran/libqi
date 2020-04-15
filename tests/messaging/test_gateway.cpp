@@ -584,13 +584,13 @@ namespace
     return session;
   }
 
-  struct callsync_
+  struct Callsync
   {
-    callsync_(qi::Promise<int> prom, int expectedValue, int expectedCalls = 1, bool* hasOverflowed = NULL)
+    Callsync(qi::Promise<int> prom, int expectedValue, int expectedCalls = 1, bool* hasOverflowed = NULL)
       : prom_(prom), exVal_(expectedValue), remainingCalls_(expectedCalls), ov_(hasOverflowed)
     {}
 
-    callsync_(const callsync_& cs)
+    Callsync(const Callsync& cs)
       : prom_(cs.prom_), exVal_(cs.exVal_), remainingCalls_(cs.remainingCalls_), ov_(cs.ov_), moutecks_()
     {}
 
@@ -609,22 +609,21 @@ namespace
       else if (remainingCalls_ < 0 && ov_)
         *ov_ = true;
     }
+
+    boost::function<void(int)> tracked()
+    {
+      return qi::track([this](int v){ (*this)(v); }, &trackable);
+    }
+
+    struct Tracked : qi::Trackable<Tracked>
+    {
+      ~Tracked() { destroy(); }
+    } trackable;
     qi::Promise<int> prom_;
     int exVal_;
     int remainingCalls_;
     bool* ov_;
     boost::mutex moutecks_;
-  };
-
-  struct callsyncwrap_
-  {
-    callsyncwrap_(callsync_* wrap) : wrapped_(wrap) {}
-    callsyncwrap_(const callsyncwrap_& w) : wrapped_(w.wrapped_) {}
-    void operator() (int value)
-    {
-      (*wrapped_)(value);
-    }
-    callsync_* wrapped_;
   };
 
   TEST_F(TestGateway, testSimpleMethodCallGwService)
@@ -654,7 +653,8 @@ namespace
 
     qi::AnyObject service = client->service("my_service").value();
     int value = randomValue();
-    service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value)));
+    Callsync callsync(sync, value);
+    service.connect("echoSignal", callsync.tracked());
     service.post("echoSignal", value);
     fut.wait();
 
@@ -686,7 +686,8 @@ namespace
       auto fut = sync.future();
       ASSERT_TRUE(test::finishesWithValue(client->waitForService( "my_service" )));
       service = client->service("my_service").value();
-      service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value)));
+      Callsync callsync(sync, value);
+      service.connect("echoSignal", callsync.tracked());
       service.post("echoSignal", value);
       fut.wait();
       ASSERT_FALSE(fut.hasError());
@@ -723,9 +724,10 @@ namespace
     serviceHost->registerService("my_service", makeBaseService());
     qi::AnyObject service = client->service("my_service").value();
 
-    callsync_ callsync(qi::Promise<int>(), value, 1);
+    Callsync callsync(qi::Promise<int>(), value, 1);
     qi::Future<int> fut = callsync.prom_.future();
-    qi::SignalLink callsyncOnEchoLink = service.connect("echoSignal", [&](int value){ callsync(value); }).value();
+    qi::SignalLink callsyncOnEchoLink =
+      service.connect("echoSignal", callsync.tracked()).value();
     ASSERT_TRUE(qi::isValidSignalLink(callsyncOnEchoLink));
     service.post("echoSignal", value);
     fut.wait();
@@ -754,11 +756,11 @@ namespace
     // disconnected GW-side).
     callsync.remainingCalls_ = 2;
     fut = callsync.prom_.future();
-    service.connect("echoSignal", boost::function<void(int)>(callsyncwrap_(&callsync)));
+    service.connect("echoSignal", callsync.tracked());
     client->close();
     client = connectClientToGw();
     service = client->service("my_service").value();
-    service.connect("echoSignal", boost::function<void(int)>(callsyncwrap_(&callsync)));
+    service.connect("echoSignal", callsync.tracked());
     service.post("echoSignal", value);
     service.post("echoSignal", value);
     fut.wait();
@@ -795,7 +797,7 @@ namespace
     qi::Future<int> fut = prom.future();
     int value = randomValue();
     bool overflow = false;
-    callsync_ callsync(prom, value, 5, &overflow);
+    Callsync callsync(prom, value, 5, &overflow);
 
     serviceHost->listen("tcp://localhost:0");
     serviceHost->registerService("my_service", makeBaseService());
@@ -804,7 +806,7 @@ namespace
     for (int i = 0; i < 5; ++i)
       serviceObjects[i] = clients[i]->service("my_service").value();
     for (int i = 0; i < 5; ++i)
-      serviceObjects[i].connect("echoSignal", boost::function<void(int)>(callsyncwrap_(&callsync)));
+      serviceObjects[i].connect("echoSignal", callsync.tracked());
     serviceObjects[0].post("echoSignal", value);
 
     fut.wait();
@@ -882,29 +884,32 @@ namespace
     serviceHost->registerService("my_service", makeBaseService());
     qi::AnyObject service = client->service("my_service").value();
     int value = randomValue();
-    qi::SignalLink link = service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
-    ASSERT_TRUE(qi::isValidSignalLink(link));
-    service.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
-    //sync.reset();
-    sync = qi::Promise<int>();
-    qi::Future<void> fut2 = service.disconnect(link);
-    ASSERT_FALSE(fut2.hasError());
+    {
+      Callsync callsync(sync, value);
+      const auto link = service.connect("echoSignal", callsync.tracked()).value();
+      ASSERT_TRUE(qi::isValidSignalLink(link));
+      service.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+      qi::Future<void> fut2 = service.disconnect(link);
+      ASSERT_FALSE(fut2.hasError());
+    }
 
-    link = service.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
-    ASSERT_TRUE(qi::isValidSignalLink(link));
-    service.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
+    {
+      sync = qi::Promise<int>();
+      Callsync callsync(sync, value);
+      const auto link = service.connect("echoSignal", callsync.tracked()).value();
+      ASSERT_TRUE(qi::isValidSignalLink(link));
+      service.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+    }
   }
 
   TEST_F(TestGateway, testDanglingObjectsClientService)
   {
     qi::SessionPtr client = connectClientToGw();
     qi::SessionPtr serviceHost = connectClientToGw();
-    qi::Promise<int> sync;
-    qi::Future<int> fut = sync.future();
 
     serviceHost->listen("tcp://localhost:0");
     serviceHost->registerService("my_service", makeBaseService());
@@ -918,23 +923,30 @@ namespace
     ASSERT_EQ(tentative, value);
 
     // TestSignals
-    value = randomValue();
-    qi::SignalLink link = danglingObject.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
-    ASSERT_TRUE(qi::isValidSignalLink(link));
-    danglingObject.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
-    sync = qi::Promise<int>();
-    fut = sync.future();
-    qi::Future<void> fut2 = danglingObject.disconnect(link);
-    ASSERT_FALSE(fut2.hasError());
-    //qi::os::sleep(2);
-    link = danglingObject.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
-    ASSERT_TRUE(qi::isValidSignalLink(link));
-    danglingObject.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
-
+    {
+      qi::Promise<int> sync;
+      const auto fut = sync.future();
+      const auto value = randomValue();
+      Callsync callsync(sync, value);
+      qi::SignalLink link = danglingObject.connect("echoSignal", callsync.tracked()).value();
+      ASSERT_TRUE(qi::isValidSignalLink(link));
+      danglingObject.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+      qi::Future<void> fut2 = danglingObject.disconnect(link);
+      ASSERT_FALSE(fut2.hasError());
+    }
+    {
+      qi::Promise<int> sync;
+      const auto fut = sync.future();
+      const auto value = randomValue();
+      Callsync callsync(sync, value);
+      const auto link = danglingObject.connect("echoSignal", callsync.tracked()).value();
+      ASSERT_TRUE(qi::isValidSignalLink(link));
+      danglingObject.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+    }
   }
 
   // In this test, the client is handing an object to the service.
@@ -978,22 +990,29 @@ namespace
 
 
     // TestSignals
-    qi::Promise<int> sync;
-    qi::Future<int> fut = sync.future();
-    value = randomValue();
-    qi::SignalLink link = danglingObject.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
-    danglingObject.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
-    //sync.reset();
-    sync = qi::Promise<int>();
-    fut = sync.future();
-    qi::Future<void> fut2 = danglingObject.disconnect(link);
-    ASSERT_FALSE(fut2.hasError());
-    link = danglingObject.connect("echoSignal", boost::function<void (int)>(callsync_(sync, value))).value();
-    danglingObject.post("echoSignal", value);
-    fut.wait();
-    ASSERT_FALSE(fut.hasError());
+    {
+      qi::Promise<int> sync;
+      qi::Future<int> fut = sync.future();
+      const auto value = randomValue();
+      Callsync callsync(sync, value);
+      const auto link = danglingObject.connect("echoSignal", callsync.tracked()).value();
+      danglingObject.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+      qi::Future<void> fut2 = danglingObject.disconnect(link);
+      ASSERT_FALSE(fut2.hasError());
+    }
+
+    {
+      qi::Promise<int> sync;
+      qi::Future<int> fut = sync.future();
+      const auto value = randomValue();
+      Callsync callsync(sync, value);
+      danglingObject.connect("echoSignal", callsync.tracked()).value();
+      danglingObject.post("echoSignal", value);
+      fut.wait();
+      ASSERT_FALSE(fut.hasError());
+    }
   }
 
   TEST_F(TestGateway, RegisterServiceOnGWRegistersItOnSD)
