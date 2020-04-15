@@ -27,6 +27,7 @@ namespace qi {
     ~SignalBasePrivate();
     Future<bool> disconnect(const SignalLink& l);
     Future<bool> disconnectAll();
+    void disconnectTrackLink(int id);
 
   private:
     friend class SignalBase;

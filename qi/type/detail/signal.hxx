@@ -55,7 +55,7 @@ namespace qi
     auto onSignalLost = [=]{
       if (auto thisSignalPrivate = maybeThisSignalPrivate.lock())
       {
-        disconnectTrackLink(curId);
+        disconnectTrackLink(*thisSignalPrivate, curId);
       }
     };
 
