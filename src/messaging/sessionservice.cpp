@@ -212,13 +212,14 @@ namespace qi {
         session_service_private::sendCapabilities(socket);
         qi::Future<void> metaObjFut;
         QI_ASSERT_NULL(sr->remoteObject);
-        sr->remoteObject.reset(new qi::RemoteObject(sr->serviceInfo.serviceId()
-                              , socket
-                              , deserializeObjectUid(sr->serviceInfo.objectUid()))
-                              );
+        auto remoteObject =
+          RemoteObject::makePtr(sr->serviceInfo.serviceId(), Message::GenericObject_Main,
+                                deserializeObjectUid(sr->serviceInfo.objectUid()));
+        remoteObject->setTransportSocket(socket);
+        sr->remoteObject = remoteObject;
 
         // TODO 40203: check if it's possible that the following future is never set.
-        metaObjFut = sr->remoteObject->fetchMetaObject();
+        metaObjFut = remoteObject->fetchMetaObject();
 
         qiLogVerbose() << "Fetching metaobject (1) for requestId = " << requestId;
         metaObjFut.connect(track(
@@ -250,14 +251,14 @@ namespace qi {
       if (old)
         socket->socketEvent.disconnectAsync(*old);
       QI_ASSERT_NULL(sr->remoteObject);
-
-      sr->remoteObject = boost::make_shared<RemoteObject>(sr->serviceInfo.serviceId()
-                                                         , socket
-                                                         , deserializeObjectUid(sr->serviceInfo.objectUid())
-                                                         );
+      auto remoteObject =
+        RemoteObject::makePtr(sr->serviceInfo.serviceId(), Message::GenericObject_Main,
+                              deserializeObjectUid(sr->serviceInfo.objectUid()));
+      remoteObject->setTransportSocket(socket);
+      sr->remoteObject = remoteObject;
 
       //ask the remoteObject to fetch the metaObject
-      metaObjFut = sr->remoteObject->fetchMetaObject();
+      metaObjFut = remoteObject->fetchMetaObject();
       qiLogVerbose() << "Fetching metaobject (2) for requestId = " << requestId;
       metaObjFut.connect(track(
         boost::bind(
@@ -394,9 +395,8 @@ namespace qi {
       {
         // Move the pointer out of the request, since the request is going to be erased.
         auto remoteObject = std::move(sr->remoteObject);
-        auto resetPtr = [=](qi::GenericObject*) mutable { remoteObject.reset(); };
         auto obj = makeDynamicAnyObject(remoteObject.get(), false, remoteObject->uid(),
-                                        std::move(resetPtr));
+                                        [=](qi::GenericObject*) mutable { remoteObject.reset(); });
 
         //register the remote object in the cache
 
