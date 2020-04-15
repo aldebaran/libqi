@@ -65,6 +65,17 @@ namespace qi {
     return disconnectAllStep(true);
   }
 
+  void SignalBasePrivate::disconnectTrackLink(int id)
+  {
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    TrackMap::iterator it = trackMap.find(id);
+    if (it == trackMap.end())
+      return;
+
+    subscriberMap.erase(it->second);
+    trackMap.erase(it);
+  }
+
   Future<bool> SignalBasePrivate::disconnectAllStep(bool overallSuccess)
   {
     SignalLink link;
@@ -494,15 +505,9 @@ QI_WARNING_POP()
     }
   }
 
-  void SignalBase::disconnectTrackLink(int id)
+  void SignalBase::disconnectTrackLink(SignalBasePrivate& p, int id)
   {
-    boost::recursive_mutex::scoped_lock sl(_p->mutex);
-    TrackMap::iterator it = _p->trackMap.find(id);
-    if (it == _p->trackMap.end())
-      return;
-
-    _p->subscriberMap.erase(it->second);
-    _p->trackMap.erase(it);
+    p.disconnectTrackLink(id);
   }
 
   ExecutionContext* SignalBase::executionContext() const

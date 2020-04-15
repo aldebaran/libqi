@@ -156,7 +156,7 @@ namespace qi {
     void setTriggerOverride(Trigger trigger);
     void callOnSubscribe(bool v);
     void createNewTrackLink(int& id, SignalLink*& trackLink);
-    void disconnectTrackLink(int id);
+    static void disconnectTrackLink(SignalBasePrivate& p, int id);
     ExecutionContext* executionContext() const;
     void clearExecutionContext();
 
