@@ -5,6 +5,7 @@
 #include <map>
 
 #include <boost/make_shared.hpp>
+#include <boost/container/flat_map.hpp>
 
 #include <qi/api.hpp>
 #include <qi/anyvalue.hpp>
@@ -29,18 +30,19 @@ namespace qi
     DynamicObjectPrivate();
 
     ~DynamicObjectPrivate();
-    // get or create signal, or 0 if id is not an event
-    SignalBase* createSignal(unsigned int id);
-    PropertyBase* property(unsigned int id);
-    using SignalMap = std::map<unsigned int, std::pair<SignalBase*, bool>>;
-    using MethodMap = std::map<unsigned int, std::pair<AnyFunction, MetaCallType>>;
+    // get or create signal, or a null pointer if id is not an event.
+    boost::shared_ptr<SignalBase> signal(unsigned int id);
+    boost::shared_ptr<PropertyBase> property(unsigned int id);
+    template<typename T>
+    using MapIdTo = boost::container::flat_map<unsigned int, T>;
+    using SignalMap = MapIdTo<boost::shared_ptr<SignalBase>>;
+    using PropertyMap = MapIdTo<boost::shared_ptr<PropertyBase>>;
+    using MethodMap = MapIdTo<std::pair<AnyFunction, MetaCallType>>;
     SignalMap           signalMap;
     MethodMap           methodMap;
     MetaObject          meta;
     ObjectThreadingModel threadingModel;
     boost::optional<ObjectUid> uid;
-
-    using PropertyMap = std::map<unsigned int, std::pair<PropertyBase*, bool>>;
     PropertyMap propertyMap;
 
     ExecutionContext* getExecutionContext(
@@ -58,52 +60,44 @@ namespace qi
     _p->methodMap.insert(Manageable::manageableMmethodMap().begin(),
       Manageable::manageableMmethodMap().end());
     _p->meta = MetaObject::merge(_p->meta, Manageable::manageableMetaObject());
-    Manageable::SignalMap& smap = Manageable::manageableSignalMap();
+    auto& smap = Manageable::manageableSignalMap();
     // need to convert signal getters to signal, we have the instance
-    for (Manageable::SignalMap::iterator it = smap.begin(); it != smap.end(); ++it)
+    for (const auto& sigIdPair : smap)
     {
-      SignalBase* sb = it->second(m);
-      _p->signalMap[it->first] = std::make_pair(sb, false);
+      const auto id = sigIdPair.first;
+      const auto sig = sigIdPair.second(m);
+      _p->signalMap[id]
+        = boost::shared_ptr<SignalBase>(sig,
+                                        // Do nothing at deletion, we do not own the signal.
+                                        ka::constant_function());
     }
   }
 
-  DynamicObjectPrivate::~DynamicObjectPrivate()
+  DynamicObjectPrivate::~DynamicObjectPrivate() = default;
+
+  boost::shared_ptr<SignalBase> DynamicObjectPrivate::signal(unsigned int id)
   {
-    //properties are also in signals, do not delete
-
-    //only delete property we created
-    for (PropertyMap::iterator it2 = propertyMap.begin(); it2 != propertyMap.end(); ++it2) {
-      if (it2->second.second)
-        delete it2->second.first;
-    }
-
-    //only delete signal we created
-    for (SignalMap::iterator it = signalMap.begin(); it != signalMap.end(); ++it) {
-      if (it->second.second)
-        delete it->second.first;
-    }
-  }
-
-  SignalBase* DynamicObjectPrivate::createSignal(unsigned int id)
-  {
-
-    SignalMap::iterator i = signalMap.find(id);
+    const auto i = signalMap.find(id);
     if (i != signalMap.end())
-      return i->second.first;
+      return i->second;
     if (meta.property(id))
     { // Replicate signal of prop in signalMap
-      SignalBase* sb = property(id)->signal();
-      signalMap[id] = std::make_pair(sb, false);
+      // Property's signal part is tied to the lifetime of the property. We use the aliasing
+      // constructor of `shared_ptr` to transform the raw pointer to the signal into a `shared_ptr`.
+      const auto prop = property(id);
+      QI_ASSERT_NOT_NULL(prop);
+      boost::shared_ptr<SignalBase> sb(prop, prop->signal());
+      signalMap[id] = sb;
       return sb;
     }
-    MetaSignal* sig = meta.signal(id);
+    const auto sig = meta.signal(id);
     if (sig)
     {
-      SignalBase* sb = new SignalBase(sig->parametersSignature());
-      signalMap[id] = std::make_pair(sb, true);
+      const auto sb = boost::make_shared<SignalBase>(sig->parametersSignature());
+      signalMap[id] = sb;
       return sb;
     }
-    return  nullptr;
+    return nullptr;
   }
 
   class DynamicObjectTypeInterface: public ObjectTypeInterface, public DefaultTypeImplMethods<DynamicObject>
@@ -160,13 +154,26 @@ namespace qi
 
   void DynamicObject::setSignal(unsigned int id, SignalBase* signal)
   {
-    _p->signalMap[id] = std::make_pair(signal, false);
+    _p->signalMap[id] = boost::shared_ptr<SignalBase>(signal,
+                                                    // Do nothing at deletion.
+                                                    ka::constant_function());
   }
 
+  void DynamicObject::setSignal(unsigned int id, boost::shared_ptr<SignalBase> signal)
+  {
+    _p->signalMap[id] = std::move(signal);
+  }
 
   void DynamicObject::setProperty(unsigned int id, PropertyBase* property)
   {
-    _p->propertyMap[id] = std::make_pair(property, false);
+    _p->propertyMap[id] = boost::shared_ptr<PropertyBase>(property,
+                                                          // Do nothing at deletion.
+                                                          ka::constant_function());
+  }
+
+  void DynamicObject::setProperty(unsigned int id, boost::shared_ptr<PropertyBase> property)
+  {
+    _p->propertyMap[id] = std::move(property);
   }
 
   const AnyFunction& DynamicObject::method(unsigned int id) const
@@ -181,21 +188,37 @@ namespace qi
 
   SignalBase* DynamicObject::signal(unsigned int id) const
   {
+    return signalAsShared(id).get();
+  }
+
+  boost::shared_ptr<SignalBase> DynamicObject::signalAsShared(unsigned int id) const
+  {
     if (_p->meta.property(id))
-      return const_cast<DynamicObject*>(this)->property(id)->signal();
-    DynamicObjectPrivate::SignalMap::iterator i = _p->signalMap.find(id);
+    {
+      const auto prop = propertyAsShared(id);
+      QI_ASSERT_NOT_NULL(prop);
+      // Property's signal part is tied to the lifetime of the property, we use the aliasing
+      // constructor of `shared_ptr` to transform the raw pointer to the signal into a `shared_ptr`.
+      return { prop, prop->signal() };
+    }
+    const auto i = _p->signalMap.find(id);
     if (i == _p->signalMap.end())
-      return  nullptr;
+      return nullptr;
     else
-      return i->second.first;
+      return i->second;
   }
 
   PropertyBase* DynamicObject::property(unsigned int id) const
   {
+    return propertyAsShared(id).get();
+  }
+
+  boost::shared_ptr<PropertyBase> DynamicObject::propertyAsShared(unsigned int id) const
+  {
     return _p->property(id);
   }
 
-  PropertyBase* DynamicObjectPrivate::property(unsigned int id)
+  boost::shared_ptr<PropertyBase> DynamicObjectPrivate::property(unsigned int id)
   {
     DynamicObjectPrivate::PropertyMap::iterator i = propertyMap.find(id);
     if (i == propertyMap.end())
@@ -208,12 +231,12 @@ namespace qi
       TypeInterface* type = TypeInterface::fromSignature(sig);
       if (!type)
         throw std::runtime_error("Unable to construct a type from " + sig.toString());
-      PropertyBase* res = new GenericProperty(type);
-      propertyMap[id] = std::make_pair(res, true);
-      return res;
+      const auto prop = boost::make_shared<GenericProperty>(type);
+      propertyMap[id] = prop;
+      return prop;
     }
     else
-      return i->second.first;
+      return i->second;
   }
 
   ExecutionContext* DynamicObjectPrivate::getExecutionContext(
@@ -285,7 +308,8 @@ namespace qi
     ExecutionContext* ec = _p->getExecutionContext(context, MetaCallType_Auto);
     if (ec)
     {
-      auto prop = property(id);
+      auto prop = propertyAsShared(id);
+      QI_ASSERT_NOT_NULL(prop);
       return ec->async([prop, val]{
             return prop->setValue(val.asReference()).async();
           }).unwrap();
@@ -294,7 +318,9 @@ namespace qi
     {
       try
       {
-        return property(id)->setValue(val.asReference());
+        const auto prop = propertyAsShared(id);
+        QI_ASSERT_NOT_NULL(prop);
+        return prop->setValue(val.asReference());
       }
       catch(const std::exception& e)
       {
@@ -305,10 +331,11 @@ namespace qi
 
   qi::Future<AnyValue> DynamicObject::metaProperty(AnyObject context, unsigned int id)
   {
-    PropertyBase* prop;
+    boost::shared_ptr<PropertyBase> prop;
     try
     {
-      prop = property(id);
+      prop = propertyAsShared(id);
+      QI_ASSERT_NOT_NULL(prop);
     }
     catch (std::exception& e)
     {
@@ -335,7 +362,7 @@ namespace qi
 
   void DynamicObject::metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& params)
   {
-    SignalBase * s = _p->createSignal(event);
+    const auto s = _p->signal(event);
     if (s)
     { // signal is declared, create if needed
       s->trigger(params);
@@ -354,7 +381,7 @@ namespace qi
 
   qi::Future<SignalLink> DynamicObject::metaConnect(unsigned int event, const SignalSubscriber& subscriber)
   {
-    SignalBase * s = _p->createSignal(event);
+    const auto s = _p->signal(event);
     if (!s)
       return qi::makeFutureError<SignalLink>("Cannot find signal");
     SignalLink l = s->connect(subscriber);
@@ -376,8 +403,7 @@ namespace qi
 
     unsigned int event = linkId >> 32;
     unsigned int link = linkId & 0xFFFFFFFF;
-    //TODO: weird to call createSignal in disconnect
-    SignalBase* s = _p->createSignal(event);
+    const auto s = _p->signal(event);
     if (!s)
       return qi::makeFutureError<void>("Cannot find local signal connection.");
     auto disconnecting = s->disconnectAsync(link);

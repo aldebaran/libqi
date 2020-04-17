@@ -133,6 +133,13 @@ namespace qi
 
   unsigned int DynamicObjectBuilder::advertiseSignal(const std::string &name, qi::SignalBase *sig)
   {
+    return advertiseSignal(name, boost::shared_ptr<SignalBase>(sig, ka::constant_function()));
+  }
+
+  unsigned int DynamicObjectBuilder::advertiseSignal(const std::string& name,
+                                                     boost::shared_ptr<qi::SignalBase> sig)
+  {
+    QI_ASSERT_NOT_NULL(sig);
     const unsigned int nextId = xAdvertiseSignal(name, sig->signature());
     _p->_object->setSignal(nextId, sig);
     return nextId;
@@ -140,6 +147,13 @@ namespace qi
 
   unsigned int DynamicObjectBuilder::advertiseProperty(const std::string &name, qi::PropertyBase *prop)
   {
+    return advertiseProperty(name, boost::shared_ptr<PropertyBase>(prop, ka::constant_function()));
+  }
+
+  unsigned int DynamicObjectBuilder::advertiseProperty(const std::string& name,
+                                                       boost::shared_ptr<qi::PropertyBase> prop)
+  {
+    QI_ASSERT_NOT_NULL(prop);
     const auto sigsignature = prop->signal()->signature();
     if (!sigsignature.hasChildren() || sigsignature.children().size() != 1)
       throw std::runtime_error("Registering property with invalid signal signature");
