@@ -479,10 +479,7 @@ namespace qi
     // shared state, but it would be undefined behavior to do so as `GenericObject` inherits from
     // `enabled_shared_from_this`.
     // TODO: Remove this function as soon as possible.
-    auto deleteGenObjReleaseOther = [=](GenericObject* go) mutable {
-      // Delete the GenericObject before releasing the shared_ptr because the GenericObject might depend
-      // on it.
-      delete go;
+    auto deleteGenObjReleaseOther = [=](GenericObject*) mutable {
       other.reset();
     };
     return makeDynamicAnyObject(obj, false, obj->uid(), std::move(deleteGenObjReleaseOther));
