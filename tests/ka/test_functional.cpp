@@ -876,11 +876,6 @@ namespace {
       return T{};
     }
   };
-
-  template<typename T>
-  bool equal(T const& a, T const& b) {
-    return a == b;
-  }
 }
 
 using types = testing::Types<
@@ -1534,4 +1529,66 @@ TYPED_TEST(FunctionalScopeLockMutexes, Mutexes) {
     ASSERT_TRUE(is_locked(m));
   }
   ASSERT_FALSE(is_locked(m));
+}
+
+// `equal_t` is `Regular`.
+TEST(FunctionalEqual, Regular) {
+  using namespace ka;
+  ASSERT_EQ(equal, equal_t{});
+  ASSERT_TRUE(is_regular({equal, equal, equal})); // only one possible value because no state
+}
+
+namespace test_equal {
+  struct X {
+    int i;
+    mutable bool called;
+    auto operator==(X x) const -> bool {
+      called = true;
+      return i == x.i;
+    }
+  };
+} // namespace test_equal
+
+// `equal` calls `operator==`.
+TEST(FunctionalEqual, CallOperatorEqual) {
+  using test_equal::X;
+  auto const x0 = X{1, false};
+  auto const x1 = X{1, false};
+  ASSERT_FALSE(x0.called);
+  ASSERT_TRUE(ka::equal(x0, x1));
+  ASSERT_TRUE(x0.called);
+}
+
+// `equal` strictly calls `operator==` without any other operation.
+TEST(FunctionalEqual, IsomorphicToOperatorEqual) {
+  using namespace ka;
+  using test::A;
+  // This is an approximation.
+  for (auto i = 0; i != 10; ++i) {
+    for (auto j = 0; j != 10; ++j) {
+      ASSERT_TRUE(equal(A{i}, A{j}) == (i == j));
+    }
+  }
+}
+
+namespace test_equal {
+  struct Y {
+    short i;
+  };
+  // Heterogeneous comparison.
+  auto operator==(ka::test::A a, Y y) -> bool {
+    return a.value == y.i;
+  }
+} // namespace test_equal
+
+// `equal_t` is polymorphic and non-homogeneous (parameters can be of different
+// types).
+TEST(FunctionalEqual, Polymorphic) {
+  using namespace ka;
+  using test::A;
+  using test::B;
+  using test_equal::Y;
+  ASSERT_TRUE(equal(A{2}, A{2}));
+  ASSERT_TRUE(equal(B{3}, B{3}));
+  ASSERT_TRUE(equal(A{3}, Y{3})); // Different types with no common type.
 }

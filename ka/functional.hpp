@@ -1066,6 +1066,19 @@ namespace ka {
       return product(fwd<T>(t), fwd<U>(u));
     }
   } // namespace fn_cat_ops
+
+  /// Polymorphic relation that compares two objects for equality.
+  struct equal_t {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(equal_t)
+  // PolymorphicRelation:
+    template<typename T, typename U> constexpr
+    auto operator()(T&& t, U&& u) const KA_NOEXCEPT_EXPR(fwd<T>(t) == fwd<U>(u))
+      -> bool {
+      return fwd<T>(t) == fwd<U>(u);
+    }
+  };
+  static constexpr auto const& equal = static_const_t<equal_t>::value;
 } // namespace ka
 
 // For ka::scope_lock_proc_t
