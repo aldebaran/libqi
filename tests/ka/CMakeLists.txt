@@ -29,6 +29,7 @@ qi_create_gmock(
     "test_typetraits.cpp"
     "test_unit.cpp"
     "test_utility.cpp"
+    "test_zero.cpp"
   DEPENDS
     ASSUME_SYSTEM_INCLUDE BOOST BOOST_SYSTEM BOOST_THREAD BOOST_DATE_TIME OPENSSL
   TIMEOUT
