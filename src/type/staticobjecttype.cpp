@@ -126,35 +126,33 @@ ExecutionContext* StaticObjectTypeBase::getExecutionContext(
 
 static PropertyBase* property(ObjectTypeData& data, void* instance, unsigned int signal)
 {
-  ObjectTypeData::PropertyGetterMap::iterator i;
-  i = data.propertyGetterMap.find(signal);
+  const auto i = data.propertyGetterMap.find(signal);
   if (i == data.propertyGetterMap.end())
-    return  nullptr;
-  PropertyBase* sig = i->second(instance);
+    return nullptr;
+  auto sig = i->second(instance);
   if (!sig)
   {
     qiLogError() << "Property getter returned NULL";
-    return  nullptr;
+    return nullptr;
   }
   return sig;
 }
 
 static SignalBase* getSignal(ObjectTypeData& data, void* instance, unsigned int signal)
 {
-  ObjectTypeData::SignalGetterMap::iterator i;
-  i = data.signalGetterMap.find(signal);
+  const auto i = data.signalGetterMap.find(signal);
   if (i == data.signalGetterMap.end())
   {
-    PropertyBase* prop = property(data, instance, signal);
+    const auto prop = property(data, instance, signal);
     if (prop)
       return prop->signal();
-    return  nullptr;
+    return nullptr;
   }
-  SignalBase* sig = i->second(instance);
+  auto sig = i->second(instance);
   if (!sig)
   {
     qiLogError() << "Signal getter returned NULL";
-    return  nullptr;
+    return nullptr;
   }
   return sig;
 }
@@ -171,7 +169,7 @@ static void reportError(qi::Future<AnyReference> fut) {
 void StaticObjectTypeBase::metaPost(void* instance, AnyObject context, unsigned int signal,
                                     const GenericFunctionParameters& params)
 {
-  if (SignalBase* sb = getSignal(_data, instance, signal))
+  if (auto sb = getSignal(_data, instance, signal))
   {
     sb->trigger(params);
   }
@@ -192,7 +190,7 @@ qi::Future<SignalLink> StaticObjectTypeBase::connect(void* instance, AnyObject c
 {
   if (event >= Manageable::startId && event < Manageable::endId)
     instance = static_cast<Manageable*>(context.asGenericObject());
-  SignalBase* sb = getSignal(_data, instance, event);
+  auto sb = getSignal(_data, instance, event);
   if (!sb) {
     qiLogWarning() << "connect: no such signal: " << event;
     return qi::makeFutureError<SignalLink>("Cant find signal");
@@ -219,7 +217,7 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
   unsigned int link = linkId & 0xFFFFFFFF;
   if (event >= Manageable::startId && event < Manageable::endId)
     instance = static_cast<Manageable*>(context.asGenericObject());
-  SignalBase* sb = getSignal(_data, instance, event);
+  auto sb = getSignal(_data, instance, event);
   if (!sb)
   {
     qiLogWarning() << "disconnect: no such signal: " << event;
@@ -235,7 +233,7 @@ qi::Future<void> StaticObjectTypeBase::disconnect(void* instance, AnyObject cont
 
 qi::Future<AnyValue> StaticObjectTypeBase::property(void* instance, AnyObject context, unsigned int id)
 {
-  PropertyBase* p = ::qi::detail::property(_data, instance, id);
+  auto p = ::qi::detail::property(_data, instance, id);
   if (!p)
   {
     qiLogWarning() << "property: no such property: " << id;
@@ -257,7 +255,7 @@ static void setPropertyValue(PropertyBase* property, AnyValue value)
 
 qi::Future<void> StaticObjectTypeBase::setProperty(void* instance, AnyObject context, unsigned int id, AnyValue value)
 {
-  PropertyBase* p = ::qi::detail::property(_data, instance, id);
+  auto p = ::qi::detail::property(_data, instance, id);
   if (!p)
   {
     qiLogWarning() << "setProperty: no such property: " << id;

@@ -69,11 +69,12 @@ namespace qi {
     unsigned int advertiseSignalF(const std::string& name);
 
     unsigned int advertiseSignal(const std::string &name, qi::SignalBase *signal);
+    unsigned int advertiseSignal(const std::string &name, boost::shared_ptr<qi::SignalBase> signal);
 
     template<typename T>
     unsigned int advertiseProperty(const std::string& name);
-    /// Ownership is transferred to the object
-    unsigned int advertiseProperty(const std::string &name, qi::PropertyBase *sig);
+    unsigned int advertiseProperty(const std::string &name, qi::PropertyBase *prop);
+    unsigned int advertiseProperty(const std::string &name, boost::shared_ptr<qi::PropertyBase> prop);
 
     void setThreadingModel(ObjectThreadingModel model);
 
