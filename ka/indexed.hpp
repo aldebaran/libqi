@@ -53,7 +53,7 @@ namespace ka {
   }
 
   namespace detail {
-    template<template<typename...> typename VT, typename... T, std::size_t... I>
+    template<template<typename...> class VT, typename... T, std::size_t... I>
     auto apply_indexed(index_sequence<I...>) -> VT<indexed_t<I, T>...>;
   } // namespace detail
 
@@ -68,7 +68,7 @@ namespace ka {
   ///
   /// Note: Unfortunately, the compiler is not always capable of deducing the types `T` if this
   /// type is used as the parameter of a function template.
-  template<template<typename...> typename VT, typename... T>
+  template<template<typename...> class VT, typename... T>
   using ApplyIndexed =
     decltype(detail::apply_indexed<VT, T...>(index_sequence_for<T...>{}));
 } // namespace ka
