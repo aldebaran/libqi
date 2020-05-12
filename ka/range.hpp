@@ -8,6 +8,9 @@
 #include "macroregular.hpp"
 #include "src.hpp"
 #include "typetraits.hpp"
+#include "iterator.hpp"
+#include "unit.hpp"
+#include "utility.hpp"
 
 /// @file
 /// This file formally defines range properties where ranges are a pair of
@@ -67,6 +70,42 @@ namespace ka {
   using std::begin;
   using std::end;
 
+  template<typename T, typename A = incr_t>
+  struct bounded_range_t;
+
+  namespace bounded_range_detail {
+    using iterator_ops::operator+;
+
+    template<typename I>
+    using Value = typename std::iterator_traits<I>::value_type;
+
+    // `at` is the implementation of `operator[]`, which is part of the
+    // `Linearizable` concept. This concept is modeled only by
+    // `bounded_range_t<T>` types where `T` is an iterator type.
+    template<typename T, typename A>
+    auto at(bounded_range_t<T, A> const& x, std::size_t i, /* IsIterator */ true_t)
+        -> Value<T> const& {
+      return *(x.b + i);
+    }
+
+    template<typename T, typename A>
+    auto at(bounded_range_t<T, A>& x, std::size_t i, /* IsIterator */ true_t)
+        -> Value<T>& {
+      return *(x.b + i);
+    }
+
+    template<typename T, typename A>
+    auto at(bounded_range_t<T, A>&& x, std::size_t i, /* IsIterator */ true_t)
+        -> Value<T> {
+      return mv(*(x.b + i));
+    }
+
+    template<typename T, typename A>
+    auto at(bounded_range_t<T, A> const&, std::size_t, /* IsIterator */ false_t)
+        -> void {
+    }
+  } // namespace bounded_range_detail
+
   /// Half-open bounded range defined with a pair of iterators.
   /// Free functions are used because it is more powerful in a generic context
   /// (non-intrusive so ok with native types and with types you have no control over).
@@ -108,7 +147,7 @@ namespace ka {
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// Regular T, Action<T> A
-  template<typename T, typename A = incr_t>
+  template<typename T, typename A>
   struct bounded_range_t {
     using self = bounded_range_t;
     T b, e;
@@ -136,7 +175,36 @@ namespace ka {
     // (not a ReadableRange).
   // MutableRange:
     // front defined outside the class.
+
+  // Linearizable (if InputIterator(T)):
+    friend T begin(self const& x) {
+      return x.b;
+    }
+    friend T end(self const& x) {
+      return x.e;
+    }
+    bool empty() const {
+      return is_empty(*this);
+    }
+    auto operator[](std::size_t i) const&
+         -> decltype(bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{})) {
+       return bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{});
+    }
+    auto operator[](std::size_t i) &
+         -> decltype(bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{})) {
+       return bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{});
+    }
+    auto operator[](std::size_t i) &&
+         -> decltype(bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{})) {
+       return bounded_range_detail::at(mv(*this), i, HasInputIteratorTag<T>{});
+    }
+    // size: See outside class.
   };
+
+  template<typename T, typename A>
+  auto size(bounded_range_t<T, A> const& x) -> decltype(std::distance(x.b, x.e)) {
+    return std::distance(x.b, x.e);
+  }
 
   /// Precondition: !is_empty(x)
   template<typename T, typename A>

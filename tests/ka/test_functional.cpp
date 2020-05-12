@@ -876,11 +876,6 @@ namespace {
       return T{};
     }
   };
-
-  template<typename T>
-  bool equal(T const& a, T const& b) {
-    return a == b;
-  }
 }
 
 using types = testing::Types<
@@ -1534,4 +1529,124 @@ TYPED_TEST(FunctionalScopeLockMutexes, Mutexes) {
     ASSERT_TRUE(is_locked(m));
   }
   ASSERT_FALSE(is_locked(m));
+}
+
+// `equal_t` is `Regular`.
+TEST(FunctionalEqual, Regular) {
+  using namespace ka;
+  ASSERT_EQ(equal, equal_t{});
+  ASSERT_TRUE(is_regular({equal, equal, equal})); // only one possible value because no state
+}
+
+namespace test_equal {
+  struct X {
+    int i;
+    mutable bool called;
+    auto operator==(X x) const -> bool {
+      called = true;
+      return i == x.i;
+    }
+  };
+} // namespace test_equal
+
+// `equal` calls `operator==`.
+TEST(FunctionalEqual, CallOperatorEqual) {
+  using test_equal::X;
+  auto const x0 = X{1, false};
+  auto const x1 = X{1, false};
+  ASSERT_FALSE(x0.called);
+  ASSERT_TRUE(ka::equal(x0, x1));
+  ASSERT_TRUE(x0.called);
+}
+
+// `equal` strictly calls `operator==` without any other operation.
+TEST(FunctionalEqual, IsomorphicToOperatorEqual) {
+  using namespace ka;
+  using test::A;
+  // This is an approximation.
+  for (auto i = 0; i != 10; ++i) {
+    for (auto j = 0; j != 10; ++j) {
+      ASSERT_TRUE(equal(A{i}, A{j}) == (i == j));
+    }
+  }
+}
+
+namespace test_equal {
+  struct Y {
+    short i;
+  };
+  // Heterogeneous comparison.
+  auto operator==(ka::test::A a, Y y) -> bool {
+    return a.value == y.i;
+  }
+} // namespace test_equal
+
+// `equal_t` is polymorphic and non-homogeneous (parameters can be of different
+// types).
+TEST(FunctionalEqual, Polymorphic) {
+  using namespace ka;
+  using test::A;
+  using test::B;
+  using test_equal::Y;
+  ASSERT_TRUE(equal(A{2}, A{2}));
+  ASSERT_TRUE(equal(B{3}, B{3}));
+  ASSERT_TRUE(equal(A{3}, Y{3})); // Different types with no common type.
+}
+
+TEST(FunctionalProductT, Regular) {
+  using namespace ka;
+  using namespace ka::test;
+  {
+    auto const f = product_t<>{};
+    ASSERT_TRUE(is_regular({f, f, f})); // only one possible value because no state
+  } {
+    auto const f = product_t<D, B, A>{};
+    ASSERT_TRUE(is_regular({f, f, f})); // only one possible value because no state
+  }
+}
+
+TEST(FunctionalProductT, ProductType) {
+  using namespace ka;
+  using namespace ka::test;
+  using std::get;
+
+  // Product of no type is unit.
+  EXPECT_EQ(unit, product_t<>{});
+
+  // Product comes with projections.
+  auto const a = A{12};
+  auto const b = B{-3};
+  auto const c = C{982};
+  auto const p = product_t<A, B, C>{a, b, c};
+  EXPECT_EQ(a, get<0>(p));
+  EXPECT_EQ(b, get<1>(p));
+  EXPECT_EQ(c, get<2>(p));
+}
+
+TEST(FunctionalProduct, PolymorphicVariadicFunction) {
+  using namespace ka;
+  using namespace ka::test;
+
+  // 0 argument.
+  EXPECT_EQ(product_t<>{}, product());
+
+  // 1 argument.
+  auto const a = A{12};
+  EXPECT_EQ(product_t<A>{a}, product(a));
+
+  // n arguments.
+  auto const b = B{-3};
+  auto const c = C{982};
+  EXPECT_EQ((product_t<A, B, C>{a, b, c}), product(a, b, c));
+  EXPECT_EQ((product_t<B, C, B, A>{b, c, b, a}), product(b, c, b, a));
+}
+
+TEST(FunctionalProduct, FunctionObject) {
+  using namespace ka;
+  using namespace ka::test;
+  using ka::functional_ops::operator*; // Mathematical function composition.
+  auto f = [](A a) -> B {return B{-2 * a.value};};
+  auto g = product * f;
+  EXPECT_EQ(product_t<B>{B{0}}, g(A{0}));
+  EXPECT_EQ(product_t<B>{B{-6}}, g(A{3}));
 }

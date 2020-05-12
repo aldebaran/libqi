@@ -10,7 +10,7 @@
 /// The properties we're interested in are, amongst others, reflexivity,
 /// symmetry and transitivity.
 
-namespace test {
+namespace test_relation {
   enum person_t : int {
     person_begin = 0,
     abe = 0,
@@ -311,6 +311,6 @@ namespace test {
     }
   };
 
-} // namespace test
+} // namespace test_relation
 
 #endif // KA_TEST_RELATIONS

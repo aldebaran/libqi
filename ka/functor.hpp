@@ -94,7 +94,7 @@ namespace fmap_ns {
 
   // Type has a member fmap: call it.
   // Function<B (A)> F
-  template<typename F, typename T>
+  template<typename F, typename T> KA_CONSTEXPR
   auto fmap_dispatch(true_t /* HasMemberFmap<C> */, F&& f, T&& t)
       -> decltype(fwd<T>(t).fmap(fwd<F>(f))) {
     return fwd<T>(t).fmap(fwd<F>(f));
@@ -155,7 +155,7 @@ using fmap_ns::fmap_fn_t;
 
 // Avoid ODR violations.
 namespace {
-  static auto const& fmap = static_const_t<fmap_fn_t>::value;
+  static constexpr auto const& fmap = static_const_t<fmap_fn_t>::value;
 }
 
 } // namespace ka

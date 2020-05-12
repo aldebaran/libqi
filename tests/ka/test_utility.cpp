@@ -44,6 +44,33 @@ TEST(UtilityFwd, RealWord) {
   ASSERT_EQ(ref_kind_t::r_value, f(move_only_t<int>{4}));
 }
 
+// Codomain of `ka::mv` is the same as the one of `std::move`.
+TEST(UtilityMv, Basic) {
+  using namespace ka;
+  // r-value
+  static_assert(Equal<decltype(std::move(5)), decltype(mv(5))>::value, "");
+  static_assert(std::is_rvalue_reference<decltype(mv(5))>::value, "");
+
+  // l-value
+  int i = 5;
+  static_assert(Equal<decltype(std::move(i)), decltype(mv(i))>::value, "");
+  static_assert(std::is_rvalue_reference<decltype(mv(i))>::value, "");
+}
+
+namespace ka {
+  auto h(ka::move_only_t<int> m) -> int {
+    return *m;
+  }
+} // namespace ka
+
+// `ka::mv` does move values.
+TEST(UtilityMv, RealWorld) {
+  using namespace ka;
+  auto const i = 4;
+  auto m = move_only_t<int>{i};
+  ASSERT_EQ(i, h(mv(m))); // `h` mandates moving `m`.
+}
+
 TEST(UtilityDeclref, Basic) {
   using namespace ka;
   static_assert(Equal<decltype(declref<int>()), int&>::value, "");

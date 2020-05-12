@@ -8,12 +8,12 @@
 #define _SRC_TRANSPORTSOCKETCACHE2_HPP_
 
 #include <string>
-#include <queue>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/synchronized_value.hpp>
 
 #include <qi/future.hpp>
+#include <qi/uri.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 
 #include <qi/trackable.hpp>
@@ -45,13 +45,17 @@ namespace qi
     void close();
 
     /// Get the socket for the given ServiceInfo.
-    /// The original url of the service directory is always preferred to the
-    /// other endpoints, and other endpoints will not be tried if the services
-    /// are running on another machine.
+    ///
+    /// The endpoints of the service info are tried in the order they were set in. If a socket
+    /// already exists for one of the endpoints URI associated with the service info machine ID (see
+    /// the `insert` member function), it is returned and no other socket is created nor another
+    /// connection is attempted.
+    ///
     /// @param servInfo A service info retrieved from a service directory.
-    /// @param sdUrl The endpoint of the service directory on which the service info came from.
-    Future<MessageSocketPtr> socket(const ServiceInfo& servInfo, const std::string& sdUrl);
-    void insert(const std::string& machineId, const Url& url, MessageSocketPtr socket);
+    Future<MessageSocketPtr> socket(const ServiceInfo& servInfo);
+
+    /// Associates a socket to a machine ID / URI pair.
+    void insert(const std::string& machineId, const Uri& uri, MessageSocketPtr socket);
 
     /// The returned future is set when the socket has been disconnected and
     /// effectively removed from the cache.
@@ -64,10 +68,8 @@ namespace qi
       State_Error
     };
 
-    using UrlVectorPtr = boost::shared_ptr<UrlVector>;
-    void onSocketConnectionAttempt(Future<void> fut, Promise<MessageSocketPtr> prom, MessageSocketPtr socket, const ServiceInfo& info, uint32_t currentUrlIdx, UrlVectorPtr urls);
-    void onSocketParallelConnectionAttempt(Future<void> fut, MessageSocketPtr socket, Url url, const ServiceInfo& info);
-    void onSocketDisconnected(Url url, const ServiceInfo& info);
+    void onSocketParallelConnectionAttempt(Future<void> fut, MessageSocketPtr socket, Uri uri, const ServiceInfo& info);
+    void onSocketDisconnected(Uri uri, const ServiceInfo& info);
 
 
     boost::mutex _socketMutex;
@@ -81,7 +83,7 @@ namespace qi
 
       Promise<MessageSocketPtr> promise;
       MessageSocketPtr endpoint;
-      UrlVector relatedUrls;
+      std::vector<Uri> relatedUris;
       int attemptCount = 0;
       State state = State_Pending;
       SignalLink disconnectionTracking = SignalBase::invalidSignalLink;
@@ -98,7 +100,7 @@ namespace qi
     };
 
     using MachineId = std::string;
-    using ConnectionMap = std::map<MachineId, std::map<Url, ConnectionAttemptPtr>>;
+    using ConnectionMap = std::map<MachineId, std::map<Uri, ConnectionAttemptPtr>>;
     ConnectionMap _connections;
     std::list<MessageSocketPtr> _allPendingConnections;
     boost::synchronized_value<std::vector<DisconnectInfo>> _disconnectInfos;

@@ -8,6 +8,9 @@
 #include <qi/type/typeinterface.hpp>
 #include <qi/messaging/serviceinfo.hpp>
 #include <qi/url.hpp>
+#include <ka/functorcontainer.hpp>
+#include <ka/functor.hpp>
+#include <ka/empty.hpp>
 
 #include "serviceinfo_p.hpp"
 
@@ -49,7 +52,26 @@ namespace qi
     _p->processId = processId;
   }
 
+  namespace
+  {
+    std::string uriParseError(const Url& url)
+    {
+      return "URI parsing error: '" + url.str() + "' is not a valid URI.";
+    }
+  }
+
   void ServiceInfo::setEndpoints(const qi::UrlVector& endpoints) {
+    _p->endpoints = ka::fmap(
+      [](const Url& url) {
+        auto optUri = toUri(url);
+        if (ka::empty(optUri))
+          throw std::runtime_error(uriParseError(url));
+        return ka::src(optUri);
+      },
+      endpoints);
+  }
+
+  void ServiceInfo::setEndpoints(const std::vector<Uri>& endpoints) {
     _p->endpoints = endpoints;
   }
 
@@ -58,6 +80,13 @@ namespace qi
   }
 
   void ServiceInfo::addEndpoint(const qi::Url& endpoint) {
+    auto optUri = toUri(endpoint);
+    if (ka::empty(optUri))
+      throw std::runtime_error(uriParseError(endpoint));
+    _p->endpoints.push_back(ka::src(optUri));
+  }
+
+  void ServiceInfo::addEndpoint(const qi::Uri& endpoint) {
     _p->endpoints.push_back(endpoint);
   }
 
@@ -82,7 +111,11 @@ namespace qi
     return _p->processId;
   }
 
-  const qi::UrlVector& ServiceInfo::endpoints() const {
+  UrlVector ServiceInfo::endpoints() const {
+    return ka::fmap(toUrl, _p->endpoints);
+  }
+
+  const std::vector<Uri>& ServiceInfo::uriEndpoints() const {
     return _p->endpoints;
   }
 

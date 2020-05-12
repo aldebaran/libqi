@@ -41,6 +41,7 @@ if(QI_WITH_TESTS)
     "test_messaging.cpp" # main
     "test_metavalue_argument.cpp"
     "test_sd.cpp"
+    "test_uri.cpp"
     "test_url.cpp"
 #    "test_with_gateway.cpp" # TODO: repair
     "test_without_gateway.cpp"
@@ -116,6 +117,8 @@ set(MESSAGING_SOURCES
   "../../src/messaging/transportserverasio_p.cpp"
   "../../src/messaging/messagesocket.cpp"
   "../../src/messaging/transportsocketcache.cpp"
+  "../../src/messaging/servicedirectory.cpp"
+  "../../src/messaging/server.cpp"
 )
 
 qi_create_gmock(
@@ -135,6 +138,7 @@ qi_create_gmock(
   "sock/test_send.cpp"
   "test_tcpmessagesocket.cpp"
   "test_appsession_internal.cpp"
+  "test_servicedirectory.cpp"
   ${MESSAGING_SOURCES}
 
   DEPENDS

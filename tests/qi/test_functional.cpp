@@ -9,7 +9,7 @@
 #include <qi/atomic.hpp>
 #include <qi/future.hpp>
 
-namespace
+namespace test_functional
 {
   template<typename T>
   struct ConstantDefault
@@ -40,7 +40,7 @@ namespace
   {
     return a.value() == b.value();
   }
-} // namespace
+} // namespace test_functional
 
 using types = testing::Types<
   qi::Future<bool>
@@ -68,8 +68,8 @@ TYPED_TEST(FunctionalSemiLift0, NonVoidCodomain)
   auto f = semilift(positive, unit);
 
   static_assert(Equal<T, decltype(f(0))>::value, "");
-  ASSERT_TRUE(equal(T{true}, f(1)));
-  ASSERT_TRUE(equal(T{false}, f(-1)));
+  ASSERT_TRUE(test_functional::equal(T{true}, f(1)));
+  ASSERT_TRUE(test_functional::equal(T{false}, f(-1)));
 }
 
 using void_types = testing::Types<
@@ -90,11 +90,11 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomain)
 
   auto noop = [](int) {
   };
-  ConstantDefault<T> unit;
+  test_functional::ConstantDefault<T> unit;
   auto f = semilift(noop, unit);
 
   static_assert(Equal<T, decltype(f(0))>::value, "");
-  ASSERT_TRUE(equal(unit(), f(0)));
+  ASSERT_TRUE(test_functional::equal(unit(), f(0)));
 }
 
 TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain)
@@ -104,11 +104,11 @@ TYPED_TEST(FunctionalSemiLift1, VoidCodomainVoidDomain)
 
   auto noop = [] {
   };
-  ConstantDefault<T> unit;
+  test_functional::ConstantDefault<T> unit;
   auto f = semilift(noop, unit);
 
   static_assert(Equal<T, decltype(f())>::value, "");
-  ASSERT_TRUE(equal(unit(), f()));
+  ASSERT_TRUE(test_functional::equal(unit(), f()));
 }
 
 namespace

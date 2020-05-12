@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <qi/api.hpp>
+#include <qi/uri.hpp>
 
 namespace qi {
   class UrlPrivate;
@@ -160,6 +161,17 @@ namespace qi {
    * @param baseUrl A supposedly complete URL, which parts will be used to fill in the specified URL.
    */
   QI_API Url specifyUrl(const Url& specification, const Url& baseUrl);
+
+  /// Always succeeds, but the result is not guaranteed to be valid.
+  inline Url toUrl(const Uri& uri)
+  {
+    return Url(to_string(uri));
+  }
+
+  inline ka::opt_t<Uri> toUri(const Url& url) noexcept
+  {
+    return uri(url.str());
+  }
 } // namespace qi
 
 #endif  // _QIMESSAGING_URL_HPP_

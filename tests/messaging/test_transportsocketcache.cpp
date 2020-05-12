@@ -76,7 +76,7 @@ TEST_F(TestTransportSocketCache, DisconnectReconnect)
   servInfo.setMachineId("tle;l");
   servInfo.setEndpoints(endpoints);
   qiLogDebug() << "CONNECTING: begin";
-  qi::Future<qi::MessageSocketPtr> sockfut = cache_.socket(servInfo, endpoints[0].protocol());
+  qi::Future<qi::MessageSocketPtr> sockfut = cache_.socket(servInfo);
   qi::MessageSocketPtr sock = sockfut.value();
   qiLogDebug() << "CONNECTING: end";
   ASSERT_TRUE(sock->isConnected()) << sock.get();
@@ -88,7 +88,7 @@ TEST_F(TestTransportSocketCache, DisconnectReconnect)
   // the disconnected signal can take some time until it's received, so wait a bit
   std::this_thread::sleep_for(std::chrono::milliseconds{ 100 });
   qiLogDebug() << "RECONNECTING: begin";
-  sockfut = cache_.socket(servInfo, endpoints[0].protocol());
+  sockfut = cache_.socket(servInfo);
   sock = sockfut.value();
   qiLogDebug() << "RECONNECTING: END";
   ASSERT_TRUE(sock->isConnected()) << sock.get();
@@ -104,7 +104,7 @@ TEST_F(TestTransportSocketCache, FirstUrlWillFail)
   qi::ServiceInfo servInfo;
   servInfo.setMachineId(qi::os::getMachineId());
   servInfo.setEndpoints(endpoints);
-  qi::Future<qi::MessageSocketPtr> sockFut = cache_.socket(servInfo, endpoints[0].protocol());
+  qi::Future<qi::MessageSocketPtr> sockFut = cache_.socket(servInfo);
   qi::MessageSocketPtr sock = sockFut.value();
 
   ASSERT_TRUE(sock->isConnected());
@@ -139,7 +139,7 @@ struct TestTransportSocketCacheDifferentMachineIdLocalConnection : TestTransport
 
 TEST_F(TestTransportSocketCacheDifferentMachineIdLocalConnection, FailsByDefault)
 {
-  const auto tentativeSocketFuture = cache_.socket(serviceInfo, "");
+  const auto tentativeSocketFuture = cache_.socket(serviceInfo);
 
   std::string err;
   ASSERT_TRUE(test::finishesWithError(tentativeSocketFuture, test::willAssignError(err)));
@@ -156,9 +156,9 @@ TEST_F(TestTransportSocketCacheDifferentMachineIdLocalConnection, SuccessAfterIn
   const auto endpoint = server_.endpoints()[0];
   const auto socket = boost::make_shared<qi::TcpMessageSocket<>>();
   socket->connect(endpoint);
-  cache_.insert(fakeMachineId, endpoint, socket);
+  cache_.insert(fakeMachineId, *toUri(endpoint), socket);
 
-  const auto tentativeSocketFuture = cache_.socket(serviceInfo, "");
+  const auto tentativeSocketFuture = cache_.socket(serviceInfo);
   ASSERT_FALSE(tentativeSocketFuture.hasError());
   ASSERT_EQ(tentativeSocketFuture.value(), socket);
 
@@ -186,17 +186,46 @@ TEST_F(TestTransportSocketCache, SameMachinePublicIp)
 
   v.push_back(url);
   client->connect(url);
-  cache_.insert(qi::os::getMachineId(), url, client);
+  cache_.insert(qi::os::getMachineId(), *toUri(url), client);
 
   qi::ServiceInfo info;
   info.setMachineId(qi::os::getMachineId());
   info.setEndpoints(v);
-  qi::Future<qi::MessageSocketPtr> tentativeSocketFuture = cache_.socket(info, "");
+  qi::Future<qi::MessageSocketPtr> tentativeSocketFuture = cache_.socket(info);
 
   tentativeSocketFuture.wait();
   ASSERT_FALSE(tentativeSocketFuture.hasError());
   ASSERT_EQ(tentativeSocketFuture.value(), client);
   client->disconnect();
+}
+
+TEST_F(TestTransportSocketCache, ReusesSocketOfServiceWithRelativeEndpoint)
+{
+  using namespace qi;
+
+  ASSERT_TRUE(test::finishesWithValue(server_.listen("tcp://127.0.0.1:9559")));
+  const auto endpoint = server_.endpoints()[0];
+  const auto machineId = qi::os::getMachineId();
+
+  qi::ServiceInfo info1;
+  info1.setMachineId(machineId);
+  info1.setName("muffins");
+  info1.setEndpoints({ endpoint });
+
+  // This creates a socket that will be connected to `endpoint`.
+  const auto socket1Fut = cache_.socket(info1);
+  ASSERT_TRUE(test::finishesWithValue(socket1Fut));
+
+  qi::ServiceInfo info2;
+  info2.setMachineId(machineId);
+  info2.setName("cookies");
+  info2.setEndpoints({ *uri("qi:muffins") });
+
+  // Cache should recognize the relative endpoint and return the same socket.
+  const auto socket2Fut = cache_.socket(info2);
+  ASSERT_TRUE(test::finishesWithValue(socket2Fut));
+
+  EXPECT_EQ(socket1Fut.value(), socket2Fut.value());
 }
 
 TEST(TestCall, IPV6Accepted)

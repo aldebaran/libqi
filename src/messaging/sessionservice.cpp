@@ -535,7 +535,7 @@ namespace qi {
           }
         }
         //empty serviceInfo
-        if (!si.endpoints().size()) {
+        if (!si.uriEndpoints().size()) {
           std::stringstream ss;
           ss << "No endpoints returned for service:" << sr->serviceInfo.name()
              << " (id:" << sr->serviceInfo.serviceId() << ")";
@@ -567,7 +567,7 @@ namespace qi {
       }
       qiLogVerbose() << "Requesting socket from cache. service = '" << service << "', "
         "requestId = " << *requestId;
-      Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value(), protocol);
+      Future<qi::MessageSocketPtr> f = _socketCache->socket(fut.value());
       f.connect(track(boost::bind(&Session_Service::onTransportSocketResult, this, _1, *requestId), this));
       mustSetPromise = false;
     }, this));

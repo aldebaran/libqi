@@ -11,7 +11,7 @@
 
 TEST(RelationPredicate, IsTransitive) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
   {
@@ -62,7 +62,7 @@ TEST(RelationPredicate, IsTransitive) {
 
 TEST(RelationPredicate, IsReflexive) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
   {
@@ -135,7 +135,7 @@ namespace {
 
 TEST(RelationPredicate, IsSymmetric) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int_t;
   auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
   {
@@ -182,7 +182,7 @@ TEST(RelationPredicate, IsSymmetric) {
 
 TEST(RelationPredicate, IsEquivalence) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
   {
@@ -219,7 +219,7 @@ TEST(RelationPredicate, IsEquivalence) {
 
 TEST(RelationPredicate, AreComplement) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
   {
@@ -255,7 +255,7 @@ TEST(RelationPredicate, AreComplement) {
 
 TEST(RelationPredicate, IsTrichotomic) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   {
     auto eq = [](N a, N b) {return a == b;};
@@ -279,7 +279,7 @@ TEST(RelationPredicate, IsTrichotomic) {
 
 TEST(RelationPredicate, IsWeakOrdering) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   {
     auto eq = [](N a, N b) {return a == b;};
@@ -327,7 +327,7 @@ TEST(RelationPredicate, IsWeakOrdering) {
 
 TEST(RelationPredicate, IsTotalOrdering) {
   using namespace ka;
-  using namespace test;
+  using namespace test_relation;
   using N = int;
   auto ints_0_to_9 = bounded_range(N{0}, N{10}); // 10 is excluded
   {

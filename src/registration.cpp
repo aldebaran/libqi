@@ -7,6 +7,8 @@
 #include <qi/anyobject.hpp>
 #include <qi/session.hpp>
 #include <qi/path.hpp>
+#include <ka/empty.hpp>
+#include <ka/src.hpp>
 
 #include "type/metaobject_p.hpp"
 #include "type/metamethod_p.hpp"
@@ -212,6 +214,22 @@ static qi::ServiceInfoPrivate* serviceInfoPrivate(qi::ServiceInfo* svcinfo) {
     return svcinfo->_p;
 }
 QI_EQUIVALENT_STRING_REGISTER(qi::Url, &qi::Url::str);
+
+namespace
+{
+  qi::Uri uriOrThrow(const std::string& str)
+  {
+    auto res = qi::uri(str);
+    if (ka::empty(res))
+      throw std::runtime_error("URI parsing error: '" + str + "' is not a valid URI.");
+    return ka::src(std::move(res));
+  }
+}
+
+QI_EQUIVALENT_STRING_REGISTER2(
+  qi::Uri,
+  static_cast<std::string (*)(const qi::Uri&)>(&qi::to_string),
+  &::uriOrThrow);
 QI_TYPE_STRUCT_EXTENSION_ADDED_FIELDS(qi::ServiceInfoPrivate, "objectUid");
 QI_TYPE_STRUCT(qi::ServiceInfoPrivate, name, serviceId, machineId, processId, endpoints, sessionId, objectUid);
 QI_TYPE_REGISTER(::qi::ServiceInfoPrivate);

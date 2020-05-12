@@ -4,9 +4,11 @@
 #include <gtest/gtest.h>
 #include <ka/conceptpredicate.hpp>
 #include <ka/opt.hpp>
+#include <ka/functional.hpp>
 #include <ka/testutils.hpp>
 #include <ka/typetraits.hpp>
 #include <ka/functor.hpp>
+#include <ka/flatten.hpp>
 #include <ka/testutils.hpp>
 
 TEST(Optional, Regular) {
@@ -1056,4 +1058,68 @@ TEST(Optional, FunctorAppKaOptNonVoidToVoid) {
   EXPECT_TRUE(v.empty()); // procedure not executed
   EXPECT_EQ(opt_t<void>(), fmap(h_void, opt_t<C>(), opt_t<D>())); // both empty
   EXPECT_TRUE(v.empty()); // procedure not executed
+}
+
+namespace {
+  template<template<typename> class O>
+  struct opt_traits;
+
+  template<>
+  struct opt_traits<boost::optional> {
+    template<typename T> using type = boost::optional<T>;
+    template<typename T>
+    static type<ka::Decay<T>> make(T&& t) {
+      return { ka::fwd<T>(t) };
+    }
+  };
+
+  template<>
+  struct opt_traits<ka::opt_t> {
+    template<typename T> using type = ka::opt_t<T>;
+    template<typename T>
+    static type<ka::Decay<T>> make(T&& t) {
+      return ka::opt(ka::fwd<T>(t));
+    }
+  };
+}
+
+template<typename Traits>
+struct OptionalFlatten : testing::Test {
+  using traits = Traits;
+  template<typename T>
+  using Opt = typename traits::template type<T>;
+};
+
+using opt_types = testing::Types<opt_traits<boost::optional>, opt_traits<ka::opt_t>>;
+
+TYPED_TEST_CASE(OptionalFlatten, opt_types);
+
+// Internal optional is extracted.
+TYPED_TEST(OptionalFlatten, NonEmpty) {
+  using namespace ka;
+  using F = TestFixture;
+  using test::A;
+  using OptA = typename F::template Opt<A>;
+  using OptOptA = typename F::template Opt<OptA>;
+
+  OptOptA o0 = F::traits::make(F::traits::make(A{934}));
+  OptA const o1 = flatten(o0);
+  ASSERT_FALSE(empty(o0));
+  EXPECT_EQ(o1, *o0);
+  ASSERT_FALSE(empty(o1));
+  EXPECT_EQ(A{934}, *o1);
+}
+
+// Empty optional is extracted.
+TYPED_TEST(OptionalFlatten, Empty) {
+  using namespace ka;
+  using F = TestFixture;
+  using test::A;
+  using OptA = typename F::template Opt<A>;
+  using OptOptA = typename F::template Opt<OptA>;
+
+  OptOptA o0;
+  EXPECT_TRUE(empty(o0));
+  OptA const o1 = flatten(o0);
+  EXPECT_TRUE(empty(o1));
 }

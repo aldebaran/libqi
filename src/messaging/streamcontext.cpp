@@ -16,6 +16,7 @@ namespace qi
     char const * const messageFlags          = "MessageFlags";
     char const * const remoteCancelableCalls = "RemoteCancelableCalls";
     char const * const objectPtrUid          = "ObjectPtrUID";
+    char const * const relativeEndpointUri   = "RelativeEndpointURI";
   }
 
 
@@ -114,6 +115,7 @@ static void initCapabilities()
   , { capabilityname::metaObjectCache      , AnyValue::from(false) }
   , { capabilityname::remoteCancelableCalls, AnyValue::from(true)  }
   , { capabilityname::objectPtrUid         , AnyValue::from(true)  }
+  , { capabilityname::relativeEndpointUri  , AnyValue::from(true)  }
   };
 
   _defaultCapabilities = new CapabilityMap(defaultCaps);

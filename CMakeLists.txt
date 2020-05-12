@@ -302,6 +302,7 @@ set(QIM_H qi/api.hpp
           qi/messaging/serviceinfo.hpp
           qi/applicationsession.hpp
           qi/session.hpp
+          qi/uri.hpp
           qi/url.hpp
 )
 
@@ -352,6 +353,7 @@ set(QIM_C
   src/messaging/transportsocketcache.hpp
   src/messaging/tcpmessagesocket.cpp
   src/messaging/tcpmessagesocket.hpp
+  src/messaging/uri.cpp
   src/messaging/url.cpp
   src/registration.cpp
 )
@@ -402,9 +404,11 @@ set(KA_H
   ka/conceptpredicate.hpp
   ka/empty.hpp
   ka/errorhandling.hpp
+  ka/flatten.hpp
   ka/functional.hpp
   ka/functor.hpp
   ka/functorcontainer.hpp
+  ka/indexed.hpp
   ka/integersequence.hpp
   ka/iterator.hpp
   ka/macro.hpp
@@ -423,6 +427,11 @@ set(KA_H
   ka/testutils.hpp
   ka/typetraits.hpp
   ka/unit.hpp
+  ka/uri.hpp
+  ka/uri/io.hpp
+  ka/uri/uri_fwd.hpp
+  ka/uri/uri.hpp
+  ka/uri/parsing.hpp
   ka/utility.hpp
 )
 

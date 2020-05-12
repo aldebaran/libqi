@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
+#include <sstream>
 
 namespace {
   // No-conversion test types.
@@ -29,7 +30,9 @@ namespace {
   struct str_t {
     template<typename T>
     std::string operator()(T const& x) const {
-      return std::to_string(x);
+      std::ostringstream oss;
+      oss << x;
+      return oss.str();
     }
     template<typename T, typename U>
     std::pair<std::string, std::string> operator()(std::pair<T, U> const& x) const {

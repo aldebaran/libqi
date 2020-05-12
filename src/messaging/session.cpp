@@ -131,7 +131,10 @@ namespace qi {
        return;
      }
      qiLogVerbose() << "Inserting sd to cache for " << mid <<" " << url.str();
-     _socketsCache.insert(mid, sdSocket->remoteEndpoint().value(), sdSocket);
+     _socketsCache.insert(mid, *toUri(sdSocket->remoteEndpoint().value()), sdSocket);
+     // Also add a relative endpoint to the ServiceDirectory with the same socket, so that for
+     // services that expose this relative endpoint, the client may reuse its socket.
+     _socketsCache.insert(mid, *uri("qi:ServiceDirectory"), sdSocket);
      p.setValue(0);
   }
 

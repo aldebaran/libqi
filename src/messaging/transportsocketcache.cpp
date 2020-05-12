@@ -10,6 +10,7 @@
 
 #include <qi/log.hpp>
 #include <qi/numeric.hpp>
+#include <qi/uri.hpp>
 
 #include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
@@ -75,10 +76,10 @@ void TransportSocketCache::close()
     }
     for (auto& pairMachineIdConnection: map)
     {
-      auto& mapUrlConnection = pairMachineIdConnection.second;
-      for (auto& pairUrlConnection: mapUrlConnection)
+      auto& mapUriConnection = pairMachineIdConnection.second;
+      for (auto& pairUriConnection: mapUriConnection)
       {
-        auto& connectionAttempt = *pairUrlConnection.second;
+        auto& connectionAttempt = *pairUriConnection.second;
         auto endpoint = connectionAttempt.endpoint;
 
         // Disconnect any valid socket we were holding.
@@ -112,37 +113,38 @@ bool isLocalHost(const std::string& host)
   return boost::algorithm::starts_with(host, "127.") || host == "localhost";
 }
 
-static UrlVector localhost_only(const UrlVector& input)
+static std::vector<Uri> localhost_only(const std::vector<Uri>& input)
 {
-  UrlVector result;
+  std::vector<Uri> result;
   result.reserve(input.size());
-  for (const auto& url: input)
+  for (const auto& uri: input)
   {
-    if (isLocalHost(url.host()))
-      result.push_back(url);
+    const auto auth = uri.authority();
+    if (!auth.empty() && isLoopbackAddress((*auth).host()))
+      result.push_back(uri);
   }
   return result;
 }
 
-Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo, const std::string& url)
+Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInfo)
 {
   const std::string& machineId = servInfo.machineId();
   auto couple = boost::make_shared<ConnectionAttempt>();
-  couple->relatedUrls = servInfo.endpoints();
+  couple->relatedUris = servInfo.uriEndpoints();
   bool local = machineId == os::getMachineId();
-  UrlVector connectionCandidates;
+  std::vector<Uri> connectionCandidates;
 
   // If the connection is local, we're mainly interested in localhost endpoint
   if (local)
-    connectionCandidates = localhost_only(servInfo.endpoints());
+    connectionCandidates = localhost_only(servInfo.uriEndpoints());
 
   // If the connection isn't local or if the service doesn't expose local endpoints,
   // try and connect to whatever is available.
   if (connectionCandidates.size() == 0)
-    connectionCandidates = servInfo.endpoints();
+    connectionCandidates = servInfo.uriEndpoints();
 
   {
-    // If we already have a pending connection to one of the urls, we return the future in question
+    // If we already have a pending connection to one of the uris, we return the future in question
     boost::mutex::scoped_lock lock(_socketMutex);
 
     if (_dying)
@@ -151,40 +153,42 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
     ConnectionMap::iterator machineIt = _connections.find(machineId);
     if (machineIt != _connections.end())
     {
-      // Check if any connection to the machine matches one of our urls
-      UrlVector& vurls = couple->relatedUrls;
-      for (std::map<Url, ConnectionAttemptPtr>::iterator b = machineIt->second.begin(), e = machineIt->second.end();
-           b != e;
-           b++)
+      // Check if any connection to the machine matches one of our uris
+      auto& vuris = couple->relatedUris;
+      for (const auto& uriConnectPair : machineIt->second)
       {
-        UrlVector::iterator uIt = std::find(vurls.begin(), vurls.end(), b->first);
-        // We found a matching machineId and URL : return the connected endpoint.
-        if (uIt != vurls.end())
+        const auto candidateUri = uriConnectPair.first;
+        const auto connection = uriConnectPair.second;
+        if (std::any_of(vuris.begin(), vuris.end(),
+                        [&](const Uri& uri) { return uri == candidateUri; }))
         {
+          // We found a matching machineId and URI : return the connected endpoint.
           qiLogDebug() << "Found pending promise.";
-          return b->second->promise.future();
+          return connection->promise.future();
         }
       }
     }
-    // Otherwise, we keep track of all those URLs and assign them the same promise in our map.
+    // Otherwise, we keep track of all those URIs and assign them the same promise in our map.
     // They will all track the same connection.
     couple->attemptCount = qi::numericConvert<int>(connectionCandidates.size());
-    std::map<Url, ConnectionAttemptPtr>& urlMap = _connections[machineId];
-    for (const auto& url: connectionCandidates)
+    auto& uriMap = _connections[machineId];
+    for (const auto& uri: connectionCandidates)
     {
-      if (!url.isValid())
-        continue; // Do not try to connect to an invalid url!
+      const auto scheme = uri.scheme();
+      // Only these protocols are supported for message sockets.
+      if (scheme != "tcp" && scheme != "tcps")
+        continue;
 
-      if (!local && isLocalHost(url.host()))
+      if (!local && isLoopbackAddress((*uri.authority()).host()))
         continue; // Do not try to connect on localhost when it is a remote!
 
-      urlMap[url] = couple;
-      MessageSocketPtr socket = makeMessageSocket(url.protocol());
+      uriMap[uri] = couple;
+      MessageSocketPtr socket = makeMessageSocket(scheme);
       _allPendingConnections.push_back(socket);
-      Future<void> sockFuture = socket->connect(url);
-      qiLogDebug() << "Inserted [" << machineId << "][" << url.str() << "]";
+      Future<void> sockFuture = socket->connect(toUrl(uri));
+      qiLogDebug() << "Inserted [" << machineId << "][" << uri << "]";
       sockFuture.then(std::bind(&TransportSocketCache::onSocketParallelConnectionAttempt, this,
-                                std::placeholders::_1, socket, url, servInfo));
+                                std::placeholders::_1, socket, uri, servInfo));
     }
   }
   return couple->promise.future();
@@ -218,9 +222,9 @@ FutureSync<void> TransportSocketCache::disconnect(MessageSocketPtr socket)
   });
 }
 
-void TransportSocketCache::insert(const std::string& machineId, const Url& url, MessageSocketPtr socket)
+void TransportSocketCache::insert(const std::string& machineId, const Uri& uri, MessageSocketPtr socket)
 {
-  // If a connection is pending for this machine / url, terminate the pendage and set the
+  // If a connection is pending for this machine / uri, terminate the pendage and set the
   // service socket as this one
   boost::mutex::scoped_lock lock(_socketMutex);
 
@@ -231,12 +235,12 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
 
   info.setMachineId(machineId);
   qi::SignalLink disconnectionTracking = socket->disconnected.connect(
-      track([=](const std::string&) { onSocketDisconnected(url, info); }, this));
+      track([=](const std::string&) { onSocketDisconnected(uri, info); }, this));
 
   ConnectionMap::iterator mIt = _connections.find(machineId);
   if (mIt != _connections.end())
   {
-    std::map<Url, ConnectionAttemptPtr>::iterator uIt = mIt->second.find(url);
+    const auto uIt = mIt->second.find(uri);
     if (uIt != mIt->second.end())
     {
       auto& connectionAttempt = *uIt->second;
@@ -259,8 +263,8 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
   couple->promise = Promise<MessageSocketPtr>();
   couple->endpoint = socket;
   couple->state = State_Connected;
-  couple->relatedUrls.push_back(url);
-  _connections[machineId][url] = couple;
+  couple->relatedUris.push_back(uri);
+  _connections[machineId][uri] = couple;
   couple->promise.setValue(socket);
 }
 
@@ -278,71 +282,77 @@ void TransportSocketCache::insert(const std::string& machineId, const Url& url, 
  */
 void TransportSocketCache::onSocketParallelConnectionAttempt(Future<void> fut,
                                                              MessageSocketPtr socket,
-                                                             Url url,
+                                                             Uri uri,
                                                              const ServiceInfo& info)
 {
-  boost::mutex::scoped_lock lock(_socketMutex);
-
-  if (_dying)
   {
-    qiLogDebug() << "ConnectionAttempt: TransportSocketCache is closed";
-    if (!fut.hasError())
+    boost::mutex::scoped_lock lock(_socketMutex);
+
+    if (_dying)
     {
+      qiLogDebug() << "ConnectionAttempt: TransportSocketCache is closed";
+      if (!fut.hasError())
+      {
+        _allPendingConnections.remove(socket);
+        socket->disconnect();
+      }
+      return;
+    }
+
+    ConnectionMap::iterator machineIt = _connections.find(info.machineId());
+    std::map<Uri, ConnectionAttemptPtr>::iterator uriIt;
+    if (machineIt != _connections.end())
+      uriIt = machineIt->second.find(uri);
+
+    if (machineIt == _connections.end() || uriIt == machineIt->second.end())
+    {
+      // The socket was disconnected at some point, and we removed it from our map:
+      // return early.
       _allPendingConnections.remove(socket);
       socket->disconnect();
+      return;
     }
-    return;
-  }
 
-  ConnectionMap::iterator machineIt = _connections.find(info.machineId());
-  std::map<Url, ConnectionAttemptPtr>::iterator urlIt;
-  if (machineIt != _connections.end())
-    urlIt = machineIt->second.find(url);
-
-  if (machineIt == _connections.end() || urlIt == machineIt->second.end())
-  {
-    // The socket was disconnected at some point, and we removed it from our map:
-    // return early.
-    _allPendingConnections.remove(socket);
-    socket->disconnect();
-    return;
-  }
-
-  ConnectionAttemptPtr attempt = urlIt->second;
-  attempt->attemptCount--;
-  if (attempt->state != State_Pending)
-  {
-    qiLogDebug() << "Already connected: reject socket " << socket.get() << " endpoint " << url.str();
-    _allPendingConnections.remove(socket);
-    socket->disconnect();
-    checkClear(attempt, info.machineId());
-    return;
-  }
-  if (fut.hasError())
-  {
-    // Failing to connect to some of the endpoint is expected.
-    qiLogDebug() << "Could not connect to service #" << info.serviceId() << " through url " << url.str();
-    _allPendingConnections.remove(socket);
-    // It's a critical error if we've exhausted all available endpoints.
-    if (attempt->attemptCount == 0)
+    ConnectionAttemptPtr attempt = uriIt->second;
+    attempt->attemptCount--;
+    if (attempt->state != State_Pending)
     {
-      std::stringstream err;
-      err << "Could not connect to service #" << info.serviceId() << ": no endpoint replied.";
-      qiLogError() << err.str();
-      attempt->promise.setError(err.str());
-      attempt->state = State_Error;
+      qiLogDebug() << "Already connected: reject socket " << socket.get() << " endpoint " << uri;
+      _allPendingConnections.remove(socket);
+      socket->disconnect();
       checkClear(attempt, info.machineId());
+      return;
     }
-    return;
+    if (fut.hasError())
+    {
+      // Failing to connect to some of the endpoint is expected.
+      qiLogDebug() << "Could not connect to service #" << info.serviceId() << " through uri " << uri;
+      _allPendingConnections.remove(socket);
+      // It's a critical error if we've exhausted all available endpoints.
+      if (attempt->attemptCount == 0)
+      {
+        std::stringstream err;
+        err << "Could not connect to service #" << info.serviceId() << ": no endpoint replied.";
+        qiLogError() << err.str();
+        attempt->promise.setError(err.str());
+        attempt->state = State_Error;
+        checkClear(attempt, info.machineId());
+      }
+      return;
+    }
+    qi::SignalLink disconnectionTracking = socket->disconnected.connect(
+        track([=](const std::string&) { onSocketDisconnected(uri, info); }, this));
+    attempt->state = State_Connected;
+    attempt->endpoint = socket;
+    attempt->promise.setValue(socket);
+    attempt->disconnectionTracking = disconnectionTracking;
   }
-  qi::SignalLink disconnectionTracking = socket->disconnected.connect(
-      track([=](const std::string&) { onSocketDisconnected(url, info); }, this));
-  attempt->state = State_Connected;
-  attempt->endpoint = socket;
-  attempt->promise.setValue(socket);
-  attempt->disconnectionTracking = disconnectionTracking;
-  qiLogDebug() << "Connected to service #" << info.serviceId() << " through url " << url.str() << " and socket "
-               << socket.get();
+
+  // Associate the same socket to the relative URI of the service, so that we may reuse the same
+  // socket if another service has this relative URI as one of its endpoints.
+  insert(info.machineId(), *qi::uri(std::string(uriQiScheme()) + ":" + info.name()), socket);
+  qiLogDebug() << "Connected to service #" << info.serviceId() << " through uri " << uri
+               << " and socket " << socket.get();
 }
 
 void TransportSocketCache::checkClear(ConnectionAttemptPtr attempt, const std::string& machineId)
@@ -352,7 +362,7 @@ void TransportSocketCache::checkClear(ConnectionAttemptPtr attempt, const std::s
     ConnectionMap::iterator machineIt = _connections.find(machineId);
     if (machineIt == _connections.end())
       return;
-    for (UrlVector::const_iterator uit = attempt->relatedUrls.begin(), end = attempt->relatedUrls.end(); uit != end;
+    for (auto uit = attempt->relatedUris.begin(), end = attempt->relatedUris.end(); uit != end;
          ++uit)
       machineIt->second.erase(*uit);
     if (machineIt->second.size() == 0)
@@ -386,16 +396,32 @@ static void updateDisconnectInfos(C& disconnectInfos, const MessageSocketPtr& so
   promise.setValue(0);
 }
 
-void TransportSocketCache::onSocketDisconnected(Url url, const ServiceInfo& info)
+void TransportSocketCache::onSocketDisconnected(Uri uri, const ServiceInfo& info)
 {
   // remove from the available connections
   boost::mutex::scoped_lock lock(_socketMutex);
 
-  ConnectionMap::iterator machineIt = _connections.find(info.machineId());
+  const auto machineId = info.machineId();
+  const auto machineIt = _connections.find(machineId);
   if (machineIt == _connections.end())
+  {
+    qiLogDebug() << "onSocketDisconnected: no socket found for this service info machine ID ("
+                 << machineId << ", from service " << info.name() << "/" << info.serviceId()
+                 << "), ignoring event.";
     return;
+  }
+  const auto& uriConnectMap = machineIt->second;
+  const auto connectionIt = uriConnectMap.find(uri);
+  if (connectionIt == uriConnectMap.end())
+  {
+    qiLogDebug() << "onSocketDisconnected: no socket found for this service info URI (" << uri
+                 << machineId << ", from service " << info.name() << "/" << info.serviceId()
+                 << "), ignoring event.";
+    return;
+  }
+
   qiLogDebug() << "onSocketDisconnected: about to erase socket";
-  auto attempt = machineIt->second[url];
+  auto attempt = machineIt->second[uri];
   attempt->state = State_Error;
   checkClear(attempt, info.machineId());
   auto syncDisconnectInfos = _disconnectInfos.synchronize();

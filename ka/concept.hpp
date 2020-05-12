@@ -492,6 +492,24 @@ namespace ka {
 ///  && (forall r in R where front(r) is defined) front(r) = x establishes front(r) == x
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ///
+/// ## Linearizable
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Linearizable(L) =
+///     Regular(L)
+///  && With InputIterator<T> I, Integral N:
+///       begin: L -> I
+///    && end: L -> I
+///    && size: L -> N
+///         l |-> end(l) - begin(l)
+///    && empty: L -> bool
+///         l |-> begin(l) == end(l)
+///    && []: L x N -> T
+///         (l, n) |-> src(begin(l) + n)
+///    && constant_time(empty)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// Range of iterators. Underlying values are not necessarily owned. Equality
+/// tests iterators themselves, not underlying values.
+///
 ///
 /// ## Empty
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -568,6 +586,34 @@ namespace ka {
 ///
 /// Typical models are: non-key/value std containers (e.g. this includes
 /// `std::set` but excludes `std::map`), std::optional, futures, etc.
+///
+///
+/// ## ParseResult
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept ParseResult(R) =
+///      Functor(R)
+///   && With Regular A, InputIterator I:
+///        EmptyMutable(R<A>)
+///     && iter: R<A> -> I
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// A parse result contains an iterator and optionally a value.
+///
+///
+/// ## Parser
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// concept Parser(P) =
+///      Functor(P)
+///   && With Regular A, InputIterator I, ParseResult R:
+///        Function<R<A> (I, I)>(P<A>)
+///     && (forall pa in P<A>, b in I, e in I) With res = pa(b, e) in R<A>:
+///       readable_bounded_range(b, e) implies
+///            (iter(res) in [b, e]
+///         && ka::empty(res) implies iter(res) = b)
+/// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/// A parser is a function taking a range of symbols `[b, e)` as input and
+/// returning a parsing result. If parsing failed, the result is empty and its
+/// iterator `i` equals `b`. Otherwise, the result is non-empty, and `[b, i)`,
+/// with `i in [b, e]`, is the subrange successfully parsed.
 
 namespace concept { // To allow doc tools to extract this documentation.
 }
