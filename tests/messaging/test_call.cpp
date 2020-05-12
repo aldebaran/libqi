@@ -665,7 +665,9 @@ TEST(TestCall, PairClientListen)
   qi::DynamicObjectBuilder ob;
   ob.advertiseMethod("addOne", &addOne);
   qi::AnyObject obj(ob.object());
-  p.client()->registerService("adder", obj);
+  auto client = p.client();
+  client->listen("tcp://localhost:0").value();
+  client->registerService("adder", obj);
   qi::AnyObject o = p.server()->service("adder").value();
   ASSERT_TRUE(o);
 }

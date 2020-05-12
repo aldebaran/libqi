@@ -250,6 +250,7 @@ TEST_F(TestAuthentication, ConnectionToServiceTest)
   serviceHost->setAuthProviderFactory(factory);
   serviceHost->connect(sd_->url());
   ASSERT_TRUE(serviceHost->isConnected());
+  serviceHost->listen("tcp://localhost:0");
   serviceHost->registerService("toto", service);
 
   client_->connect(sd_->url());
