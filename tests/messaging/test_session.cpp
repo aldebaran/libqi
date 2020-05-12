@@ -595,6 +595,7 @@ TEST(TestSession, RegisterServiceFromClient)
   TestSessionPair sessionPair;
   auto& client = *sessionPair.client();
   auto obj = dummyDynamicObject();
+  ASSERT_TRUE(finishesWithValue(client.listen("tcp://localhost:0").async()));
   ASSERT_TRUE(finishesWithValue(client.registerService(dummyServiceName, obj)));
 
   AnyObject object;
