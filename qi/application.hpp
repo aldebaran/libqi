@@ -158,9 +158,12 @@ namespace qi {
     static const char* program();
 
     /**
-     * \brief Return the current program full path.
-     * \return full path to the current running program, symbolic links are
-     * resolved.
+     * \brief Physical absolute path of the current program.
+     * \return The path or an empty string in case of errors (missing file or
+     * access denial).
+     *
+     * The path of the current program is transformed to get a complete path
+     * from the root of the filesystem, without any symbolic link.
      *
      * When using this function from a Python application for example on
      * gentoo, it will return something like /usr/bin/python2.7 (because python

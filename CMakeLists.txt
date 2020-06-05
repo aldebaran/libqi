@@ -120,6 +120,7 @@ set(QI_H qi/detail/async.hxx
 set(QI_C src/dlfcn.cpp
          src/path.cpp
          src/application.cpp
+         src/application_p.hpp
          src/buffer.cpp
          src/buffer_p.hpp
          src/bufferreader.cpp

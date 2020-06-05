@@ -8,15 +8,14 @@
 #include <iostream>
 #include <numeric>
 
+#include <src/application_p.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
-#include <qi/path.hpp>
 #include <qi/path_conf.hpp>
 #include <src/sdklayout.hpp>
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -29,12 +28,6 @@
 #endif
 #ifdef _WIN32
 #include <windows.h>
-#endif
-
-#ifndef _WIN32
-static const char SEPARATOR = ':';
-#else
-static const char SEPARATOR = ';';
 #endif
 
 qiLogCategory("qi.Application");
@@ -140,58 +133,23 @@ namespace qi {
       ptr = new T;
     return *ptr;
   }
-
   bool Application::atSignal(std::function<void (int)> func, int signal)
   {
     lazyGet(globalAtSignal).push_back(std::make_pair(std::move(func), signal));
     return true;
   }
-
-  static boost::filesystem::path system_absolute(
-      const boost::filesystem::path path)
+  qi::Path details::searchExecutableAbsolutePath(const qi::Path& path,
+                                                 const bfs::path& currentDirectory,
+                                                 std::vector<bfs::path> environmentPaths)
   {
-    if (path.empty())
-      return path;
-
-    if (path.is_absolute())
-      return path;
-
-    if (path.has_parent_path())
-      return bfs::system_complete(path);
-
-    if (!bfs::exists(path) || bfs::is_directory(path))
+    boost::system::error_code err;
+    const bfs::path boostPath(path);
+    if (boostPath.is_relative() && !boostPath.has_parent_path())
     {
-      std::string envPath = qi::os::getenv("PATH");
-
-      if (!envPath.empty())
-      {
-        std::vector<std::string> envPaths;
-        boost::algorithm::split(envPaths,
-                                envPath,
-                                boost::algorithm::is_from_range(SEPARATOR,
-                                                                SEPARATOR));
-
-        for (const auto& realPath : envPaths)
-        {
-          bfs::path p(realPath);
-
-          p /= path;
-          p = boost::filesystem::system_complete(p);
-
-          if (boost::filesystem::exists(p) &&
-              !boost::filesystem::is_directory(p))
-            return p.string(qi::unicodeFacet());
-        }
-      }
+      environmentPaths.insert(environmentPaths.begin(), currentDirectory);
+      return boost::process::search_path(boostPath, environmentPaths).make_preferred();
     }
-
-    // fallback to something
-    return bfs::system_complete(path);
-  }
-
-  static qi::Path guess_app_from_path(const qi::Path& path)
-  {
-    return system_absolute(path).make_preferred();
+    return bfs::absolute(boostPath, currentDirectory).make_preferred();
   }
 
   static void initApp(int& argc, char ** &argv, const std::string& path)
@@ -205,9 +163,10 @@ namespace qi {
     }
     else
     {
-      globalProgram = guess_app_from_path(qi::Path::fromNative(argv[0])).str();
+      globalProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(argv[0])).str();
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
+
     globalProgram = path::detail::normalize(globalProgram).str();
 
     parseArguments(argc, argv);
@@ -528,7 +487,7 @@ namespace qi {
         }
         else
         {
-          globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+          globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
         }
         free(fname);
       }
@@ -539,7 +498,7 @@ namespace qi {
       if (!boost::filesystem::is_empty(fname))
         globalRealProgram = fname.string().c_str();
       else
-        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+        globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #elif _WIN32
       WCHAR fname[MAX_PATH];
       int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
@@ -552,10 +511,10 @@ namespace qi {
       else
       {
         // GetModuleFileName failed, trying to guess from argc, argv...
-        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+        globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
       }
 #else
-      globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+      globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #endif
       return globalRealProgram.c_str();
     }
