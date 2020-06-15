@@ -323,14 +323,20 @@ namespace mock
       _async_write_next_layer(s, b, h);
     }
 
-    static const char* cipherList()
+    static const char* clientCipherList()
+    {
+      return "";
+    }
+
+    static const char* serverCipherList()
     {
       return "";
     }
 
     static std::atomic_bool resultOfTrySetCipherListTls12AndBelow;
 
-    static bool trySetCipherListTls12AndBelow(ssl_context_type&)
+    static bool trySetCipherListTls12AndBelow(
+      ssl_context_type&, const char* /* cipherList */)
     {
       return resultOfTrySetCipherListTls12AndBelow.load();
     }

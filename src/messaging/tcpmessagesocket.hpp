@@ -37,12 +37,12 @@ namespace qi {
   ///
   /// Network N
   template<typename N>
-  void setCipherListTls12AndBelow(sock::SslContext<N>& c)
+  void setCipherListTls12AndBelow(sock::SslContext<N>& c, const char* cipherList)
   {
-    if (!N::trySetCipherListTls12AndBelow(c))
+    if (!N::trySetCipherListTls12AndBelow(c, cipherList))
     {
       throw std::runtime_error(
-        std::string("SSL context: Could not set cipher list: ") + N::cipherList());
+        std::string("SSL context: Could not set cipher list: ") + cipherList);
     }
   }
 
@@ -432,7 +432,7 @@ namespace qi {
         // The lowest authorized protocol is TLS1.2. This means SSL protocols
         // and TLS 1.1 are forbidden.
         auto contextPtr = sock::makeSslContextPtr<N>(Method::tlsv12);
-        setCipherListTls12AndBelow<N>(*contextPtr);
+        setCipherListTls12AndBelow<N>(*contextPtr, N::clientCipherList());
         contextPtr->set_options(
             sock::SslContext<N>::no_sslv2
           | sock::SslContext<N>::no_sslv3

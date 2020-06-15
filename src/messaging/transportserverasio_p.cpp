@@ -303,7 +303,8 @@ namespace qi
         return qi::makeFutureError<void>(s);
       }
 
-      setCipherListTls12AndBelow<sock::NetworkAsio>(*_sslContext);
+      using N = sock::NetworkAsio;
+      setCipherListTls12AndBelow<N>(*_sslContext, N::serverCipherList());
 
       // Protocols are explicitly forbidden to allow TLS 1.2 only.
       // A white list interface would be preferable, but `Asio` lets us no
