@@ -892,8 +892,6 @@ namespace qi {
 
     /** Set a cancel callback. If the cancel is requested, calls this callback
      * immediately.
-     * \throws std::exception if the promise was not created as a cancelable
-     * promise.
      */
     void setOnCancel(boost::function<void (qi::Promise<T>&)> cancelCallback)
     {
