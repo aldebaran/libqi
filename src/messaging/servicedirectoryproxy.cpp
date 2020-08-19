@@ -50,10 +50,6 @@ const std::string notConnectedUnmirrorErrorMsg = notConnectedMsgPrefix
 
 using FutureMaybeMirroredIdMap = boost::container::flat_map<std::string, Future<unsigned int>>;
 
-const auto delayIncreaseExponent = 1;
-const auto delayIncreaseFactor = 1 << delayIncreaseExponent;
-const auto maxTryCount = 7;
-
 void logAnyMirroringFailure(const FutureMaybeMirroredIdMap& ids)
 {
   using namespace boost::adaptors;
@@ -115,8 +111,7 @@ static const ServiceDirectoryProxy::Status totallyDisconnected{
 class ServiceDirectoryProxy::Impl
 {
 public:
-  static const Seconds initTryDelay;
-  static Seconds maxTryDelay();
+  static const Seconds retryAttachDelay;
 
   explicit Impl(bool enforceAuth);
   ~Impl();
@@ -165,7 +160,7 @@ private:
   // Tries to reattach to a service directory and in case of failure, schedules another try with
   // a delay calculated from the last try delay. Returns a future set when the attachment is
   // successful.
-  Future<void> tryAttachUnsync(Seconds lastDelay);
+  Future<void> tryAttachUnsync();
 
   // Precondition: synchronized()
   //
@@ -179,7 +174,7 @@ private:
   void resetUnsync();
 
   // Tries to attach to a service directory after a delay.
-  Future<void> delayTryAttach(Seconds delay = initTryDelay);
+  Future<void> delayTryAttach(Seconds delay);
 
   // Precondition: synchronized()
   //
@@ -273,7 +268,7 @@ private:
   mutable Strand _strand;
 };
 
-const Seconds ServiceDirectoryProxy::Impl::initTryDelay { 1 };
+const Seconds ServiceDirectoryProxy::Impl::retryAttachDelay { 1 };
 
 QI_WARNING_PUSH()
 QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore connected deprecation warnings
@@ -360,13 +355,6 @@ ServiceDirectoryProxy::Impl::~Impl()
     });
 }
 
-
-Seconds ServiceDirectoryProxy::Impl::maxTryDelay()
-{
-  static const Seconds val = boost::chrono::duration_cast<Seconds>(
-      initTryDelay * std::ldexp(initTryDelay.count(), delayIncreaseExponent * maxTryCount));
-  return val;
-}
 
 void ServiceDirectoryProxy::Impl::closeUnsync()
 {
@@ -497,7 +485,7 @@ Future<void> ServiceDirectoryProxy::Impl::attachToServiceDirectory(const Url& sd
       }).unwrap()
       .then([=](Future<void> connectFut) {
         if (connectFut.hasError())
-          connectFut = delayTryAttach(); // try again
+          connectFut = delayTryAttach(retryAttachDelay);
         return connectFut;
       }).unwrap();
 }
@@ -638,7 +626,7 @@ void ServiceDirectoryProxy::Impl::resetUnsync()
 {
   qiLogVerbose() << "Resetting.";
   closeUnsync();
-  delayTryAttach();
+  delayTryAttach(retryAttachDelay);
 }
 
 Future<void> ServiceDirectoryProxy::Impl::delayTryAttach(Seconds delay)
@@ -648,7 +636,7 @@ Future<void> ServiceDirectoryProxy::Impl::delayTryAttach(Seconds delay)
       + os::to_string(boost::chrono::duration_cast<Seconds>(delay).count()) + "sec",
     [&] {
       return asyncDelay(_strand.schedulerFor([=] {
-        return tryAttachUnsync(delay);
+        return tryAttachUnsync();
       }), delay).unwrap();
     });
 }
@@ -800,7 +788,7 @@ Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
     });
 }
 
-Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync(Seconds lastDelay)
+Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync()
 {
   if (!(_sdUrl.isValid())) // precondition
     return makeFutureError<void>(
@@ -811,10 +799,7 @@ Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync(Seconds lastDelay)
     }).then(
       _strand.unwrappedSchedulerFor([=](const Future<void>& attachFuture) {
         if (attachFuture.hasError())
-        {
-          auto newDelay = std::min(lastDelay * delayIncreaseFactor, maxTryDelay());
-          return delayTryAttach(newDelay);
-        }
+          return delayTryAttach(retryAttachDelay);
         return attachFuture;
       })
     ).unwrap();
