@@ -103,6 +103,42 @@ static const ServiceDirectoryProxy::Status totallyDisconnected{
   ServiceDirectoryProxy::ListenStatus::NotListening
 };
 
+/// Repeats an operation returning a Future until it succeeds or is cancelled, with a delay between
+/// each try.
+///
+/// @param op The operation, as a procedure to invoke.
+/// @param strand The strand that will execute the operation.
+/// @param opDesc The description of the operation, for logging purposes.
+/// @returns The future result of the first successful try of the operation.
+///
+/// Procedure<Fut()> ProcOp
+template <typename ProcOp,
+          typename Fut = decltype(std::declval<ProcOp>()())>
+Fut repeatWhileError(ProcOp op,
+                     Strand& strand,
+                     const std::string& opDesc,
+                     Duration delay)
+{
+  // We execute everything in the strand not just to synchronize the calls to the operation, but
+  // also to ensure that the strand is still alive when we access it.
+  return strand.async(op).unwrap()
+    .then(strand.unwrappedSchedulerFor([=, &strand](const Fut& fut) {
+      if (fut.hasError())
+      {
+        qiLogVerbose()
+          << "Retrying to " << opDesc << " in "
+          << boost::chrono::duration_cast<MilliSeconds>(delay).count()
+          << "msec.";
+        return strand.asyncDelay(
+            [=, &strand] {
+              return repeatWhileError(op, strand, opDesc, delay);
+            },
+            delay).unwrap();
+      }
+      return fut;
+    })).unwrap();
+}
+
 }
 
 // To implement the proxy, we use a session that listens and provides endpoints for connections and
@@ -112,6 +148,7 @@ class ServiceDirectoryProxy::Impl
 {
 public:
   static const Seconds retryAttachDelay;
+  static const MilliSeconds retryServiceDelay;
 
   explicit Impl(bool enforceAuth);
   ~Impl();
@@ -151,16 +188,9 @@ private:
 
   // Precondition: synchronized() && _sdUrl.isValid()
   //
-  // Attaches the proxy to a service directory at _sdUrl. Returns a future set when the attachment
-  // is successful.
+  // Attaches the proxy to a service directory at _sdUrl. Returns a future set
+  // when the attachment is successful.
   Future<void> doAttachUnsync();
-
-  // Precondition: synchronized()
-  //
-  // Tries to reattach to a service directory and in case of failure, schedules another try with
-  // a delay calculated from the last try delay. Returns a future set when the attachment is
-  // successful.
-  Future<void> tryAttachUnsync();
 
   // Precondition: synchronized()
   //
@@ -173,9 +203,6 @@ private:
   // Resets this object by closing it then trying to reattach it to the service directory.
   void resetUnsync();
 
-  // Tries to attach to a service directory after a delay.
-  Future<void> delayTryAttach(Seconds delay);
-
   // Precondition: synchronized()
   //
   // Returns true if the service should be mirrored, regardless of the current state of the proxy.
@@ -187,9 +214,9 @@ private:
   // Precondition: synchronized()
   Future<void> unmirrorServiceToSDUnsync(const std::string& name);
 
-  // Precondition: synchronized() && destSess != nullptr
+  // Precondition: synchronized() && srcSess != nullptr && destSess != nullptr
   Future<unsigned int> mirrorServiceUnsync(const std::string& name,
-                                           Session& srcSess,
+                                           const SessionPtr& srcSess,
                                            const SessionPtr& destSess,
                                            const std::string& srcDesc,
                                            const std::string& destDesc);
@@ -269,6 +296,7 @@ private:
 };
 
 const Seconds ServiceDirectoryProxy::Impl::retryAttachDelay { 1 };
+const MilliSeconds ServiceDirectoryProxy::Impl::retryServiceDelay { 500 };
 
 QI_WARNING_PUSH()
 QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore connected deprecation warnings
@@ -473,47 +501,59 @@ Future<void> ServiceDirectoryProxy::Impl::setAuthProviderFactory(AuthProviderFac
 Future<void> ServiceDirectoryProxy::Impl::attachToServiceDirectory(const Url& sdUrl)
 {
   if (!sdUrl.isValid()) return makeFutureError<void>("Invalid service directory URL");
-  return _strand.async([=] {
-        if (_status.current().connection != ConnectionStatus::NotConnected
-            && _sdClient && sdUrl == _sdUrl)
-        {
-          return futurize();
-        }
 
-        _sdUrl = sdUrl;
-        return doAttachUnsync();
-      }).unwrap()
-      .then([=](Future<void> connectFut) {
-        if (connectFut.hasError())
-          connectFut = delayTryAttach(retryAttachDelay);
-        return connectFut;
-      }).unwrap();
+  return _strand.async([=] {
+      if (_status.current().connection != ConnectionStatus::NotConnected &&
+          _sdClient && sdUrl == _sdUrl)
+      {
+        return futurize();
+      }
+
+      _sdUrl = sdUrl;
+      return doAttachUnsync();
+    }).unwrap();
 }
 
 Future<void> ServiceDirectoryProxy::Impl::doAttachUnsync()
 {
-  return invokeLogProgress("Attaching to service directory at URL '" + _sdUrl.str() + "'", [&]{
+  if (!_sdUrl.isValid())
+    return makeFutureError<void>(
+      "Cannot attach to the service directory, the URL is invalid");
+
+  const auto disconnect = [=] {
+    _sdClient.reset();
     _status.set(ConnectionStatus::NotConnected);
+  };
 
-    qiLogVerbose() << "Instantiating new service directory client session.";
-    _sdClient = makeSession();
-    _status.set(ConnectionStatus::Starting);
+  const auto connect = [=] {
+    return invokeLogProgress(
+      "Attaching to service directory at URL '" + _sdUrl.str() + "'", [&] {
+        disconnect();
 
-    return _sdClient->connect(_sdUrl).async()
-        .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
-          if (connectFut.hasError())
-          {
-            _sdClient.reset();
-            _status.set(ConnectionStatus::NotConnected);
-          }
-          else
-          {
-            bindToServiceDirectoryUnsync();
-            _status.set(ConnectionStatus::Connected);
-          }
-          return connectFut;
-        })).unwrap();
-  });
+        qiLogVerbose() << "Instantiating new service directory client session.";
+        _sdClient = makeSession();
+        _status.set(ConnectionStatus::Starting);
+
+        return _sdClient->connect(_sdUrl)
+          .async()
+          .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
+            if (connectFut.hasError())
+            {
+              disconnect();
+            }
+            else
+            {
+              bindToServiceDirectoryUnsync();
+              _status.set(ConnectionStatus::Connected);
+            }
+            return connectFut;
+          })).unwrap();
+      });
+  };
+
+  return repeatWhileError(connect, _strand,
+                          "attach to the service directory",
+                          retryAttachDelay);
 }
 
 Future<ServiceDirectoryProxy::ServiceFilter> ServiceDirectoryProxy::Impl::setServiceFilter(
@@ -563,7 +603,7 @@ Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceFromSDUnsync(
   QI_ASSERT_FALSE(_server->endpoints().empty());
 
   return invokeLogProgress("Mirroring service '" + name + "' from the service directory", [&]{
-    const auto idFut = mirrorServiceUnsync(name, *_sdClient, _server, "service directory", "proxy");
+    const auto idFut = mirrorServiceUnsync(name, _sdClient, _server, "service directory", "proxy");
     _servicesIdMap[name] = MirroredFromServiceDirectoryServiceId{ idFut, remoteId };
     return idFut;
   });
@@ -626,19 +666,7 @@ void ServiceDirectoryProxy::Impl::resetUnsync()
 {
   qiLogVerbose() << "Resetting.";
   closeUnsync();
-  delayTryAttach(retryAttachDelay);
-}
-
-Future<void> ServiceDirectoryProxy::Impl::delayTryAttach(Seconds delay)
-{
-  return invokeLogProgress(
-    "Trying to attach to the service directory in "
-      + os::to_string(boost::chrono::duration_cast<Seconds>(delay).count()) + "sec",
-    [&] {
-      return asyncDelay(_strand.schedulerFor([=] {
-        return tryAttachUnsync();
-      }), delay).unwrap();
-    });
+  doAttachUnsync();
 }
 
 bool ServiceDirectoryProxy::Impl::shouldMirrorServiceFromSDUnsync(const std::string& name) const
@@ -664,7 +692,7 @@ Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceToSDUnsync(
 
   return listenFut.andThen(_strand.unwrappedSchedulerFor([=](void*) {
     return invokeLogProgress("Mirroring service '" + name + "' to the service directory", [&]{
-      const auto idFut = mirrorServiceUnsync(name, *_server, _sdClient, "proxy", "service directory");
+      const auto idFut = mirrorServiceUnsync(name, _server, _sdClient, "proxy", "service directory");
       _servicesIdMap[name] = MirroredFromProxyServiceId{ localId, idFut };
       return idFut;
     });
@@ -769,40 +797,46 @@ Future<void> ServiceDirectoryProxy::Impl::unmirrorServiceFromSDUnsync(const std:
 
 Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
   const std::string& name,
-  Session& srcSess,
+  const SessionPtr& srcSess,
   const SessionPtr& destSess,
   const std::string& srcDesc,
   const std::string& destDesc)
 {
+  QI_ASSERT_NOT_NULL(srcSess);
   QI_ASSERT_NOT_NULL(destSess);
-  return ka::invoke_catch(
-    futureErrorFromException<unsigned int>(),
-    [&] {
-      return invokeLogProgress("Getting service '" + name + "' from " + srcDesc, [&]{
-          return srcSess.service(name).async();
-        }).andThen(_strand.unwrappedSchedulerFor([=](AnyObject service) {
-          return invokeLogProgress("Registering service '" + name + "' on " + destDesc, [&]{
-              return destSess->registerService(name, service).async();
-            });
-          })).unwrap();
-    });
-}
 
-Future<void> ServiceDirectoryProxy::Impl::tryAttachUnsync()
-{
-  if (!(_sdUrl.isValid())) // precondition
-    return makeFutureError<void>(
-        "Cannot try to attach to the service directory, the URL is invalid");
-  return invokeLogProgress("Trying to attach to service directory at URL '" + _sdUrl.str() + "'",
-    [&] {
-      return doAttachUnsync();
-    }).then(
-      _strand.unwrappedSchedulerFor([=](const Future<void>& attachFuture) {
-        if (attachFuture.hasError())
-          return delayTryAttach(retryAttachDelay);
-        return attachFuture;
-      })
-    ).unwrap();
+  const std::string sessionResetMessage = "the session was reset";
+
+  auto weakSrcSess = ka::weak_ptr(srcSess);
+  const auto getServ = [=] {
+    auto session = weakSrcSess.lock();
+    if (!session)
+      return makeFutureError<AnyObject>(sessionResetMessage);
+    return invokeLogProgress("Getting service '" + name + "' from " + srcDesc,
+                             [&] { return session->service(name).async(); });
+  };
+
+  auto weakDestSess = ka::weak_ptr(destSess);
+  const auto registerServ = [=](AnyObject service) {
+    auto session = weakDestSess.lock();
+    if (!session)
+      return makeFutureError<unsigned int>(sessionResetMessage);
+    return invokeLogProgress(
+      "Registering service '" + name + "' on " + destDesc,
+      [&] { return session->registerService(name, service).async(); });
+  };
+
+  const auto mirror = [=] {
+    return getServ()
+      .andThen(_strand.unwrappedSchedulerFor(registerServ))
+      .unwrap();
+  };
+
+  return ka::invoke_catch(futureErrorFromException<unsigned int>(), [&] {
+    return repeatWhileError(mirror, _strand,
+                            "get and register service '" + name + "'",
+                            retryServiceDelay);
+  });
 }
 
 SessionPtr ServiceDirectoryProxy::Impl::createServerUnsync()
