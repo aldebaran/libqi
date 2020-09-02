@@ -154,10 +154,10 @@ namespace qi {
     qi::Future<void> f = _sdClient.connect(serviceDirectoryURL);
     qi::Promise<void> p;
 
-    f.then([=](Future<void> f) {
+    f.then(track([=](Future<void> f) {
       _sdClientClosedByThis = false;
       addSdSocketToCache(f, serviceDirectoryURL, p);
-    });
+    }, this));
     return p.future();
   }
 
@@ -390,7 +390,7 @@ namespace qi {
     qi::Promise<void> p;
     //will listen and connect
     qi::Future<void> f = _sd.listenStandalone(addresses);
-    f.then(std::bind(&SessionPrivate::listenStandaloneCont, this, p, std::placeholders::_1));
+    f.then(track(std::bind(&SessionPrivate::listenStandaloneCont, this, p, std::placeholders::_1), this));
     return p.future();
   }
 
