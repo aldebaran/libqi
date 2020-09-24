@@ -258,7 +258,7 @@ TEST_P(UriParsingAlphaNum, Succeeds) {
   char const in[] = { GetParam() };
   auto const expected = *in;
   auto const p = grammar::alphanum;
-  EXPECT_THAT(p(begin(in), end(in)), ok(expected, end(in)));
+  EXPECT_EQ(ok(expected, end(in)), p(begin(in), end(in)));
 }
 
 struct UriParsingAlphaNumFailure : TestWithParam<char>{};
