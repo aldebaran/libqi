@@ -307,8 +307,9 @@ namespace qi { namespace sock {
 ///     && N::async_read(sslSocketLValue.next_layer(), mutable_bufs, transferHandler)
 ///     && N::async_write(sslSocketLValue, const_bufs, transferHandler)
 ///     && N::async_write(sslSocketLValue.next_layer(), const_bufs, transferHandler)
-///     && const_cstr = N::cipherList()
-///     && ok = N::trySetCipherListTls12AndBelow(sslContextLValue)
+///     && const_cstr = N::clientCipherList()
+///     && const_cstr = N::serverCipherList()
+///     && ok = N::trySetCipherListTls12AndBelow(sslContextLValue, const_cstr)
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// Gives access to all types and functions handling low-level network operations:
 /// - SSL socket

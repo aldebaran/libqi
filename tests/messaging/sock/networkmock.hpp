@@ -95,9 +95,14 @@ namespace mock
     struct ssl_context_type
     {
       enum class method {tlsv12};
+      enum option {no_sslv2, no_sslv3, no_tlsv1, no_tlsv1_1};
+      friend option operator|(option a, option b) {
+        return option(static_cast<int>(a) | static_cast<int>(b));
+      }
       method m;
       ssl_context_type() = default;        // The 2 ctors are to avoid the
       ssl_context_type(method m) : m(m) {} // "not initialized" warning about m.
+      void set_options(option) {}
     };
     struct ssl_verify_mode_type
     {
@@ -318,14 +323,20 @@ namespace mock
       _async_write_next_layer(s, b, h);
     }
 
-    static const char* cipherList()
+    static const char* clientCipherList()
+    {
+      return "";
+    }
+
+    static const char* serverCipherList()
     {
       return "";
     }
 
     static std::atomic_bool resultOfTrySetCipherListTls12AndBelow;
 
-    static bool trySetCipherListTls12AndBelow(ssl_context_type&)
+    static bool trySetCipherListTls12AndBelow(
+      ssl_context_type&, const char* /* cipherList */)
     {
       return resultOfTrySetCipherListTls12AndBelow.load();
     }

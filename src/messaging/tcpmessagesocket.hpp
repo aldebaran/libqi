@@ -37,12 +37,12 @@ namespace qi {
   ///
   /// Network N
   template<typename N>
-  void setCipherListTls12AndBelow(sock::SslContext<N>& c)
+  void setCipherListTls12AndBelow(sock::SslContext<N>& c, const char* cipherList)
   {
-    if (!N::trySetCipherListTls12AndBelow(c))
+    if (!N::trySetCipherListTls12AndBelow(c, cipherList))
     {
       throw std::runtime_error(
-        std::string("SSL context: Could not set cipher list: ") + N::cipherList());
+        std::string("SSL context: Could not set cipher list: ") + cipherList);
     }
   }
 
@@ -429,12 +429,16 @@ namespace qi {
       sock::logCategory(),       // log category
       "could not create socket", // log prefix
       [&]() {
-        // Other protocols (TLS 1.1, SSL 3.0, etc.) are not explicitly
-        // forbidden and thus can be used, to let client connect to an older
-        // server. It is the server, not the client, that forces a specific
-        // protocol (see for instance see `TransportServer` implementations).
+        // The lowest authorized protocol is TLS1.2. This means SSL protocols
+        // and TLS 1.1 are forbidden.
         auto contextPtr = sock::makeSslContextPtr<N>(Method::tlsv12);
-        setCipherListTls12AndBelow<N>(*contextPtr);
+        setCipherListTls12AndBelow<N>(*contextPtr, N::clientCipherList());
+        contextPtr->set_options(
+            sock::SslContext<N>::no_sslv2
+          | sock::SslContext<N>::no_sslv3
+          | sock::SslContext<N>::no_tlsv1
+          | sock::SslContext<N>::no_tlsv1_1
+        );
         return sock::makeSocketWithContextPtr<N>(_ioService, contextPtr);
       }
     );
