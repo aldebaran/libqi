@@ -492,7 +492,7 @@ TEST(TestStrand, FutureThenActorCancel)
     masterFut.cancel();
     ASSERT_TRUE(prom.isCancelRequested());
     prom.setValue(0);
-    ASSERT_TRUE(masterFut.hasValue());
+    ASSERT_TRUE(test::finishesWithValue(masterFut));
     ASSERT_EQ(42, masterFut.value());
     ASSERT_NO_THROW(finished.future().value());
   }
