@@ -74,20 +74,16 @@ namespace qi {
   static std::string globalRealProgram;
 
   using FunctionList = std::vector<std::function<void()>>;
+  using FunctionWithArgValueList = std::vector<std::pair<std::function<void(int)>, int>>;
   static FunctionList* globalAtExit = nullptr;
   static FunctionList* globalAtEnter = nullptr;
+  static FunctionWithArgValueList* globalAtSignal = nullptr;
   static FunctionList* globalAtRun = nullptr;
   static FunctionList* globalAtStop = nullptr;
 
 
   static boost::mutex globalMutex;
   static boost::condition_variable globalCond;
-
-  static boost::asio::io_service*             globalIoService = nullptr;
-  static boost::thread*                       globalIoThread = nullptr;
-  static boost::asio::io_service::work*       globalIoWork = nullptr;
-  static std::list<boost::asio::signal_set*>* globalSignalSet = nullptr;
-
 
   static void readPathConf()
   {
@@ -97,41 +93,6 @@ namespace qi {
     for (it = toAdd.begin(); it != toAdd.end(); ++it) {
       ::qi::path::detail::addOptionalSdkPrefix(it->c_str());
     }
-  }
-
-  static void stop_io_service()
-  {
-    qiLogVerbose() << "Unregistering all signal handlers.";
-    //dont call ioservice->stop, just remove all events for the ioservice
-    //deleting the object holding the run() method from quitting
-    delete globalIoWork;
-    globalIoWork = 0;
-
-    if (globalSignalSet) {
-      std::list<boost::asio::signal_set*>::iterator it;
-      for (it = globalSignalSet->begin(); it != globalSignalSet->end(); ++it) {
-        (*it)->cancel();
-        delete *it;
-      }
-      delete globalSignalSet;
-      globalSignalSet = 0;
-    }
-    if (globalIoThread) {
-      //wait for the ioservice to terminate
-      if (boost::this_thread::get_id() != globalIoThread->get_id())
-        globalIoThread->join();
-      //we are sure run has stopped so we can delete the io service
-      delete globalIoService;
-      delete globalIoThread;
-      globalIoThread = 0;
-      globalIoService = 0;
-    }
-  }
-
-  static void run_io_service()
-  {
-    qi::os::setCurrentThreadName("appioservice");
-    globalIoService->run();
   }
 
   static void stop_handler(int signal_number)
@@ -173,31 +134,17 @@ namespace qi {
     }
   }
 
-  bool Application::atSignal(std::function<void (int)> func, int signal)
-  {
-    if (!globalIoService)
-    {
-      globalIoService = new boost::asio::io_service;
-      // Prevent run from exiting
-      globalIoWork = new boost::asio::io_service::work(*globalIoService);
-      // Start io_service in a thread. It will call our handlers.
-      globalIoThread = new boost::thread(&run_io_service);
-      // We want signal handlers to work as late as possible.
-      ::atexit(&stop_io_service);
-      globalSignalSet = new std::list<boost::asio::signal_set*>;
-    }
-
-    boost::asio::signal_set *sset = new boost::asio::signal_set(*globalIoService, signal);
-    sset->async_wait(boost::bind(signal_handler, _1, _2, func));
-    globalSignalSet->push_back(sset);
-    return true;
-  }
-
   template<typename T> static T& lazyGet(T* & ptr)
   {
     if (!ptr)
       ptr = new T;
     return *ptr;
+  }
+
+  bool Application::atSignal(std::function<void (int)> func, int signal)
+  {
+    lazyGet(globalAtSignal).push_back(std::make_pair(std::move(func), signal));
+    return true;
   }
 
   static boost::filesystem::path system_absolute(
@@ -390,18 +337,6 @@ namespace qi {
     globalTerminated = true;
   }
 
-  static void initSigIntSigTermCatcher() {
-    static bool signalInit = false;
-
-    if (!signalInit) {
-      qiLogVerbose() << "Registering SIGINT/SIGTERM handler within qi::Application";
-      // kill with no signal sends TERM, control-c sends INT.
-      Application::atSignal(boost::bind(&stop_handler, _1), SIGTERM);
-      Application::atSignal(boost::bind(&stop_handler, _1), SIGINT);
-      signalInit = true;
-    }
-  }
-
   static bool isStop()
   {
     return globalIsStop;
@@ -409,21 +344,41 @@ namespace qi {
 
   void Application::run()
   {
-    //run is called, so we catch sigint/sigterm, the default implementation call Application::stop that
-    //will make this loop exit.
-    initSigIntSigTermCatcher();
+    boost::asio::io_service ioService(1);
+    // We use a list because signal_set is not moveable.
+    std::list<boost::asio::signal_set> signalSets;
 
-    // call every function registered as "atRun"
+    auto atSignal = lazyGet(globalAtSignal);
+
+    // run is called, so we catch sigint/sigterm, the default
+    // implementation call Application::stop that
+    // will make this loop exit.
+    atSignal.emplace_back(boost::bind(stop_handler, _1), SIGTERM);
+    atSignal.emplace_back(boost::bind(stop_handler, _1), SIGINT);
+
+    for(const auto& func: lazyGet(globalAtSignal))
+      signalSets.emplace(signalSets.end(), ioService, func.second)->async_wait(
+                  boost::bind(signal_handler, _1, _2, std::move(func.first)));
+
+    // Call every function registered as "atRun"
     for(auto& function: lazyGet(globalAtRun))
       function();
 
-    boost::unique_lock<boost::mutex> l(globalMutex);
-    globalCond.wait(l, &isStop);
+    const auto stopped = [&] {
+      // We use a small period to react quickly when a signal is triggered
+      // without having to keep the main thread constantly awake.
+      static const constexpr boost::chrono::microseconds period{100};
+      boost::unique_lock<boost::mutex> l(globalMutex);
+      return globalCond.wait_for(l, period, &isStop);
+    };
+    while (!stopped())
+    {
+      ioService.poll();
+    }
   }
 
   void Application::stop()
   {
-
     static qi::Atomic<bool> atStopHandlerCall{false};
     if (atStopHandlerCall.setIfEquals(false, true))
     {
@@ -517,10 +472,6 @@ namespace qi {
 
   bool Application::atStop(std::function<void()> func)
   {
-    //If the client call atStop, it mean it will handle the proper destruction
-    //of the program by itself. So here we catch SigInt/SigTerm to call Application::stop
-    //and let the developer properly stop the application as needed.
-    initSigIntSigTermCatcher();
     lazyGet(globalAtStop).push_back(func);
     return true;
   }
