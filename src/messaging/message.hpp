@@ -58,35 +58,6 @@ namespace qi {
   class Message
   {
   public:
-    struct Header
-    {
-      qi::uint32_t magic = magicCookie;
-      qi::uint32_t id = newMessageId();
-      qi::uint32_t size = 0;
-      qi::uint16_t version = currentVersion();
-      qi::uint8_t  type = 0;
-      qi::uint8_t  flags = 0;
-      qi::uint32_t service = 0;
-      qi::uint32_t object = 0;
-      qi::uint32_t action = 0;
-
-      friend KA_GENERATE_REGULAR_OP_EQUAL_9(Header,
-        magic, id, size, version, type, flags, service, object, action
-      )
-      friend KA_GENERATE_REGULAR_OP_DIFFERENT(Header)
-
-      static inline qi::uint16_t currentVersion()
-      {
-        return 0;
-      }
-
-      QI_API static qi::uint32_t newMessageId();
-
-      QI_API static const qi::uint32_t magicCookie;
-    };
-    static_assert(sizeof(Header) == 28, "Message::Header does not have the right size!");
-
-
     // Fixed service id numbers
     enum Service
     {
@@ -159,6 +130,44 @@ namespace qi {
      */
     static const unsigned int TypeFlag_ReturnType = 2;
 
+    struct Header
+    {
+      qi::uint32_t magic = magicCookie;
+      qi::uint32_t id = newMessageId();
+      qi::uint32_t size = 0;
+      qi::uint16_t version = currentVersion();
+      qi::uint8_t  type = 0;
+      qi::uint8_t  flags = 0;
+      qi::uint32_t service = 0;
+      qi::uint32_t object = 0;
+      qi::uint32_t action = 0;
+
+      friend KA_GENERATE_REGULAR_OP_EQUAL_9(Header,
+        magic, id, size, version, type, flags, service, object, action
+      )
+      friend KA_GENERATE_REGULAR_OP_DIFFERENT(Header)
+
+      static inline qi::uint16_t currentVersion()
+      {
+        return 0;
+      }
+
+      Type messageType() const
+      {
+        return static_cast<Type>(type);
+      }
+
+      MessageAddress address() const
+      {
+        return MessageAddress(id, service, object, action);
+      }
+
+      QI_API static qi::uint32_t newMessageId();
+
+      QI_API static const qi::uint32_t magicCookie;
+    };
+    static_assert(sizeof(Header) == 28, "Message::Header does not have the right size!");
+
     QI_API static const char* typeToString(Type t);
     QI_API static const char* actionToString(unsigned int action, unsigned int service);
 
@@ -205,7 +214,7 @@ namespace qi {
 
     Type type() const
     {
-      return static_cast<Message::Type>(_header.type);
+      return _header.messageType();
     }
 
     void setFlags(qi::uint8_t flags)
@@ -313,7 +322,7 @@ namespace qi {
 
     MessageAddress address() const
     {
-      return MessageAddress(_header.id, _header.service, _header.object, _header.action);
+      return _header.address();
     }
 
     Header& header() {return _header;}

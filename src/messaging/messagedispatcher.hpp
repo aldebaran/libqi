@@ -35,7 +35,7 @@ namespace qi {
 
     MessageDispatcher(ExecutionContext& execContext);
 
-    Future<bool> dispatch(qi::Message& msg);
+    Future<bool> dispatch(Message msg);
 
     qi::SignalLink messagePendingConnect(unsigned int serviceId,
                                          unsigned int objectId,

@@ -36,10 +36,14 @@ MessageDispatcher::MessageDispatcher(ExecutionContext& execContext)
 {
 }
 
-Future<bool> MessageDispatcher::dispatch(Message& msg)
+Future<bool> MessageDispatcher::dispatch(Message msg)
 {
   QI_LOG_DEBUG_MSGDISPATCHER() << "Posting a message " << msg.address() << " for dispatch.";
+  // Avoid copying the message in the asynchronous callback by using a shared
+  // reference.
+  const auto sharedMsg = std::make_shared<Message>(std::move(msg));
   return _execContext.async([=] {
+    const auto& msg = *sharedMsg;
     const auto handlers = find(_state->recipients, RecipientId{ msg.service(), msg.object() })
                             .value_or(MessageHandlerList{});
     QI_LOG_DEBUG_MSGDISPATCHER() << "Dispatching a message " << msg.address() << " to "

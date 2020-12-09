@@ -53,7 +53,7 @@ namespace qi {
 
   namespace sock
   {
-    /// Functor that forwards the message to a TcpMessageSocket.
+    /// Functor that consumes and forwards the message to a TcpMessageSocket.
     ///
     /// Precondition: The socket pointer must be valid.
     /// You should protect the socket if necessary.
@@ -69,7 +69,7 @@ namespace qi {
       {
         QI_LOG_DEBUG_SOCKET(_tcpSocket.get()) << "Message received "
                                               << ((!erc && msg) ? msg->id() : 0);
-        return !erc && msg && _tcpSocket->handleMessage(*msg);
+        return !erc && msg && _tcpSocket->handleMessage(std::move(*msg));
       }
     };
 
@@ -298,10 +298,10 @@ namespace qi {
 
     bool mustTreatAsServerAuthentication(const Message& msg) const;
     bool handleCapabilityMessage(const Message& msg);
-    bool handleNormalMessage(Message& msg);
-    bool handleMessage(Message& msg);
+    bool handleNormalMessage(Message msg);
+    bool handleMessage(Message msg);
 
-    Future<void> dispatchOrSendError(Message& msg);
+    Future<void> dispatchOrSendError(Message msg);
 
     ConnectedState& asConnected(State& s)
     {
@@ -586,16 +586,16 @@ namespace qi {
   }
 
   template<typename N, typename S>
-  bool TcpMessageSocket<N, S>::handleNormalMessage(Message& msg)
+  bool TcpMessageSocket<N, S>::handleNormalMessage(Message msg)
   {
     messageReady(msg);
     socketEvent(SocketEventData(msg));
-    dispatchOrSendError(msg);
+    dispatchOrSendError(std::move(msg));
     return true;
   }
 
   template<typename N, typename S>
-  bool TcpMessageSocket<N, S>::handleMessage(Message& msg)
+  bool TcpMessageSocket<N, S>::handleMessage(Message msg)
   {
     bool success = false;
     if (mustTreatAsServerAuthentication(msg) || msg.type() == Message::Type_Capability)
@@ -606,26 +606,27 @@ namespace qi {
       }
       if (success && msg.type() != Message::Type_Capability)
       {
-        success = handleNormalMessage(msg);
+        success = handleNormalMessage(std::move(msg));
       }
     }
     else
     {
-      success = handleNormalMessage(msg);
+      success = handleNormalMessage(std::move(msg));
     }
     return success;
   }
 
   template<typename N, typename S>
-  Future<void> TcpMessageSocket<N, S>::dispatchOrSendError(Message& msg)
+  Future<void> TcpMessageSocket<N, S>::dispatchOrSendError(Message msg)
   {
-    auto fut = _dispatcher.dispatch(msg);
+    const auto header = msg.header();
+    auto fut = _dispatcher.dispatch(std::move(msg));
 
     // Call request expects a reply and if the client doesn't get it, it might block. To avoid that,
     // if no handler was able to process the message, send back an error informing the client.
-    if (msg.type() == Message::Type_Call)
+    if (header.messageType() == Message::Type_Call)
     {
-      const MessageAddress msgAddress = msg.address();
+      const MessageAddress msgAddress = header.address();
       return fut
         .andThen(ka::scope_lock_proc(
           [msgAddress, this](bool handled) {
