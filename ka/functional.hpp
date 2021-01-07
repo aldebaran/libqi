@@ -248,6 +248,21 @@ namespace ka {
     return {};
   }
 
+  /// Polymorphic function that creates a composition of its arguments.
+  ///
+  /// With Type A, Type B, Type C, and 'X → Y' denoting 'Procedure<Y (X)>':
+  ///   - compose_t{}: (B → C, A → B) → (A → C)
+  ///     (g, f) ↦ compose(g, f) = g ∘ f
+  struct compose_t {
+  // Regular:
+    KA_GENERATE_FRIEND_REGULAR_OPS_0(compose_t)
+  // (B → C) × (A → B) → (A → C):
+    template<typename G, typename F>
+    auto operator()(G g, F f) const -> decltype(compose(mv(g), mv(f))) {
+      return compose(mv(g), mv(f));
+    }
+  };
+
   /// Composes two accumulations.
   ///
   /// An `Accumulation` has the signature `void (T&, Args...)`, meaning it modifies
