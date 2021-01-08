@@ -79,7 +79,34 @@ namespace qi
     template<typename... Args>
     static BoundObjectPtr makePtr(Args&&... args)
     {
-      return BoundObjectPtr(new BoundObject(std::forward<Args>(args)...));
+      // Defer destruction to another thread to stay compatible with previous code, otherwise we
+      // might get unsuspected deadlocks in client code.
+      const auto deleter = [](BoundObject* ptr) {
+        const auto deletePtr = [=]{ delete ptr; };
+        const auto eventLoop = getEventLoop();
+
+        // If the event loop is dead, just delete it immediately.
+        // WARNING: This check is racy for 2 reasons:
+        //            - The `EventLoop` pointer accesses are not atomic, so the value returned by
+        //            `getEventLoop` could be incorrect if another thread changes it concurrently.
+        //            - The `EventLoop` could be destroyed at this point, but we currently have no
+        //              API to ensure its lifetime.
+        //          Fixing both these problems requires more work, so we do this check and assume
+        //          the chance of any happening is low.
+        if (!eventLoop)
+        {
+          deletePtr();
+          return;
+        }
+
+        eventLoop->async(deletePtr)
+          // If the async call failed, just delete it immediately.
+          .then(FutureCallbackType_Sync, [=](Future<void> fut) {
+            if (!fut.hasValue())
+              deletePtr();
+          });
+      };
+      return BoundObjectPtr(new BoundObject(std::forward<Args>(args)...), deleter);
     }
 
     ~BoundObject() override;
