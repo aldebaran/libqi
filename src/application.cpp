@@ -356,7 +356,7 @@ namespace qi {
     atSignal.emplace_back(boost::bind(stop_handler, _1), SIGTERM);
     atSignal.emplace_back(boost::bind(stop_handler, _1), SIGINT);
 
-    for(const auto& func: lazyGet(globalAtSignal))
+    for(const auto& func: atSignal)
       signalSets.emplace(signalSets.end(), ioService, func.second)->async_wait(
                   boost::bind(signal_handler, _1, _2, std::move(func.first)));
 
