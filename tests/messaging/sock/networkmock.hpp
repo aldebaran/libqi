@@ -50,7 +50,8 @@ namespace mock
         messageSize,
         shutdown,
         socketCreationFailed,
-        unknown
+        unknown,
+        noMemory,
       } _value;
       error_code_type(value_type c = success) : _value(c) {}
       explicit operator bool() const {return _value != success;}
@@ -72,6 +73,7 @@ namespace mock
         case shutdown: return "shutdown";
         case socketCreationFailed: return "socketCreationFailed";
         case unknown: return "unknown";
+        case noMemory: return "noMemory";
         }
         throw std::runtime_error("error_code_type::message(): unknown code.");
       }
@@ -424,6 +426,12 @@ template<>
 inline ErrorCode<mock::Network> socketCreationFailed<ErrorCode<mock::Network>>()
 {
   return {ErrorCode<mock::Network>::socketCreationFailed};
+}
+
+template<>
+inline ErrorCode<mock::Network> noMemory<ErrorCode<mock::Network>>()
+{
+  return {ErrorCode<mock::Network>::noMemory};
 }
 
 }} // namespace qi::sock

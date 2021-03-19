@@ -388,6 +388,31 @@ TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecausePayloadIsTooBig)
   ASSERT_EQ(messageSize<ErrorCode<N>>(), futureError.value());
 }
 
+TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadHeaderBecauseCannotAllocateBuffer)
+{
+  using namespace qi;
+  using namespace qi::sock;
+  using N = mock::Network;
+
+  mock::AsyncReadNextLayerHeaderThenData h;
+
+  // Make reading the header cause a "no memory" error.
+  h._headerError = noMemory<ErrorCode<N>>();
+
+  auto _ = ka::scoped_set_and_restore(N::_async_read_next_layer, h);
+  SslContext<N> context;
+  auto socket = makeSslSocketPtr<N>(N::defaultIoService(), context);
+  Promise<ErrorCode<N>> promiseError;
+  Future<ErrorCode<N>> futureError = promiseError.future();
+  ReceiveMessageContinuous<N> receive;
+  const size_t maxPayload = 10000;
+  receive(socket, SslEnabled{false}, maxPayload, [=](ErrorCode<N> e, const Message*) mutable {
+    promiseError.setValue(e);
+    return false;
+  });
+  ASSERT_EQ(noMemory<ErrorCode<N>>(), futureError.value());
+}
+
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadData)
 {
   using namespace qi;

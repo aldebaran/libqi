@@ -285,6 +285,12 @@ namespace qi { namespace sock {
       }
       auto messageBuffer = msg.extractBuffer();
       void* ptr = messageBuffer.reserve(payload);
+      if (ptr == nullptr) {
+        qiLogWarning(logCategory()) << "Cannot reserve a buffer for the "
+          "received payload of size " << payload << " byte(s).";
+        receiveErrorAndMaybeReceiveNext(noMemory<ErrorCode<N>>());
+        return;
+      }
       auto buffer = N::buffer(ptr, payload);
       msg.setBuffer(std::move(messageBuffer));
       auto readData = lifetimeTransfo([=](ErrorCode<N> error, std::size_t /*len*/) {

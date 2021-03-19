@@ -111,6 +111,16 @@ namespace qi { namespace sock {
     return system::error_code{asio::error::shut_down, system::system_category()};
   }
 
+  template<typename Error>
+  Error noMemory();
+
+  template<>
+  inline boost::system::error_code noMemory<boost::system::error_code>()
+  {
+    using namespace boost;
+    return system::error_code{asio::error::no_memory, system::system_category()};
+  }
+
   /// Socket-related applicative errors.
   enum SocketErrors
   {
