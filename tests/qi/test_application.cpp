@@ -45,7 +45,7 @@ TEST(TestSearchExecutableAbsolutePath, RelativePathChanges)
   qi::path::ScopedDir tmpDirRelative;
   qi::path::ScopedDir tmpDir(makeTempDir(tmpDirRelative.path()));
   const qi::Path tmpRelativeFilePath = boost::filesystem::relative(makeFile(tmpDir), tmpDirRelative.path());
-  EXPECT_EQ(qi::Path(tmpDir.path().str() + "/" + tmpRelativeFilePath.filename()),
+  EXPECT_EQ(tmpDir.path() / qi::Path(tmpRelativeFilePath.filename()),
             qi::details::searchExecutableAbsolutePath(tmpRelativeFilePath, tmpDirRelative.path().bfsPath()));
 }
 
@@ -54,7 +54,7 @@ TEST(TestSearchExecutableAbsolutePath, ExecutableFromCurrentPathsChanges)
   qi::path::ScopedDir tmpDir;
   const qi::Path tmpExecutableFilePath = makeFile(tmpDir, ".exe");
   boost::filesystem::permissions(tmpExecutableFilePath, boost::filesystem::owner_exe);
-  EXPECT_EQ(qi::Path(tmpDir.path().str() + boost::filesystem::path::preferred_separator + tmpExecutableFilePath.filename()),
+  EXPECT_EQ(tmpDir.path() / qi::Path(tmpExecutableFilePath.filename()),
             qi::details::searchExecutableAbsolutePath(tmpExecutableFilePath.filename(), tmpDir.path()));
 }
 
@@ -65,7 +65,7 @@ TEST(TestSearchExecutableAbsolutePath, ExecutableFromEnvironmentPathsChanges)
   std::vector<boost::filesystem::path> pathlist;
   pathlist.push_back(tmpDir.path().bfsPath());
   boost::filesystem::permissions(tmpExecutableFilePath, boost::filesystem::owner_exe);
-  EXPECT_EQ(qi::Path(tmpDir.path().str() + boost::filesystem::path::preferred_separator + tmpExecutableFilePath.filename()),
+  EXPECT_EQ(tmpDir.path() / qi::Path(tmpExecutableFilePath.filename()),
             qi::details::searchExecutableAbsolutePath(tmpExecutableFilePath.filename(), boost::filesystem::current_path(), pathlist));
 }
 
@@ -81,7 +81,7 @@ TEST(TestSearchExecutableAbsolutePath, NotExistingRelativePathSucceeds)
   qi::path::ScopedDir tmpDirRelative;
   qi::path::ScopedDir tmpDir(makeTempDir(tmpDirRelative.path()));
   const qi::Path tmpRelativeFilePath = boost::filesystem::relative(makeTmpFilePath(tmpDir), tmpDirRelative.path());
-  EXPECT_EQ(qi::Path(tmpDir.path().str() + boost::filesystem::path::preferred_separator + tmpRelativeFilePath.filename()),
+  EXPECT_EQ(tmpDir.path() / qi::Path(tmpRelativeFilePath.filename()),
             qi::details::searchExecutableAbsolutePath(tmpRelativeFilePath, tmpDirRelative.path().bfsPath()));
 }
 
