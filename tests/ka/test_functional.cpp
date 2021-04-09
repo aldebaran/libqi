@@ -526,7 +526,7 @@ TEST(FunctionalComposeT, Bind) {
   ASSERT_TRUE(str_even("20"));
   ASSERT_FALSE(str_even("21"));
 
-  using V = vector<float>;
+  using V = vector<double>;
   auto len = [](V const& x) -> int { return x.size(); };
   auto len_even = comp_even(len); // len_even: vector<float> → int → bool
   ASSERT_TRUE(len_even(V{1.4, 76.2}));
