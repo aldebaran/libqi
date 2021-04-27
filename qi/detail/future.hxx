@@ -566,10 +566,7 @@ namespace detail {
   template <typename T>
   Future<AnyValue> toAnyValueFuture(Future<T> future)
   {
-    return future.andThen([](const typename Future<T>::ValueType& value)
-    { // convert the result to qi::AnyValue
-      return AnyValue::from(value);
-    });
+    return future.andThen(AnyValue::from<T>);
   }
 
   template <>
