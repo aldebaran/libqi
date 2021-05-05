@@ -116,14 +116,6 @@ namespace qi
 
       using result_type = Future<void>;
 
-    // Regular:
-      KA_GENERATE_FRIEND_REGULAR_OPS_5(ResetBounceEventCallbackOnSubscribersContinuous,
-                                       signal,
-                                       lifeSignal,
-                                       callSubs,
-                                       weakObject,
-                                       signalName)
-
     // Procedure:
       result_type operator()(SignalLink link, bool enable) const
       {
