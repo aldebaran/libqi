@@ -58,7 +58,6 @@ namespace qi {
   static char**      globalArgv = nullptr;
   static bool        globalInitialized = false;
   static bool        globalTerminated = false;
-  static bool        globalIsStop = false;
 
   static std::string globalName;
   static std::vector<std::string>* globalArguments;
@@ -74,9 +73,7 @@ namespace qi {
   static FunctionList* globalAtRun = nullptr;
   static FunctionList* globalAtStop = nullptr;
 
-
-  static boost::mutex globalMutex;
-  static boost::condition_variable globalCond;
+  static boost::optional<boost::asio::io_service> globalIoService;
 
   static void readPathConf()
   {
@@ -172,9 +169,16 @@ namespace qi {
     parseArguments(argc, argv);
 
     readPathConf();
+
     if (globalInitialized)
       throw std::logic_error("Application was already initialized");
     globalInitialized = true;
+
+    // We use only one thread (the main thread) for the application `io_service` that is used
+    // to process signals.
+    constexpr const auto ioServiceConcurrencyHint = 1;
+    globalIoService.emplace(ioServiceConcurrencyHint);
+
     globalArgc = argc;
     globalArgv = argv;
     std::vector<std::string>& args = lazyGet(globalArguments);
@@ -292,18 +296,14 @@ namespace qi {
       }
     }
 
-    globalCond.notify_all();
+    globalIoService = boost::none;
     globalTerminated = true;
-  }
-
-  static bool isStop()
-  {
-    return globalIsStop;
   }
 
   void Application::run()
   {
-    boost::asio::io_service ioService(1);
+    QI_ASSERT_TRUE(globalIoService);
+
     // We use a list because signal_set is not moveable.
     std::list<boost::asio::signal_set> signalSets;
 
@@ -316,24 +316,14 @@ namespace qi {
     atSignal.emplace_back(boost::bind(stop_handler, _1), SIGINT);
 
     for(const auto& func: atSignal)
-      signalSets.emplace(signalSets.end(), ioService, func.second)->async_wait(
+      signalSets.emplace(signalSets.end(), *globalIoService, func.second)->async_wait(
                   boost::bind(signal_handler, _1, _2, std::move(func.first)));
 
     // Call every function registered as "atRun"
     for(auto& function: lazyGet(globalAtRun))
       function();
 
-    const auto stopped = [&] {
-      // We use a small period to react quickly when a signal is triggered
-      // without having to keep the main thread constantly awake.
-      static const constexpr boost::chrono::microseconds period{100};
-      boost::unique_lock<boost::mutex> l(globalMutex);
-      return globalCond.wait_for(l, period, &isStop);
-    };
-    while (!stopped())
-    {
-      ioService.poll();
-    }
+    globalIoService->run();
   }
 
   void Application::stop()
@@ -354,9 +344,9 @@ namespace qi {
           qiLogError() << "Application atStop callback throw the following error: " << e.what();
         }
       }
-      boost::unique_lock<boost::mutex> l(globalMutex);
-      globalIsStop = true;
-      globalCond.notify_all();
+
+      QI_ASSERT_TRUE(globalIoService);
+      globalIoService->stop();
     }
   }
 
