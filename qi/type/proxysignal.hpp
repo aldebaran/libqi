@@ -101,7 +101,10 @@ namespace qi
     SrcOptOrInvoke<Proc> srcOptOrInvoke(Proc proc) { return { ka::mv(proc) }; }
 
     /// Resets the bounce event callback on an object, and then sets the `OnSubscribers` callback
-    /// to itself with the new signal link, continuously.
+    /// to a copy of itself with the new signal link, continuously. Once called, an instance of
+    /// this type is not meant to be called again.
+    ///
+    /// The signal pointer must be valid for the duration of this function call.
     ///
     /// Transformation<Procedure> LifeSignal
     /// Procedure<void(GenericFunctionParameters)> CallSubs
@@ -124,8 +127,8 @@ namespace qi
            // link changed, rebind ourselves if we're still alive
           .andThen(lifeSignal(
             // Copy self instead of using `this` to avoid lifetime issues.
-            [=](SignalLink newLink) {
-              self.signal->setOnSubscribers(lifeSignal(boost::bind(self, newLink, _1)));
+            [self](SignalLink newLink) {
+              self.signal->setOnSubscribers(self.lifeSignal(boost::bind(self, newLink, _1)));
             }));
       }
     };
