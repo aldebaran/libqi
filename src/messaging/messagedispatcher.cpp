@@ -36,10 +36,14 @@ MessageDispatcher::MessageDispatcher(ExecutionContext& execContext)
 {
 }
 
-Future<bool> MessageDispatcher::dispatch(Message& msg)
+Future<bool> MessageDispatcher::dispatch(Message msg)
 {
   QI_LOG_DEBUG_MSGDISPATCHER() << "Posting a message " << msg.address() << " for dispatch.";
+  // Avoid copying the message in the asynchronous callback by using a shared
+  // reference.
+  const auto sharedMsg = std::make_shared<Message>(std::move(msg));
   return _execContext.async([=] {
+    const auto& msg = *sharedMsg;
     const auto handlers = find(_state->recipients, RecipientId{ msg.service(), msg.object() })
                             .value_or(MessageHandlerList{});
     QI_LOG_DEBUG_MSGDISPATCHER() << "Dispatching a message " << msg.address() << " to "
@@ -66,6 +70,11 @@ bool MessageDispatcher::messagePendingDisconnect(unsigned int serviceId,
                                                  unsigned int objectId,
                                                  SignalLink linkId) noexcept
 {
+  // The invalid signal link is never connected, therefore the disconnection
+  // is always successful.
+  if (!isValidSignalLink(linkId))
+    return true;
+
   auto state = _state.synchronize();
   const auto it = state->recipients.find(RecipientId{ serviceId, objectId });
   if (it == state->recipients.end())

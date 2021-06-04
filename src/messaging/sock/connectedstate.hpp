@@ -152,7 +152,7 @@ namespace qi
         void start(SslEnabled, size_t maxPayload, Proc onReceive, qi::int64_t messageHandlingTimeoutInMus);
 
         template<typename Msg, typename Proc>
-        void send(Msg&& msg, SslEnabled, Proc onSent);
+        void send(Msg msg, SslEnabled, Proc onSent);
 
         void stop(Promise<void> disconnectedPromise)
         {
@@ -320,7 +320,7 @@ namespace qi
 
     template<typename N, typename S>
     template<typename Msg, typename Proc>
-    void Connected<N, S>::Impl::send(Msg&& msg, SslEnabled ssl, Proc onSent)
+    void Connected<N, S>::Impl::send(Msg msg, SslEnabled ssl, Proc onSent)
     {
       using SendMessage = decltype(_sendMsg);
       using ReadableMessage = typename SendMessage::ReadableMessage;
@@ -329,7 +329,7 @@ namespace qi
       auto sync = syncTransfo();
 
       // We preventively strand the first call.
-      sync(life([=]() mutable {
+      sync(life(std::bind([=](Msg& msg) mutable {
         _sendMsg(std::move(msg), ssl,
 
           // This callback will be called when a message has been sent, or
@@ -357,7 +357,7 @@ namespace qi
           life,
           sync
         );
-      }))();
+      }, std::move(msg))))();
     }
 }} // namespace qi::sock
 

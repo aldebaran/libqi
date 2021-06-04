@@ -24,15 +24,15 @@ namespace qi {
 
   class ServerClient;
 
-  struct RemoteSignalLinks {
-    RemoteSignalLinks()
-      : remoteSignalLink(qi::SignalBase::invalidSignalLink)
-    {}
-
+  struct RemoteSignalLinks
+  {
     std::vector<qi::SignalLink> localSignalLink;
-    qi::SignalLink              remoteSignalLink;
+    qi::SignalLink remoteSignalLink = SignalBase::invalidSignalLink;
     qi::Future<qi::SignalLink>  future;
   };
+
+  class RemoteObject;
+  using RemoteObjectPtr = boost::shared_ptr<RemoteObject>;
 
   /// This class represents the interface to a remote (potentially in a different process or host)
   /// `qi::Object`.
@@ -49,17 +49,17 @@ namespace qi {
   class RemoteObject
     : public DynamicObject
     , public ObjectHost
-    , public Trackable<RemoteObject>
+    , public boost::enable_shared_from_this<RemoteObject>
   {
+    RemoteObject(unsigned int service, unsigned int object = Message::GenericObject_Main,
+                 boost::optional<ObjectUid> uid = boost::none);
+
   public:
-    RemoteObject();
-    RemoteObject(unsigned int service, qi::MessageSocketPtr socket = qi::MessageSocketPtr(),
-      boost::optional<ObjectUid> uid = boost::none);
-    //deprecated
-    RemoteObject(unsigned int service,
-                 unsigned int object,
-                 qi::MetaObject metaObject,
-                 qi::MessageSocketPtr socket = qi::MessageSocketPtr());
+    template<typename... Args>
+    static RemoteObjectPtr makePtr(Args&&... args)
+    {
+      return RemoteObjectPtr(new RemoteObject(std::forward<Args>(args)...));
+    }
 
     ~RemoteObject() override;
 
@@ -74,24 +74,31 @@ namespace qi {
     unsigned int service() const { return _service; }
     unsigned int object() const { return _object; }
 
+    void metaPost(AnyObject context,
+                  unsigned int event,
+                  const GenericFunctionParameters& args) override;
+    qi::Future<AnyReference> metaCall(AnyObject context,
+                                      unsigned int method,
+                                      const GenericFunctionParameters& args,
+                                      qi::MetaCallType callType = MetaCallType_Auto,
+                                      Signature returnSignature = {}) override;
+
+    qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub) override;
+    qi::Future<void> metaDisconnect(SignalLink linkId) override;
+
+    qi::Future<AnyValue> metaProperty(qi::AnyObject context, unsigned int id) override;
+    qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val) override;
+
   protected:
     //TransportSocket.messagePending
     DispatchStatus onMessagePending(const qi::Message &msg);
     //TransportSocket.disconnected
     void onSocketDisconnected(std::string error);
 
-    virtual void metaPost(AnyObject context, unsigned int event, const GenericFunctionParameters& args);
-    virtual qi::Future<AnyReference> metaCall(AnyObject context, unsigned int method, const GenericFunctionParameters& args, qi::MetaCallType callType, Signature returnSignature);
     void onFutureCancelled(unsigned int originalMessageId);
 
     //metaObject received
     void onMetaObject(qi::Future<qi::MetaObject> fut, qi::Promise<void> prom);
-
-    virtual qi::Future<SignalLink> metaConnect(unsigned int event, const SignalSubscriber& sub);
-    virtual qi::Future<void> metaDisconnect(SignalLink linkId);
-
-    virtual qi::Future<AnyValue> metaProperty(qi::AnyObject context, unsigned int id);
-    virtual qi::Future<void> metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val);
 
   protected:
     using LocalToRemoteSignalLinkMap = std::map<qi::uint64_t, RemoteSignalLinks>;
@@ -100,8 +107,8 @@ namespace qi {
     unsigned int                                    _service;
     unsigned int                                    _object;
     boost::synchronized_value<std::map<int, qi::Promise<AnyReference>>> _promises;
-    qi::SignalLink                                  _linkMessageDispatcher;
-    qi::SignalLink                                  _linkDisconnected;
+    qi::SignalLink _linkMessageDispatcher = SignalBase::invalidSignalLink;
+    qi::SignalLink _linkDisconnected = SignalBase::invalidSignalLink;
     qi::AnyObject                                   _self;
     boost::recursive_mutex                          _localToRemoteSignalLinkMutex;
     LocalToRemoteSignalLinkMap                      _localToRemoteSignalLink;
@@ -109,8 +116,6 @@ namespace qi {
   private:
     static qi::Atomic<unsigned int> _nextId;
   };
-
-  using RemoteObjectPtr = boost::shared_ptr<RemoteObject>;
 
 }
 

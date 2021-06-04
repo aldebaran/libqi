@@ -13,6 +13,7 @@
 
 # include <ka/functional.hpp>
 # include <ka/errorhandling.hpp>
+# include <ka/macro.hpp>
 # include <qi/api.hpp>
 # include <qi/assert.hpp>
 # include <qi/atomic.hpp>
@@ -31,11 +32,9 @@
 # include <boost/thread/recursive_mutex.hpp>
 # include <boost/exception/diagnostic_information.hpp>
 
-# ifdef _MSC_VER
-#   pragma warning( push )
-#   pragma warning( disable: 4251 )
-#   pragma warning( disable: 4275 ) //std::runtime_error: no dll interface
-# endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
+KA_WARNING_DISABLE(4275, )  //std::runtime_error: no dll interface
 
 namespace qi {
 
@@ -893,8 +892,6 @@ namespace qi {
 
     /** Set a cancel callback. If the cancel is requested, calls this callback
      * immediately.
-     * \throws std::exception if the promise was not created as a cancelable
-     * promise.
      */
     void setOnCancel(boost::function<void (qi::Promise<T>&)> cancelCallback)
     {
@@ -1308,8 +1305,6 @@ namespace qi
 #endif
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QI_FUTURE_HPP_

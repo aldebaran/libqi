@@ -8,15 +8,14 @@
 #include <iostream>
 #include <numeric>
 
+#include <src/application_p.hpp>
 #include <qi/application.hpp>
 #include <qi/os.hpp>
 #include <qi/atomic.hpp>
 #include <qi/log.hpp>
-#include <qi/path.hpp>
 #include <qi/path_conf.hpp>
 #include <src/sdklayout.hpp>
 #include <boost/program_options.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -29,12 +28,6 @@
 #endif
 #ifdef _WIN32
 #include <windows.h>
-#endif
-
-#ifndef _WIN32
-static const char SEPARATOR = ':';
-#else
-static const char SEPARATOR = ';';
 #endif
 
 qiLogCategory("qi.Application");
@@ -65,7 +58,6 @@ namespace qi {
   static char**      globalArgv = nullptr;
   static bool        globalInitialized = false;
   static bool        globalTerminated = false;
-  static bool        globalIsStop = false;
 
   static std::string globalName;
   static std::vector<std::string>* globalArguments;
@@ -74,20 +66,14 @@ namespace qi {
   static std::string globalRealProgram;
 
   using FunctionList = std::vector<std::function<void()>>;
+  using FunctionWithArgValueList = std::vector<std::pair<std::function<void(int)>, int>>;
   static FunctionList* globalAtExit = nullptr;
   static FunctionList* globalAtEnter = nullptr;
+  static FunctionWithArgValueList* globalAtSignal = nullptr;
   static FunctionList* globalAtRun = nullptr;
   static FunctionList* globalAtStop = nullptr;
 
-
-  static boost::mutex globalMutex;
-  static boost::condition_variable globalCond;
-
-  static boost::asio::io_service*             globalIoService = nullptr;
-  static boost::thread*                       globalIoThread = nullptr;
-  static boost::asio::io_service::work*       globalIoWork = nullptr;
-  static std::list<boost::asio::signal_set*>* globalSignalSet = nullptr;
-
+  static boost::optional<boost::asio::io_service> globalIoService;
 
   static void readPathConf()
   {
@@ -97,41 +83,6 @@ namespace qi {
     for (it = toAdd.begin(); it != toAdd.end(); ++it) {
       ::qi::path::detail::addOptionalSdkPrefix(it->c_str());
     }
-  }
-
-  static void stop_io_service()
-  {
-    qiLogVerbose() << "Unregistering all signal handlers.";
-    //dont call ioservice->stop, just remove all events for the ioservice
-    //deleting the object holding the run() method from quitting
-    delete globalIoWork;
-    globalIoWork = 0;
-
-    if (globalSignalSet) {
-      std::list<boost::asio::signal_set*>::iterator it;
-      for (it = globalSignalSet->begin(); it != globalSignalSet->end(); ++it) {
-        (*it)->cancel();
-        delete *it;
-      }
-      delete globalSignalSet;
-      globalSignalSet = 0;
-    }
-    if (globalIoThread) {
-      //wait for the ioservice to terminate
-      if (boost::this_thread::get_id() != globalIoThread->get_id())
-        globalIoThread->join();
-      //we are sure run has stopped so we can delete the io service
-      delete globalIoService;
-      delete globalIoThread;
-      globalIoThread = 0;
-      globalIoService = 0;
-    }
-  }
-
-  static void run_io_service()
-  {
-    qi::os::setCurrentThreadName("appioservice");
-    globalIoService->run();
   }
 
   static void stop_handler(int signal_number)
@@ -173,78 +124,29 @@ namespace qi {
     }
   }
 
-  bool Application::atSignal(std::function<void (int)> func, int signal)
-  {
-    if (!globalIoService)
-    {
-      globalIoService = new boost::asio::io_service;
-      // Prevent run from exiting
-      globalIoWork = new boost::asio::io_service::work(*globalIoService);
-      // Start io_service in a thread. It will call our handlers.
-      globalIoThread = new boost::thread(&run_io_service);
-      // We want signal handlers to work as late as possible.
-      ::atexit(&stop_io_service);
-      globalSignalSet = new std::list<boost::asio::signal_set*>;
-    }
-
-    boost::asio::signal_set *sset = new boost::asio::signal_set(*globalIoService, signal);
-    sset->async_wait(boost::bind(signal_handler, _1, _2, func));
-    globalSignalSet->push_back(sset);
-    return true;
-  }
-
   template<typename T> static T& lazyGet(T* & ptr)
   {
     if (!ptr)
       ptr = new T;
     return *ptr;
   }
-
-  static boost::filesystem::path system_absolute(
-      const boost::filesystem::path path)
+  bool Application::atSignal(std::function<void (int)> func, int signal)
   {
-    if (path.empty())
-      return path;
-
-    if (path.is_absolute())
-      return path;
-
-    if (path.has_parent_path())
-      return bfs::system_complete(path);
-
-    if (!bfs::exists(path) || bfs::is_directory(path))
-    {
-      std::string envPath = qi::os::getenv("PATH");
-
-      if (!envPath.empty())
-      {
-        std::vector<std::string> envPaths;
-        boost::algorithm::split(envPaths,
-                                envPath,
-                                boost::algorithm::is_from_range(SEPARATOR,
-                                                                SEPARATOR));
-
-        for (const auto& realPath : envPaths)
-        {
-          bfs::path p(realPath);
-
-          p /= path;
-          p = boost::filesystem::system_complete(p);
-
-          if (boost::filesystem::exists(p) &&
-              !boost::filesystem::is_directory(p))
-            return p.string(qi::unicodeFacet());
-        }
-      }
-    }
-
-    // fallback to something
-    return bfs::system_complete(path);
+    lazyGet(globalAtSignal).push_back(std::make_pair(std::move(func), signal));
+    return true;
   }
-
-  static qi::Path guess_app_from_path(const qi::Path& path)
+  qi::Path details::searchExecutableAbsolutePath(const qi::Path& path,
+                                                 const bfs::path& currentDirectory,
+                                                 std::vector<bfs::path> environmentPaths)
   {
-    return system_absolute(path).make_preferred();
+    boost::system::error_code err;
+    const bfs::path boostPath(path);
+    if (boostPath.is_relative() && !boostPath.has_parent_path())
+    {
+      environmentPaths.insert(environmentPaths.begin(), currentDirectory);
+      return boost::process::search_path(boostPath, environmentPaths).make_preferred();
+    }
+    return bfs::absolute(boostPath, currentDirectory).make_preferred();
   }
 
   static void initApp(int& argc, char ** &argv, const std::string& path)
@@ -258,17 +160,25 @@ namespace qi {
     }
     else
     {
-      globalProgram = guess_app_from_path(qi::Path::fromNative(argv[0])).str();
+      globalProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(argv[0])).str();
       qiLogVerbose() << "Program path guessed as " << globalProgram;
     }
+
     globalProgram = path::detail::normalize(globalProgram).str();
 
     parseArguments(argc, argv);
 
     readPathConf();
+
     if (globalInitialized)
       throw std::logic_error("Application was already initialized");
     globalInitialized = true;
+
+    // We use only one thread (the main thread) for the application `io_service` that is used
+    // to process signals.
+    constexpr const auto ioServiceConcurrencyHint = 1;
+    globalIoService.emplace(ioServiceConcurrencyHint);
+
     globalArgc = argc;
     globalArgv = argv;
     std::vector<std::string>& args = lazyGet(globalArguments);
@@ -386,44 +296,38 @@ namespace qi {
       }
     }
 
-    globalCond.notify_all();
+    globalIoService = boost::none;
     globalTerminated = true;
-  }
-
-  static void initSigIntSigTermCatcher() {
-    static bool signalInit = false;
-
-    if (!signalInit) {
-      qiLogVerbose() << "Registering SIGINT/SIGTERM handler within qi::Application";
-      // kill with no signal sends TERM, control-c sends INT.
-      Application::atSignal(boost::bind(&stop_handler, _1), SIGTERM);
-      Application::atSignal(boost::bind(&stop_handler, _1), SIGINT);
-      signalInit = true;
-    }
-  }
-
-  static bool isStop()
-  {
-    return globalIsStop;
   }
 
   void Application::run()
   {
-    //run is called, so we catch sigint/sigterm, the default implementation call Application::stop that
-    //will make this loop exit.
-    initSigIntSigTermCatcher();
+    QI_ASSERT_TRUE(globalIoService);
 
-    // call every function registered as "atRun"
+    // We use a list because signal_set is not moveable.
+    std::list<boost::asio::signal_set> signalSets;
+
+    auto atSignal = lazyGet(globalAtSignal);
+
+    // run is called, so we catch sigint/sigterm, the default
+    // implementation call Application::stop that
+    // will make this loop exit.
+    atSignal.emplace_back(boost::bind(stop_handler, _1), SIGTERM);
+    atSignal.emplace_back(boost::bind(stop_handler, _1), SIGINT);
+
+    for(const auto& func: atSignal)
+      signalSets.emplace(signalSets.end(), *globalIoService, func.second)->async_wait(
+                  boost::bind(signal_handler, _1, _2, std::move(func.first)));
+
+    // Call every function registered as "atRun"
     for(auto& function: lazyGet(globalAtRun))
       function();
 
-    boost::unique_lock<boost::mutex> l(globalMutex);
-    globalCond.wait(l, &isStop);
+    globalIoService->run();
   }
 
   void Application::stop()
   {
-
     static qi::Atomic<bool> atStopHandlerCall{false};
     if (atStopHandlerCall.setIfEquals(false, true))
     {
@@ -440,9 +344,9 @@ namespace qi {
           qiLogError() << "Application atStop callback throw the following error: " << e.what();
         }
       }
-      boost::unique_lock<boost::mutex> l(globalMutex);
-      globalIsStop = true;
-      globalCond.notify_all();
+
+      QI_ASSERT_TRUE(globalIoService);
+      globalIoService->stop();
     }
   }
 
@@ -517,10 +421,6 @@ namespace qi {
 
   bool Application::atStop(std::function<void()> func)
   {
-    //If the client call atStop, it mean it will handle the proper destruction
-    //of the program by itself. So here we catch SigInt/SigTerm to call Application::stop
-    //and let the developer properly stop the application as needed.
-    initSigIntSigTermCatcher();
     lazyGet(globalAtStop).push_back(func);
     return true;
   }
@@ -577,7 +477,7 @@ namespace qi {
         }
         else
         {
-          globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+          globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
         }
         free(fname);
       }
@@ -588,7 +488,7 @@ namespace qi {
       if (!boost::filesystem::is_empty(fname))
         globalRealProgram = fname.string().c_str();
       else
-        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+        globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #elif _WIN32
       WCHAR fname[MAX_PATH];
       int ret = GetModuleFileNameW(NULL, fname, MAX_PATH);
@@ -601,10 +501,10 @@ namespace qi {
       else
       {
         // GetModuleFileName failed, trying to guess from argc, argv...
-        globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+        globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
       }
 #else
-      globalRealProgram = guess_app_from_path(qi::Path::fromNative(::qi::Application::argv()[0])).str();
+      globalRealProgram = details::searchExecutableAbsolutePath(qi::Path::fromNative(::qi::Application::argv()[0])).str();
 #endif
       return globalRealProgram.c_str();
     }

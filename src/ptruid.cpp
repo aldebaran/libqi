@@ -46,7 +46,7 @@ namespace qi
     // The array size computation use the assumption that
     // for any Uuid u, u.end() - u.begin() == sizeof(UUid).
     // Assert that it's really the case.
-    QI_ASSERT(it - begin(buffer) == buffer.size());
+    QI_ASSERT(static_cast<std::size_t>(it - begin(buffer)) == buffer.size());
 
     boost::copy(ka::sha1(buffer), begin(*this));
 #ifdef QI_PTRUID_DEBUG

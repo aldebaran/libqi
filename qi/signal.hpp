@@ -15,13 +15,13 @@
 #include <qi/anyfunction.hpp>
 #include <qi/type/typeobject.hpp>
 
+#include <ka/macro.hpp>
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 // Macro to be more expressive when emitting a signal. Does nothing, it's normal.
 #define QI_EMIT
@@ -31,10 +31,15 @@ namespace qi {
   class ManageablePrivate;
   class SignalSubscriber;
 
+  class SignalBase;
   class SignalBasePrivate;
 
   using SignalLink = qi::uint64_t;
 
+  namespace details_proxysignal
+  {
+    void setUpProxy(SignalBase&, AnyWeakObject, const std::string&);
+  }
 
   /// SignalBase provides a signal subscription mechanism called "connection".
   /// Derived classes can customize the subscription step by setting
@@ -100,6 +105,8 @@ namespace qi {
      * This method blocks until all the already running callbacks are
      * finished.
      * @return Returns true on success.
+     * @throws `std::runtime_error` if the `onSubscribers` callback is set and it
+     *         returned a future in error.
      */
     bool disconnect(const SignalLink& link);
 
@@ -108,7 +115,9 @@ namespace qi {
      * Same as disconnect, but this method does not block.
      * Though this is async, you are guaranteed that once the function returns
      * the future, your callback will not be called anymore.
-     * @return A future set to true on success.
+     * @return A future set to true on success, or set in error if the
+     *         `OnSubscribers` callback is set and it returned a future in
+     *         error.
      */
     Future<bool> disconnectAsync(const SignalLink& link);
 
@@ -150,20 +159,34 @@ namespace qi {
 
     static const SignalLink invalidSignalLink;
     void _setSignature(const Signature &s);
+
   protected:
-    using Trigger = boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)>;
     void callSubscribers(const GenericFunctionParameters& params, MetaCallType callType = MetaCallType_Auto);
+    using Trigger = boost::function<void(const GenericFunctionParameters& params, MetaCallType callType)>;
     void setTriggerOverride(Trigger trigger);
     void callOnSubscribe(bool v);
     void createNewTrackLink(int& id, SignalLink*& trackLink);
-    void disconnectTrackLink(int id);
+    static void disconnectTrackLink(SignalBasePrivate& p, int id);
     ExecutionContext* executionContext() const;
     void clearExecutionContext();
 
   protected:
     boost::shared_ptr<SignalBasePrivate> _p;
     friend class SignalBasePrivate;
+    friend void details_proxysignal::setUpProxy(SignalBase&, AnyWeakObject, const std::string&);
   };
+
+  inline bool isValidSignalLink(SignalLink l)
+  {
+    return l != SignalBase::invalidSignalLink;
+  }
+
+  /// Sets the link to an invalid value.
+  /// @returns The previous value of the signal link.
+  inline SignalLink exchangeInvalidSignalLink(SignalLink& l)
+  {
+    return ka::exchange(l, SignalBase::invalidSignalLink);
+  }
 
   template <typename... P> class Signal;
 
@@ -365,9 +388,7 @@ QI_WARNING_POP()
   };
 } // qi
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #include <qi/type/detail/signal.hxx>
 

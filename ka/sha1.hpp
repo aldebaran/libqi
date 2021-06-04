@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <type_traits>
 #include <openssl/sha.h>
-#include <boost/uuid/sha1.hpp>
 #include "scoped.hpp"
 #include "typetraits.hpp"
 

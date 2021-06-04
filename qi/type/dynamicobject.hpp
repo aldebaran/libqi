@@ -11,11 +11,10 @@
 #include <qi/property.hpp>
 #include <qi/objectuid.hpp>
 #include <boost/optional.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi
 {
@@ -47,11 +46,18 @@ namespace qi
 
     void setMethod(unsigned int id, AnyFunction callable, MetaCallType threadingModel = MetaCallType_Auto);
     void setSignal(unsigned int id, SignalBase* signal);
+    void setSignal(unsigned int id, boost::shared_ptr<SignalBase> signal);
+
     void setProperty(unsigned int id, PropertyBase* property);
+    void setProperty(unsigned int id, boost::shared_ptr<PropertyBase> property);
 
     const AnyFunction&   method(unsigned int id) const;
-    SignalBase*   signal(unsigned int id) const;
+
+    SignalBase* signal(unsigned int id) const;
+    boost::shared_ptr<SignalBase> signalAsShared(unsigned int id) const;
+
     PropertyBase* property(unsigned int) const;
+    boost::shared_ptr<PropertyBase> propertyAsShared(unsigned int id) const;
 
     boost::optional<ObjectUid> uid() const;
     void setUid(boost::optional<ObjectUid> newUid);
@@ -111,8 +117,6 @@ QI_WARNING_POP()
   QI_API ObjectTypeInterface* getDynamicTypeInterface();
 }
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_DYNAMICOBJECT_HPP_

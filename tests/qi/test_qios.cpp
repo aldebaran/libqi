@@ -26,6 +26,7 @@
 
 #include <qi/path.hpp>
 #include <qi/os.hpp>
+#include <ka/macro.hpp>
 #include <ka/scoped.hpp>
 #include "testutils/testutils.hpp"
 
@@ -34,11 +35,10 @@ static std::chrono::milliseconds timeout()
   return std::chrono::milliseconds{1000};
 }
 
-#ifdef _MSC_VER
-# pragma warning( push )
+KA_WARNING_PUSH()
 // truncation of constant value when building char* objects
-# pragma warning( disable : 4309 )
-#endif
+KA_WARNING_DISABLE(4309, )
+
 class QiOSTests: public ::testing::Test
 {
 public:
@@ -93,12 +93,18 @@ TEST(QiOs, fnmatch)
 // TODO: us qi::time when it's available :)
 TEST(QiOs, sleep)
 {
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads.
   qi::os::sleep(1);
+KA_WARNING_POP()
 }
 
 TEST(QiOs, msleep)
 {
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4996, deprecated-declarations) // ignore use of deprecated overloads.
   qi::os::msleep(1000);
+KA_WARNING_POP()
 }
 
 TEST(QiOs, currentThreadName)
@@ -713,6 +719,4 @@ TEST(QiOs, ptrUid)
   ASSERT_EQ(expectedPtrUid, ptruid);
 }
 
-#ifdef _MSC_VER
-# pragma warning( pop )
-#endif
+KA_WARNING_POP()

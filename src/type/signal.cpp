@@ -34,6 +34,11 @@ namespace qi {
 
   Future<bool> SignalBasePrivate::disconnect(const SignalLink& l)
   {
+    // The invalid signal link is never connected, therefore the disconnection
+    // is always successful.
+    if (!isValidSignalLink(l))
+      return Future<bool>{true};
+
     SignalSubscriber subscriber;
     Future<void> callingOnSubscribers{nullptr};
     SignalBase::OnSubscribers onSubscribersToCall;
@@ -65,12 +70,23 @@ namespace qi {
     return disconnectAllStep(true);
   }
 
+  void SignalBasePrivate::disconnectTrackLink(int id)
+  {
+    boost::recursive_mutex::scoped_lock sl(mutex);
+    TrackMap::iterator it = trackMap.find(id);
+    if (it == trackMap.end())
+      return;
+
+    subscriberMap.erase(it->second);
+    trackMap.erase(it);
+  }
+
   Future<bool> SignalBasePrivate::disconnectAllStep(bool overallSuccess)
   {
-    SignalLink link;
     FutureBarrier<bool> barrier;
     while (true)
     {
+      auto link = SignalBase::invalidSignalLink;
       {
         boost::recursive_mutex::scoped_lock sl(mutex);
         SignalSubscriberMap::iterator it = subscriberMap.begin();
@@ -80,7 +96,8 @@ namespace qi {
       }
       // allow for multiple disconnects to occur at the same time, we must not
       // keep the lock
-      barrier.addFuture(disconnect(link));
+      if (isValidSignalLink(link))
+        barrier.addFuture(disconnect(link));
     }
     return barrier.future().andThen([](const std::vector<Future<bool>>& successes)
     {
@@ -430,7 +447,7 @@ QI_WARNING_POP()
     QI_ASSERT(_p);
     // Check arity. Does not require to acquire weakLock.
     // We assume the number of children to int will never be bigger than INT_MAX.
-    QI_ASSERT_TRUE(signature().children().size() <= std::numeric_limits<int>::max());
+    QI_ASSERT_TRUE(signature().children().size() <= static_cast<std::size_t>(std::numeric_limits<int>::max()));
     const auto signalArity = qi::numericConvert<int>(signature().children().size());
     auto subscriberArity = -1;
     Signature subscriberSignature = src.signature();
@@ -494,15 +511,9 @@ QI_WARNING_POP()
     }
   }
 
-  void SignalBase::disconnectTrackLink(int id)
+  void SignalBase::disconnectTrackLink(SignalBasePrivate& p, int id)
   {
-    boost::recursive_mutex::scoped_lock sl(_p->mutex);
-    TrackMap::iterator it = _p->trackMap.find(id);
-    if (it == _p->trackMap.end())
-      return;
-
-    _p->subscriberMap.erase(it->second);
-    _p->trackMap.erase(it);
+    p.disconnectTrackLink(id);
   }
 
   ExecutionContext* SignalBase::executionContext() const

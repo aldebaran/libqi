@@ -62,8 +62,9 @@ TEST(TestBuffer, TestReserveSpace)
 
   // let's put a string in buffer
   reservedSpace1 = buffer.reserve(150);
+  ASSERT_NE(nullptr, reservedSpace1);
   //Oh wait it's a config file !
-  ASSERT_TRUE(buffer.reserve(1024) != NULL);
+  ASSERT_NE(nullptr, buffer.reserve(1024));
 
   std::vector<unsigned char> image(fiveM);
   for (int i = 0; i < fiveM; i++)

@@ -15,6 +15,7 @@
 #include <ka/algorithm.hpp>
 #include <ka/conceptpredicate.hpp>
 #include <ka/functional.hpp>
+#include <ka/macro.hpp>
 #include <ka/memory.hpp>
 #include <ka/mutablestore.hpp>
 #include <ka/mutex.hpp>
@@ -22,6 +23,8 @@
 #include <ka/testutils.hpp>
 #include <ka/typetraits.hpp>
 #include <ka/utility.hpp>
+
+KA_WARNING_DISABLE(, unused-function)
 
 TEST(FunctionalPolymorphicConstantFunction, RegularNonVoid) {
   using namespace ka;
@@ -493,6 +496,41 @@ TEST(FunctionalCompose, OperatorPipe) {
     auto const f = half | greater_1 | str;
     testComposeMulti(f);
   }
+}
+
+TEST(FunctionalComposeT, Regular) {
+  using namespace ka;
+  compose_t comp;
+  ASSERT_TRUE(is_regular({comp})); // only one possible value because no state
+}
+
+TEST(FunctionalComposeT, Basic) {
+  using namespace ka; using namespace std::placeholders; using std::string; using std::vector;
+  auto even = [](int x) -> bool { return x % 2 == 0; };
+  auto int_ = [](string const& x) -> int { return std::stoi(x); };
+  auto evenInt = compose_t{}(even, int_);
+
+  ASSERT_FALSE(evenInt("123"));
+  ASSERT_TRUE(evenInt("1234"));
+  ASSERT_EQ(evenInt("123"), compose(even, int_)("123"));
+  ASSERT_EQ(evenInt("1234"), compose(even, int_)("1234"));
+}
+
+TEST(FunctionalComposeT, Bind) {
+  using namespace ka; using namespace std::placeholders; using std::string; using std::vector;
+  auto even = [](int x) -> bool { return x % 2 == 0; };
+  auto comp_even = std::bind(compose_t{}, even, _1); // comp_even f = even ∘ f
+
+  auto int_ = [](string const& x) -> int { return std::stoi(x); };
+  auto str_even = comp_even(int_); // str_even: string → int → bool
+  ASSERT_TRUE(str_even("20"));
+  ASSERT_FALSE(str_even("21"));
+
+  using V = vector<double>;
+  auto len = [](V const& x) -> int { return x.size(); };
+  auto len_even = comp_even(len); // len_even: vector<float> → int → bool
+  ASSERT_TRUE(len_even(V{1.4, 76.2}));
+  ASSERT_FALSE(len_even(V{3.56}));
 }
 
 namespace {

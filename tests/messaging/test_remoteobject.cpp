@@ -69,6 +69,7 @@ public:
       qiLogInfo() << "Client has disconnected unexpectedly: " << what;
       FAIL();
     }).setCallType(MetaCallType_Direct);
+    ASSERT_TRUE(isValidSignalLink(_clientDisconnectionLink));
 
     // Wait for messages to be tracked before executing tests
     auto status = _messagesTrackedPromise.get_future().wait_for(usualTimeout);
@@ -97,7 +98,7 @@ private:
   std::promise<void> _messagesTrackedPromise;
   std::promise<qi::Message> _nextClientToServerMessagePromise;
   std::mutex _mutex;
-  qi::SignalLink _clientDisconnectionLink;
+  qi::SignalLink _clientDisconnectionLink = qi::SignalBase::invalidSignalLink;
 };
 
 TEST_F(RemoteObject, CallingAVoidMethodSendsACallMessage)
@@ -109,15 +110,14 @@ TEST_F(RemoteObject, CallingAVoidMethodSendsACallMessage)
   auto mmb = makeMetaMethodBuilder();
   mob.addMethod(mmb, static_cast<int>(methodId)); // KLUDGE: meta object have int for method indexes!
 
-  qi::RemoteObject remoteObject{serviceId};
-  remoteObject.setMetaObject(mob.metaObject());
-  remoteObject.setTransportSocket(clientSocket);
+  auto remoteObject = qi::RemoteObject::makePtr(serviceId);
+  remoteObject->setMetaObject(mob.metaObject());
+  remoteObject->setTransportSocket(clientSocket);
 
   auto futureMessage = nextClientToServerMessage(); // get ready to receive messages
 
   // Send a call message from the client to the server
-  auto dynamicObject = static_cast<qi::DynamicObject*>(&remoteObject);
-  dynamicObject->metaCall(qi::AnyObject{}, methodId, qi::GenericFunctionParameters{});
+  remoteObject->metaCall(qi::AnyObject{}, methodId, qi::GenericFunctionParameters{});
 
   auto status = futureMessage.wait_for(usualTimeout);
   ASSERT_EQ(std::future_status::ready, status);

@@ -4,11 +4,9 @@
 #include "tcpmessagesocket.hpp"
 
 // Disable "'this': used in base member initializer list"
-#if BOOST_COMP_MSVC
-# pragma warning(push)
-# pragma warning(disable: 4355)
-#endif
-
+#include <ka/macro.hpp>
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4355, )
 
 qiLogCategory(qi::sock::logCategory());
 
@@ -48,8 +46,7 @@ namespace qi
   MessageDispatchConnection::MessageDispatchConnection(MessageDispatchConnection&& other)
     : _socket(ka::exchange(other._socket, {}))
     , _recipientId(ka::exchange(other._recipientId, defaultRecipientId()))
-    , _messageDispatcherLink(
-        ka::exchange(other._messageDispatcherLink, SignalBase::invalidSignalLink))
+    , _messageDispatcherLink(exchangeInvalidSignalLink(other._messageDispatcherLink))
 
   {
   }
@@ -62,8 +59,7 @@ namespace qi
     reset();
     _socket = ka::exchange(other._socket, {});
     _recipientId = ka::exchange(other._recipientId, defaultRecipientId());
-    _messageDispatcherLink =
-      ka::exchange(other._messageDispatcherLink, SignalBase::invalidSignalLink);
+    _messageDispatcherLink = exchangeInvalidSignalLink(other._messageDispatcherLink);
     return *this;
   }
 
@@ -74,11 +70,11 @@ namespace qi
 
   void MessageDispatchConnection::reset()
   {
-    if (_messageDispatcherLink == SignalBase::invalidSignalLink)
+    const auto link = exchangeInvalidSignalLink(_messageDispatcherLink);
+    if (!isValidSignalLink(link))
       return;
     if (auto sock = socket())
-      sock->messagePendingDisconnect(_recipientId.serviceId, _recipientId.objectId,
-                                     _messageDispatcherLink);
+      sock->messagePendingDisconnect(_recipientId.serviceId, _recipientId.objectId, link);
   }
 
   MessageDispatcher::RecipientId MessageDispatchConnection::defaultRecipientId() noexcept
@@ -88,6 +84,4 @@ namespace qi
 
 }
 
-#if BOOST_COMP_MSVC
-# pragma warning(pop)
-#endif
+KA_WARNING_POP()

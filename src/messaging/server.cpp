@@ -42,7 +42,7 @@ namespace qi
         if (!sock)
           return;
 
-        if (_disconnected != SignalBase::invalidSignalLink)
+        if (isValidSignalLink(_disconnected))
         {
           const auto logExceptMsgWarning =
             ka::compose([](const std::string& msg) {
@@ -401,7 +401,7 @@ namespace qi
     }
 
     QI_LOG_DEBUG_SERVER() << std::boolalpha
-                 << "The message is an authentication request: " << isAuthRequest
+                 << "The message is an authentication request: " << isAuthRequest(msg)
                  << ", the server enforces authentication: " << _enforceAuth << ".";
 
     return _enforceAuth ? handleServerMessageAuth(msg, socketInfo) :
@@ -508,12 +508,12 @@ namespace qi
 
   bool Server::sendAuthReply(CapabilityMap authResult, SocketInfo& socketInfo, Message reply)
   {
-    qiLogDebug() << "Sending authentication reply ("
-                 << authResult.at(AuthProvider::State_Key).to<unsigned int>() << ") to socket "
-                 << &socket << ".";
-
     auto socket = socketInfo.socket();
     QI_ASSERT_NOT_NULL(socket);
+
+    qiLogDebug() << "Sending authentication reply ("
+                 << authResult.at(AuthProvider::State_Key).to<unsigned int>() << ") to socket "
+                 << socket << ".";
 
     const auto capa = socketInfo.extractCapabilities();
     authResult.insert(capa.begin(), capa.end());

@@ -7,6 +7,7 @@
 
 #include <qi/anyobject.hpp>
 #include <qi/type/objecttypebuilder.hpp>
+#include <src/type/signal_p.hpp>
 #include "boundobject.hpp"
 
 const auto logCategory = "qimessaging.boundobject";
@@ -114,7 +115,6 @@ namespace qi
 
   BoundObject::~BoundObject()
   {
-    _tracker.destroy();
     _cancelables.reset();
     ObjectHost::clear();
   }
@@ -187,7 +187,13 @@ namespace qi
   }
 
   // Bound Method
-  qi::Future<void> BoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId) {
+  qi::Future<void> BoundObject::unregisterEvent(unsigned int objectId, unsigned int QI_UNUSED(event), SignalLink remoteSignalLinkId)
+  {
+    // The invalid signal link is never connected, therefore the disconnection
+    // is always successful.
+    if (!isValidSignalLink(remoteSignalLinkId))
+      return futurize();
+
     ServiceSignalLinks&          sl = _links[_currentSocket];
     ServiceSignalLinks::iterator it = sl.find(remoteSignalLinkId);
 
@@ -508,7 +514,7 @@ namespace qi
                                                qi::AnyObject object,
                                                qi::MetaCallType mct)
   {
-    return boost::make_shared<BoundObject>(serviceId, Message::GenericObject_Main, object, mct);
+    return BoundObject::makePtr(serviceId, Message::GenericObject_Main, object, mct);
   }
 
   qi::Future<AnyValue> BoundObject::property(const AnyValue& prop)
@@ -567,7 +573,7 @@ namespace qi
       return false;
 
     MessageDispatcher::MessageHandler handler =
-      track([this, socket](const Message& msg) { return onMessage(msg, socket); }, &_tracker);
+      track([this, socket](const Message& msg) { return onMessage(msg, socket); }, weak_from_this());
     syncConnectionList->emplace_back(socket,
                                      MessageDispatcher::RecipientId{ _serviceId, _objectId },
                                      std::move(handler));
@@ -815,24 +821,6 @@ namespace qi
     Message::GenericObject_Main + 1 // Start the object id values after the ones fixed by the protocol.
   );
 
-  Future<void> BoundObject::deferDestruction(BoundObjectPtr&& object)
-  {
-    if (!object)
-      return futurize();
-
-    QI_ASSERT_TRUE(object.use_count() == 1);
-
-    if (object->_owner)
-      object->_owner.reset();
-
-    return deferConsumeWhenReady<BoundObjectPtr>(
-      std::move(object), [](Future<void> ready, PtrHolder<BoundObjectPtr> holder) {
-        return ready.andThen(FutureCallbackType_Async, [=](void*) {
-          consumePtr(holder, [](BoundObjectPtr&& object) { object.reset(); });
-        });
-      });
-  }
-
   std::size_t BoundObject::removeConnections(const MessageSocketPtr& socket) noexcept
   {
     QI_LOG_DEBUG_BOUNDOBJECT() << "Removing connections to socket " << socket;
@@ -889,6 +877,8 @@ namespace qi
   {
     namespace boundObject
     {
+      SocketBinding::SocketBinding() noexcept = default;
+
       SocketBinding::SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept
         : _object(object)
         , _socket(socket)
@@ -900,9 +890,9 @@ namespace qi
         QI_ASSERT_TRUE(res);
       }
 
-      SocketBinding::SocketBinding(SocketBinding&&) = default;
+      SocketBinding::SocketBinding(SocketBinding&&) noexcept = default;
 
-      SocketBinding& SocketBinding::operator=(SocketBinding&& other)
+      SocketBinding& SocketBinding::operator=(SocketBinding&& other) noexcept
       {
         if (&other == this)
           return *this;
@@ -916,6 +906,19 @@ namespace qi
       SocketBinding::~SocketBinding()
       {
         reset();
+      }
+
+      bool SocketBinding::operator==(const SocketBinding& rhs) const noexcept
+      {
+        return _object == rhs._object
+          && !_socket.owner_before(rhs._socket)
+          && !rhs._socket.owner_before(_socket);
+      }
+
+      bool SocketBinding::operator<(const SocketBinding& rhs) const noexcept
+      {
+        return _object < rhs._object ||
+               (!(rhs._object < _object) && _socket.owner_before(rhs._socket));
       }
 
       void SocketBinding::reset() noexcept

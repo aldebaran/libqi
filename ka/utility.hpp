@@ -107,7 +107,7 @@ namespace ka {
   /// Helper type to avoid ODR violations.
   template<typename T>
   struct static_const_t {
-    static KA_CONSTEXPR T value{};
+    static KA_CONSTEXPR T value = T();
   };
 
   template<typename T> KA_CONSTEXPR
@@ -152,6 +152,9 @@ namespace ka {
 } // namespace ka
 
 namespace std {
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(, pragmas)
+KA_WARNING_DISABLE(, mismatched-tags)
   // Specializations for `ka::type_t`.
   // Specializations for indices above 0 are provided to reduce the recursion depth.
   template<typename T, typename... U>
@@ -173,6 +176,7 @@ namespace std {
   struct tuple_element<n, ka::type_t<T, U...>>
     : tuple_element<n - 1, ka::type_t<U...>> {
   };
+KA_WARNING_POP()
 } // namespace std
 
 #endif // KA_UTILITY_HPP

@@ -16,6 +16,7 @@ qi_create_gmock(
   test_qi
 
   SRC
+  "test_application.cpp"
   "test_bind.cpp"
   "test_buffer.cpp"
   "test_bufferreader.cpp"

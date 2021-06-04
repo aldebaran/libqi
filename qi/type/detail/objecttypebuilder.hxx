@@ -12,8 +12,13 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/metamethod.hpp>
 #include <qi/actor.hpp>
+#include <ka/macro.hpp>
 
 namespace qi {
+
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4068, pragmas)
+KA_WARNING_DISABLE(, noexcept-type)
 
   namespace detail {
     template <typename T>
@@ -39,13 +44,14 @@ namespace qi {
 
   template<typename T> void ObjectTypeBuilderBase::buildFor(bool autoRegister)
   {
-    // We are erasing T here: we must pass everything the builder need to know about t:
+    // We are erasing T here: we must pass everything the builder needs to know about:
     // - typeid
     // - cloner/deleter
     // - serializer, ...
-    // => wee need all TypeInterface* methods, but we do not want another TypeInterface*
-    // to anwser to typeOf<T>
-    xBuildFor(new DefaultTypeImpl<T>(), autoRegister, detail::getStrandAccessor<T>());
+    // => we need all TypeInterface* methods, but we do not want another TypeInterface*
+    // to answer to typeOf<T>
+    static DefaultTypeImpl<T> implTypeInterface;
+    xBuildFor(&implTypeInterface, autoRegister, detail::getStrandAccessor<T>());
 
     if (std::is_base_of<Actor, T>::value)
       setThreadingModel(ObjectThreadingModel_SingleThread);
@@ -279,6 +285,8 @@ namespace qi {
     detail::advertiseBounce(this, name, element, typename detail::Accessor<T>::is_accessor());
     return *this;
   }
+
+KA_WARNING_POP()
 
 }
 

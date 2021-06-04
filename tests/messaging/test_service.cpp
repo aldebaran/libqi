@@ -331,16 +331,17 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   // Create an object
   boost::shared_ptr<Bar> bar(new Bar());
   qi::AnyObject barAsObject = qi::AnyValue::from(bar).to<qi::AnyObject>();
+  auto server = p.server();
 
   // Register the object with the provider, find it back from the client
-  p.server()->registerService("Bar", barAsObject);
+  server->registerService("Bar", barAsObject);
   qi::AnyObject barAsRemoteService = p.client()->service("Bar").value();
   ASSERT_TRUE(barAsRemoteService);
 
   // Disconnect the provider, it should unregister any related services
-  p.server()->close();
+  server->close();
   qiLogVerbose() << "close finished";
-  qi::Future<void> fc = p.server()->connect(p.serviceDirectoryEndpoints()[0]);
+  qi::Future<void> fc = server->connect(p.serviceDirectoryEndpoints()[0]);
   fc.wait(3000);
   if (fc.hasError())
     qiLogError() << fc.error();
@@ -348,7 +349,8 @@ TEST(QiService, RemoteServiceRegistrationAfterDisconnection)
   qiLogVerbose() << "Connect finished";
 
   // Register the object again with the provider, find it back from the client
-  ASSERT_NO_THROW(p.server()->registerService("Bar", barAsObject));
+  server->listen("tcp://localhost:0").value();
+  ASSERT_NO_THROW(server->registerService("Bar", barAsObject));
   ASSERT_EQ(qi::FutureState_FinishedWithValue,
             p.client()->waitForService("Bar").wait(qi::Seconds{ 3 }));
   ASSERT_TRUE(p.client()->service("Bar").value());
@@ -465,7 +467,7 @@ TEST(QiService, ExceptionFromPropertySetterSetsErrorOnFuture)
 {
   using CustomException = std::exception;
   const int initialValue = 12;
-  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [this](int&, const int&)->bool
+  qi::Property<int> property{initialValue, qi::Property<int>::Getter{}, [](int&, const int&)->bool
   {
     throw CustomException{};
   }};

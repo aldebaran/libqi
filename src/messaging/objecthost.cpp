@@ -29,6 +29,9 @@ namespace qi
 
   unsigned int ObjectHost::addObject(BoundObjectPtr obj, MessageSocketPtr socket)
   {
+    QI_ASSERT_NOT_NULL(obj);
+    QI_ASSERT_NOT_NULL(socket);
+
     const auto id = obj->id();
     {
       auto syncObjSockBindings = _objSockBindings.synchronize();
@@ -49,60 +52,46 @@ namespace qi
     return id;
   }
 
-  namespace
-  {
-
-    /// ForwardIterator FwdIter
-    template<typename FwdIter>
-    std::vector<BoundObjectPtr> consumeObjectFromBindings(FwdIter begin, FwdIter end)
-    {
-      std::vector<BoundObjectPtr> objects;
-      objects.reserve(static_cast<std::size_t>(distance(begin, end)));
-
-      // Transform the range of bindings into a range of objects so that we can defer destruct all of
-      // them.
-      std::transform(std::make_move_iterator(begin), std::make_move_iterator(end),
-                     std::back_inserter(objects),
-                     [](detail::boundObject::SocketBinding binding) -> BoundObjectPtr {
-                       return binding.object();
-                     });
-      return objects;
-    }
-
-  }
-
   std::size_t ObjectHost::removeObjectsFromSocket(const MessageSocketPtr& socket) noexcept
   {
-    std::vector<BoundObjectPtr> objects;
+    // Destroy the socket bindings outside of the lock.
+    ObjSocketBindingList bindings;
 
-    {
+    { // Lock all bindings just to move the ones from the socket into the local storage.
+      // Do not destroy a binding while locking this object bindings storage, as it can induce a deadlock if
+      // the bound object of the binding locks a mutex while waiting for this object bindings to unlock.
       auto syncObjSockBindings = _objSockBindings.synchronize();
-      const auto bindingsEnd = syncObjSockBindings->end();
+      const auto syncBindingsEnd = syncObjSockBindings->end();
 
       // Put all bindings related to the socket at the end of the vector. Do not use `std::remove_if`
-      // because values to remove are move-assigned into, effectively resulting in their immediate
+      // because values that are removed are move-assigned into, effectively resulting in their immediate
       // destruction preventing us to defer the destruction of the bound objects.
       const auto bindingsWithSocketIt =
-        std::partition(syncObjSockBindings->begin(), bindingsEnd,
+        std::partition(syncObjSockBindings->begin(), syncBindingsEnd,
                        [&](const detail::boundObject::SocketBinding& binding) {
                          return binding.socket() != socket;
                        });
 
-      objects = consumeObjectFromBindings(bindingsWithSocketIt, bindingsEnd);
-      syncObjSockBindings->erase(bindingsWithSocketIt, bindingsEnd);
-    }
+      // Early return if no object exists for this socket to avoid unnecessary operations.
+      if (bindingsWithSocketIt == syncBindingsEnd)
+        return {};
 
-    // Defer destruction outside of the lock of the list to avoid potential deadlocks.
-    const auto count = objects.size();
-    sequentializeDeferDestruction(std::move(objects));
-    return count;
+      // Move the socket bindings into the local storage.
+      bindings.reserve(static_cast<std::size_t>(std::distance(bindingsWithSocketIt, syncBindingsEnd)));
+      std::move(bindingsWithSocketIt, syncBindingsEnd, std::back_inserter(bindings));
+      syncObjSockBindings->erase(bindingsWithSocketIt, syncBindingsEnd);
+    }
+    return bindings.size();
   }
 
   bool ObjectHost::removeObject(unsigned int id) noexcept
   {
-    BoundObjectPtr object;
+    // Destroy the socket bindings outside of the lock.
+    detail::boundObject::SocketBinding binding;
 
-    {
+    { // Lock all bindings just to move the ones for this object into the local object.
+      // Do not destroy a binding while locking this object bindings storage, as it can induce a deadlock if
+      // the bound object of the binding locks a mutex while waiting for this object bindings to unlock.
       auto syncObjSockBindings = _objSockBindings.synchronize();
       const auto bindingsEnd = syncObjSockBindings->end();
       const auto it = std::find_if(syncObjSockBindings->begin(), bindingsEnd,
@@ -115,45 +104,21 @@ namespace qi
         return false;
       }
 
-      auto binding = std::move(*it);
+      // Move the socket binding into the local object.
+      binding = std::move(*it);
       syncObjSockBindings->erase(it);
       qiLogDebug() << this << " Object " << id << " removed.";
-      object = binding.object();
     }
 
-    // Defer destruction outside of the lock of the list to avoid potential deadlocks.
-    BoundObject::deferDestruction(std::move(object));
     return true;
   }
 
-  void ObjectHost::clear() noexcept
+  std::size_t ObjectHost::clear() noexcept
   {
+    // Destroy the socket bindings outside of the lock of this object storage.
     ObjSocketBindingList bindings;
     _objSockBindings.swap(bindings);
-
-    sequentializeDeferDestruction(consumeObjectFromBindings(bindings.begin(), bindings.end()));
-  }
-
-  template<typename Range>
-  Future<void> ObjectHost::sequentializeDeferDestruction(Range objects)
-  {
-    // We use future continuations to implement chaining/sequencing.
-    auto seqFut = futurize();
-
-    for (BoundObjectPtr& object : std::move(objects))
-    {
-      seqFut = deferConsumeWhenReady<BoundObjectPtr>(
-        std::move(object), [&](Future<void> ready, PtrHolder<BoundObjectPtr> holder) {
-          return seqFut.then(FutureCallbackType_Async,
-                  [=](Future<void>) mutable {
-                    return ready.andThen([=](void*) {
-                      const auto res = consumePtr(holder, &BoundObject::deferDestruction);
-                      return res.empty() ? futurize() : *res;
-                    }).unwrap();
-                  }).unwrap();
-        });
-    }
-    return seqFut;
+    return bindings.size();
   }
 }
 

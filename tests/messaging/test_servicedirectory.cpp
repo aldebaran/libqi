@@ -4,6 +4,14 @@
 #include <ka/utility.hpp>
 #include <ka/empty.hpp>
 
+struct ServiceInitEndpointsAndRelativeEndpointExpectations
+{
+  std::vector<qi::Uri> serv1Endpoints;
+  std::vector<qi::Uri> serv2Endpoints;
+  bool serv1RelEpExpected;
+  bool serv2RelEpExpected;
+};
+
 namespace
 {
 
@@ -14,14 +22,6 @@ testing::Matcher<qi::Uri> IsRelativeEndpoint(std::string serv)
                Property(&qi::Uri::authority, Truly(ka::empty)),
                Property(&qi::Uri::path, serv));
 }
-
-struct ServiceInitEndpointsAndRelativeEndpointExpectations
-{
-  std::vector<qi::Uri> serv1Endpoints;
-  std::vector<qi::Uri> serv2Endpoints;
-  bool serv1RelEpExpected;
-  bool serv2RelEpExpected;
-};
 
 struct ServiceDirectoryServiceRelativeEndpoint
   : testing::TestWithParam<
@@ -134,6 +134,7 @@ INSTANTIATE_TEST_CASE_P(
     testing::ValuesIn(servInitEpAndRelEpExpect)
   )
 );
+
 } // anonymous namespace
 
 TEST_P(ServiceDirectoryServiceRelativeEndpoint, RelativeEndpointsArePresentWhenExpected)

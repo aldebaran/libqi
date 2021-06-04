@@ -166,6 +166,7 @@ TEST(TestSignal, DisconnectAsynchronouslyFromCallback)
   qi::Signal<void> signal;
   qi::Promise<bool> p;
   link = signal.connect([&]{ adaptFuture(signal.disconnectAsync(link), p); });
+  ASSERT_TRUE(qi::isValidSignalLink(link));
   QI_EMIT signal();
   ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
@@ -176,6 +177,7 @@ TEST(TestSignal, DisconnectSynchronouslyFromCallback)
   qi::Signal<void> signal;
   qi::Promise<bool> p;
   link = signal.connect([&]{ p.setValue(signal.disconnect(link)); });
+  ASSERT_TRUE(qi::isValidSignalLink(link));
   QI_EMIT signal();
   ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
@@ -187,6 +189,7 @@ TEST(TestSignal, DisconnectAsynchronouslyFromAsyncCallback)
   qi::Promise<bool> p;
   link = signal.connect([&]{ adaptFuture(signal.disconnectAsync(link), p); })
       .setCallType(qi::MetaCallType_Queued);
+  ASSERT_TRUE(qi::isValidSignalLink(link));
   QI_EMIT signal();
   ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
@@ -198,6 +201,7 @@ TEST(TestSignal, DisconnectSynchronouslyFromAsyncCallback)
   qi::Promise<bool> p;
   link = signal.connect([&]{ p.setValue(signal.disconnect(link)); })
       .setCallType(qi::MetaCallType_Queued);
+  ASSERT_TRUE(qi::isValidSignalLink(link));
   QI_EMIT signal();
   ASSERT_EQ(qi::FutureState_FinishedWithValue, p.future().wait(usualTimeout));
 }
@@ -215,6 +219,7 @@ TEST(TestSignal, FunctionDestroyedOnDisconnection)
   std::shared_ptr<int> sharedInt{new int{42}, [&](int* i){ delete i; destroyed = true; }};
   qi::Signal<void> signal;
   qi::SignalLink link = signal.connect([sharedInt]{});
+  ASSERT_TRUE(qi::isValidSignalLink(link));
   sharedInt.reset();
   ASSERT_FALSE(destroyed);
   signal.disconnect(link);
@@ -226,6 +231,7 @@ TEST(TestSignal, DisconnectLinkRegistrationCheck)
 {
   qi::Signal<void> signal1;
   qi::SignalLink link1 = signal1.connect([]{});
+  ASSERT_TRUE(qi::isValidSignalLink(link1));
   { // Nominal case: registered link id
     bool linkFoundAndDisconnected = signal1.disconnect(link1);
     ASSERT_TRUE(linkFoundAndDisconnected);
@@ -246,6 +252,7 @@ TEST(TestSignal, DisconnectLinkRegistrationCheckWarning)
   // Set up signals
   qi::Signal<void> signal1, signal2;
   qi::SignalLink link1 = signal1.connect([]{});
+  ASSERT_TRUE(qi::isValidSignalLink(link1));
 
   // Listen to log
   // TODO: Add common test utility to expect a particular message of a given level.
@@ -526,6 +533,7 @@ TEST(TestSignal, OnSubscriber)
   qi::Signal<int> sig(boost::bind(onSubs, boost::ref(subscribers), _1));
   ASSERT_FALSE(subscribers);
   qi::SignalLink l = sig.connect(&callback);
+  ASSERT_TRUE(qi::isValidSignalLink(l));
   ASSERT_TRUE(subscribers);
   ASSERT_TRUE(sig.disconnect(l));
   ASSERT_FALSE(subscribers);

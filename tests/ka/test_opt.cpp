@@ -174,7 +174,7 @@ namespace {
       using namespace ka;
       opt_t<Decay<decltype(proc(fwd<Args>(args)...))>> o;
       o.call_set(proc, fwd<Args>(args)...);
-      return std::move(o);
+      return o;
     }
   };
 

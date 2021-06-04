@@ -159,6 +159,7 @@ TEST(ServiceDirectory, RegisterServiceFromNonListeningSessionAndCallThroughAnInt
   sessionMainServer->registerService("C", boost::make_shared<Serv>());
 
   auto originalService = boost::make_shared<Serv>();
+  sessionMainClient->listen("tcp://localhost:0");
   sessionMainClient->registerService("Service", originalService);
 
   auto remoteService = sessionSecondaryFromMain->service("Service").value();
@@ -188,6 +189,7 @@ TEST(ServiceDirectory, MirrorServicesBetweenProcesses)
     }
   }
   ASSERT_TRUE(mainClient->isConnected());
+  mainClient->listen("tcp://localhost:0");
   mainClient->registerService("Service", boost::make_shared<Serv>());
 
   auto secondaryClient = qi::makeSession();

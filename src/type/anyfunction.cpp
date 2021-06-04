@@ -74,7 +74,7 @@ namespace qi
     const AnyReference* args = sz > 0 ? &vargs[0] : nullptr;
 
     // We assume that the number of arguments cannot possibly be more than INT_MAX.
-    QI_ASSERT_TRUE(target.size() <= std::numeric_limits<int>::max());
+    QI_ASSERT_TRUE(target.size() <= static_cast<std::size_t>(std::numeric_limits<int>::max()));
     if (qi::numericConvert<int>(target.size()) != sz + deltaCount)
     {
       throw std::runtime_error(_QI_LOG_FORMAT("Argument count mismatch, expected %1%, got %2%",

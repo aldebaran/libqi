@@ -35,28 +35,44 @@ Programming](http://elementsofprogramming.com) (Stepanov-McJones, 2009).
 
 A classification of the components you will find here:
 
+- concepts: formal definition of syntactic, semantic and algorithmic complexity
+  constraints on types, used in generic code.
+
 - functional: simplify the use of functional patterns (function composition,
-  function objects...)
+  function objects, unit, zero, functor support, partial monad support...)
 
-- algorithms: `erase_if`, `sha1`...
-
-- ranges: allow to write more general algorithms than those based on iterators
-  (bounded, counted, sentinel, transformation... ranges)
+- algorithms: `erase_if`, sha1 digest, base64 encoding...
 
 - metaprogramming: various type traits
 
 - RAII: `scoped` helpers and affiliated functions
+
+- parsers: fundamental parsers and combinators (sequencing, alternative,
+  repetition...), and associated DSL.
+
+- URI: type and parsing compliant with RFC 3986.
+
+- iterators: product and operators (`+`, `-`, ...) for all iterator categories.
+
+- optional: functorial and monadic optional type, with partial `void` support.
+
+- error handling: various utilities.
 
 - archetypes: wrappers to check that a type effectively models a concept
 
 - genericity: ensure a type behaves correctly according to copy and equality
   (aka "regularity")
 
+- test utilities: regularity and functor predicates, dummy types for testing
+  strongly-typed code.
+
+- macros: helpers to make types derive (i.e. automatically model) concepts.
+
 
 ## Example : Use of a 3-way lexicographic compare on ranges
 
 The following illustrates the use of concepts, ranges, function composition,
-scoped ressources. Unqualified names denote `Ka` components such as `scoped`,
+scoped resources. Unqualified names denote `Ka` components such as `scoped`,
 `bounded_range`, etc.
 
 ```cpp

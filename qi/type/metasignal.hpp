@@ -8,11 +8,10 @@
 #define _QI_TYPE_METASIGNAL_HPP_
 
 #include <qi/type/typeinterface.hpp>
+#include <ka/macro.hpp>
 
-#ifdef _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4251 )
-#endif
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(4251, )
 
 namespace qi {
 
@@ -47,8 +46,6 @@ QI_TYPE_STRUCT_AGREGATE_CONSTRUCTOR(qi::MetaSignal,
   ("name",_name),
   ("signature", _signature));
 
-#ifdef _MSC_VER
-#  pragma warning( pop )
-#endif
+KA_WARNING_POP()
 
 #endif  // _QITYPE_METASIGNAL_HPP_

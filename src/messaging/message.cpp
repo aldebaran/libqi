@@ -219,8 +219,7 @@ namespace qi
       }
 
       const unsigned int oid = host->nextId();
-      auto bo =
-        boost::make_shared<BoundObject>(sid, oid, object, MetaCallType_Queued, true, context);
+      auto bo = BoundObject::makePtr(sid, oid, object, MetaCallType_Queued, true, context);
       host->addObject(bo, socket);
       qiLogDebug() << "Hooking " << oid <<" on " << host.get();
       qiLogDebug() << "BoundObject " << bo << " obj " << object.asGenericObject();
@@ -233,10 +232,10 @@ namespace qi
       return res;
     }
 
-    void onProxyLost(GenericObject* ptr)
+    void onProxyLost(RemoteObjectPtr remoteObject)
     {
+      QI_ASSERT_NOT_NULL(remoteObject);
       qiLogDebug() << "Proxy on argument object lost, invoking terminate...";
-      DynamicObject* dobj = reinterpret_cast<DynamicObject*>(ptr->value);
       // dobj is a RemoteObject
       /* Warning, we are in a shared_ptr destruction callback.
       * So we cannot reacquire the shared_ptr, which call/post will try to
@@ -244,7 +243,7 @@ namespace qi
       * So go through backend
       */
       //FIXME: use post()
-      int mid = dobj->metaObject().methodId("terminate::(I)");
+      int mid = remoteObject->metaObject().methodId("terminate::(I)");
       if (mid<0)
       {
         qiLogError() << "terminate() method not found, object will not be destroyed";
@@ -252,9 +251,9 @@ namespace qi
       }
       GenericFunctionParameters params;
       // Argument is unused by remote end, but better pass something valid just in case.
-      int sid = static_cast<RemoteObject*>(dobj)->service();
+      int sid = remoteObject->service();
       params.push_back(AnyReference::from(sid));
-      dobj->metaPost(AnyObject(), mid, params);
+      remoteObject->metaPost(AnyObject(), mid, params);
     }
 
     AnyObject deserializeObject(const ObjectSerializationInfo& osi, MessageSocketPtr socket)
@@ -264,8 +263,18 @@ namespace qi
       qiLogDebug() << "Creating unregistered object " << osi.serviceId << '/' << osi.objectId
                    << " uid = '" << (osi.objectUid ? *osi.objectUid : ObjectUid{}) << "' on "
                    << socket.get();
-      RemoteObject* ro = new RemoteObject(osi.serviceId, osi.objectId, osi.metaObject, socket);
-      AnyObject o = makeDynamicAnyObject(ro, true, osi.objectUid, &onProxyLost);
+      auto ro = RemoteObject::makePtr(osi.serviceId, osi.objectId);
+      ro->setMetaObject(osi.metaObject);
+      ro->setTransportSocket(socket);
+      auto o =
+        makeDynamicAnyObject(ro.get(), false, osi.objectUid,
+                             // Copy the shared pointer of remote object to maintain it alive.
+                             [ro](GenericObject*) mutable {
+                               onProxyLost(ro);
+                               // Don't wait for the destruction of the deleter to try to destroy
+                               // the `RemoteObject`.
+                               ro.reset();
+                             });
       qiLogDebug() << "New object is " << o.asGenericObject() << "on ro " << ro;
       QI_ASSERT(o);
       return o;

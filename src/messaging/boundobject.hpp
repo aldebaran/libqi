@@ -17,6 +17,7 @@
 #include "transportserver.hpp"
 #include <qi/atomic.hpp>
 #include <qi/strand.hpp>
+#include <ka/macroregular.hpp>
 
 #include "objecthost.hpp"
 
@@ -46,91 +47,6 @@ namespace qi
     unsigned int event;
   };
 
-  template<typename Ptr>
-  using PtrHolder = std::shared_ptr<Ptr>;
-
-  /// Consumes the shared pointer held by the holder.
-  ///
-  /// @note The consumer is not called if the `holder == nullptr`.
-  ///
-  /// @returns An optional set to the return value of the consumer if it was called, empty
-  /// otherwise.
-  ///
-  /// @pre `holder == nullptr || *holder == nullptr || holder->use_count() == 1`
-  /// @post `holder == nullptr || *holder == nullptr`
-  ///
-  /// Procedure<_ (Ptr&&)> Consumer
-  template <typename Ptr,
-            typename Consumer,
-            typename ReturnType = decltype(std::declval<Consumer>()(std::declval<Ptr>()))>
-  ka::opt_t<ReturnType> consumePtr(PtrHolder<Ptr> holder, Consumer&& consumer)
-  {
-    if (!holder)
-      return {};
-    auto& ptr = *holder;
-    QI_ASSERT_TRUE(!ptr || ptr.use_count() == 1);
-    auto post = ka::scoped([&]{
-      QI_ASSERT_NULL(ptr);
-    });
-
-    ka::opt_t<ReturnType> res;
-    res.call_set(std::forward<Consumer>(consumer), std::move(ptr));
-    return res;
-  }
-
-  /// Defers the consumption of a shared pointer.
-  ///
-  /// Example: Destroying an object held by a shared pointer in another thread.
-  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// struct MyUncopyableData { ... };
-  /// using Data = MyUncopyableData;
-  /// using DataPtr = std::shared_ptr<Data>;
-  ///
-  /// auto data = std::make_shared<Data>(...);
-  ///
-  /// auto defer = [](Future<void> ready, PtrHolder<DataPtr> holder) {
-  ///   return ready.andThen(FutureCallbackType_Async, [=] {
-  ///       return consumePtr(holder, [](DataPtr&& data) {
-  ///         data.reset();
-  ///         return true;
-  ///       });
-  ///   });
-  /// };
-  ///
-  /// QI_ASSERT_TRUE(deferConsumeWhenReady<DataPtr>(std::move(data), defer).value());
-  /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  ///
-  /// @param defer
-  /// A procedure that takes a future and a `PtrHolder` object.
-  /// It must wait for the future and then call `consumePtr` with the pointer holder and a function
-  /// that will consume the shared pointer.
-  ///
-  /// @returns The result of the call to the `defer` procedure.
-  ///
-  /// @pre `ptr.use_count() == 1`
-  /// @post `ptr == nullptr`
-  ///
-  /// std::shared_ptr | boost::shared_ptr Ptr
-  /// Procedure<_ (Future<void>, PtrHolder<Ptr>)> Defer
-  ///
-  /// TODO: When C++14 is available, just use lambdas and initialize captures by moving the shared
-  /// ptr.
-  template <typename Ptr, typename Defer>
-  auto deferConsumeWhenReady(ka::RemoveCvRef<Ptr>&& ptr, Defer&& defer)
-    -> decltype(std::forward<Defer>(defer)(std::declval<Future<void>>(),
-                                           std::declval<PtrHolder<Ptr>>()))
-  {
-    QI_ASSERT_TRUE(ptr.use_count() == 1);
-
-    auto sync = ka::scoped(Promise<void>(), [&](Promise<void> p){
-      QI_ASSERT_NULL(ptr);
-      p.setValue(nullptr);
-    });
-
-    auto owner = std::make_shared<Ptr>(std::move(ptr));
-    return std::forward<Defer>(defer)(sync.value.future(), std::move(owner));
-  }
-
   /// This class represents the interface to a concrete object exposed to remote clients.
   ///
   /// Bound objects exist in 2 forms:
@@ -150,15 +66,48 @@ namespace qi
   /// process sending the call, i.e. the client).
   class BoundObject
     : public ObjectHost
+    , public boost::enable_shared_from_this<BoundObject>
     , boost::noncopyable
   {
-  public:
     BoundObject(unsigned int serviceId,
                 unsigned int objectId,
                 qi::AnyObject obj,
                 qi::MetaCallType mct = qi::MetaCallType_Queued,
                 bool bindTerminate = false,
                 boost::optional<boost::weak_ptr<ObjectHost>> owner = {});
+  public:
+    template<typename... Args>
+    static BoundObjectPtr makePtr(Args&&... args)
+    {
+      // Defer destruction to another thread to stay compatible with previous code, otherwise we
+      // might get unsuspected deadlocks in client code.
+      const auto deleter = [](BoundObject* ptr) {
+        const auto deletePtr = [=]{ delete ptr; };
+        const auto eventLoop = getEventLoop();
+
+        // If the event loop is dead, just delete it immediately.
+        // WARNING: This check is racy for 2 reasons:
+        //            - The `EventLoop` pointer accesses are not atomic, so the value returned by
+        //            `getEventLoop` could be incorrect if another thread changes it concurrently.
+        //            - The `EventLoop` could be destroyed at this point, but we currently have no
+        //              API to ensure its lifetime.
+        //          Fixing both these problems requires more work, so we do this check and assume
+        //          the chance of any happening is low.
+        if (!eventLoop)
+        {
+          deletePtr();
+          return;
+        }
+
+        eventLoop->async(deletePtr)
+          // If the async call failed, just delete it immediately.
+          .then(FutureCallbackType_Sync, [=](Future<void> fut) {
+            if (!fut.hasValue())
+              deletePtr();
+          });
+      };
+      return BoundObjectPtr(new BoundObject(std::forward<Args>(args)...), deleter);
+    }
 
     ~BoundObject() override;
 
@@ -215,12 +164,6 @@ namespace qi
     /// @returns True if the object was succesfully unbound from the socket.
     bool unbindFromSocket(const MessageSocketPtr& socket) noexcept;
 
-    /// Because of potential dependencies between the object's destruction and the networking
-    /// resources, we need to be able to transfer the object's destruction responsibility to another
-    /// thread.
-    /// Asynchronously posts a callback and returns a Future set when the callback is finished.
-    static Future<void> deferDestruction(BoundObjectPtr&& object);
-
   private:
     using FutureMap =
       boost::container::flat_map<MessageId, std::pair<Future<AnyReference>, AtomicIntPtr>>;
@@ -246,7 +189,7 @@ namespace qi
       // that its own lifetime can be bound to it.
       // Therefore it is valid to use the aliasing constructor of shared_ptr to transform a
       // shared_ptr of the tracker to a shared_ptr of its bound object.
-      return boost::shared_ptr<ObjectHost>(_tracker.weakPtr().lock(), this);
+      return weak_from_this();
     }
 
     static void _removeCachedFuture(CancelableKitWeak kit, MessageSocketPtr sock, MessageId id);
@@ -296,9 +239,6 @@ namespace qi
     mutable boost::recursive_mutex           _mutex;
     boost::synchronized_value<boost::function<void (MessageSocketPtr)>> _onSocketUnboundCallback;
 
-    struct Tracker : public Trackable<Tracker> { using Trackable::destroy; };
-    Tracker _tracker;
-
     static std::atomic<unsigned int> _nextId;
   };
 
@@ -319,20 +259,27 @@ namespace qi
       class SocketBinding
       {
       public:
+      // DefaultConstructible:
+        SocketBinding() noexcept;
+
       // MoveOnly:
         SocketBinding(const SocketBinding&) = delete;
         SocketBinding& operator=(const SocketBinding&) = delete;
 
-        SocketBinding(SocketBinding&&);
-        SocketBinding& operator=(SocketBinding&&);
+        SocketBinding(SocketBinding&&) noexcept;
+        SocketBinding& operator=(SocketBinding&&) noexcept;
+
+        bool operator==(const SocketBinding& rhs) const noexcept;
+        bool operator<(const SocketBinding& rhs) const noexcept;
+
+        KA_GENERATE_FRIEND_REGULAR_DERIVED_OPS(SocketBinding)
 
       // SocketBinding:
         /// @pre `object != nullptr && socket != nullptr`
         SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept;
         ~SocketBinding();
 
-        const BoundObjectPtr& object() const noexcept { return _object; }
-        BoundObjectPtr& object() noexcept { return _object; }
+        BoundObjectPtr object() const noexcept { return _object; }
 
         MessageSocketPtr socket() const noexcept { return _socket.lock(); }
 

@@ -232,11 +232,20 @@ namespace qi
   ** We need to allocate memory as soon as this function is called
   ** Returned memory MUST be coherent with the buffer used (either on stack/heap)
   ** As we can't know if the buffer will be used on heap later, we've to resize on heap
+  **
+  ** Returns a pointer to the first available byte in the (potentially
+  ** reallocated) buffer memory, or nullptr in case of error.
   */
   void *Buffer::reserve(size_t size)
   {
     if (_p->used + size > _p->available)
-      _p->resize(_p->used + size);
+    {
+      bool success = _p->resize(_p->used + size);
+      if (!success) {
+        qiLogVerbose() << "reserve(" << size << ") failed, buffer size is " << _p->available;
+        return nullptr;
+      }
+    }
 
     void *p = _p->data() + _p->used;
     _p->used += size;
@@ -311,7 +320,7 @@ namespace qi
         {
           for (unsigned int j = i - 16; j < i ; j++)
           {
-            char c = data[j];
+            const auto c = data[j];
             stream << (isgraph(c) ? c : '.');
           }
           stream << '\n';
@@ -326,8 +335,8 @@ namespace qi
       stream << ' ';
 
       for (unsigned int j = i - 16; j < buffer.size(); j++) {
-        char c = data[j];
-        stream << (c >= 0 && isgraph(c) ? c : '.'); // isgraph() required a value which can be represented by an unsigned char
+        const auto c = data[j];
+        stream << (isgraph(c) ? c : '.');
       }
 
       stream.flags(flags);

@@ -278,6 +278,7 @@ namespace qi {
   EventLoopAsio::EventLoopAsio(int threadCount, int minThreadCount, int maxThreadCount,
                                std::string name, bool spawnOnOverload)
     : EventLoopPrivate(std::move(name))
+    , _io(threadCount)
     , _work(nullptr)
     , _minThreads(minThreadCount)
     , _maxThreads(maxThreadCount)
