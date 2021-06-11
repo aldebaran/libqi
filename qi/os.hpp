@@ -625,12 +625,10 @@ namespace qi {
      */
     QI_API long numberOfCPUs();
     /**
-     * \brief Returns an unique uuid for the machine.
+     * \brief Return an unique uuid for the machine.
      * \return The uuid of the machine.
      *
-     * The UUID is stored on disk and will stay unchanged as long as it is not
-     * removed. All programs running on the same machine will have the same UUID
-     * returned. An empty string is returned on failure.
+     * Throw on failure.
      */
     QI_API std::string getMachineId();
     /**

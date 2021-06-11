@@ -7,10 +7,12 @@
 #include <boost/chrono/chrono.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+
 #include <boost/predef/os.h>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/version.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/synchronized_value.hpp>
 
@@ -26,7 +28,9 @@
 #elif BOOST_OS_MACOS
 # include <libproc.h>
 #endif // no header required on linux to check processes
-
+#ifdef WITH_SYSTEMD
+# include <systemd/sd-id128.h>
+#endif
 #include <qi/path.hpp>
 #include <qi/os.hpp>
 #include <qi/log.hpp>
@@ -42,6 +46,44 @@
 qiLogCategory("qi.os");
 
 namespace bfs = boost::filesystem;
+
+#if defined(WITH_SYSTEMD)
+namespace {
+  qi::Uuid getMachineIdFromSystemd()
+  {
+    // Ask libsystemd for the system's machine-id (the content of
+    // `/etc/machine-id`).
+    // Since this id should be kept confidential, we will use a salted version.
+    // Note: libsystemd's sd_id128_get_machine_app_specific() is not used
+    // because it relies on some linux kernel feature which may be unavailable.
+    sd_id128_t systemMachineId = SD_ID128_NULL;
+    const int res = sd_id128_get_machine(&systemMachineId);
+    if (res == 0)
+    {
+      char systemMachineIdStr[SD_ID128_STRING_MAX];
+      // Always succeeds, and sets the terminal NULL char.
+      sd_id128_to_string(systemMachineId, systemMachineIdStr);
+      // Our app salt (generated with `systemd-id128 new`)
+      constexpr qi::Uuid salt{0xdd, 0x96, 0x97, 0x1d, 0x09, 0x12, 0x44, 0xc2,
+                              0xa4, 0x07, 0x8e, 0x79, 0xa8, 0x29, 0x7b, 0x89};
+      // Note: processes with different ids won't be able to
+      // communicate through localhost. If the hash algorithm or the salt
+      // is changed (e.g. with a libqi update), it must be changed for
+      // all the communicating processes at once.
+      using name_generator_sha1 =
+# if (BOOST_VERSION < 106600)
+          boost::uuids::name_generator; // deprecated in boost >= 1.66
+# else
+          boost::uuids::name_generator_sha1;
+# endif
+      return name_generator_sha1(salt)(systemMachineIdStr);
+    }
+    std::ostringstream msg;
+    msg << "failed to get a machine_id from libsystemd, error code: " << res;
+    throw std::runtime_error(msg.str());
+  };
+} // namespace
+#endif
 
 namespace qi {
   namespace os {
@@ -227,12 +269,12 @@ namespace qi {
     }
 
     /* getMachineId will return an uuid as a string.
-     * If the uuid is not created yet, it will generate it and store it
-     * in machine_id file.
-     * Otherwise it will read the file to retrieve the uuid and cache it
-     * for further uses.
-     * If the file is removed, a new file with a different uuid will be
-     * created.
+     *
+     * When libsystemd available, the uuid is generated from systemd's
+     * machine-id.
+     *
+     * Otherwise, the uuid is read from the machine_id file. If the file does
+     * not exist, the uuid is randomly generated and stored in the file.
      */
     std::string getMachineId()
     {
@@ -246,6 +288,14 @@ namespace qi {
       boost::mutex::scoped_lock lock(mutex);
       if (initialized)
         return idString;
+      {
+#if defined(WITH_SYSTEMD)
+        idString = to_string(getMachineIdFromSystemd());
+        initialized = true;
+        return idString;
+#endif
+      }
+
       const qi::Path idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
       boost::filesystem::ifstream idFile(idFilePath);
 
