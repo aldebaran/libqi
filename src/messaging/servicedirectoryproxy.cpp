@@ -15,6 +15,8 @@
 #include <qi/url.hpp>
 #include <qi/macro.hpp>
 
+#include <boost/version.hpp>
+#include <boost/predef/version_number.h>
 #include <boost/range/adaptors.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
@@ -577,11 +579,21 @@ Future<void> ServiceDirectoryProxy::Impl::mirrorAllServices()
           }).andThen(_strand.unwrappedSchedulerFor([=](const std::vector<ServiceInfo>& services) {
               using namespace boost::adaptors;
               const auto mirroredIds =
-                services | transformed([&](const ServiceInfo& serviceInfo) {
+                services | transformed(
+#if (BOOST_VERSION >= 106600) && (BOOST_VERSION < 106800)
+              // Change [1] in Boost.Optional 1.66 broke Boost.Range's support for lambdas,
+              // which was then fixed in Boost.Range 1.68 with [2].
+              // Wrap the lambda in a boost::function if Boost in [1.66, 1.68[ is used.
+              //
+              // [1] https://github.com/boostorg/optional/commit/7541076cf1c95201158e47de10f0c8222fb02a70
+              // [2] https://github.com/boostorg/range/commit/1b4f8100efab5f3b7d9886c3bdfe309b2c500f4e
+                        boost::function<std::pair<std::string, Future<unsigned int>>(const ServiceInfo& serviceInfo)>
+#endif
+                            ([&](const ServiceInfo& serviceInfo) {
                   const auto name = serviceInfo.name();
                   return std::make_pair(name,
                                         mirrorServiceFromSDUnsync(serviceInfo.serviceId(), name));
-                });
+                }));
               return FutureMaybeMirroredIdMap{ begin(mirroredIds), end(mirroredIds) };
             })).unwrap();
       }).unwrap().andThen(&logAnyMirroringFailure);

@@ -20,6 +20,7 @@
 #include <boost/type_traits/add_pointer.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
+#include <boost/type_traits/is_fundamental.hpp>
 #include <boost/type_traits/is_member_function_pointer.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_arity.hpp>

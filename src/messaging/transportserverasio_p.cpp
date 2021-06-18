@@ -244,7 +244,7 @@ namespace qi
     boost::asio::socket_base::reuse_address option(false);
 #else
     boost::asio::socket_base::reuse_address option(true);
-    fcntl(_acceptor->native(), F_SETFD, FD_CLOEXEC);
+    fcntl(_acceptor->native_handle(), F_SETFD, FD_CLOEXEC);
 #endif
     _acceptor->set_option(option);
     try
@@ -359,8 +359,8 @@ namespace qi
     , _self(self)
     , _acceptor(new boost::asio::ip::tcp::acceptor(*asIoServicePtr(ctx)))
     , _live(true)
-    , _sslContext(sock::makeSslContextPtr<sock::NetworkAsio>(*asIoServicePtr(ctx),
-                                                             sock::SslContext<sock::NetworkAsio>::tlsv12))
+    , _sslContext(sock::makeSslContextPtr<sock::NetworkAsio>(
+                    sock::SslContext<sock::NetworkAsio>::tlsv12))
     , _s()
     , _ssl(false)
     , _port(0)
