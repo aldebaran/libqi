@@ -7,6 +7,7 @@
 #ifndef _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
 #define _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
 
+#include <type_traits>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/mpl/find_if.hpp>
@@ -20,7 +21,6 @@
 #include <boost/type_traits/add_pointer.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
-#include <boost/type_traits/is_fundamental.hpp>
 #include <boost/type_traits/is_member_function_pointer.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_arity.hpp>
@@ -81,8 +81,8 @@ KA_WARNING_DISABLE(, noexcept-type)
     template<typename T>
     struct EqTypeBase<T, true>
     {
-      using type = typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type;
-      using rType =  typename boost::mpl::if_<typename boost::is_fundamental<T>::type, void*, T>::type;
+      using type = typename boost::mpl::if_<typename std::is_fundamental<T>::type, void*, T>::type;
+      using rType =  typename boost::mpl::if_<typename std::is_fundamental<T>::type, void*, T>::type;
       using isReference = typename boost::is_reference<T>::type;
       static const int dbgTag = 1;
     };
