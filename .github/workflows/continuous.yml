@@ -1,0 +1,47 @@
+name: CMake
+
+on:
+  push:
+    branches: [ master, release-2.9, team/platform/dev ]
+  pull_request:
+    branches: [ master, release-2.9, team/platform/dev ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    - name: Install Build Tools
+      run: pip install qibuild
+
+    - name: Install Dependencies
+      # TODO move these dependencies in the toolchain
+      run: sudo apt install libgmock-dev
+    
+    - uses: actions/checkout@v2
+
+    - name: Prepare QiBuild Toolchain
+      run: qitoolchain create qisdk https://github.com/victorpaleologue/qisdk-toolchain/releases/download/v1.0.0/feed.xml
+
+    - name: Prepare QiBuild Config
+      run: |
+        qibuild init
+        qibuild add-config qisdk -t qisdk
+
+    - name: Configure
+      run: qibuild configure --debug -DQI_WITH_TESTS=ON -c qisdk
+
+    - name: Build
+      run: qibuild make -c qisdk
+
+    - name: Test
+      run: qitest run -c qisdk
