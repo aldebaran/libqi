@@ -598,7 +598,25 @@ TEST(QiOs, sequentialHostIPAddrs)
   }
 }
 
-TEST(QiOs, getMachineId)
+TEST(QiOs, MachineIdIsAlwaysTheSame)
+{
+  EXPECT_EQ(qi::os::getMachineId(), qi::os::getMachineId());
+}
+
+TEST(QiOs, MachineIdIsNotEmpty)
+{
+  EXPECT_FALSE(qi::os::getMachineId().empty());
+}
+
+TEST(QiOs, MachineIdIsNotNull)
+{
+  EXPECT_NE("00000000-0000-0000-0000-000000000000", qi::os::getMachineId());
+}
+
+// On Android, we cannot ensure that a machine-id will be shared among
+// different processes, so this test is disabled for this platform.
+#ifndef ANDROID
+TEST(QiOs, MachineIdIsSharedBetweenProcesses)
 {
   int status = 0;
   std::string bin = qi::path::findBin("check_machineid");
@@ -623,6 +641,7 @@ TEST(QiOs, getMachineId)
 
   ASSERT_TRUE(uuid1.compare(uuid2) == 0);
 }
+#endif
 
 TEST(QiOs, getMachineIdAsUuid)
 {

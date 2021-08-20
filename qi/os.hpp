@@ -624,13 +624,27 @@ namespace qi {
      *  \return Number of CPUs
      */
     QI_API long numberOfCPUs();
+
     /**
-     * \brief Return an unique uuid for the machine.
-     * \return The uuid of the machine.
+     * \brief Returns an UUID identifying the machine, as a best effort.
+     * \return The uuid of the machine as a string.
      *
-     * Throw on failure.
+     * When libsystemd is available, the UUID is generated from systemd's machine-id.
+     *
+     * On Android, as a best effort as we do not assume any shared file access between processes,
+     * an UUID is generated for the process once and persists for its duration, so that each call
+     * of this function will return the same result. This implies that different processes on a
+     * same Android device will *NOT* share the same machine-id.
+     *
+     * Otherwise, the UUID is read from the machine-id file. If the file does
+     * not exist, the UUID is randomly generated and stored in the file.
+     *
+     * The returned machine-id is never null (00000000-0000-0000-0000-000000000000).
+     *
+     * \throws On failure, throws a `std::exception`.
      */
     QI_API std::string getMachineId();
+
     /**
      * \brief Same as getMachineId but return a uuid and not its string representation.
      */

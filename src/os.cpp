@@ -268,63 +268,44 @@ namespace qi {
       return actualProcessName == (fileName + qi::path::detail::binSuffix());
     }
 
-    /* getMachineId will return an uuid as a string.
-     *
-     * When libsystemd available, the uuid is generated from systemd's
-     * machine-id.
-     *
-     * Otherwise, the uuid is read from the machine_id file. If the file does
-     * not exist, the uuid is randomly generated and stored in the file.
-     */
     std::string getMachineId()
     {
-      static bool initialized = false;
-      static std::string idString;
-
-      if (initialized)
-        return idString;
-
-      static boost::mutex mutex;
-      boost::mutex::scoped_lock lock(mutex);
-      if (initialized)
-        return idString;
-      {
+      static const auto id = [] {
 #if defined(WITH_SYSTEMD)
-        idString = to_string(getMachineIdFromSystemd());
-        initialized = true;
-        return idString;
+        return to_string(getMachineIdFromSystemd());
+#elif BOOST_OS_ANDROID
+        return generateUuid();
+#else
+        const qi::Path idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
+        boost::filesystem::ifstream idFile(idFilePath);
+
+        if (idFile)
+        {
+          std::string id;
+          idFile >> id;
+          idFile.close();
+          if (!id.empty()) {
+            return id;
+          } //else machine id is empty...
+          qiLogWarning() << "machine_id is empty, generating a new one";
+        }
+
+        boost::filesystem::ofstream newIdFile(idFilePath);
+        const auto id = generateUuid();
+        if (newIdFile)
+        {
+          newIdFile << id;
+          newIdFile.close();
+        }
+        else
+        {
+          qiLogError() << "Unable to create file: '" << idFilePath << "'";
+        }
+        return id;
 #endif
-      }
-
-      const qi::Path idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));
-      boost::filesystem::ifstream idFile(idFilePath);
-
-      if (idFile)
-      {
-        idFile >> idString;
-        idFile.close();
-        initialized = true;
-        if (!idString.empty()) {
-          return idString;
-        } //else machine id is empty...
-        qiLogWarning() << "machine_id is empty, generating a new one";
-      }
-
-      boost::filesystem::ofstream newIdFile(idFilePath);
-
-      idString = generateUuid();
-      if (newIdFile)
-      {
-        newIdFile << idString;
-        newIdFile.close();
-        initialized = true;
-      }
-      else
-      {
-        qiLogError() << "Unable to create file: '" << idFilePath << "'";
-      }
-
-      return idString;
+      }();
+      QI_ASSERT(id != "00000000-0000-0000-0000-000000000000");
+      return id;
     }
 
     /// This is implemented in terms of getMachineId(), which is not as
