@@ -38,7 +38,7 @@ jobs:
         qibuild add-config qisdk -t qisdk
 
     - name: Configure
-      run: qibuild configure --debug -DQI_WITH_TESTS=ON -c qisdk
+      run: qibuild configure -c qisdk --debug -DQI_WITH_TESTS=ON -DCMAKE_CXX_FLAGS=-pthread
 
     - name: Build
       run: qibuild make -c qisdk
