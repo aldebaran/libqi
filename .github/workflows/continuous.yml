@@ -25,7 +25,7 @@ jobs:
 
     - name: Install Dependencies
       # TODO move these dependencies in the toolchain
-      run: sudo apt install libgmock-dev
+      run: sudo apt install libgtest-dev libgmock-dev
     
     - uses: actions/checkout@v2
 
