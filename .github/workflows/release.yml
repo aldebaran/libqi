@@ -17,10 +17,11 @@ jobs:
 
     steps:
 
+    - name: Install Utilities
+      run: sudo apt install apt-utils ca-certificates locales curl wget jq libxml2-utils xmlstarlet
+
     - name: Install Build Tools
-      run: |
-        pip install qibuild
-        sudo apt install xmlstarlet
+      run: pip install qibuild
 
     - name: Install Dependencies
       # TODO move these dependencies in the toolchain
