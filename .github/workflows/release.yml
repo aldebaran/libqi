@@ -1,0 +1,60 @@
+name: Release with Toolchain
+
+on:
+  push:
+    tags: "v*"
+
+env:
+  FEED: https://github.com/victorpaleologue/qisdk-toolchain/releases/download/v1.0.0/feed.xml
+
+jobs:
+  gh_tagged_release:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    - name: Install Build Tools
+      run: pip install qibuild
+
+    - name: Install Dependencies
+      # TODO move these dependencies in the toolchain
+      run: sudo apt install libgtest-dev libgmock-dev
+
+    - uses: actions/checkout@v2
+
+    - name: Prepare QiBuild Toolchain
+      run: qitoolchain create qisdk $FEED
+
+    - name: Prepare QiBuild Config
+      run: |
+        qibuild init
+        qibuild add-config qisdk -t qisdk
+
+    - name: Build QiToolchain Package # Outputs the package as a .zip in ./package/
+      run: qibuild package -c qisdk --release -DQI_WITH_TESTS=OFF -DCMAKE_CXX_FLAGS=-pthread
+
+    - name: Release Package
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
+        files: |
+          package/*.zip
+      id: "release"
+
+    - name: Make Feed # Outputs feed.xml
+      run: .github/workflows/make_feed.sh
+
+    - name: Release Feed
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.release.outputs.upload_url }}
+        asset_path: feed.xml
+        asset_name: feed.xml
+        asset_content_type: application/xml
