@@ -18,7 +18,9 @@ jobs:
     steps:
 
     - name: Install Build Tools
-      run: pip install qibuild
+      run: |
+        pip install qibuild
+        sudo apt install xmlstarlet
 
     - name: Install Dependencies
       # TODO move these dependencies in the toolchain
@@ -33,6 +35,9 @@ jobs:
       run: |
         qibuild init
         qibuild add-config qisdk -t qisdk
+
+    - name: Set Version
+      run: xmlstarlet ed --inplace -i '/project/qibuild' -t attr -n version -v `git describe --tags` qiproject.xml
 
     - name: Build QiToolchain Package # Outputs the package as a .zip in ./package/
       run: qibuild package -c qisdk --release -DQI_WITH_TESTS=OFF -DCMAKE_CXX_FLAGS=-pthread
