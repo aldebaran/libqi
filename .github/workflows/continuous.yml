@@ -15,7 +15,7 @@ jobs:
     # well on Windows or Mac.  You can convert this to a matrix build if you need
     # cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
 
     steps:
 
@@ -24,7 +24,10 @@ jobs:
 
     - name: Install Dependencies
       # TODO move these dependencies in the toolchain
-      run: sudo apt install libgtest-dev libgmock-dev
+      run: |
+        sudo add-apt-repository ppa:team-xbmc/ppa # contains libgmock-dev for 18.04
+        sudo apt-get update
+        sudo apt install libgtest-dev libgmock-dev
     
     - uses: actions/checkout@v2
 
