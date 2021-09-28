@@ -3,8 +3,8 @@
 **  See COPYING for the license
 */
 
-#ifndef _QITYPE_PACKAGE_HPP_
-#define _QITYPE_PACKAGE_HPP_
+#ifndef _QITYPE_ANYMODULE_HPP_
+#define _QITYPE_ANYMODULE_HPP_
 
 #include <string>
 #include <map>
@@ -167,7 +167,4 @@ namespace qi {
     ::qi::registerModuleFactory(factoryType, fun);            \
   }
 
-
-
-
-#endif
+#endif // _QITYPE_ANYMODULE_HPP_

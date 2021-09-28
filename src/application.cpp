@@ -55,7 +55,7 @@ static void parseArguments(int argc, char* argv[])
 
 namespace qi {
   static int         globalArgc = -1;
-  static char**      globalArgv = nullptr;
+  static std::vector<char*> globalArgv;
   static bool        globalInitialized = false;
   static bool        globalTerminated = false;
 
@@ -180,7 +180,7 @@ namespace qi {
     globalIoService.emplace(ioServiceConcurrencyHint);
 
     globalArgc = argc;
-    globalArgv = argv;
+    globalArgv = std::vector<char*>(argv, argv + argc);
     std::vector<std::string>& args = lazyGet(globalArguments);
     args.clear();
     for (int i=0; i<argc; ++i)
@@ -232,7 +232,7 @@ namespace qi {
         /* Set arguments to what was not used */
         ::qi::Application::setArguments(args);
         argc = Application::argc();
-        argv = globalArgv;
+        argv = globalArgv.data();
       }
       catch (po::error& e)
       {
@@ -364,7 +364,7 @@ namespace qi {
   {
     globalArgc = static_cast<int>(args.size());
     lazyGet(globalArguments) = args;
-    globalArgv = new char*[args.size() + 1];
+    globalArgv.resize(args.size() + 1);
     for (unsigned i=0; i<args.size(); ++i)
       globalArgv[i] = qi::os::strdup(args[i].c_str());
     globalArgv[args.size()] = 0;
@@ -373,7 +373,7 @@ namespace qi {
   void Application::setArguments(int argc, char** argv)
   {
     globalArgc = argc;
-    globalArgv = argv;
+    globalArgv = std::vector<char*>(argv, argv + argc);
     std::vector<std::string>& args = lazyGet(globalArguments);
     args.resize(argc);
     for (int i=0; i<argc; ++i)
@@ -397,7 +397,7 @@ namespace qi {
 
   const char** Application::argv()
   {
-    return (const char**)globalArgv;
+    return const_cast<const char**>(globalArgv.data());
   }
 
   bool Application::atEnter(std::function<void()> func)

@@ -20,22 +20,22 @@ function(qi_create_module name)
   set(_namelist)
   string(FIND "${name}" "." _idx REVERSE)
 
-  string(SUBSTRING "${name}" "0" "${_idx}" _pkgname)
+  string(SUBSTRING "${name}" "0" "${_idx}" _modulename)
   #only libname
   if (_idx EQUAL -1)
-    set(_pkgname "")
+    set(_modulename "")
     set(_libname "${name}")
   else()  #pkg + lib name
     math(EXPR _idxlib "${_idx} + 1")
     string(SUBSTRING "${name}" "${_idxlib}" "-1"      _libname)
   endif()
 
-  string(REPLACE "." "/" _pkgpathname "${_pkgname}")
+  string(REPLACE "." "/" _modulepathname "${_modulename}")
 
   qi_info("Module: ${name}")
 
   #TODO: check for SUBFOLDER spec already provided... FAIL in that case..
-  qi_create_lib("${name}" SHARED ${ARGN} SUBFOLDER "${_pkgpathname}" NO_LOG)
+  qi_create_lib("${name}" SHARED ${ARGN} SUBFOLDER "${_modulepathname}" NO_LOG)
   qi_use_lib("${name}" qi)
   set_target_properties("${name}" PROPERTIES OUTPUT_NAME "${_libname}")
 
