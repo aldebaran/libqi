@@ -2,16 +2,18 @@ add_definitions(-DQI_IS_TEST)
 
 include_directories(".")
 
-qi_create_lib(qitestutils
-  STATIC NO_INSTALL
-  SRC
-    "qi/testutils/testutils.hpp"
-    "qi/testutils/testutils.cpp"
-    "qi/testutils/mockutils.hpp"
-  DEPENDS qi gmock
-)
-
-qi_stage_lib(qitestutils)
+option(QI_WITH_TESTUTILS "build the testutils library" TRUE)
+if(QI_WITH_TESTUTILS)
+  qi_create_lib(qitestutils
+    STATIC NO_INSTALL
+    SRC
+      "qi/testutils/testutils.hpp"
+      "qi/testutils/testutils.cpp"
+      "qi/testutils/mockutils.hpp"
+    DEPENDS qi gmock
+  )
+  qi_stage_lib(qitestutils)
+endif()
 
 add_subdirectory("qi")
 add_subdirectory("type")
