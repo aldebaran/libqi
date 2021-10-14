@@ -188,7 +188,7 @@ namespace qi
         auto ioServiceStranded(Proc&& p)
           -> decltype(StrandTransfo<N>{std::declval<IoService<N>*>()}(std::forward<Proc>(p)))
         {
-          return StrandTransfo<N>{&socket()->get_io_service()}(std::forward<Proc>(p));
+          return StrandTransfo<N>{ &N::getIoService(*socket()) }(std::forward<Proc>(p));
         }
 
         ka::data_bound_transfo_t<std::shared_ptr<Impl>> lifetimeTransfo()
@@ -198,7 +198,7 @@ namespace qi
 
         StrandTransfo<N> syncTransfo()
         {
-          return {&(*socket()).get_io_service()};
+          return { &N::getIoService(*socket()) };
         }
       };
       std::shared_ptr<Impl> _impl;

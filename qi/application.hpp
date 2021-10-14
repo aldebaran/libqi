@@ -264,7 +264,7 @@ namespace qi {
 
 //THIS IS INTERNAL
 //API is not maintained for this function
-//The user need to include <boost/program_options.hpp> and <boost/bind.hpp>
+//The user needs to include <boost/program_options.hpp> and <boost/bind/bind.hpp>
 //Use like this:
 //namespace {
 //  _QI_COMMAND_LINE_OPTIONS(

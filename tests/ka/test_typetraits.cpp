@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <ka/typetraits.hpp>
 #include <boost/function.hpp>
-#include <boost/config/suffix.hpp>
 #include <ka/macro.hpp>
 #include <string>
 #include <array>

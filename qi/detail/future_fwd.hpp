@@ -28,7 +28,9 @@
 # include <boost/shared_ptr.hpp>
 # include <boost/make_shared.hpp>
 # include <boost/function.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 # include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 # include <boost/thread/recursive_mutex.hpp>
 # include <boost/exception/diagnostic_information.hpp>
 

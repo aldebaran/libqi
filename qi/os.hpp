@@ -702,7 +702,7 @@ namespace qi {
         "to_string() accepts only arithmetic types (i.e. integral types and "
         "floating-point types) and enum types.");
 
-#if BOOST_OS_ANDROID && BOOST_COMP_GNUC
+#if ANDROID && BOOST_COMP_GNUC
       // workaround android gcc missing std::to_string on arm
       // http://stackoverflow.com/questions/17950814/how-to-use-stdstoul-and-stdstoull-in-android/18124627#18124627
       std::ostringstream stream;

@@ -95,6 +95,13 @@ namespace mock
         return ka::compose(ka::constant_function(), _strand.schedulerFor(ka::fwd<Proc>(p)));
       }
     };
+    /// NetSslSocket S
+    template<typename S>
+    static io_service_type& getIoService(const S&)
+    {
+      return defaultIoService();
+    }
+
     struct ssl_context_type
     {
       enum class method {tlsv12};
@@ -181,7 +188,6 @@ namespace mock
       };
       io_service_type* _io;
       ssl_socket_type(io_service_type& io, ssl_context_type) : _io(&io) {}
-      io_service_type& get_io_service() {return *_io;}
       void set_verify_mode(ssl_verify_mode_type) {}
 
       using _anyAsyncHandshaker = std::function<void (handshake_type, _anyHandler)>;
@@ -192,6 +198,9 @@ namespace mock
 
       struct next_layer_type {} _next_layer;
       next_layer_type& next_layer() {return _next_layer;}
+
+      struct executor_type {};
+      executor_type get_executor() { return {}; }
     };
     struct acceptor_type
     {
@@ -199,7 +208,6 @@ namespace mock
       io_service_type& _io;
       using _anyAsyncAccepter = std::function<void (ssl_socket_type::next_layer_type&, _anyHandler)>;
 
-      io_service_type& get_io_service() {return _io;}
       void open(_endpoint::protocol_t) {}
       bool is_open() const {return true;}
       void set_option(accept_option_reuse_address_type) {}
@@ -248,7 +256,6 @@ KA_WARNING_POP()
       using _anyAsyncResolver = std::function<void (query, _anyResolveHandler)>;
       static _anyAsyncResolver async_resolve;
       void cancel() {}
-      io_service_type& get_io_service() {return _io;}
     };
 
     static io_service_type& defaultIoService()

@@ -8,7 +8,10 @@
 #include <iterator>
 #include <boost/lexical_cast.hpp>
 #ifdef WITH_BOOST_LOCALE
+// Disable deprecation warnings about `std::auto_ptr`.
+#  define BOOST_LOCALE_HIDE_AUTO_PTR
 #  include <boost/locale.hpp>
+#  undef BOOST_LOCALE_HIDE_AUTO_PTR
 #endif
 #include "jsoncodec_p.hpp"
 

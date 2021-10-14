@@ -39,7 +39,7 @@
 
 #include "sdklayout.hpp"
 
-#if BOOST_OS_ANDROID && BOOST_COMP_GNUC
+#if ANDROID && BOOST_COMP_GNUC
 #include <sstream>
 #endif
 
@@ -71,11 +71,7 @@ namespace {
       // is changed (e.g. with a libqi update), it must be changed for
       // all the communicating processes at once.
       using name_generator_sha1 =
-# if (BOOST_VERSION < 106600)
-          boost::uuids::name_generator; // deprecated in boost >= 1.66
-# else
           boost::uuids::name_generator_sha1;
-# endif
       return name_generator_sha1(salt)(systemMachineIdStr);
     }
     std::ostringstream msg;
@@ -273,7 +269,7 @@ namespace qi {
       static const auto id = [] {
 #if defined(WITH_SYSTEMD)
         return to_string(getMachineIdFromSystemd());
-#elif BOOST_OS_ANDROID
+#elif ANDROID
         return generateUuid();
 #else
         const qi::Path idFilePath(qi::path::userWritableConfPath("qimessaging", "machine_id"));

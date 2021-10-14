@@ -28,7 +28,9 @@
 #include <boost/function_types/member_function_pointer.hpp>
 #include <boost/function_types/result_type.hpp>
 #include <boost/function_types/parameter_types.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include <qi/atomic.hpp>
@@ -568,7 +570,8 @@ KA_WARNING_DISABLE(, noexcept-type)
     template<typename C, typename R>
     AnyFunction makeAnyFunctionBare(R (C::*fun)(const AnyArguments&))
     {
-      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncer<C, R>, _1, fun));
+      namespace ph = std::placeholders;
+      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncer<C, R>, ph::_1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
       return res;
@@ -577,8 +580,9 @@ KA_WARNING_DISABLE(, noexcept-type)
     template<typename R>
     AnyFunction makeAnyFunctionBare(R (*fun)(const AnyArguments&))
     {
+      namespace ph = std::placeholders;
       boost::function<R (const AnyArguments&)> fu = fun;
-      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, _1, fun));
+      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, ph::_1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
       return res;
@@ -586,7 +590,8 @@ KA_WARNING_DISABLE(, noexcept-type)
 
     template<typename R> AnyFunction makeAnyFunctionBare(boost::function<R (const AnyArguments&)> fun)
     {
-      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, _1, fun));
+      namespace ph = std::placeholders;
+      AnyFunction res = AnyFunction::fromDynamicFunction(boost::bind(&bouncerBF<R>, ph::_1, fun));
       // The signature storage in GO will drop first argument, and bug if none is present
       const_cast<std::vector<TypeInterface*> &>(res.functionType()->argumentsType()).push_back(typeOf<AnyValue>());
       return res;

@@ -9,7 +9,9 @@
 
 #include <qi/trackable.hpp>
 #include <qi/type/detail/manageable.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <qi/type/detail/functionsignature.hxx>
 
 namespace qi

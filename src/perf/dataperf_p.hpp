@@ -12,7 +12,11 @@
 #include <qi/perf/dataperf.hpp>
 
 #include <qi/os.hpp>
+
+// TODO: Remove once we migrate to a non-deprecated boost timer type.
+#define BOOST_ALLOW_DEPRECATED_HEADERS
 #include <boost/timer.hpp>
+#undef BOOST_ALLOW_DEPRECATED_HEADERS
 
 namespace qi
 {

@@ -7,7 +7,10 @@
 #include <boost/filesystem/fstream.hpp>
 
 #include <boost/filesystem.hpp>
+// Disable deprecation warnings about `std::auto_ptr`.
+#define BOOST_LOCALE_HIDE_AUTO_PTR
 #include <boost/locale.hpp>
+#undef BOOST_LOCALE_HIDE_AUTO_PTR
 #include <boost/thread/mutex.hpp>
 
 #include <qi/translator.hpp>

@@ -181,17 +181,18 @@ namespace qi { namespace sock {
 ///   && Regular(V)
 ///   && HandshakeSide<S>: NetHandshakeSide
 ///   && Lowest<S>: NetLowestSocket
+///   && Executor<S>: Regular
 ///   && With O ioServiceLValue,
 ///           C sslContext,
 ///           V sslVerifyMode,
 ///           HandshakeSide<S> handshakeSide,
 ///           NetHandler handler, the following are valid:
 ///        S sslSocket{ioServiceLValue, sslContext};
-///     && O& io = sslSocket.get_io_service();
 ///     && sslSocket.set_verify_mode(sslVerifyMode)
 ///     && sslSocket.async_handshake(handshakeSide, handler)
 ///     && Lowest<S>& l = sslSocket.lowest_layer();
 ///     && auto& n = sslSocket.next_layer();
+///     && Executor<S>& e = sslSocket.get_executor();
 /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /// A socket that can send and receive data.
 /// The sending and receiving is done with external functions.
@@ -215,8 +216,7 @@ namespace qi { namespace sock {
 ///           S socket,
 ///           const NetHandler handler,
 ///           E& errorCode, the following are valid:
-///          I& io = acceptor.get_io_service();
-///       && acceptor.open(endpoint.protocol());
+///          acceptor.open(endpoint.protocol());
 ///       && bool b = const_acceptor.is_open();
 ///       && acceptor.set_option(O{reuse});
 ///       && acceptor.bind(endpoint);
@@ -262,7 +262,6 @@ namespace qi { namespace sock {
 ///        R resolver{ioServiceLValue};
 ///     && resolver.async_resolve(query, resolveHandler)
 ///     && resolver.cancel();
-///     && NetIoService& io = resolver.get_io_service();
 ///     && If `resolver` is destroyed before `resolveHandler` has been called,
 ///         `resolveHandler` must eventually be called with an error equal to
 ///         `operationAborted<E>()`
@@ -296,6 +295,7 @@ namespace qi { namespace sock {
 ///           NetTransferHandler transferHandler, the following is valid:
 ///        IoService<N>& io = N::defaultIoService();
 ///        Regular v = N::sslVerifyNone();
+///     && IoService<N>& io = N::getIoService(sslSocketLValue)
 ///     && N::setSocketNativeOptionsWindows(handle, i) if compiled on Windows
 ///     && N::setSocketNativeOptionsLinux(handle, i) if compiled on Linux
 ///     && N::setSocketNativeOptionsMacOs(handle) if compiled on MacOs
