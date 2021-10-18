@@ -22,6 +22,7 @@ qi_add_optional_package(SYSTEMD "Enable usage of journald")
 # We always want boost filesystem v3
 add_definitions("-DBOOST_FILESYSTEM_VERSION=3")
 add_definitions("-DBOOST_ASIO_DISABLE_STD_CHRONO")
+add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 
 if(MSVC)
   add_definitions(" -DWIN32_LEAN_AND_MEAN -DNOMINMAX")
