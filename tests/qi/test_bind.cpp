@@ -197,7 +197,7 @@ namespace {
   struct TestBindActor : ::testing::Test {};
 
   using ObjectTypeList = ::testing::Types<ActorType, NotActorType>;
-  TYPED_TEST_CASE(TestBindActor, ObjectTypeList);
+  TYPED_TEST_SUITE(TestBindActor, ObjectTypeList);
 
 }
 

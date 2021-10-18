@@ -25,7 +25,7 @@ using NumericTypes = testing::Types<char, unsigned char,
 
 template<typename T>
 struct NumericConvertTyped : testing::Test {};
-TYPED_TEST_CASE(NumericConvertTyped, NumericTypes);
+TYPED_TEST_SUITE(NumericConvertTyped, NumericTypes);
 
 TYPED_TEST(NumericConvertTyped, ReturnTypeIsFirstTemplateParamater)
 {
@@ -72,7 +72,7 @@ TEST(NumericConvert, UnderflowThrows)
 
 template<typename T>
 struct NumericConvertBoundTyped : testing::Test {};
-TYPED_TEST_CASE(NumericConvertBoundTyped, NumericTypes);
+TYPED_TEST_SUITE(NumericConvertBoundTyped, NumericTypes);
 
 TYPED_TEST(NumericConvertBoundTyped, ReturnTypeIsFirstTemplateParamater)
 {

@@ -1944,7 +1944,7 @@ using ObjectWithReadOnlyPropertyTypes = testing::Types<
 >;
 }
 
-TYPED_TEST_CASE(TestCallReadOnlyProperty, ObjectWithReadOnlyPropertyTypes);
+TYPED_TEST_SUITE(TestCallReadOnlyProperty, ObjectWithReadOnlyPropertyTypes);
 
 TYPED_TEST(TestCallReadOnlyProperty, GetProperty)
 {

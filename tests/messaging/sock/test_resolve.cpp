@@ -117,7 +117,7 @@ using sequences = testing::Types<
   qi::sock::ConnectSocketFun<qi::sock::NetworkAsio>, qi::sock::ConnectSocketFutureFun<qi::sock::NetworkAsio>
 >;
 
-TYPED_TEST_CASE(NetResolveUrl, sequences);
+TYPED_TEST_SUITE(NetResolveUrl, sequences);
 
 TYPED_TEST(NetResolveUrl, WrongUrl)
 {

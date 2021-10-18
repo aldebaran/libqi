@@ -15,7 +15,7 @@ TEST(Uri, IsRegular) {
 
 struct UriConstructionAtIndex : testing::TestWithParam<std::size_t> {};
 
-INSTANTIATE_TEST_CASE_P(GoodUriIndex,
+INSTANTIATE_TEST_SUITE_P(GoodUriIndex,
                         UriConstructionAtIndex,
                         testing::Range(std::size_t{}, boost::size(ka::test::uri_strings)));
 
@@ -31,7 +31,7 @@ TEST_P(UriConstructionAtIndex, GoodUriParse) {
 
 struct UriConstructionWithInput : testing::TestWithParam<std::string> {};
 
-INSTANTIATE_TEST_CASE_P(BadInput,
+INSTANTIATE_TEST_SUITE_P(BadInput,
                         UriConstructionWithInput,
                         testing::ValuesIn(ka::test::bad_uri_list()));
 
@@ -61,7 +61,7 @@ TEST(UriConstruction, AuthorityIsFollowedByAbsoluteOrEmptyPath) {
 
 struct UriAtIndex : testing::TestWithParam<std::size_t> {};
 
-INSTANTIATE_TEST_CASE_P(WithGoodUriIndex,
+INSTANTIATE_TEST_SUITE_P(WithGoodUriIndex,
                         UriAtIndex,
                         testing::Range(std::size_t{}, boost::size(ka::test::uri_strings)));
 

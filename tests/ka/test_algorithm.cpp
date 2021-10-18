@@ -24,7 +24,7 @@ using sequences = testing::Types<
   std::forward_list<int>, boost::container::static_vector<int, 9>,
   boost::container::small_vector<int, 9>, boost::container::slist<int>>;
 
-TYPED_TEST_CASE(EraseIfSequence, sequences);
+TYPED_TEST_SUITE(EraseIfSequence, sequences);
 
 struct even_t {
   /// Arithmetic N
@@ -69,7 +69,7 @@ using associative_sequences = testing::Types<
   std::map<int, char>, std::multimap<int, char>, std::unordered_map<int, char>,
   boost::container::flat_map<int, char>, boost::container::flat_multimap<int, char>>;
 
-TYPED_TEST_CASE(EraseIfAssociativeSequence, associative_sequences);
+TYPED_TEST_SUITE(EraseIfAssociativeSequence, associative_sequences);
 
 struct even_key_t {
   /// Pair<Arithmetic, _> T
@@ -115,7 +115,7 @@ using sets = testing::Types<
   std::set<int>, std::multiset<int>, std::unordered_set<int>,
   boost::container::flat_set<int>, boost::container::flat_multiset<int>>;
 
-TYPED_TEST_CASE(EraseIfSet, sets);
+TYPED_TEST_SUITE(EraseIfSet, sets);
 
 TYPED_TEST(EraseIfSet, SetsEmpty) {
   using S = TypeParam;

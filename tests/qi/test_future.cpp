@@ -1452,7 +1452,7 @@ struct FutureValue : testing::Test {
 using unit_types = testing::Types<qi::UnitFuture, UnitFutureSync>;
 
 // Make `FutureValue` tests with `Future` and `FutureSync`.
-TYPED_TEST_CASE(FutureValue, unit_types);
+TYPED_TEST_SUITE(FutureValue, unit_types);
 
 namespace
 {

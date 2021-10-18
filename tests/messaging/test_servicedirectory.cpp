@@ -125,7 +125,7 @@ ServiceInitEndpointsAndRelativeEndpointExpectations servInitEpAndRelEpExpect[] =
   }
 };
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   FeatureSwitch,
   ServiceDirectoryServiceRelativeEndpoint,
   testing::Combine(

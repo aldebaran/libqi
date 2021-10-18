@@ -38,7 +38,7 @@ using container_types = testing::Types<
   std::list<ka::test::A>
 >;
 
-TYPED_TEST_CASE(ArkInputIterTemplate, container_types);
+TYPED_TEST_SUITE(ArkInputIterTemplate, container_types);
 
 // Basic manipulations (an input iterator is not a regular value so `is_regular`
 // is not used).

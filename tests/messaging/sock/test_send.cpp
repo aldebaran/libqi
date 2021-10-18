@@ -197,7 +197,7 @@ using sequences = testing::Types<
   //, qi::sock::MessageReceiver<qi::sock::NetworkAsio>, qi::sock::Connected<qi::sock::NetworkAsio>
 >;
 
-TYPED_TEST_CASE(NetSendMessageEnqueue, sequences);
+TYPED_TEST_SUITE(NetSendMessageEnqueue, sequences);
 
 TYPED_TEST(NetSendMessageEnqueue, MultipleSendsFromMultipleThreads)
 {

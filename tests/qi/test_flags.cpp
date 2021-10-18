@@ -159,7 +159,7 @@ public:
 };
 
 typedef ::testing::Types<ExampleFlags, ExampleClassFlags> FlagsTypes;
-TYPED_TEST_CASE(TestFlags, FlagsTypes);
+TYPED_TEST_SUITE(TestFlags, FlagsTypes);
 
 TYPED_TEST(TestFlags, Regular)
 {

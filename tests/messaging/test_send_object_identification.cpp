@@ -69,8 +69,8 @@ namespace {
                                        , AsService<NewObject>
                                        >;
 
-  TYPED_TEST_CASE(SendObjectIdentityFactoryType, FactoryTypes);
-  TYPED_TEST_CASE(SendObjectIdentityInterfaceProxyFactoryType, FactoryTypes);
+  TYPED_TEST_SUITE(SendObjectIdentityFactoryType, FactoryTypes);
+  TYPED_TEST_SUITE(SendObjectIdentityInterfaceProxyFactoryType, FactoryTypes);
 
 }
 
@@ -487,7 +487,7 @@ namespace
     : public SendObjectIdentityFactoryType<ObjectFactory>
   {
   };
-  TYPED_TEST_CASE(SomeInterfaceFactoryType, FactoryTypes);
+  TYPED_TEST_SUITE(SomeInterfaceFactoryType, FactoryTypes);
 }
 
 TYPED_TEST(SomeInterfaceFactoryType, IdentityIsMaintainedWhenSentToInterfaceSpecializedStoreRetrievingAnyObject)

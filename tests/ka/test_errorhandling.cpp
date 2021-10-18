@@ -88,7 +88,7 @@ using handle_exception_rethrow_types = testing::Types<
   test_error_handling::handle_exception_rethrow_fn_t
 >;
 
-TYPED_TEST_CASE(TestErrorHandlingHandleExceptionRethrow, handle_exception_rethrow_types);
+TYPED_TEST_SUITE(TestErrorHandlingHandleExceptionRethrow, handle_exception_rethrow_types);
 
 TYPED_TEST(TestErrorHandlingHandleExceptionRethrow, ExceptionHandleExceptionRegular) {
   using namespace ka;
@@ -102,7 +102,7 @@ struct TestErrorHandlingExceptionParam : testing::Test {};
 
 using exceptions = testing::Types<std::runtime_error, boost_error_t, std::string>;
 
-TYPED_TEST_CASE(TestErrorHandlingExceptionParam, exceptions);
+TYPED_TEST_SUITE(TestErrorHandlingExceptionParam, exceptions);
 
 TYPED_TEST(TestErrorHandlingExceptionParam, ExceptionHandleExceptionRethrow) {
   using Exception = TypeParam;
@@ -196,7 +196,7 @@ using invoke_catch_types = testing::Types<
   test_error_handling::invoke_catch_fn_t
 >;
 
-TYPED_TEST_CASE(TestErrorHandlingInvokeCatch, invoke_catch_types);
+TYPED_TEST_SUITE(TestErrorHandlingInvokeCatch, invoke_catch_types);
 
 TYPED_TEST(TestErrorHandlingInvokeCatch, NoException) {
   using namespace ka;

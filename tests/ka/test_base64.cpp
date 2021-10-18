@@ -17,7 +17,7 @@ namespace {
   };
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   DefaultInstantiation,
   Base64WithoutPadding,
   testing::Values(
@@ -168,7 +168,7 @@ TEST_P(Base64WithoutPadding, EncodeString) {
 struct Base64WithPadding : testing::TestWithParam<std::pair<char const*, char const*>> {
 };
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   DefaultInstantiation,
   Base64WithPadding,
   testing::Values(

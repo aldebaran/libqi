@@ -345,7 +345,7 @@ using Containers = testing::Types<
 
 template<typename T>
 struct TestPropertyWithContainerType : testing::Test {};
-TYPED_TEST_CASE(TestPropertyWithContainerType, Containers);
+TYPED_TEST_SUITE(TestPropertyWithContainerType, Containers);
 
 TYPED_TEST(TestPropertyWithContainerType, CanBeInstanciatedWithContainer)
 {

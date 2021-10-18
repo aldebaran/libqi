@@ -347,7 +347,7 @@ namespace test_conceptpredicate {
 
 template<typename T>
 struct ConceptPredicateIsFunctor : testing::Test {};
-TYPED_TEST_CASE(ConceptPredicateIsFunctor, test_conceptpredicate::lift_types);
+TYPED_TEST_SUITE(ConceptPredicateIsFunctor, test_conceptpredicate::lift_types);
 
 TYPED_TEST(ConceptPredicateIsFunctor, Basic) {
   using namespace ka;

@@ -1071,7 +1071,7 @@ using TypeInterfaces = ::testing::Types<
    PointerTypeInterface,
    DynamicTypeInterface>;
 
-TYPED_TEST_CASE(ConvertWithTypeInterface, TypeInterfaces);
+TYPED_TEST_SUITE(ConvertWithTypeInterface, TypeInterfaces);
 
 TYPED_TEST(ConvertWithTypeInterface, convertInvalidToNullTypeInterfaceYieldsInvalid)
 {
@@ -1107,7 +1107,7 @@ using NonAnyReferenceTypes = testing::Types<QI_INTERNAL_NON_ANYREFERENCE_TYPES>;
 using Types = testing::Types<QI_INTERNAL_NON_ANYREFERENCE_TYPES, qi::AnyValue>;
 #undef QI_INTERNAL_NON_ANYREFERENCE_TYPES
 
-TYPED_TEST_CASE(ConvertWithTypes, Types);
+TYPED_TEST_SUITE(ConvertWithTypes, Types);
 
 TYPED_TEST(ConvertWithTypes, convertInvalidToOtherTypeInterfaceIsYieldsInvalid)
 {
@@ -1362,7 +1362,7 @@ TEST(Value, OptionalAnyValue)
 }
 
 class TypeParameterizedAutoAnyReference : public ::testing::TestWithParam<TypeInterface*> {};
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     MostCommonInterfaces,
     TypeParameterizedAutoAnyReference,
     ::testing::Values(
@@ -1403,7 +1403,7 @@ TEST_P(TypeParameterizedAutoAnyReference, AutoAnyReferenceFromAnyReferenceShares
 
 template<typename T>
 class TypedAutoAnyReference : public ::testing::Test {};
-TYPED_TEST_CASE(TypedAutoAnyReference, NonAnyReferenceTypes);
+TYPED_TEST_SUITE(TypedAutoAnyReference, NonAnyReferenceTypes);
 
 TYPED_TEST(TypedAutoAnyReference, AutoAnyReferenceFromValueSharesItsType)
 {

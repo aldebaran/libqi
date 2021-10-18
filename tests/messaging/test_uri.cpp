@@ -9,7 +9,7 @@ using namespace qi;
 
 struct UriIsLoopbackAddressWithInput : testing::TestWithParam<std::string>{};
 
-INSTANTIATE_TEST_CASE_P(LoopbackHosts,
+INSTANTIATE_TEST_SUITE_P(LoopbackHosts,
                         UriIsLoopbackAddressWithInput,
                         testing::Values(
                           "localhost",

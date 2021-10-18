@@ -335,7 +335,7 @@ struct TestURLFromUriPortParsingFails : testing::TestWithParam<qi::Uri>{};
 
 // Anything after the port (path, query or fragment) is included in it and thus makes it fail if
 // it's not only digits.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   AnythingAfterPort,
   TestURLFromUriPortParsingFails,
   testing::Values(
@@ -356,7 +356,7 @@ TEST_P(TestURLFromUriPortParsingFails, Basic)
 
 struct TestURLToUri : testing::TestWithParam<std::pair<qi::Url, ka::opt_t<qi::Uri>>> {};
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   InputUrlExpectedUriPair,
   TestURLToUri,
   testing::Values(

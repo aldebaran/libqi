@@ -231,8 +231,8 @@ namespace {
                                         , SchemeTcpSSL
                                         >;
 
-  TYPED_TEST_CASE(NetMessageSocket, SchemeTypes);
-  TYPED_TEST_CASE(NetMessageSocketAsio, SchemeTypes);
+  TYPED_TEST_SUITE(NetMessageSocket, SchemeTypes);
+  TYPED_TEST_SUITE(NetMessageSocketAsio, SchemeTypes);
 
 }
 
