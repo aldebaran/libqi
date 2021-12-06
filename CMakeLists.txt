@@ -45,18 +45,6 @@ if (WITH_SYSTEMD)
 endif()
 #### }}}
 
-if (WITH_PROBES)
-  find_package(qiprobes)
-  qiprobes_create_probe(tp_qi
-    src/tp_qi.in.h
-    PROVIDER_NAME qi_qi)
-  qiprobes_instrument_files(tp_qi
-    src/eventloop.cpp)
-  set(_tp_qi "tp_qi")
-else()
-  set(_tp_qi "")
-endif()
-
 #### Set compilation flags {{{
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
@@ -462,7 +450,6 @@ qi_create_lib(qi SHARED
     BOOST_REGEX
     BOOST_PROGRAM_OPTIONS
     BOOST_RANDOM
-  SUBMODULE ${_tp_qi}
 )
 
 
