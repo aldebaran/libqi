@@ -3,6 +3,7 @@
 #define QI_OBJECTUID_HPP
 
 #include <boost/optional.hpp>
+#include <ka/typetraits.hpp>
 #include <ka/utility.hpp>
 #include <qi/ptruid.hpp>
 
@@ -32,7 +33,9 @@ namespace qi
     using std::begin;
     using std::end;
     ObjectUid uid;
-    if (std::distance(begin(r), end(r)) == size(uid))
+    using It = ka::Decay<decltype(begin(r))>;
+    using DiffType = typename std::iterator_traits<It>::difference_type;
+    if (std::distance(begin(r), end(r)) == static_cast<DiffType>(size(uid)))
     {
       std::copy(begin(r), end(r), begin(uid));
       return uid;

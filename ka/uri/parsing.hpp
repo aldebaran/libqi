@@ -1068,7 +1068,7 @@ auto decode_percent_unreserved(std::string const& s) -> std::string {
   char percent = '\0';
   iss >> percent >> std::hex >> encoded_char;
   assert(percent == '%');
-  assert(encoded_char <= std::numeric_limits<char>::max());
+  assert(encoded_char <= static_cast<unsigned int>(std::numeric_limits<char>::max()));
   auto const decoded_char = static_cast<char>(encoded_char);
   // If it is a reserved character, return the percent encoded version.
   if (!grammar::reserved(&decoded_char, &decoded_char + 1).empty()) {
