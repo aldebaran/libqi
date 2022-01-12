@@ -159,7 +159,7 @@
  * \brief Generate a compiler warning stating a header is deprecated.
  * add a message to explain what user should do
  */
-#if !defined(WITH_DEPRECATED) || defined(QI_NO_DEPRECATED_HEADER)
+#if defined(QI_NO_DEPRECATED_HEADER)
 # define QI_DEPRECATED_HEADER(x)
 #else
 # define QI_DEPRECATED_HEADER(x) KA_PRAGMA_MESSAGE("\
