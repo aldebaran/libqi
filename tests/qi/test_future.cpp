@@ -1583,3 +1583,22 @@ TEST(FutureErrorFromException, WithTransfo)
   EXPECT_EQ(0u, err.find(prefix)) << err;
   EXPECT_NE(std::string::npos, err.find("an exception"));
 }
+
+TEST(ToAnyValueFuture, Basic)
+{
+  using namespace qi;
+  Promise<int> prom;
+  auto fut = toAnyValueFuture(prom.future());
+  prom.setValue(42);
+  EXPECT_EQ(AnyValue::from(42), fut.value());
+}
+
+TEST(ToAnyValueFuture, Void)
+{
+  using namespace qi;
+  Promise<void> prom;
+  auto fut = toAnyValueFuture(prom.future());
+  prom.setValue(nullptr);
+  EXPECT_EQ(AnyValue::make<void>(), fut.value());
+}
+
