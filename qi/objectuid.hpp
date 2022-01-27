@@ -21,12 +21,13 @@ namespace qi
   /// Deserializes an ObjectUid from a range of bytes.
   /// @returns An ObjectUid or none if the range has the wrong size.
   ///
-  /// Post-conditions (where empty(r) means begin(r) == end(r)):
-  ///   std::distance(begin(r), end(r)) == size(uid)) == !result.empty()
+  /// Post-condition (where result == deserializeObjectUid(r)):
+  ///   (std::distance(begin(r), end(r)) == size(uid)) == result.has_value()
   ///
   /// Invariant: boost::range::equal(serializeObjectUid(*deserializeObjectUid(r)), r)
+  ///   provided deserializeObjectUid(r).has_value()
   ///
-  /// ForwardRange<T> R, where T is implicitly convertible to uint8_t
+  /// Linearizable<T> R, where T is implicitly convertible to uint8_t
   template<typename R>
   boost::optional<ObjectUid> deserializeObjectUid(const R& r)
   {
