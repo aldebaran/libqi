@@ -970,3 +970,45 @@ TEST(IsInputIterator, Basic) {
   static_assert( IsInputIterator<list_iterator_t>::value, "");
   static_assert( IsInputIterator<vector_iterator_t>::value, "");
 }
+
+TEST(IsForwardIterator, Basic) {
+  using namespace ka;
+  using namespace ::detail;
+  static_assert(!IsForwardIterator<input_iterator_tagged_t>::value, "");
+  static_assert( IsForwardIterator<forward_iterator_tagged_t>::value, "");
+  static_assert( IsForwardIterator<bidirectional_iterator_tagged_t>::value, "");
+  static_assert( IsForwardIterator<random_access_iterator_tagged_t>::value, "");
+
+  static_assert(!IsForwardIterator<istream_iterator_t>::value, "");
+  static_assert( IsForwardIterator<forward_list_iterator_t>::value, "");
+  static_assert( IsForwardIterator<list_iterator_t>::value, "");
+  static_assert( IsForwardIterator<vector_iterator_t>::value, "");
+}
+
+TEST(IsBidirectionalIterator, Basic) {
+  using namespace ka;
+  using namespace ::detail;
+  static_assert(!IsBidirectionalIterator<input_iterator_tagged_t>::value, "");
+  static_assert(!IsBidirectionalIterator<forward_iterator_tagged_t>::value, "");
+  static_assert( IsBidirectionalIterator<bidirectional_iterator_tagged_t>::value, "");
+  static_assert( IsBidirectionalIterator<random_access_iterator_tagged_t>::value, "");
+
+  static_assert(!IsBidirectionalIterator<istream_iterator_t>::value, "");
+  static_assert(!IsBidirectionalIterator<forward_list_iterator_t>::value, "");
+  static_assert( IsBidirectionalIterator<list_iterator_t>::value, "");
+  static_assert( IsBidirectionalIterator<vector_iterator_t>::value, "");
+}
+
+TEST(IsRandomAccessIterator, Basic) {
+  using namespace ka;
+  using namespace ::detail;
+  static_assert(!IsRandomAccessIterator<input_iterator_tagged_t>::value, "");
+  static_assert(!IsRandomAccessIterator<forward_iterator_tagged_t>::value, "");
+  static_assert(!IsRandomAccessIterator<bidirectional_iterator_tagged_t>::value, "");
+  static_assert( IsRandomAccessIterator<random_access_iterator_tagged_t>::value, "");
+
+  static_assert(!IsRandomAccessIterator<istream_iterator_t>::value, "");
+  static_assert(!IsRandomAccessIterator<forward_list_iterator_t>::value, "");
+  static_assert(!IsRandomAccessIterator<list_iterator_t>::value, "");
+  static_assert( IsRandomAccessIterator<vector_iterator_t>::value, "");
+}
