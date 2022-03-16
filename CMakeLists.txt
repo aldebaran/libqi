@@ -13,6 +13,10 @@ set_source_files_properties(src/os_posix.cpp
   PROPERTIES
     COMPILE_DEFINITIONS HAVE_SC_HOST_NAME_MAX)
 
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard to be used")
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE CACHE BOOL "Boolean describing whether the value of CXX_STANDARD is a requirement.")
+set(CMAKE_CXX_EXTENSIONS TRUE CACHE BOOL "Boolean specifying whether compiler specific extensions are requested.")
+
 #### Check optional packages {{{
 qi_add_optional_package(BOOST_LOCALE "Enable usage of boost::locale")
 qi_add_optional_package(SYSTEMD "Enable usage of journald")
@@ -47,7 +51,6 @@ endif()
 #### Set compilation flags {{{
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 endif()
 #### }}}
 
