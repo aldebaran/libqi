@@ -162,11 +162,16 @@ namespace qi {
    */
   QI_API Url specifyUrl(const Url& specification, const Url& baseUrl);
 
-  /// Always succeeds, but the result is not guaranteed to be valid.
-  inline Url toUrl(const Uri& uri)
-  {
-    return Url(to_string(uri));
-  }
+  /// Returns an URL constructed from the given URI, according to the following behavior:
+  ///   - the URL protocol is set to the URI scheme.
+  ///   - the URL host is set to the URI authority host iff it has one.
+  ///   - the URL port is set to the URI authority port iff it has one.
+  /// Consequently, the resulting URL is not guaranteed to be valid (i.e. `isValid()` may return
+  /// false). This is the case if the URI has no authority, in which case `hasHost()` and
+  /// `hasPort()` both return false.
+  /// Note that an URI with an empty host (such as 'ssh://:22') is valid, and will result in a URL
+  /// with a host that is empty (i.e. `hasHost()` and `host().empty()` both return true).
+  QI_API Url toUrl(const Uri& uri);
 
   inline ka::opt_t<Uri> toUri(const Url& url) noexcept
   {

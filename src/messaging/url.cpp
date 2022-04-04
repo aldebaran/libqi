@@ -338,4 +338,23 @@ namespace qi {
   {
     return out << url.str();
   }
+
+  Url toUrl(const Uri& uri)
+  {
+    Url url;
+    url.setProtocol(uri.scheme());
+    const auto optAuth = uri.authority();
+    if (!optAuth.empty())
+    {
+      const auto auth = *optAuth;
+      url.setHost(auth.host());
+      const auto optPort = auth.port();
+      if (!optPort.empty())
+      {
+        const auto port = *optPort;
+        url.setPort(port);
+      }
+    }
+    return url;
+  }
 }
