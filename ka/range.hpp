@@ -187,16 +187,16 @@ namespace ka {
       return is_empty(*this);
     }
     auto operator[](std::size_t i) const&
-         -> decltype(bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{})) {
-       return bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{});
+         -> decltype(bounded_range_detail::at(*this, i, IsInputIterator<T>{})) {
+       return bounded_range_detail::at(*this, i, IsInputIterator<T>{});
     }
     auto operator[](std::size_t i) &
-         -> decltype(bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{})) {
-       return bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{});
+         -> decltype(bounded_range_detail::at(*this, i, IsInputIterator<T>{})) {
+       return bounded_range_detail::at(*this, i, IsInputIterator<T>{});
     }
     auto operator[](std::size_t i) &&
-         -> decltype(bounded_range_detail::at(*this, i, HasInputIteratorTag<T>{})) {
-       return bounded_range_detail::at(mv(*this), i, HasInputIteratorTag<T>{});
+         -> decltype(bounded_range_detail::at(*this, i, IsInputIterator<T>{})) {
+       return bounded_range_detail::at(mv(*this), i, IsInputIterator<T>{});
     }
     // size: See outside class.
   };

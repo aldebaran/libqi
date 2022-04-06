@@ -497,7 +497,7 @@ namespace ka {
   struct IsRetract : detail::IsRetract<G, F, HasRetract<Decay<F>>> {
   };
 
-  KA_GENERATE_TRAITS_HAS(HasInputIteratorTag, T,
+  KA_GENERATE_TRAITS_HAS(IsInputIterator, T,
     std::declval<std::input_iterator_tag>() = typename std::iterator_traits<T>::iterator_category{})
 
   /// Causes a substitution failure if the type is not an iterator, effectively
@@ -518,14 +518,14 @@ namespace ka {
   /// N distance(N b, N e);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   template<typename T>
-  using EnableIfInputIterator = EnableIf<HasInputIteratorTag<T>::value>;
+  using EnableIfInputIterator = EnableIf<IsInputIterator<T>::value>;
 
   /// Causes a substitution failure if the type is an iterator, effectively
   /// discarding the function from the overload set.
   ///
   /// See `EnableIfInputIterator` for a usage example.
   template<typename T>
-  using EnableIfNotInputIterator = EnableIf<!HasInputIteratorTag<T>::value>;
+  using EnableIfNotInputIterator = EnableIf<!IsInputIterator<T>::value>;
 
   KA_GENERATE_TRAITS_HAS(HasMappedType, T,
     std::declval<typename T::mapped_type>())
