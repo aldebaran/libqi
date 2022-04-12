@@ -518,8 +518,8 @@ namespace ka {
   template<typename T>
   using IsRandomAccessIterator = IsIterator<std::pair<T, std::random_access_iterator_tag>>;
 
-  /// Causes a substitution failure if the type is not an iterator, effectively
-  /// discarding the function from the overload set.
+  /// Causes a substitution failure if the type is not an input iterator,
+  /// effectively discarding the function from the overload set.
   ///
   /// Note: `EnableIfInputIterator` is to be typically used in conjunction with
   ///       `EnableIfNotInputIterator`.
@@ -538,8 +538,8 @@ namespace ka {
   template<typename T>
   using EnableIfInputIterator = EnableIf<IsInputIterator<T>::value>;
 
-  /// Causes a substitution failure if the type is an iterator, effectively
-  /// discarding the function from the overload set.
+  /// Causes a substitution failure if the type is an input iterator,
+  /// effectively discarding the function from the overload set.
   ///
   /// See `EnableIfInputIterator` for a usage example.
   template<typename T>
