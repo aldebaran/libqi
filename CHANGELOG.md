@@ -1,6 +1,24 @@
 libqi Change Log
 =================
 
+libqi 2.1.0
+-----------
+
+This release mainly aims to upgrade some used libraries and the C++ dialect, as well as some tools.
+
+### Upgrades
+
+- Boost: from 1.64 to 1.77
+- C++: the required version of the standard has been changed from C++11 to C++14.
+- CMake: minimum version from 2.8 to 3.16 (the version coming with Ubuntu 20.04)
+
+### API changes
+
+- `ka.typetraits`: Renames `HasInputIteratorTag` into `IsInputIterator`
+  (API break, but only used internally).
+- `ka.typetraits`: Adds type predicates checking the category of an iterator type
+  (input, forward, bidirectional, random access).
+
 
 libqi 2.0.0
 -----------
