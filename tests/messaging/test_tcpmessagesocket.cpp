@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock-matchers.h>
 #include <qi/uri.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "sock/networkmock.hpp"
 #include "sock/networkcommon.hpp"
 #include <boost/asio.hpp>
@@ -14,7 +15,6 @@
 #include "src/messaging/sock/option.hpp"
 #include "src/messaging/tcpmessagesocket.hpp"
 #include "src/messaging/transportserver.hpp"
-#include "src/messaging/tcpscheme.hpp"
 #include "tests/qi/testutils/testutils.hpp"
 #include <testssl/testssl.hpp>
 #include "ka/scoped.hpp"

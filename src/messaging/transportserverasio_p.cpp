@@ -13,11 +13,11 @@
 #include <ka/uri/io.hpp>
 #include <qi/log.hpp>
 #include <qi/eventloop.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "transportserver.hpp"
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
 #include "transportserverasio_p.hpp"
-#include "tcpscheme.hpp"
 #include "sock/traits.hpp"
 #include "sock/sslcontextptr.hpp"
 

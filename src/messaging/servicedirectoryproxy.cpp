@@ -12,8 +12,10 @@
 #include <qi/log.hpp>
 #include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/messaging/servicedirectoryproxy.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include <qi/url.hpp>
 #include <qi/macro.hpp>
+#include <qi/future.hpp>
 
 #include <boost/version.hpp>
 #include <boost/predef/version_number.h>
@@ -321,6 +323,170 @@ const MilliSeconds ServiceDirectoryProxy::Impl::retryServiceDelay { 500 };
 ServiceDirectoryProxy::ServiceDirectoryProxy(Config config, Promise<void> ready)
   : _p(new Impl(std::move(config), std::move(ready)))
 {
+}
+
+namespace
+{
+  void throwRuntimeError(const ssl::Error& e, const char* prefix, const boost::filesystem::path& p)
+  {
+    std::ostringstream oss;
+    oss << prefix << "'" << p << "'. Details: " << e.what();
+    throw std::runtime_error(oss.str());
+  }
+
+  void throwRuntimeError(const char* prefix, const boost::filesystem::path& p)
+  {
+    std::ostringstream oss;
+    oss << prefix << "'" << p << "'.";
+    throw std::runtime_error(oss.str());
+  }
+
+  // Throws a `std::runtime_error` iff reading the file failed or no
+  // certificate was found in it.
+  std::vector<ssl::Certificate> readCertChain(const boost::filesystem::path& p)
+  {
+    auto certs = std::vector<ssl::Certificate>{};
+    try
+    {
+      certs = ssl::Certificate::chainFromPemFile(p);
+    }
+    catch (const ssl::Error& e)
+    {
+      throwRuntimeError(e, "Could not read certificate chain from file ", p);
+    }
+    if (certs.empty())
+    {
+      throwRuntimeError("No certificate found in file ", p);
+    }
+    return certs;
+  }
+
+  // Throws a `std::runtime_error` iff reading the file failed or no
+  // private key was found in it.
+  ssl::PKey readPrivateKey(const boost::filesystem::path& p)
+  {
+    auto optPrivateKey = boost::optional<ssl::PKey>{};
+    try
+    {
+      optPrivateKey = ssl::PKey::privateFromPemFile(p);
+    }
+    catch (const ssl::Error& e)
+    {
+      throwRuntimeError(e, "Could not read private key from file ", p);
+    }
+    if (! optPrivateKey.has_value())
+    {
+      throwRuntimeError("No private key found in file ", p);
+    }
+    return optPrivateKey.value();
+  };
+
+  // Returns the certificate read in the given file path, or throws a
+  // `std::runtime_error` iff reading failed or no certificate was found in it.
+  // Factorizing with `readPrivateKey` does not worth the trouble.
+  ssl::Certificate readCert(const boost::filesystem::path& p)
+  {
+    auto optCert = boost::optional<ssl::Certificate>{};
+    try
+    {
+      optCert = ssl::Certificate::fromPemFile(p);
+    }
+    catch (const ssl::Error& e)
+    {
+      throwRuntimeError(e, "Could not read certificate from file ", p);
+    }
+    if (! optCert.has_value())
+    {
+      throwRuntimeError("No certificate found in file ", p);
+    }
+    return optCert.value();
+  }
+} // anonymous namespace
+
+ServiceDirectoryProxy::Config ServiceDirectoryProxy::Config::createFromListeningProtocol(
+    Url sdUrl,
+    Url listenUrl,
+    ServiceDirectoryProxy::FilterService filterService,
+    ServiceDirectoryProxy::Filepaths filepaths,
+    boost::optional<boost::shared_ptr<AuthProviderFactory>> authProviderFactory
+  )
+{
+  auto throwError = [](std::string message) {
+    throw std::invalid_argument(ka::mv(message));
+  };
+  auto optScheme = tcpScheme(listenUrl);
+  if (! optScheme.has_value())
+  {
+    throwError("Unsupported protocol. Scheme = " + listenUrl.protocol());
+  }
+  auto config = ServiceDirectoryProxy::Config{
+    ka::mv(sdUrl),
+    std::vector<Url>{ listenUrl },
+    ka::mv(authProviderFactory),
+    boost::optional<ClientAuthenticatorFactoryPtr>{},
+    ka::mv(filterService),
+    ssl::ClientConfig{},
+    ssl::ServerConfig{}
+  };
+  switch (optScheme.value())
+  {
+  case TcpScheme::Raw: {
+    const auto hasFilepaths = boost::get<ka::unit_t>(&filepaths) == nullptr;
+    if (hasFilepaths)
+    {
+      throwError("Extra data: TLS or mTLS file paths provided while listening with TCP.");
+    }
+    break;
+  }
+  case TcpScheme::Tls: {
+    const auto* paths = boost::get<ServiceDirectoryProxy::TlsFilepaths>(&filepaths);
+    if (paths == nullptr)
+    {
+      throwError("Missing data: TLS file paths.");
+    }
+    config.serverSslConfig.certWithPrivKey = ssl::CertChainWithPrivateKey{
+      readCertChain(paths->certChain),
+      readPrivateKey(paths->privateKey)
+    };
+    break;
+  }
+  case TcpScheme::MutualTls: {
+    const auto* paths = boost::get<ServiceDirectoryProxy::MTlsFilepaths>(&filepaths);
+    if (paths == nullptr)
+    {
+      throwError("Missing data: mTLS file paths.");
+    }
+    config.serverSslConfig.certWithPrivKey = ssl::CertChainWithPrivateKey{
+      readCertChain(paths->certChain),
+      readPrivateKey(paths->privateKey)
+    };
+    config.serverSslConfig.trustStore = { readCert(paths->trustedCert) };
+    config.serverSslConfig.verifyPartialChain = true; // For certificate pinning.
+    break;
+  }
+  default:
+    throwError("Unsupported protocol. Scheme = " + listenUrl.protocol());
+  }
+  return config;
+}
+
+Future<ServiceDirectoryProxyPtr> ServiceDirectoryProxy::createFromListeningProtocol(
+    Url sdUrl,
+    Url listenUrl,
+    ServiceDirectoryProxy::FilterService filterService,
+    ServiceDirectoryProxy::Filepaths filepaths,
+    boost::optional<boost::shared_ptr<AuthProviderFactory>> authProviderFactory
+  )
+{
+  return ServiceDirectoryProxy::create(
+    Config::createFromListeningProtocol(
+      ka::mv(sdUrl),
+      ka::mv(listenUrl),
+      ka::mv(filterService),
+      ka::mv(filepaths),
+      ka::mv(authProviderFactory)
+    )
+  );
 }
 
 Future<ServiceDirectoryProxyPtr> ServiceDirectoryProxy::create(Config config)

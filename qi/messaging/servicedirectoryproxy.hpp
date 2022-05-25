@@ -60,7 +60,51 @@ private:
 
 public:
 
-  using FilterService = std::function<bool(boost::string_ref)>;
+  // A distinct type is defined instead of a mere alias to
+  // `std::function<bool(boost::string_ref)>` to enable aggregate initialization
+  // of type `Config` below.
+  struct FilterService
+  {
+    using F = std::function<bool(boost::string_ref)>;
+    F f = ka::constant_function(false);
+
+    FilterService() = default;
+
+    inline explicit FilterService(F f) : f(ka::mv(f)) {}
+
+    inline bool operator()(boost::string_ref s)
+    {
+      return f(s);
+    }
+
+    inline bool operator()(boost::string_ref s) const
+    {
+      return f(s);
+    }
+  };
+
+  /// File paths used to create a service directory proxy listening with TLS.
+  struct TlsFilepaths
+  {
+    // No constructor is defined since there is no invariant to preserve.
+    boost::filesystem::path certChain;
+    boost::filesystem::path privateKey;
+  };
+
+  /// File paths used to create a service directory proxy listening with mTLS.
+  struct MTlsFilepaths
+  {
+    // No inheritance is used to preserve aggregate initialization.
+    // No constructor is defined since there is no invariant to preserve.
+    boost::filesystem::path certChain;
+    boost::filesystem::path privateKey;
+    boost::filesystem::path trustedCert;
+  };
+
+  /// File paths corresponding to the possible listening protocols.
+  /// `ka::unit_t` corresponds to the TCP case, i.e. no file path is needed. It
+  /// is intentionally put first to be selected by default construction.
+  using Filepaths = boost::variant<ka::unit_t, TlsFilepaths, MTlsFilepaths>;
 
   /// The configuration of a service directory proxy. It contains any parameter a proxy can handle.
   struct Config
@@ -86,7 +130,7 @@ public:
     /// A function object that when passed the name of a service returns true if the
     /// service must be filtered and false if it must be made available. By default, this argument
     /// is set to a function that always return false, thus filtering nothing.
-    FilterService filterService = ka::constant_function(false);
+    FilterService filterService;
 
     /// The SSL configuration used for the service directory client part of the proxy.
     /// You should set this field if the service directory is listening on a TLS socket (i.e. the
@@ -99,6 +143,43 @@ public:
     /// ('tcpsm'), the trust store should contain at least one certificate used to verify the
     /// certificates presented by clients.
     ssl::ServerConfig serverSslConfig;
+
+    /// Creates a configuration based on the listening protocol.
+    ///
+    /// When listening with
+    ///
+    /// - TCP (scheme "tcp"):
+    ///     + No file path must be provided (type `ka::unit_t`).
+    ///
+    /// - TLS (scheme "tcps"):
+    ///     + The certificate chain file path and private key file path must be
+    ///     provided (type `TlsFilepaths`).
+    ///
+    ///     + The server certificate chain is read and set from corresponding file path.
+    ///
+    ///     + The server private key is read and set from corresponding file path.
+    ///
+    /// - mTLS (scheme "tcpsm"):
+    ///     + In addition to the two previous file paths, the
+    ///     trusted certificate file path must be provided (type `MTlsFilepaths`).
+    ///
+    ///     + The server trust store is fed with the *first* certificate from
+    ///     the corresponding file.
+    ///
+    ///     + Partial chain verification is enabled.
+    ///
+    /// The files' data must be encoded in the PEM/PKCS#8 format.
+    ///
+    /// Other parameters (SD URL, listening URL, service filter, authentication
+    /// factory) are put as-is in their corresponding fields in the
+    /// configuration.
+    ///
+    /// The client authenticator factory is left empty.
+    ///
+    /// Any error will result in a `std::exception` being thrown.
+    static Config createFromListeningProtocol(
+      Url sdUrl, Url listenUrl, FilterService, Filepaths = {},
+      boost::optional<boost::shared_ptr<AuthProviderFactory>> = {});
   };
 
   /// Proxy state diagram:
@@ -142,6 +223,14 @@ private:
   explicit ServiceDirectoryProxy(Config config, Promise<void> ready);
 
 public:
+  /// Creates a new service directory proxy with a configuration created through
+  /// `Config::createFromListeningProtocol`.
+  /// Parameters are passed as-is.
+  static Future<ServiceDirectoryProxyPtr> createFromListeningProtocol(
+    Url sdUrl, Url listenUrl, FilterService, Filepaths = {},
+    boost::optional<boost::shared_ptr<AuthProviderFactory>> = {}
+  );
+
   /// Creates a new service directory proxy according to the given configuration.
   /// Returns a future that is set with a non-null pointer once the proxy is ready
   /// (see `Status`).

@@ -17,10 +17,10 @@
 #include <qi/url.hpp>
 #include <qi/assert.hpp>
 #include <qi/detail/future_fwd.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "message.hpp"
 #include "messagedispatcher.hpp"
 #include "messagesocket.hpp"
-#include "tcpscheme.hpp"
 #include "sock/disconnectedstate.hpp"
 #include "sock/disconnectingstate.hpp"
 #include "sock/connectingstate.hpp"

@@ -81,6 +81,10 @@ qi::ssl::ClientConfig clientConfig(Args&&... args) { return config<qi::ssl::Clie
 template<typename... Args>
 qi::ssl::ServerConfig serverConfig(Args&&... args) { return config<qi::ssl::ServerConfig>(std::forward<Args>(args)...); }
 
+std::string getServerA1CertsChain();
+std::string getServerA1Key();
+std::string getClientA1CertsChain();
+
 } // namespace ssl
 } // namespace test
 

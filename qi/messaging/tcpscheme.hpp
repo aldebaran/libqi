@@ -17,7 +17,7 @@ namespace qi
 {
 
 /// Set of TCP-based URI schemes supported by the library.
-enum class TcpScheme
+enum class QI_API TcpScheme
 {
   /// The raw TCP URI scheme is used when no TLS-based encryption must be
   /// done by sockets.
@@ -37,11 +37,11 @@ enum class TcpScheme
 
 /// Returns the TCP scheme corresponding to the scheme as a string, or an empty optional if the
 /// scheme is not one of the TCP schemes.
-boost::optional<TcpScheme> tcpSchemeFromUriScheme(const std::string& scheme);
+QI_API boost::optional<TcpScheme> tcpSchemeFromUriScheme(const std::string& scheme);
 
 /// Returns the TCP scheme corresponding to the "protocol" (i.e. a scheme) of the URL or an empty
 /// optional if its "protocol" is missing or is not one of the TCP schemes.
-boost::optional<TcpScheme> tcpScheme(const Url& url);
+QI_API boost::optional<TcpScheme> tcpScheme(const Url& url);
 
 /// Returns the TCP scheme as a string. See the `TcpScheme` type for the values equivalence.
 ///
@@ -53,10 +53,10 @@ boost::optional<TcpScheme> tcpScheme(const Url& url);
 ///
 /// @pre The scheme is one of the values of the enumeration. This is verified by assertion, but will
 /// throw a `std::domain_error` if assertions are disabled.
-std::string to_string(TcpScheme scheme);
+QI_API std::string to_string(TcpScheme scheme);
 
 /// Returns true if the TCP scheme forces TLS-based encryption when used.
-bool isWithTls(TcpScheme scheme);
+QI_API bool isWithTls(TcpScheme scheme);
 
 } // namespace qi
 

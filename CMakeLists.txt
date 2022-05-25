@@ -292,6 +292,7 @@ set(QIM_H qi/api.hpp
           qi/messaging/serviceinfo.hpp
           qi/messaging/ssl/detail/ssl.hxx
           qi/messaging/ssl/ssl.hpp
+          qi/messaging/tcpscheme.hpp
           qi/applicationsession.hpp
           qi/session.hpp
           qi/uri.hpp
@@ -345,7 +346,6 @@ set(QIM_C
   src/messaging/transportsocketcache.hpp
   src/messaging/tcpmessagesocket.cpp
   src/messaging/tcpmessagesocket.hpp
-  src/messaging/tcpscheme.hpp
   src/messaging/tcpscheme.cpp
   src/messaging/uri.cpp
   src/messaging/url.cpp

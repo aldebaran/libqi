@@ -501,10 +501,10 @@ public:
     return privateFromPemRange(begin(range), end(range), std::move(cb));
   }
 
-  /// Compares the content of two keys.
+  /// Compares the public key components and parameters (if present) of two keys.
   ///
-  /// Returns an integer less, equal or greater than 0 if this object is found to be less than,
-  /// to match or be greater than the other key, respectively.
+  /// Returns 1 if the keys match, 0 if they don't match, -1 if the key types
+  /// are different and -2 if the operation is not supported.
   ///
   /// This behavior differs from the comparison of two keys using `operator==`, which
   /// compares the value of pointers and not the content of the pointees.

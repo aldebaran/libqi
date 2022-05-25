@@ -10,11 +10,11 @@
 #include <qi/trackable.hpp>
 #include <qi/future.hpp>
 #include <qi/url.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "concept.hpp"
 #include "traits.hpp"
 #include "option.hpp"
 #include "socketptr.hpp"
-#include "../tcpscheme.hpp"
 
 
 /// @file

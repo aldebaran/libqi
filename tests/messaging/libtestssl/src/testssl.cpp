@@ -596,5 +596,20 @@ const qi::ssl::CertChainWithPrivateKey& b::client()      { QI_TESTSSL_CERT_CHAIN
 
 #undef QI_TESTSSL_CERT_CHAIN_WITH_PRIV_KEY
 
+std::string getServerA1CertsChain()
+{
+  return serverA1CertsChain;
+}
+
+std::string getServerA1Key()
+{
+  return serverA1Key;
+}
+
+std::string getClientA1CertsChain()
+{
+  return clientA1CertsChain;
+}
+
 } // namespace ssl
 } // namespace test

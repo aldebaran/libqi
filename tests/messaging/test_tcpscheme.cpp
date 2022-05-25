@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include <src/messaging/tcpscheme.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include <gtest/gtest.h>
 
 TEST(TcpScheme, FromUriScheme)

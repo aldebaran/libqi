@@ -10,10 +10,10 @@
 #include <qi/log.hpp>
 #include <qi/numeric.hpp>
 #include <qi/uri.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 
 #include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
-#include "tcpscheme.hpp"
 
 #define LOG_CATEGORY "qimessaging.transportsocketcache"
 

@@ -3,7 +3,7 @@
 **  See COPYING for the license
 */
 
-#include "tcpscheme.hpp"
+#include <qi/messaging/tcpscheme.hpp>
 #include <qi/assert.hpp>
 
 namespace qi

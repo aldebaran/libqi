@@ -14,11 +14,11 @@
 
 # include <qi/api.hpp>
 # include <qi/url.hpp>
+# include <qi/messaging/tcpscheme.hpp>
 # include "sock/networkasio.hpp"
 # include "sock/traits.hpp"
 # include "sock/socketptr.hpp"
 # include "transportserver.hpp"
-# include "tcpscheme.hpp"
 
 namespace qi
 {
