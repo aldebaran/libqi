@@ -24,10 +24,11 @@ namespace qi { namespace sock {
     socket_t socket;
 
   public:
+    using next_layer_type = typename socket_t::next_layer_type;
   // NetSslSocket:
     using handshake_type = HandshakeSide<socket_t>;
     using lowest_layer_type = Lowest<socket_t>;
-    using next_layer_type = typename socket_t::next_layer_type;
+    using executor_type = typename socket_t::executor_type;
 
     SocketWithContext(io_service_t& io, const SslContextPtr<N>& ctx)
       : context(ctx)
@@ -35,9 +36,9 @@ namespace qi { namespace sock {
     {
     }
 
-    io_service_t& get_io_service()
+    executor_type get_executor()
     {
-      return socket.get_io_service();
+      return socket.get_executor();
     }
 
     void set_verify_mode(decltype(N::sslVerifyNone()) x)

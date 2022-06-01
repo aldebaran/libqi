@@ -9,7 +9,9 @@
 
 #include <vector>
 #include <utility> // pair
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <ka/errorhandling.hpp>
 #include <qi/eventloop.hpp>
 #include <qi/log.hpp>
@@ -437,11 +439,12 @@ namespace detail {
       {
         Future<Future<T> >* self = static_cast<Future<Future<T> >*>(this);
 
-        Promise<T> promise(boost::bind(&AddUnwrap<Future<T> >::_cancel, _1,
+        namespace ph = std::placeholders;
+        Promise<T> promise(boost::bind(&AddUnwrap<Future<T> >::_cancel, ph::_1,
               boost::weak_ptr<FutureBaseTyped<Future<T> > >(self->_p)));
 
         self->connect(
-            boost::bind(&AddUnwrap<Future<T> >::_forward, _1, promise),
+            boost::bind(&AddUnwrap<Future<T> >::_forward, ph::_1, promise),
             FutureCallbackType_Sync);
 
         return promise.future();
@@ -541,7 +544,7 @@ namespace detail {
     p.setup(boost::bind(&detail::futureCancelAdapter<AnyReference>,
           boost::weak_ptr<detail::FutureBaseTyped<AnyReference> >(f._p)));
     f.connect(boost::function<void(const qi::Future<AnyReference>&)>(
-          boost::bind(&detail::futureAdapter<R>, _1, p)));
+          boost::bind(&detail::futureAdapter<R>, std::placeholders::_1, p)));
   }
 
   template<typename FT, typename PT>
@@ -550,7 +553,7 @@ namespace detail {
     if (option == AdaptFutureOption_ForwardCancel)
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
-    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, _1, p,
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, std::placeholders::_1, p,
       FutureValueConverter<FT, PT>()));
   }
 
@@ -560,13 +563,15 @@ namespace detail {
     if (option == AdaptFutureOption_ForwardCancel)
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
-    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, _1, p, converter));
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, std::placeholders::_1, p, converter));
   }
 
   template <typename T>
   Future<AnyValue> toAnyValueFuture(Future<T> future)
   {
-    return future.andThen(AnyValue::from<T>);
+    return future.andThen([](const T& val) {
+        return AnyValue::from(val);
+    });
   }
 
   template <>

@@ -2,7 +2,7 @@
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.16) # Ubuntu 20.04 comes with CMake 3.16.3
 project(LibQi)
 find_package(qibuild)
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
@@ -12,6 +12,10 @@ check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
 set_source_files_properties(src/os_posix.cpp
   PROPERTIES
     COMPILE_DEFINITIONS HAVE_SC_HOST_NAME_MAX)
+
+set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard to be used")
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE CACHE BOOL "Boolean describing whether the value of CXX_STANDARD is a requirement.")
+set(CMAKE_CXX_EXTENSIONS TRUE CACHE BOOL "Boolean specifying whether compiler specific extensions are requested.")
 
 #### Check optional packages {{{
 qi_add_optional_package(BOOST_LOCALE "Enable usage of boost::locale")
@@ -44,22 +48,9 @@ if (WITH_SYSTEMD)
 endif()
 #### }}}
 
-if (WITH_PROBES)
-  find_package(qiprobes)
-  qiprobes_create_probe(tp_qi
-    src/tp_qi.in.h
-    PROVIDER_NAME qi_qi)
-  qiprobes_instrument_files(tp_qi
-    src/eventloop.cpp)
-  set(_tp_qi "tp_qi")
-else()
-  set(_tp_qi "")
-endif()
-
 #### Set compilation flags {{{
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
 endif()
 #### }}}
 
@@ -458,11 +449,8 @@ qi_create_lib(qi SHARED
     BOOST_THREAD
     BOOST_CHRONO
     BOOST_FILESYSTEM
-    BOOST_LOCALE
-    BOOST_REGEX
     BOOST_PROGRAM_OPTIONS
     BOOST_RANDOM
-  SUBMODULE ${_tp_qi}
 )
 
 

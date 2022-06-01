@@ -345,7 +345,7 @@ using Containers = testing::Types<
 
 template<typename T>
 struct TestPropertyWithContainerType : testing::Test {};
-TYPED_TEST_CASE(TestPropertyWithContainerType, Containers);
+TYPED_TEST_SUITE(TestPropertyWithContainerType, Containers);
 
 TYPED_TEST(TestPropertyWithContainerType, CanBeInstanciatedWithContainer)
 {
@@ -396,7 +396,7 @@ TEST(TestProxyProperty, CallsSourceGetter)
   EXPECT_CALL(objectImpl->getter, Call(0)).WillOnce(Return(futurize(42)));
   const auto futRes = proxyProp.get();
   ASSERT_TRUE(test::finishesWithValue(futRes));
-  EXPECT_EQ(futurize(42), futRes);
+  EXPECT_EQ(42, futRes.value());
 }
 
 TEST(TestProxyProperty, CallsSourceSetter)

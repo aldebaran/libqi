@@ -58,7 +58,7 @@ template<typename Traits>
 struct Flatten : testing::Test {
 };
 
-TYPED_TEST_CASE(Flatten, test_flatten::pair_types);
+TYPED_TEST_SUITE(Flatten, test_flatten::pair_types);
 
 // `ka::flatten` calls the `flatten` member or free function, if any.
 TYPED_TEST(Flatten, Basic) {

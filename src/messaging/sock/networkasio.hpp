@@ -31,6 +31,12 @@ namespace qi { namespace sock {
     {
       return *static_cast<io_service_type*>(getNetworkEventLoop()->nativeHandle());
     }
+    template<typename S>
+    static io_service_type& getIoService(S& socket)
+    {
+      auto exec = socket.get_executor();
+      return static_cast<io_service_type&>(exec.context());
+    }
     static boost::asio::ssl::verify_mode sslVerifyNone()
     {
       return boost::asio::ssl::verify_none;

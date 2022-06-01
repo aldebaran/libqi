@@ -44,7 +44,8 @@ namespace qi
           // lifetime issues).
           auto completePromise = _completePromise;
           auto socket = _socket;
-          socket->get_io_service().wrap([=]() mutable {
+          auto& io = N::getIoService(*socket);
+          io.wrap([=]() mutable {
             QI_LOG_DEBUG_SOCKET(socket.get()) << "Disconnecting: before socket close";
             close<N>(socket);
             completePromise.setValue(nullptr);

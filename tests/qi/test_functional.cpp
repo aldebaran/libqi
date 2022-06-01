@@ -51,7 +51,7 @@ struct FunctionalSemiLift0 : testing::Test
 {
 };
 
-TYPED_TEST_CASE(FunctionalSemiLift0, types);
+TYPED_TEST_SUITE(FunctionalSemiLift0, types);
 
 TYPED_TEST(FunctionalSemiLift0, NonVoidCodomain)
 {
@@ -81,7 +81,7 @@ struct FunctionalSemiLift1 : testing::Test
 {
 };
 
-TYPED_TEST_CASE(FunctionalSemiLift1, void_types);
+TYPED_TEST_SUITE(FunctionalSemiLift1, void_types);
 
 TYPED_TEST(FunctionalSemiLift1, VoidCodomain)
 {

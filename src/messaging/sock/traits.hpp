@@ -58,6 +58,9 @@ namespace qi { namespace sock {
   template<typename S>
   using Lowest = typename S::lowest_layer_type;
 
+  template<typename S>
+  using Executor = typename S::executor_type;
+
   // NetLowestSocket-related traits
   template<typename L>
   using ShutdownMode = typename L::shutdown_type;

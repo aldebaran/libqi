@@ -816,7 +816,7 @@ struct OptionalEmplaceFrontBack : testing::Test {};
 
 using emplace_types = testing::Types<emplace_front_t, emplace_back_t>;
 
-TYPED_TEST_CASE(OptionalEmplaceFrontBack, emplace_types);
+TYPED_TEST_SUITE(OptionalEmplaceFrontBack, emplace_types);
 
 TYPED_TEST(OptionalEmplaceFrontBack, SequenceContainer) {
   TypeParam emplace;
@@ -856,7 +856,7 @@ struct OptionalPushFrontBack : testing::Test {};
 
 using push_types = testing::Types<push_front_t, push_back_t>;
 
-TYPED_TEST_CASE(OptionalPushFrontBack, push_types);
+TYPED_TEST_SUITE(OptionalPushFrontBack, push_types);
 
 TYPED_TEST(OptionalPushFrontBack, SequenceContainer) {
   TypeParam push;
@@ -897,7 +897,7 @@ struct OptionalPopFrontBack : testing::Test {};
 
 using pop_types = testing::Types<pop_front_t, pop_back_t>;
 
-TYPED_TEST_CASE(OptionalPopFrontBack, pop_types);
+TYPED_TEST_SUITE(OptionalPopFrontBack, pop_types);
 
 TYPED_TEST(OptionalPopFrontBack, SequenceContainer) {
   TypeParam pop;
@@ -1092,7 +1092,7 @@ struct OptionalFlatten : testing::Test {
 
 using opt_types = testing::Types<opt_traits<boost::optional>, opt_traits<ka::opt_t>>;
 
-TYPED_TEST_CASE(OptionalFlatten, opt_types);
+TYPED_TEST_SUITE(OptionalFlatten, opt_types);
 
 // Internal optional is extracted.
 TYPED_TEST(OptionalFlatten, NonEmpty) {

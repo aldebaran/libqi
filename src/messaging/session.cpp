@@ -225,15 +225,15 @@ namespace qi {
   {
     // If no connect URL was specified in the configuration, fallback on the hardcoded default
     // connect URL. This is to have an homogeneous behavior with `listen`.
-    const auto& connectUrl = _p->_config.connectUrl;
-    if (!connectUrl)
-    {
-      const auto defaultConnectUrl = SessionConfig::defaultConnectUrl();
-      qiLogVerbose() << "No connect URL configured, using the hardcoded default value '"
-                     << defaultConnectUrl << "'";
-      return listen(defaultConnectUrl);
-    }
-    return connect(*connectUrl);
+    const auto connectUrl = [&]{
+        const auto& cfgUrl = _p->_config.connectUrl;
+        if (cfgUrl) return *cfgUrl;
+        const auto defaultUrl = SessionConfig::defaultConnectUrl();
+        qiLogVerbose() << "No connect URL configured, using the hardcoded default value '"
+                       << defaultUrl << "'";
+        return defaultUrl;
+      }();
+    return connect(connectUrl);
   }
 
   qi::FutureSync<void> Session::connect(const char* serviceDirectoryURL)

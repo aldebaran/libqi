@@ -90,7 +90,7 @@ namespace qi
             qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
         }
     }
-    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
+    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(*asIoServicePtr(context), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
                            boost::bind(_onAccept, shared_from_this(), _1, _s));
   }
@@ -213,7 +213,7 @@ namespace qi
     using namespace boost::asio;
 #ifndef ANDROID
     // resolve endpoint
-    ip::tcp::resolver r(_acceptor->get_io_service());
+    ip::tcp::resolver r(*asIoServicePtr(context));
     ip::tcp::resolver::query q(_listenUrl.host(), boost::lexical_cast<std::string>(_listenUrl.port()),
                                boost::asio::ip::tcp::resolver::query::all_matching);
     ip::tcp::resolver::iterator it = r.resolve(q);
@@ -325,7 +325,7 @@ namespace qi
       ));
     }
 
-    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(_acceptor->get_io_service(), _sslContext);
+    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(*asIoServicePtr(context), _sslContext);
     _acceptor->async_accept(_s->lowest_layer(),
       boost::bind(_onAccept, shared_from_this(), _1, _s));
     _connectionPromise.setValue(0);

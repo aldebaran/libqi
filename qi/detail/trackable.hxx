@@ -10,7 +10,9 @@
 
 #include <type_traits>
 #include <boost/function.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/weak_ptr.hpp>
 #include <boost/function_types/result_type.hpp>
 
@@ -23,14 +25,14 @@ namespace qi
   : _wasDestroyed(false)
   {
     T* thisAsT = static_cast<T*>(this);
-    _ptr = boost::shared_ptr<T>(thisAsT, boost::bind(&Trackable::_destroyed, _1));
+    _ptr = boost::shared_ptr<T>(thisAsT, boost::bind(&Trackable::_destroyed, std::placeholders::_1));
   }
 
   template<typename T>
   inline Trackable<T>::Trackable(T* ptr)
     : _wasDestroyed(false)
   {
-    _ptr = boost::shared_ptr<T>(ptr, boost::bind(&Trackable::_destroyed, _1));
+    _ptr = boost::shared_ptr<T>(ptr, boost::bind(&Trackable::_destroyed, std::placeholders::_1));
   }
 
   template<typename T>

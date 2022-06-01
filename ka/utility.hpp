@@ -77,7 +77,7 @@ namespace ka {
   /// Replaces the value of an object with a new value and returns the old value of the object.
   /// It is useful to implement move assignment operators and move constructors for example.
   ///
-  /// Note: If any of the constructors and assigment operators throws an exception, the behavior
+  /// Note: If any of the constructors and assignment operators throws an exception, the behavior
   /// is undefined as is the value of the object.
   ///
   /// Note: This is equivalent to `std::exchange()` from C++14.

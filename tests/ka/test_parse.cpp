@@ -618,7 +618,7 @@ namespace test_parse {
 } // namespace test_parse
 
 template<typename T> struct ParseList : testing::Test {};
-TYPED_TEST_CASE(ParseList, test_parse::list_types);
+TYPED_TEST_SUITE(ParseList, test_parse::list_types);
 
 // List of a parser applies it as much as possible.
 TYPED_TEST(ParseList, Basic) {

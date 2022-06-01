@@ -7,7 +7,9 @@
 #ifndef _QI_TYPE_PROXYSIGNAL_HPP_
 #define _QI_TYPE_PROXYSIGNAL_HPP_
 
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <qi/signal.hpp>
 #include <qi/anyfunction.hpp>
 #include <qi/anyobject.hpp>
@@ -128,7 +130,7 @@ namespace qi
           .andThen(lifeSignal(
             // Copy self instead of using `this` to avoid lifetime issues.
             [self](SignalLink newLink) {
-              self.signal->setOnSubscribers(self.lifeSignal(boost::bind(self, newLink, _1)));
+              self.signal->setOnSubscribers(self.lifeSignal(boost::bind(self, newLink, std::placeholders::_1)));
             }));
       }
     };
@@ -149,6 +151,7 @@ namespace qi
     inline void setUpProxy(SignalBase& signal, AnyWeakObject object, const std::string& signalName)
     {
       using namespace ka;
+      namespace ph = std::placeholders;
 
       // lockTransfo: (A... → B) → (A... → ka::opt_t<B>)
       // p ↦ (x... ↦ | ka::opt(p(x...))  if the weak_ptr could be locked,
@@ -161,7 +164,7 @@ namespace qi
       auto srcOrThrow =
         std::bind(compose_t{},
                   srcOptOrInvoke([] { throw std::runtime_error("the signal has expired"); }),
-                  std::placeholders::_1);
+                  ph::_1);
 
       // lifeSignal: (A... → B) → (A... → B)
       // Transforms a procedure p to one that first checks if the signal is
@@ -169,18 +172,18 @@ namespace qi
       auto lifeSignal = compose(mv(srcOrThrow), mv(lockTransfo));
 
       auto callSubs = lifeSignal(std::bind(&SignalBase::callSubscribers, std::ref(signal),
-                                           std::placeholders::_1, MetaCallType_Auto));
+                                           ph::_1, MetaCallType_Auto));
 
       signal.setOnSubscribers(lifeSignal(
         boost::bind(resetBounceEventCallbackOnSubscribersContinuous(signal, lifeSignal, callSubs,
                                                                     object, signalName),
-                    SignalBase::invalidSignalLink, _1)));
+                    SignalBase::invalidSignalLink, ph::_1)));
 
       // On signal trigger, just forward the trigger to the back-end. When the back-end gets
       // triggered, we get notified back, because we connect to the back-end by the 'bounce event'
       // callback, in which we can notify back our local subscribers.
       signal.setTriggerOverride(
-        boost::bind(&details_proxysignal::metaPostSignal, object, signalName, _1));
+        boost::bind(&details_proxysignal::metaPostSignal, object, signalName, ph::_1));
     }
 
     inline void tearDownProxy(SignalBase& sig)

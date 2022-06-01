@@ -163,7 +163,7 @@ namespace ka { namespace test {
   >;
 }} // namespace ka::test
 
-TYPED_TEST_CASE(FunctorTest, ka::test::functor_types);
+TYPED_TEST_SUITE(FunctorTest, ka::test::functor_types);
 
 // First, we test functor laws for all functor types. To test equality of
 // functions, we specify an input for which they must agree, i.e. give same
@@ -198,7 +198,7 @@ namespace ka { namespace test {
   >;
 }} // namespace ka::test
 
-TYPED_TEST_CASE(FunctorAppTest, ka::test::functor_app_types);
+TYPED_TEST_SUITE(FunctorAppTest, ka::test::functor_app_types);
 
 namespace {
   auto const sum_abc = [](A a, B b, C c) -> D {

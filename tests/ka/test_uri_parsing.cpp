@@ -223,7 +223,7 @@ namespace test_uri_parsing {
 using namespace test_uri_parsing;
 
 struct UriParsingAlpha : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(Alpha,
+INSTANTIATE_TEST_SUITE_P(Alpha,
                         UriParsingAlpha,
                         ValuesIn(alpha));
 
@@ -235,7 +235,7 @@ TEST_P(UriParsingAlpha, Succeeds) {
 }
 
 struct UriParsingAlphaFailure : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(AllButAlpha,
+INSTANTIATE_TEST_SUITE_P(AllButAlpha,
                         UriParsingAlphaFailure,
                         ValuesIn(all_chars_but(alpha)));
 
@@ -247,10 +247,10 @@ TEST_P(UriParsingAlphaFailure, Fails) {
 }
 
 struct UriParsingAlphaNum : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(Alpha,
+INSTANTIATE_TEST_SUITE_P(Alpha,
                         UriParsingAlphaNum,
                         ValuesIn(alpha));
-INSTANTIATE_TEST_CASE_P(Digit,
+INSTANTIATE_TEST_SUITE_P(Digit,
                         UriParsingAlphaNum,
                         ValuesIn(digit));
 
@@ -262,7 +262,7 @@ TEST_P(UriParsingAlphaNum, Succeeds) {
 }
 
 struct UriParsingAlphaNumFailure : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(AllButAlphanum,
+INSTANTIATE_TEST_SUITE_P(AllButAlphanum,
                         UriParsingAlphaNumFailure,
                         ValuesIn(all_chars_but(alpha + digit)));
 
@@ -274,7 +274,7 @@ TEST_P(UriParsingAlphaNumFailure, Fails) {
 }
 
 struct UriParsingDigit : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(Digit,
+INSTANTIATE_TEST_SUITE_P(Digit,
                         UriParsingDigit,
                         ValuesIn(digit));
 
@@ -286,7 +286,7 @@ TEST_P(UriParsingDigit, Succeeds) {
 }
 
 struct UriParsingDigitFailure : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(AllButDigit,
+INSTANTIATE_TEST_SUITE_P(AllButDigit,
                         UriParsingDigitFailure,
                         ValuesIn(all_chars_but(digit)));
 
@@ -298,7 +298,7 @@ TEST_P(UriParsingDigitFailure, Succeeds) {
 }
 
 struct UriParsingHexdig : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(Hexdig,
+INSTANTIATE_TEST_SUITE_P(Hexdig,
                         UriParsingHexdig,
                         ValuesIn(hexdig));
 
@@ -310,7 +310,7 @@ TEST_P(UriParsingHexdig, Succeeds) {
 }
 
 struct UriParsingHexdigFailure : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(AllButHexdig,
+INSTANTIATE_TEST_SUITE_P(AllButHexdig,
                         UriParsingHexdigFailure,
                         ValuesIn(all_chars_but(hexdig)));
 
@@ -329,7 +329,7 @@ TEST(UriParsingColon, SucceedsOnColon) {
 }
 
 struct UriParsingColonFailure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllButColon,
+INSTANTIATE_TEST_SUITE_P(AllButColon,
                         UriParsingColonFailure,
                         ValuesIn(all_chars_but(":")));
 
@@ -369,7 +369,7 @@ TEST(UriParsingPeriod, SucceedsOnPeriod) {
 }
 
 struct UriParsingPeriodFailure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllButPeriod,
+INSTANTIATE_TEST_SUITE_P(AllButPeriod,
                         UriParsingPeriodFailure,
                         ValuesIn(all_chars_but(".")));
 
@@ -388,7 +388,7 @@ TEST(UriParsingSlash, SucceedsOnSlash) {
 }
 
 struct UriParsingSlashFailure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllButSlash,
+INSTANTIATE_TEST_SUITE_P(AllButSlash,
                         UriParsingSlashFailure,
                         ValuesIn(all_chars_but("/")));
 
@@ -400,13 +400,13 @@ TEST_P(UriParsingSlashFailure, FailsOnOthers) {
 }
 
 struct UriParsingUnreserved : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(Alpha,
+INSTANTIATE_TEST_SUITE_P(Alpha,
                         UriParsingUnreserved,
                         ValuesIn(alpha));
-INSTANTIATE_TEST_CASE_P(Digit,
+INSTANTIATE_TEST_SUITE_P(Digit,
                         UriParsingUnreserved,
                         ValuesIn(digit));
-INSTANTIATE_TEST_CASE_P(UnreservedOther,
+INSTANTIATE_TEST_SUITE_P(UnreservedOther,
                         UriParsingUnreserved,
                         ValuesIn(unreserved_other));
 
@@ -418,7 +418,7 @@ TEST_P(UriParsingUnreserved, Succeeds) {
 }
 
 struct UriParsingUnreservedFailure : TestWithParam<char>{};
-INSTANTIATE_TEST_CASE_P(AllButUnreserved,
+INSTANTIATE_TEST_SUITE_P(AllButUnreserved,
                         UriParsingUnreservedFailure,
                         ValuesIn(all_chars_but(alpha + digit + unreserved_other)));
 
@@ -472,10 +472,10 @@ namespace test_uri_parsing {
 } // namespace test_uri_parsing
 
 struct UriParsingPctEncodedReserved : TestWithParam<std::string> {};
-INSTANTIATE_TEST_CASE_P(SubDelims,
+INSTANTIATE_TEST_SUITE_P(SubDelims,
                         UriParsingPctEncodedReserved,
                         ValuesIn(pct_encoded::sub_delims));
-INSTANTIATE_TEST_CASE_P(GenDelims,
+INSTANTIATE_TEST_SUITE_P(GenDelims,
                         UriParsingPctEncodedReserved,
                         ValuesIn(pct_encoded::gen_delims));
 
@@ -487,16 +487,16 @@ TEST_P(UriParsingPctEncodedReserved, CharactersAreLeftEncoded) {
 }
 
 struct UriParsingPctEncodedUnreserved : TestWithParam<std::pair<std::string, char>> {};
-INSTANTIATE_TEST_CASE_P(Alpha,
+INSTANTIATE_TEST_SUITE_P(Alpha,
                         UriParsingPctEncodedUnreserved,
                         ValuesIn(pct_encoded::alpha));
-INSTANTIATE_TEST_CASE_P(Numeric,
+INSTANTIATE_TEST_SUITE_P(Numeric,
                         UriParsingPctEncodedUnreserved,
                         ValuesIn(pct_encoded::numeric));
-INSTANTIATE_TEST_CASE_P(OtherUnreserved,
+INSTANTIATE_TEST_SUITE_P(OtherUnreserved,
                         UriParsingPctEncodedUnreserved,
                         ValuesIn(pct_encoded::other_unreserved));
-INSTANTIATE_TEST_CASE_P(Percent,
+INSTANTIATE_TEST_SUITE_P(Percent,
                         UriParsingPctEncodedUnreserved,
                         Values(pct_encoded::percent));
 
@@ -516,7 +516,7 @@ TEST(UriParsingPctEncoded, CaseNormalization) {
 }
 
 struct UriParsingGenDelims : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(GenDelims,
+INSTANTIATE_TEST_SUITE_P(GenDelims,
                         UriParsingGenDelims,
                         ValuesIn(gen_delims));
 
@@ -528,7 +528,7 @@ TEST_P(UriParsingGenDelims, Succeeds) {
 }
 
 struct UriParsingGenDelimsFailure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllButGenDelims,
+INSTANTIATE_TEST_SUITE_P(AllButGenDelims,
                         UriParsingGenDelimsFailure,
                         ValuesIn(all_chars_but(gen_delims)));
 
@@ -540,7 +540,7 @@ TEST_P(UriParsingGenDelimsFailure, Fails) {
 }
 
 struct UriParsingSubDelims : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(SubDelims,
+INSTANTIATE_TEST_SUITE_P(SubDelims,
                         UriParsingSubDelims,
                         ValuesIn(sub_delims));
 
@@ -552,7 +552,7 @@ TEST_P(UriParsingSubDelims, Succeeds) {
 }
 
 struct UriParsingSubDelimsFailure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllButSubDelims,
+INSTANTIATE_TEST_SUITE_P(AllButSubDelims,
                         UriParsingSubDelimsFailure,
                         ValuesIn(all_chars_but(sub_delims)));
 
@@ -564,10 +564,10 @@ TEST_P(UriParsingSubDelimsFailure, Fails) {
 }
 
 struct UriParsingReserved : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(GenDelims,
+INSTANTIATE_TEST_SUITE_P(GenDelims,
                         UriParsingReserved,
                         ValuesIn(gen_delims));
-INSTANTIATE_TEST_CASE_P(SubDelims,
+INSTANTIATE_TEST_SUITE_P(SubDelims,
                         UriParsingReserved,
                         ValuesIn(sub_delims));
 
@@ -579,7 +579,7 @@ TEST_P(UriParsingReserved, Succeeds) {
 }
 
 struct UriParsingReservedFailure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllButReserved,
+INSTANTIATE_TEST_SUITE_P(AllButReserved,
                         UriParsingReservedFailure,
                         ValuesIn(all_chars_but(gen_delims + sub_delims)));
 
@@ -597,25 +597,25 @@ namespace test_uri_parsing {
 using namespace boost::adaptors;
 
 struct UriParsingPChar : TestWithParam<std::string> {};
-INSTANTIATE_TEST_CASE_P(Alpha,
+INSTANTIATE_TEST_SUITE_P(Alpha,
                         UriParsingPChar,
                         ValuesIn(alpha | transformed(test_uri_parsing::to_string)));
-INSTANTIATE_TEST_CASE_P(Digit,
+INSTANTIATE_TEST_SUITE_P(Digit,
                         UriParsingPChar,
                         ValuesIn(digit | transformed(test_uri_parsing::to_string)));
-INSTANTIATE_TEST_CASE_P(UnreservedOther,
+INSTANTIATE_TEST_SUITE_P(UnreservedOther,
                         UriParsingPChar,
                         ValuesIn(unreserved_other | transformed(test_uri_parsing::to_string)));
-INSTANTIATE_TEST_CASE_P(PctEncodedSubDelims,
+INSTANTIATE_TEST_SUITE_P(PctEncodedSubDelims,
                         UriParsingPChar,
                         ValuesIn(pct_encoded::sub_delims));
-INSTANTIATE_TEST_CASE_P(PctEncodedGenDelims,
+INSTANTIATE_TEST_SUITE_P(PctEncodedGenDelims,
                         UriParsingPChar,
                         ValuesIn(pct_encoded::gen_delims));
-INSTANTIATE_TEST_CASE_P(SubDelims,
+INSTANTIATE_TEST_SUITE_P(SubDelims,
                         UriParsingPChar,
                         ValuesIn(sub_delims | transformed(test_uri_parsing::to_string)));
-INSTANTIATE_TEST_CASE_P(PCharOther,
+INSTANTIATE_TEST_SUITE_P(PCharOther,
                         UriParsingPChar,
                         ValuesIn(pchar_other | transformed(test_uri_parsing::to_string)));
 
@@ -627,7 +627,7 @@ TEST_P(UriParsingPChar, Succeeds) {
 }
 
 struct UriParsingPCharFailure : TestWithParam<std::string> {};
-INSTANTIATE_TEST_CASE_P(AllButPChar,
+INSTANTIATE_TEST_SUITE_P(AllButPChar,
                         UriParsingPCharFailure,
                         ValuesIn(all_chars_but(alpha + digit + unreserved_other + sub_delims +
                                                pchar_other)
@@ -647,7 +647,7 @@ namespace test_uri_parsing {
 }
 
 struct UriParsingR1To9 : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(Char1To9,
+INSTANTIATE_TEST_SUITE_P(Char1To9,
                         UriParsingR1To9,
                         ValuesIn(r1_to_9));
 
@@ -659,7 +659,7 @@ TEST_P(UriParsingR1To9, Succeeds) {
 }
 
 struct UriParsingR1To9Failure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllBut1To9,
+INSTANTIATE_TEST_SUITE_P(AllBut1To9,
                         UriParsingR1To9Failure,
                         ValuesIn(all_chars_but(r1_to_9)));
 
@@ -671,7 +671,7 @@ TEST_P(UriParsingR1To9Failure, Fails) {
 }
 
 struct UriParsingR0To4 : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(Char0To4,
+INSTANTIATE_TEST_SUITE_P(Char0To4,
                         UriParsingR0To4,
                         ValuesIn(r0_to_4));
 
@@ -683,7 +683,7 @@ TEST_P(UriParsingR0To4, Succeeds) {
 }
 
 struct UriParsingR0To4Failure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllBut0To4,
+INSTANTIATE_TEST_SUITE_P(AllBut0To4,
                         UriParsingR0To4Failure,
                         ValuesIn(all_chars_but(r0_to_4)));
 
@@ -695,7 +695,7 @@ TEST_P(UriParsingR0To4Failure, Fails) {
 }
 
 struct UriParsingR0To5 : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(Char0To5,
+INSTANTIATE_TEST_SUITE_P(Char0To5,
                         UriParsingR0To5,
                         ValuesIn(r0_to_5));
 
@@ -707,7 +707,7 @@ TEST_P(UriParsingR0To5, Succeeds) {
 }
 
 struct UriParsingR0To5Failure : TestWithParam<char> {};
-INSTANTIATE_TEST_CASE_P(AllBut0To5,
+INSTANTIATE_TEST_SUITE_P(AllBut0To5,
                         UriParsingR0To5Failure,
                         ValuesIn(all_chars_but(r0_to_5)));
 
@@ -735,7 +735,7 @@ namespace test_uri_parsing {
 }
 
 struct UriParsingDecOctet : TestWithParam<std::string> {};
-INSTANTIATE_TEST_CASE_P(DecOctet,
+INSTANTIATE_TEST_SUITE_P(DecOctet,
                         UriParsingDecOctet,
                         ValuesIn(dec_octet()));
 
@@ -747,7 +747,7 @@ TEST_P(UriParsingDecOctet, Succeeds) {
 }
 
 struct UriParsingDecOctetFailure : TestWithParam<std::string> {};
-INSTANTIATE_TEST_CASE_P(NotDecOctet,
+INSTANTIATE_TEST_SUITE_P(NotDecOctet,
                         UriParsingDecOctetFailure,
                         ValuesIn(not_dec_octet));
 
@@ -841,7 +841,7 @@ namespace test_uri_parsing {
 } // namespace test_uri_parsing
 
 using UriParsingIpv6Address = Ipv6Address;
-INSTANTIATE_TEST_CASE_P(Ipv6Addresses,
+INSTANTIATE_TEST_SUITE_P(Ipv6Addresses,
                         UriParsingIpv6Address,
                         ValuesIn(ipv6addresses));
 

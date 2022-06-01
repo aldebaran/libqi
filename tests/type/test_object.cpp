@@ -10,7 +10,7 @@
 #include <thread>
 #include <chrono>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/assign/list_of.hpp>
 

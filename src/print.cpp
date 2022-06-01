@@ -150,7 +150,6 @@ namespace detail
   void PrettyPrintStream::printMetaObjectMembers(const L& members, string_ref headerLabel)
   {
     using V = typename L::value_type;
-    using boost::adaptors::transformed;
     using boost::range::max_element;
     using boost::algorithm::join;
 
@@ -159,8 +158,11 @@ namespace detail
       print(makeSubSectionHeader(Line{ Column(headerLabel.to_string(), StreamColor_Fuchsia) }));
       IndentLevelPtr membersIndentLevel = makeIndentLevel();
 
-      const auto maxMemberIt = max_element(members | transformed(memberNameSize<V>));
-      const auto offset = std::min(*maxMemberIt, maxOffset);
+      const auto cmpMemberNameSize = [](const V& lhs, const V& rhs) {
+        return memberNameSize(lhs) < memberNameSize(rhs);
+      };
+      const auto maxMemberIt = max_element(members, cmpMemberNameSize);
+      const auto offset = std::min(memberNameSize(*maxMemberIt), maxOffset);
 
       for (const auto& member: members)
       {
@@ -308,17 +310,19 @@ namespace detail
 
   void PrettyPrintStream::print(StructTypeInterface& structType)
   {
-    using boost::adaptors::transformed;
     using boost::range::max_element;
 
     const auto memberTypes = structType.memberTypes();
     const auto elementNames = structType.elementsName();
+    const auto cmpStringSize = [](const std::string& lhs, const std::string& rhs) {
+        return lhs.size() < rhs.size();
+    };
 
     const auto offset = [&] {
       if (elementNames.empty())
         return 0;
-      const auto maxElemIt = max_element(elementNames | transformed(boost::size<std::string>));
-      return std::min(numericConvertBound<int>(*maxElemIt), maxOffset);
+      const auto maxElemIt = max_element(elementNames, cmpStringSize);
+      return std::min(numericConvertBound<int>(maxElemIt->size()), maxOffset);
     }();
 
     if (!memberTypes.empty())
@@ -348,12 +352,15 @@ namespace detail
 
   void PrettyPrintStream::print(MapTypeInterface& mapType)
   {
-    using boost::adaptors::transformed;
     using boost::range::max_element;
 
+    const auto cmpStringSize = [](string_ref lhs, string_ref rhs) {
+        return lhs.size() < rhs.size();
+    };
+
     const std::vector<string_ref> labels {keyTypeLabel, elementTypeLabel};
-    const auto maxLabelIt = max_element(labels | transformed(boost::size<string_ref>));
-    const auto offset = std::min(numericConvertBound<int>(*maxLabelIt), maxOffset);
+    const auto maxLabelIt = max_element(labels, cmpStringSize);
+    const auto offset = std::min(numericConvertBound<int>(maxLabelIt->size()), maxOffset);
 
     TypeInterface* const keyType = mapType.keyType();
     print(keyType, [&](const std::string& typeName) -> optional<Line> {

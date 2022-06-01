@@ -15,7 +15,7 @@
 #include "log_p.hpp"
 #include <qi/log/consoleloghandler.hpp>
 #include <boost/thread.hpp>
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 #include <boost/algorithm/string/trim.hpp>
 
 #ifdef _WIN32

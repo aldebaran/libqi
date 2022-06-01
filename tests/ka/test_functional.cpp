@@ -925,7 +925,7 @@ struct FunctionalSemiLift0 : testing::Test
 {
 };
 
-TYPED_TEST_CASE(FunctionalSemiLift0, types);
+TYPED_TEST_SUITE(FunctionalSemiLift0, types);
 
 TYPED_TEST(FunctionalSemiLift0, NonVoidCodomain) {
   using namespace ka;
@@ -952,7 +952,7 @@ template<typename T>
 struct FunctionalSemiLift1 : testing::Test {
 };
 
-TYPED_TEST_CASE(FunctionalSemiLift1, void_types);
+TYPED_TEST_SUITE(FunctionalSemiLift1, void_types);
 
 TYPED_TEST(FunctionalSemiLift1, VoidCodomain) {
   using namespace ka;
@@ -1014,7 +1014,7 @@ using bound_proc_types = testing::Types<
   bound_transfo_t const>;
 
 // We perform all tests with `ka::data_bound_proc` and `ka::data_bound_transfo`.
-TYPED_TEST_CASE(FunctionalDataBoundProc, bound_proc_types);
+TYPED_TEST_SUITE(FunctionalDataBoundProc, bound_proc_types);
 
 namespace {
   // Returns the next element.
@@ -1504,7 +1504,7 @@ template<typename T>
 struct FunctionalScopeLockWeakPtr : testing::Test {
 };
 
-TYPED_TEST_CASE(FunctionalScopeLockWeakPtr, SharedPtrTypes);
+TYPED_TEST_SUITE(FunctionalScopeLockWeakPtr, SharedPtrTypes);
 
 TYPED_TEST(FunctionalScopeLockWeakPtr, SuccessfulLock) {
   using namespace ka;
@@ -1539,7 +1539,7 @@ namespace {
 
 using MutexTypes = testing::Types<std::mutex,
                                   std::recursive_mutex,
-#if !BOOST_OS_ANDROID
+#if !ANDROID
                                   std::timed_mutex,
                                   std::recursive_timed_mutex,
 #endif
@@ -1553,7 +1553,7 @@ template<typename T>
 struct FunctionalScopeLockMutexes : testing::Test {
 };
 
-TYPED_TEST_CASE(FunctionalScopeLockMutexes, MutexTypes);
+TYPED_TEST_SUITE(FunctionalScopeLockMutexes, MutexTypes);
 
 TYPED_TEST(FunctionalScopeLockMutexes, Mutexes) {
   using namespace ka;

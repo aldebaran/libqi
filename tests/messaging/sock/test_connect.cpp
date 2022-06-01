@@ -130,7 +130,7 @@ using sequences = testing::Types<
   //, qi::sock::ConnectSocketFuture<qi::sock::NetworkAsio>, qi::sock::Connecting<qi::sock::NetworkAsio>
 >;
 
-TYPED_TEST_CASE(NetConnectFuture, sequences);
+TYPED_TEST_SUITE(NetConnectFuture, sequences);
 
 TYPED_TEST(NetConnectFuture, FailsOnResolve)
 {

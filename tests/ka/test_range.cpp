@@ -327,7 +327,7 @@ namespace detail {
     );
 } // namespace detail
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   DefaultInstantiation,
   RangeBoundedRangeLinearizableBeginEnd,
   detail::boundedRangeLinearizableBeginEndTestingValues
@@ -343,7 +343,7 @@ TEST_P(RangeBoundedRangeLinearizableBeginEnd, Basic) {
   EXPECT_EQ(b, begin(rng));
   EXPECT_EQ(e, end(rng));
   EXPECT_EQ(values.empty(), empty(rng));
-  EXPECT_EQ(values.size(), size(rng));
+  EXPECT_EQ(values.size(), static_cast<std::size_t>(size(rng)));
   for (auto i = 0; i != size(rng); ++i) {
     EXPECT_EQ(values[i], rng[i]);
   }

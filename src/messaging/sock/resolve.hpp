@@ -62,10 +62,6 @@ namespace qi { namespace sock {
       : _resolver{io}
     {
     }
-    IoService<N>& getIoService()
-    {
-      return _resolver.get_io_service();
-    }
   // Procedure:
     /// Network N,
     /// Procedure<void (ErrorCode<N>, Iterator<Resolver<N>>)> Proc,
@@ -80,7 +76,7 @@ namespace qi { namespace sock {
       }
       qiLogVerbose(logCategory()) << "(ResolverUrlList)" << this << ": Trying to connect to " << url.host() << ":" << url.port();
       Query<Resolver<N>> query(url.host(), os::to_string(url.port())
-#if !BOOST_OS_ANDROID
+#if !ANDROID
         , Query<Resolver<N>>::all_matching
 #endif
       );
@@ -155,10 +151,6 @@ namespace qi { namespace sock {
     explicit ResolveUrl(IoService<N>& io)
       : _resolve{io}
     {
-    }
-    IoService<N>& getIoService()
-    {
-      return _resolve.getIoService();
     }
   // Procedure:
     /// Procedure<void (ErrorCode<N>, OptionalEntry)> Proc,

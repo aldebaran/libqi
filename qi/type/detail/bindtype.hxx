@@ -16,7 +16,9 @@
 #include <boost/function_types/parameter_types.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/function_pointer.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/any.hpp>
 
 namespace qi

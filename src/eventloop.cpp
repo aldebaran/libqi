@@ -28,11 +28,6 @@
 #include <qi/getenv.hpp>
 
 #include "eventloop_p.hpp"
-#ifdef WITH_PROBES
-# include "tp_qi.h"
-#else
-# define tracepoint(...)
-#endif
 
 qiLogCategory("qi.eventloop");
 
@@ -620,12 +615,10 @@ namespace qi {
     if (!erc)
     {
       auto _ = ka::scoped_incr_and_decr(_activeTask);
-      tracepoint(qi_qi, eventloop_task_start, id);
 
       try
       {
         f();
-        tracepoint(qi_qi, eventloop_task_stop, id);
         p.setValue(0);
       }
       catch (const detail::TerminateThread& /* e */)
@@ -635,18 +628,15 @@ namespace qi {
       }
       catch (const std::exception& ex)
       {
-        tracepoint(qi_qi, eventloop_task_error, id);
         p.setError(ex.what());
       }
       catch (...)
       {
-        tracepoint(qi_qi, eventloop_task_error, id);
         p.setError("unknown error");
       }
     }
     else
     {
-      tracepoint(qi_qi, eventloop_task_cancel, id);
       p.setCanceled();
     }
     if (src(update))
@@ -671,7 +661,6 @@ namespace qi {
     if (delay == qi::Duration(0))
     {
       const auto id = ++gTaskId;
-      tracepoint(qi_qi, eventloop_post, id, cb.target_type().name());
 
       auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
       _io.post([=] { invoke_maybe(cb, id, Promise<void>{}, erc, countTotalTask,
@@ -720,7 +709,6 @@ namespace qi {
 
     auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
 
-    tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), boost::chrono::duration_cast<qi::MicroSeconds>(delay).count());
     if (delay > Duration::zero())
     {
       boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(_io);
@@ -765,7 +753,6 @@ namespace qi {
 
     auto countTotalTask = ka::shared_ptr(ka::scoped_incr_and_decr(_totalTask));
 
-    //tracepoint(qi_qi, eventloop_delay, id, cb.target_type().name(), qi::MicroSeconds(delay).count());
     boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(_io);
     timer->expires_at(timepoint);
     auto prom = detail::makeCancelingPromise(options, boost::bind(&SteadyTimer::cancel, timer));

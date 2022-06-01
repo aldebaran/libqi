@@ -6,6 +6,7 @@
 #include <iterator>
 #include <type_traits>
 #include <boost/container/container_fwd.hpp>
+#include <boost/preprocessor/comma.hpp>
 
 // Unfortunately, the standard does not allow to add anything to the
 // std namespace, except explicit specializations of existing functions.
@@ -497,11 +498,28 @@ namespace ka {
   struct IsRetract : detail::IsRetract<G, F, HasRetract<Decay<F>>> {
   };
 
-  KA_GENERATE_TRAITS_HAS(HasInputIteratorTag, T,
-    std::declval<std::input_iterator_tag>() = typename std::iterator_traits<T>::iterator_category{})
+  /// `T` must have the form `std::pair<TypeToTest, StdIteratorCategory>`, where
+  /// `StdIteratorCategory` is in {`std::input_iterator_tag`,
+  ///   `std::forward_iterator_tag`, `std::bidirectional_iterator_tag`,
+  ///   `std::random_access_iterator_tag`}.
+  KA_GENERATE_TRAITS_HAS(IsIterator, T,
+    std::declval<typename std::tuple_element<1 BOOST_PP_COMMA() T>::type>()
+      = typename std::iterator_traits<typename std::tuple_element<0 BOOST_PP_COMMA() T>::type>::iterator_category{})
 
-  /// Causes a substitution failure if the type is not an iterator, effectively
-  /// discarding the function from the overload set.
+  template<typename T>
+  using IsInputIterator = IsIterator<std::pair<T, std::input_iterator_tag>>;
+
+  template<typename T>
+  using IsForwardIterator = IsIterator<std::pair<T, std::forward_iterator_tag>>;
+
+  template<typename T>
+  using IsBidirectionalIterator = IsIterator<std::pair<T, std::bidirectional_iterator_tag>>;
+
+  template<typename T>
+  using IsRandomAccessIterator = IsIterator<std::pair<T, std::random_access_iterator_tag>>;
+
+  /// Causes a substitution failure if the type is not an input iterator,
+  /// effectively discarding the function from the overload set.
   ///
   /// Note: `EnableIfInputIterator` is to be typically used in conjunction with
   ///       `EnableIfNotInputIterator`.
@@ -518,14 +536,14 @@ namespace ka {
   /// N distance(N b, N e);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   template<typename T>
-  using EnableIfInputIterator = EnableIf<HasInputIteratorTag<T>::value>;
+  using EnableIfInputIterator = EnableIf<IsInputIterator<T>::value>;
 
-  /// Causes a substitution failure if the type is an iterator, effectively
-  /// discarding the function from the overload set.
+  /// Causes a substitution failure if the type is an input iterator,
+  /// effectively discarding the function from the overload set.
   ///
   /// See `EnableIfInputIterator` for a usage example.
   template<typename T>
-  using EnableIfNotInputIterator = EnableIf<!HasInputIteratorTag<T>::value>;
+  using EnableIfNotInputIterator = EnableIf<!IsInputIterator<T>::value>;
 
   KA_GENERATE_TRAITS_HAS(HasMappedType, T,
     std::declval<typename T::mapped_type>())

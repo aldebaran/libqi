@@ -286,9 +286,25 @@ TEST(TestURLFromUri, CompleteURL)
   ASSERT_FALSE(optUri.empty());
   auto uri = *optUri;
   const auto url = qi::toUrl(uri);
+  EXPECT_TRUE(url.hasProtocol());
   EXPECT_EQ("http", url.protocol());
+  EXPECT_TRUE(url.hasHost());
   EXPECT_EQ("10.0.170.180", url.host());
+  EXPECT_TRUE(url.hasPort());
   EXPECT_EQ(22, url.port());
+}
+
+TEST(TestURLFromUri, NoAuthority)
+{
+  using namespace qi;
+  const auto optUri = uri("qi:Life");
+  ASSERT_FALSE(optUri.empty());
+  auto uri = *optUri;
+  const auto url = qi::toUrl(uri);
+  EXPECT_TRUE(url.hasProtocol());
+  EXPECT_EQ("qi", url.protocol());
+  EXPECT_FALSE(url.hasHost());
+  EXPECT_FALSE(url.hasPort());
 }
 
 TEST(TestURLFromUri, NoHost)
@@ -298,8 +314,11 @@ TEST(TestURLFromUri, NoHost)
   ASSERT_FALSE(optUri.empty());
   auto uri = *optUri;
   const auto url = qi::toUrl(uri);
+  EXPECT_TRUE(url.hasProtocol());
   EXPECT_EQ("scp", url.protocol());
-  EXPECT_FALSE(url.hasHost());
+  EXPECT_TRUE(url.hasHost());
+  EXPECT_EQ("", url.host());
+  EXPECT_TRUE(url.hasPort());
   EXPECT_EQ(80, url.port());
 }
 
@@ -310,53 +329,55 @@ TEST(TestURLFromUri, NoPort)
   ASSERT_FALSE(optUri.empty());
   auto uri = *optUri;
   const auto url = qi::toUrl(uri);
+  EXPECT_TRUE(url.hasProtocol());
   EXPECT_EQ("muffins", url.protocol());
+  EXPECT_TRUE(url.hasHost());
   EXPECT_EQ("cookies", url.host());
   EXPECT_FALSE(url.hasPort());
 }
 
-TEST(TestURLFromUri, UserPasswordMakesParsingFail)
+TEST(TestURLFromUri, UserPassword)
 {
   using namespace qi;
   const auto optUri = uri("http://nao:pass@10.0.170.180:22");
   ASSERT_FALSE(optUri.empty());
   auto uri = *optUri;
   const auto url = qi::toUrl(uri);
-  // The colon before the password makes the parsing fail, the username becomes the host and the
-  // rest is the port.
+  EXPECT_TRUE(url.hasProtocol());
   EXPECT_EQ("http", url.protocol());
-  EXPECT_EQ("nao", url.host());
-  EXPECT_FALSE(url.hasPort());
+  EXPECT_TRUE(url.hasHost());
+  EXPECT_EQ("10.0.170.180", url.host());
+  EXPECT_TRUE(url.hasPort());
+  EXPECT_EQ(22, url.port());
 }
 
-// Tests for cases where some URI will make the port parsing fail, but the host and scheme are
-// parsed successfully.
-struct TestURLFromUriPortParsingFails : testing::TestWithParam<qi::Uri>{};
+struct TestURLFromUriPortPathQueryFragmentIgnored : testing::TestWithParam<qi::Uri>{};
 
-// Anything after the port (path, query or fragment) is included in it and thus makes it fail if
-// it's not only digits.
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   AnythingAfterPort,
-  TestURLFromUriPortParsingFails,
+  TestURLFromUriPortPathQueryFragmentIgnored,
   testing::Values(
     *qi::uri("http://10.0.170.180:22/some/path"),
     *qi::uri("http://10.0.170.180:22?somequery"),
     *qi::uri("http://10.0.170.180:22#somefragment")));
 
-TEST_P(TestURLFromUriPortParsingFails, Basic)
+TEST_P(TestURLFromUriPortPathQueryFragmentIgnored, Basic)
 {
   const auto uri = GetParam();
   const auto url = qi::toUrl(uri);
+  EXPECT_TRUE(url.hasProtocol());
   EXPECT_EQ(uri.scheme(), url.protocol());
   const auto auth = uri.authority();
   ASSERT_FALSE(auth.empty());
+  EXPECT_TRUE(url.hasHost());
   EXPECT_EQ((*auth).host(), url.host());
-  EXPECT_FALSE(url.hasPort());
+  EXPECT_TRUE(url.hasPort());
+  EXPECT_EQ((*auth).port(), ka::opt(url.port()));
 }
 
 struct TestURLToUri : testing::TestWithParam<std::pair<qi::Url, ka::opt_t<qi::Uri>>> {};
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   InputUrlExpectedUriPair,
   TestURLToUri,
   testing::Values(

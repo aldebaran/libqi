@@ -78,7 +78,7 @@ namespace
   struct SyncLogInvokeCatch : SyncLog {};
 }
 
-TYPED_TEST_CASE(SyncLogInvokeCatch, TestTypes);
+TYPED_TEST_SUITE(SyncLogInvokeCatch, TestTypes);
 
 // Expected: Non-throwing procedure is executed, no log is done.
 TYPED_TEST(SyncLogInvokeCatch, NoExceptionThrown)

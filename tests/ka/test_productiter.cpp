@@ -80,7 +80,7 @@ template<typename T>
 struct ProductIterOne : testing::Test {
 };
 
-TYPED_TEST_CASE(ProductIterOne, ka::test::container_fn_types);
+TYPED_TEST_SUITE(ProductIterOne, ka::test::container_fn_types);
 
 // Tests of singleton iterator.
 TYPED_TEST(ProductIterOne, Laws) {
@@ -109,7 +109,7 @@ template<typename T>
 struct ProductIterOneBidirectional : testing::Test {
 };
 
-TYPED_TEST_CASE(ProductIterOneBidirectional, ka::test::bidirectional_container_fn_types);
+TYPED_TEST_SUITE(ProductIterOneBidirectional, ka::test::bidirectional_container_fn_types);
 
 TYPED_TEST(ProductIterOneBidirectional, Laws) {
   using namespace ka;
@@ -132,7 +132,7 @@ template<typename T>
 struct ProductIterOneRandomAccess : testing::Test {
 };
 
-TYPED_TEST_CASE(ProductIterOneRandomAccess, ka::test::random_access_container_fn_types);
+TYPED_TEST_SUITE(ProductIterOneRandomAccess, ka::test::random_access_container_fn_types);
 
 TYPED_TEST(ProductIterOneRandomAccess, Laws) {
   using namespace ka;
@@ -158,7 +158,7 @@ namespace ka { namespace test {
   >;
 }} // namespace ka::test
 
-TYPED_TEST_CASE(ProductIterNRandomAccess, ka::test::random_access_container_triple_types);
+TYPED_TEST_SUITE(ProductIterNRandomAccess, ka::test::random_access_container_triple_types);
 
 TYPED_TEST(ProductIterNRandomAccess, Laws) {
   using namespace ka;
@@ -194,7 +194,7 @@ template<typename T>
 struct ProductIterEnd : testing::Test {
 };
 
-TYPED_TEST_CASE(ProductIterEnd, ka::test::container_triple_fn_types);
+TYPED_TEST_SUITE(ProductIterEnd, ka::test::container_triple_fn_types);
 
 TYPED_TEST(ProductIterEnd, SameSize) {
   using namespace ka;
@@ -435,7 +435,7 @@ template<typename T>
 struct ProductIterProjection : testing::Test {
 };
 
-TYPED_TEST_CASE(ProductIterProjection, ka::test::container_triple_fn_types);
+TYPED_TEST_SUITE(ProductIterProjection, ka::test::container_triple_fn_types);
 
 TYPED_TEST(ProductIterProjection, Basic) {
   using namespace ka;

@@ -38,7 +38,7 @@
 #include <boost/function.hpp>
 #include <boost/predef.h>
 #include <boost/utility/string_ref.hpp>
-#include <boost/function_output_iterator.hpp>
+#include <boost/iterator/function_output_iterator.hpp>
 
 #ifdef WITH_SYSTEMD
 #include <qi/log/journaldloghandler.hpp>
@@ -51,7 +51,10 @@
 #if BOOST_OS_WINDOWS
 # include <shlwapi.h>
 # pragma comment(lib, "shlwapi.lib")
+// Disable deprecation warnings about `std::auto_ptr`.
+# define BOOST_LOCALE_HIDE_AUTO_PTR
 # include <boost/locale.hpp>
+# undef BOOST_LOCALE_HIDE_AUTO_PTR
 # include <boost/filesystem.hpp>
 #else
 # include <fnmatch.h>
@@ -440,11 +443,12 @@ namespace qi {
         auto id = invalidId;
         QI_ASSERT(! handler.empty());
         if (handler == QI_DEFAULT_LOGHANDLER::value::stdOut){
+          namespace ph = std::placeholders;
           _glConsoleLogHandler = new ConsoleLogHandler;
           id = addHandler("consoleloghandler",
                           boost::bind(&ConsoleLogHandler::log,
                                       _glConsoleLogHandler,
-                                      _1, _2, _3, _4, _5, _6, _7, _8),
+                                      ph::_1, ph::_2, ph::_3, ph::_4, ph::_5, ph::_6, ph::_7, ph::_8),
                           verb);
           QI_ASSERT(id == 0 || id == invalidId);
         }
@@ -907,9 +911,10 @@ namespace qi {
     SubscriberId addLogHandler(const std::string& name, logFuncHandler fct,
                                qi::LogLevel defaultLevel)
     {
+      namespace ph = std::placeholders;
       return addHandler(name,
           boost::bind(adaptLogFuncHandler,
-                      fct, _1, _2, _3, _4, _5, _6, _7, _8),
+                      fct, ph::_1, ph::_2, ph::_3, ph::_4, ph::_5, ph::_6, ph::_7, ph::_8),
                       defaultLevel);
     }
 

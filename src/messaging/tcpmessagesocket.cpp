@@ -10,7 +10,7 @@
 #if BOOST_OS_WINDOWS
 # include <Winsock2.h> // needed by mstcpip.h
 # include <Mstcpip.h> // for tcp_keepalive struct
-#elif BOOST_OS_ANDROID
+#elif ANDROID
 # include <linux/in.h> // for  IPPROTO_TCP
 #endif
 
@@ -40,7 +40,7 @@ static void setSocketNativeOptionsWindows(
     qiLogWarning() << "Failed to set socket keepalive with code " << WSAGetLastError();
   }
 }
-#elif BOOST_OS_LINUX || BOOST_OS_ANDROID
+#elif BOOST_OS_LINUX || ANDROID
   /// Precondition: timeoutInSeconds >= 0
 static void setSocketNativeOptionsLinuxAndroid(
   boost::asio::ip::tcp::socket::native_handle_type socketNativeHandle, int timeoutInSeconds)
@@ -148,7 +148,7 @@ namespace qi { namespace sock {
   {
   #if BOOST_OS_WINDOWS
     setSocketNativeOptionsWindows(socketNativeHandle, timeoutInSeconds);
-  #elif BOOST_OS_LINUX || BOOST_OS_ANDROID
+  #elif BOOST_OS_LINUX || ANDROID
     setSocketNativeOptionsLinuxAndroid(socketNativeHandle, timeoutInSeconds);
   #elif BOOST_OS_MACOS
     setSocketNativeOptionsMacOs(socketNativeHandle);

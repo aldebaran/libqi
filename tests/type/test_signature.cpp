@@ -527,7 +527,7 @@ class TestSignatureWithTypeToString
   EQ_TYPES_ALTS(P*, S),      \
   EQ_TYPES_ALTS(P* const, S) \
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
   MostTypes,
   TestSignatureWithTypeToString,
   ::testing::ValuesIn(

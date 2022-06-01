@@ -14,7 +14,7 @@
 #include <qi/log.hpp>
 #include <qi/atomic.hpp>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 

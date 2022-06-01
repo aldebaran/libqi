@@ -93,7 +93,7 @@ namespace
   };
 }
 
-TYPED_TEST_CASE(TestExceptionLogRegular, ExceptionLogTypes);
+TYPED_TEST_SUITE(TestExceptionLogRegular, ExceptionLogTypes);
 
 TYPED_TEST(TestExceptionLogRegular, Basic)
 {
@@ -270,7 +270,7 @@ namespace
   };
 } // namespace
 
-TYPED_TEST_CASE(TestExceptionLog, LogCombinationTypes);
+TYPED_TEST_SUITE(TestExceptionLog, LogCombinationTypes);
 
 // Expected: Log is done, in the right log level, with (approximately) the right
 // message.

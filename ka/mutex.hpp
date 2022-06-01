@@ -15,7 +15,7 @@ namespace ka {
     // Common mutexes that might be used in this library.
     template<> struct IsMutex<std::mutex>                   : true_t {};
     template<> struct IsMutex<std::recursive_mutex>         : true_t {};
-#if !BOOST_OS_ANDROID
+#if !ANDROID
     template<> struct IsMutex<std::timed_mutex>             : true_t {};
     template<> struct IsMutex<std::recursive_timed_mutex>   : true_t {};
 #endif

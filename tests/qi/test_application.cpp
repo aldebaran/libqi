@@ -116,3 +116,16 @@ TEST(TestSearchExecutableAbsolutePath, FileInRootPathDoesNotChange)
   const auto tmpAbsoluteFilePath = qi::Path("/foo");
   EXPECT_EQ(tmpAbsoluteFilePath, qi::details::searchExecutableAbsolutePath(tmpAbsoluteFilePath));
 }
+
+TEST(Application, SetNoArguments)
+{
+  int argc = 0;
+  char* arg = nullptr;
+  char** argv = &arg;
+  qi::Application::setArguments(argc, argv);
+}
+
+TEST(Application, SetEmptyArguments)
+{
+  qi::Application::setArguments({});
+}

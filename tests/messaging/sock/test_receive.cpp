@@ -70,7 +70,7 @@ using sequences = testing::Types<
   //, qi::sock::ReceiveMessageContinuous<qi::sock::NetworkAsio>, qi::sock::Connected<qi::sock::NetworkAsio>
 >;
 
-TYPED_TEST_CASE(NetReceiveMessageContinuous, sequences);
+TYPED_TEST_SUITE(NetReceiveMessageContinuous, sequences);
 
 TYPED_TEST(NetReceiveMessageContinuous, FailsOnReadNonSsl)
 {
