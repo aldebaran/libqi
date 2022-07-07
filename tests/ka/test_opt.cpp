@@ -1,6 +1,7 @@
 #include <iterator>
 #include <memory>
 #include <stdexcept>
+#include <boost/optional/optional_io.hpp>
 #include <gtest/gtest.h>
 #include <ka/conceptpredicate.hpp>
 #include <ka/opt.hpp>

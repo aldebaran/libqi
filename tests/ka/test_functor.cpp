@@ -7,6 +7,7 @@
 #include <ka/typetraits.hpp>
 #include <ka/testutils.hpp>
 #include <ka/opt.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <gtest/gtest.h>
 #include <numeric>
 #include <string>

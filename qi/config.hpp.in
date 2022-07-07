@@ -1,2 +1,21 @@
-#cmakedefine qi_STATIC_BUILD
-#cmakedefine QI_WITH_TESTS
+/*
+**  Copyright (C) 2023 Aldebaran United Robotics Group
+**  See COPYING for the license
+*/
+
+#define QI_VERSION_MAJOR @QI_VERSION_MAJOR@
+#define QI_VERSION_MINOR @QI_VERSION_MINOR@
+#define QI_VERSION_PATCH @QI_VERSION_PATCH@
+
+// Reuses pattern from Boost (see boost/version.hpp).
+//
+// QI_VERSION % 100 is the patch version
+// (QI_VERSION / 100) % 1000 is the minor version
+// (QI_VERSION / 100000) is the major version
+#define QI_VERSION \
+  QI_VERSION_PATCH + \
+  QI_VERSION_MINOR * 100 + \
+  QI_VERSION_MAJOR * 100000
+
+// The qi version as a string.
+#define QI_LIB_VERSION "@QI_VERSION_FULL@"

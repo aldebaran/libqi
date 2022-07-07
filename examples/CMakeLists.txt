@@ -4,32 +4,35 @@
 
 project(qi_examples)
 
-#### Set compilation flags {{{
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+add_executable(example_qipath EXCLUDE_FROM_ALL qipath_example.cpp)
+target_link_libraries(example_qipath PRIVATE qi::qi Boost::filesystem)
+
+add_executable(example_sharedlibrary EXCLUDE_FROM_ALL sharedlibrary_example.cpp)
+target_link_libraries(example_sharedlibrary PRIVATE qi::qi)
+
+add_executable(example_log EXCLUDE_FROM_ALL log_example.cpp)
+target_link_libraries(example_log PRIVATE qi::qi Boost::program_options)
+
+if(UNIX)
+  target_link_libraries(example_log PRIVATE Threads::Threads)
 endif()
-#### }}}
 
-qi_create_bin(qipath_example qipath_example.cpp NO_INSTALL)
-qi_use_lib(qipath_example QI BOOST_FILESYSTEM)
-set_target_properties(qipath_example PROPERTIES FOLDER "examples")
+add_executable(example_buffer EXCLUDE_FROM_ALL buffer_example.cpp)
+target_link_libraries(example_buffer PRIVATE qi::qi)
 
-qi_create_bin(sharedlibrary_example sharedlibrary_example.cpp NO_INSTALL)
-qi_use_lib(sharedlibrary_example QI)
-set_target_properties(sharedlibrary_example PROPERTIES FOLDER "examples")
-
-qi_create_bin(log_example log_example.cpp NO_INSTALL)
-qi_use_lib(log_example QI BOOST_PROGRAM_OPTIONS PTHREAD)
-set_target_properties(log_example PROPERTIES FOLDER "examples")
-
-qi_create_bin(buffer_example buffer_example.cpp NO_INSTALL)
-qi_use_lib(buffer_example QI)
-set_target_properties(buffer_example PROPERTIES FOLDER "examples")
+add_dependencies(
+  examples
+    example_qipath
+    example_sharedlibrary
+    example_log
+    example_buffer
+)
 
 if (UNIX AND WITH_BOOST_LOCALE)
-  qi_create_bin(qiconvloc_example qiconvloc_example.cpp NO_INSTALL)
-  qi_use_lib(qiconvloc_example QI BOOST_LOCALE)
-  set_target_properties(qiconvloc_example PROPERTIES FOLDER "examples")
+  add_executable(example_qiconvloc EXCLUDE_FROM_ALL qiconvloc_example.cpp)
+  target_link_libraries(example_qiconvloc PRIVATE qi::qi Boost::locale)
+  add_dependencies(examples example_qiconvloc)
+
   add_subdirectory(qitranslate)
 endif()
 

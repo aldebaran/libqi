@@ -8,7 +8,6 @@
 
 #include <testsession/testsession.hpp>
 #include "testsession_p.hpp"
-#include <qi/testutils/testutils.hpp>
 
 using namespace qi;
 

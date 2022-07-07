@@ -18,7 +18,7 @@ qi_create_lib(adder_fromclient
 # Generate the client which uses the proxy.
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-qi_create_gtest(test_adder_fromclient SRC test_adder.cpp DEPENDS adder_fromclient_support QI GTEST TIMEOUT 10)
+qi_create_test(test_adder_fromclient SRC test_adder.cpp DEPENDS adder_fromclient_support qi TIMEOUT 10)
 if(NOT WIN32)
 set_target_properties(test_adder_fromclient PROPERTIES
   LINK_FLAGS "-Wl,-no-as-needed")

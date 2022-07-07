@@ -4,7 +4,16 @@
 */
 
 #include <qi/messaging/tcpscheme.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <gtest/gtest.h>
+
+namespace qi
+{
+  std::ostream& operator<<(std::ostream& os, const TcpScheme& s)
+  {
+    return os << qi::to_string(s);
+  }
+}
 
 TEST(TcpScheme, FromUriScheme)
 {

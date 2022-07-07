@@ -4,15 +4,13 @@
 qi_create_test_helper(testlaunch         testlaunch.cpp)
 qi_create_test_helper(testlaunchloop     testlaunchloop.cpp)
 qi_create_test_helper(test_launchloop_with_spaces testlaunchloop.cpp)
-if(QI_WITH_TESTS)
-  set_property(TARGET test_launchloop_with_spaces PROPERTY OUTPUT_NAME "test launchloop with spaces")
-endif()
+set_property(TARGET test_launchloop_with_spaces PROPERTY OUTPUT_NAME "test launchloop with spaces")
 
-qi_create_test_helper(check_env             check_env.cpp             DEPENDS QI)
-qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS QI)
-qi_create_test_helper(print_process_uuid    print_process_uuid.cpp    DEPENDS QI)
+qi_create_test_helper(check_env             check_env.cpp             DEPENDS qi::qi)
+qi_create_test_helper(check_machineid       check_machineid.cpp       DEPENDS qi::qi)
+qi_create_test_helper(print_process_uuid    print_process_uuid.cpp    DEPENDS qi::qi)
 
-qi_create_gmock(
+qi_create_test(
   test_qi
 
   SRC
@@ -52,27 +50,28 @@ qi_create_gmock(
   "test_version.cpp"
 
   DEPENDS
-  qi
-  qitestutils
+  qi::qi
+  qi::testutils
+  GTest::gmock
 
   TIMEOUT 120
 )
 
 # TODO: Merge helptext tests in one program once Application can be constructed
 #       and destroyed multiple times in the same process.
-qi_create_gtest(test_helptext
+qi_create_test(test_helptext
   SRC
     "test_helptext.hpp"
     "test_helptext.cpp"
-  DEPENDS QI
+  DEPENDS qi::qi
   TIMEOUT 120
 )
 
-qi_create_gtest(test_helptext_session
+qi_create_test(test_helptext_session
   SRC
     "test_helptext.hpp"
     "test_helptext_session.cpp"
-  DEPENDS QI
+  DEPENDS qi::qi
   TIMEOUT 120
 )
 
@@ -83,17 +82,11 @@ ARGUMENTS
 TIMEOUT
   10
 DEPENDS
-  qi
+  qi::qi
 )
 
-qi_create_gtest(test_qipath SRC "test_qipath.cpp" "../../src/utils.cpp" DEPENDS qi)
+# Links with qi_objects because it needs internal symbols.
+qi_create_test(test_qipath SRC "test_qipath.cpp" DEPENDS qi::internal::qi_objects)
 
 # test with the default chrono io, which is v1 in boost 1.55
-qi_create_gtest(test_qiclock_chronoio SRC test_qiclock_chronoio.cpp DEPENDS QI GTEST)
-# test with the chrono io v2.
-# commented out since it does not compile
-#qi_create_gtest(test_qiclock_chronoio_v2 SRC test_qiclock_chronoio.cpp DEPENDS QI GTEST)
-if(TARGET test_qiclock_chronoio_v2)
-  set_target_properties(test_qiclock_chronoio_v2 PROPERTIES
-      COMPILE_DEFINITIONS "BOOST_CHRONO_DONT_PROVIDES_DEPRECATED_IO_SINCE_V2_0_0")
-endif()
+qi_create_test(test_qiclock_chronoio SRC test_qiclock_chronoio.cpp DEPENDS qi::qi GTest::gtest_main)

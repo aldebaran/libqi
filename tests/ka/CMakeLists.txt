@@ -1,4 +1,4 @@
-qi_create_gmock(
+qi_create_test(
   test_ka
   SRC
     "ark/test_inputiter.cpp"
@@ -35,7 +35,12 @@ qi_create_gmock(
     "test_utility.cpp"
     "test_zero.cpp"
   DEPENDS
-    ASSUME_SYSTEM_INCLUDE BOOST BOOST_SYSTEM BOOST_THREAD BOOST_DATE_TIME OPENSSL
+    qi::ka
+    Boost::headers
+    Boost::date_time
+    Boost::thread
+    OpenSSL::SSL
+    GTest::gtest_main
   TIMEOUT
     120
 )
