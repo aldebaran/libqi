@@ -1,6 +1,135 @@
 libqi Change Log
 =================
 
+libqi 3.0.0
+-----------
+
+This release aims to add the support of mTLS with peer certification
+verification to the library.
+
+### API changes
+
+#### New header: 'qi/messaging/tcpscheme.hpp"
+
+This header introduces a new enumeration `qi::TcpScheme`.
+
+This enumeration has been added in an effort to remove usage of URL "protocol"
+values as raw strings. It contains three values, each associated to a URI scheme:
+  - `TcpScheme::Raw` associated to the 'tcp' scheme.
+  - `TcpScheme::Tls` associated to the 'tcps' scheme.
+  - `TcpScheme::MutualTls` associated to the new 'tcpsm' scheme.
+
+With this new type come a few utility functions, such as a conversion function
+from URL/URI or strings into `TcpScheme` values.
+
+#### New header: 'qi/messaging/ssl/ssl.hpp'
+
+This header introduces a new namespace `qi::ssl` which contains types and
+functions around the OpenSSL library.
+
+The header introduces the following types (among less significant others):
+  - `qi::ssl::BIO`: a basic input/output wrapper.
+  - `qi::ssl::Certificate`: a X509 Certificate.
+  - `qi::ssl::PKey`: a private key.
+  - `qi::ssl::CertChainWithPrivateKey`: a pair of a X509 certificates chain and
+    a private key.
+  - `qi::ssl::ClientConfig`: the configuration of a client doing SSL over TCP.
+  - `qi::ssl::ServerConfig`: the configuration of a server doing SSL over TCP.
+  - `qi::ssl::Error`: an error type usually thrown when an SSL error occurs in
+    our code.
+  - `qi::ssl::PemPasswordCallback`: a callback to decrypt a PEM object
+    protected by a password.
+
+#### `qi::Session`
+
+A few fields were added to the `qi::SessionConfig` type:
+  - `clientSslConfig`: the client side SSL configuration for the session.
+  - `serverSslConfig`: the server side SSL configuration for the session.
+  - `clientAuthenticatorFactory`: added for consistency, the factory used by
+    the client side of the session for qi based authentication.
+  - `authProviderFactory`: added for consistency, the factory used by the
+    server side of the session for qi based authentication.
+
+However, some of these fields are not comparable. Therefore,
+`qi::SessionConfig` is also not comparable anymore.
+
+The `qi::Session::endpoints()` member function returns a list of endpoints
+now ordered by preference according to the `qi::isPreferredEndpoint`
+predicate.
+
+The constructor `qi::Session(bool enforceAuth, SessionConfig)` is now
+deprecated. Enforcing authentication should now be done by setting the
+authentication provider factory and the client authenticator factory of the
+session configuration structure.
+
+The `qi::Session::setIdentity(...)` member function has been removed. The
+certificate and the key of either side of the session should now be set in the
+session configuration structure.
+
+#### `qi::ApplicationSession`
+
+As a result of `qi::SessionConfig` not being comparable,
+`qi::ApplicationSession::Config` is also not comparable anymore.
+
+#### `qi::Gateway`
+
+The previous `qi::Gateway` structure has been replaced by a type alias to
+`qi::ServiceDirectoryProxy`.
+
+A `qi::GatewayPtr` type alias to `qi::ServiceDirectoryProxyPtr` has been added.
+
+#### `qi::ServiceDirectoryProxy`
+
+The `qi::ServiceDirectoryProxy` has been reworked in an effort to reduce its
+code complexity.
+
+All the parameters of the proxy (including the service directory URL, the list
+of listen URL, the service filter, the SSL parameters and the authentication
+factories) are now set through a configuration structure
+`qi::ServiceDirectoryProxy::Config` that is passed at construction of the proxy.
+
+Previous member functions that would change the state of the proxy have been
+removed, including:
+  - `qi::ServiceDirectoryProxy::attachToServiceDirectory(...)`.
+  - `qi::ServiceDirectoryProxy::listenAsync(...)`.
+  - `qi::ServiceDirectoryProxy::setServiceFilter(...)`.
+  - `qi::ServiceDirectoryProxy::setValidateIdentity(...)`.
+
+The class now offers a static member function
+`qi::ServiceDirectoryProxy::create(Config)` returning a
+`qi::Future<qi::ServiceDirectoryProxyPtr>` that is set once the proxy is fully
+operational, i.e. it is connected to the service directory and its server is
+running. This ensures that service directory proxy objects are less stateful
+and simplifies user code.
+
+Since a proxy can still lose connection from its service directory, the
+`status` property is still available. The `ListenStatus` and `ConnectionStatus`
+enumeration have been merged into one `Status` enumeration. Its values are
+limited to the following values:
+  - `Status::Initializing`: the proxy is still initializing and has not
+    launched a connection to the service directory yet.
+  - `Status::Created`: equivalent to `Status::Initializing`.
+  - `Status::Connecting`: the proxy is trying to connect to the service directory.
+  - `Status::Initialized`: equivalent to `Status::Connecting`.
+  - `Status::TryingToListen`: the proxy is connected to the service directory and is
+    trying to launch its server.
+  - `Status::Connected`: equivalent to `Status::TryingToListen`.
+  - `Status::Listening`: the proxy is connected and its server is operational.
+  - `Status::Ready`: equivalent to `Status::Listening`.
+
+To avoid exposing unnecessary implementation details, a static
+`qi::ServiceDirectoryProxy::Config::createFromListeningProtocol` method has
+been added.
+
+`qi::ServiceDirectoryProxy::Filepaths` is a sum type corresponding to the file
+paths needed to create a configuration for each listening protocol.
+
+Since there is no logic based on `Gateway::Config` itself,
+`qi::ServiceDirectoryProxy::createFromListeningProtocol` is provided that
+passes arguments as-is to
+`qi::ServiceDirectoryProxyPtr::Config::createFromListeningProtocol`.
+
+
 libqi 2.1.0
 -----------
 
