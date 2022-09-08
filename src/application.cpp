@@ -20,6 +20,9 @@
 #include <boost/asio.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+#include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 
 #include "utils.hpp"
 
@@ -107,7 +110,7 @@ namespace qi {
       count_term++;
       sigcount = count_term;
     }
-    namespace ph = std::placeholders;
+    namespace ph = boost::placeholders;
     switch (sigcount) {
       case 1:
         qiLogVerbose() << "Sending the stop command...";
@@ -313,7 +316,7 @@ namespace qi {
   {
     QI_ASSERT_TRUE(globalIoService);
 
-    namespace ph = std::placeholders;
+    namespace ph = boost::placeholders;
 
     // We use a list because signal_set is not moveable.
     std::list<boost::asio::signal_set> signalSets;

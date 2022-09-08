@@ -25,14 +25,14 @@ namespace qi
   : _wasDestroyed(false)
   {
     T* thisAsT = static_cast<T*>(this);
-    _ptr = boost::shared_ptr<T>(thisAsT, boost::bind(&Trackable::_destroyed, std::placeholders::_1));
+    _ptr = boost::shared_ptr<T>(thisAsT, boost::bind(&Trackable::_destroyed, boost::placeholders::_1));
   }
 
   template<typename T>
   inline Trackable<T>::Trackable(T* ptr)
     : _wasDestroyed(false)
   {
-    _ptr = boost::shared_ptr<T>(ptr, boost::bind(&Trackable::_destroyed, std::placeholders::_1));
+    _ptr = boost::shared_ptr<T>(ptr, boost::bind(&Trackable::_destroyed, boost::placeholders::_1));
   }
 
   template<typename T>

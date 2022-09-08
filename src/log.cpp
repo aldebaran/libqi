@@ -39,6 +39,9 @@
 #include <boost/predef.h>
 #include <boost/utility/string_ref.hpp>
 #include <boost/iterator/function_output_iterator.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
+#include <boost/bind.hpp>
+#undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 
 #ifdef WITH_SYSTEMD
 #include <qi/log/journaldloghandler.hpp>
@@ -443,7 +446,7 @@ namespace qi {
         auto id = invalidId;
         QI_ASSERT(! handler.empty());
         if (handler == QI_DEFAULT_LOGHANDLER::value::stdOut){
-          namespace ph = std::placeholders;
+          namespace ph = boost::placeholders;
           _glConsoleLogHandler = new ConsoleLogHandler;
           id = addHandler("consoleloghandler",
                           boost::bind(&ConsoleLogHandler::log,
@@ -911,7 +914,7 @@ namespace qi {
     SubscriberId addLogHandler(const std::string& name, logFuncHandler fct,
                                qi::LogLevel defaultLevel)
     {
-      namespace ph = std::placeholders;
+      namespace ph = boost::placeholders;
       return addHandler(name,
           boost::bind(adaptLogFuncHandler,
                       fct, ph::_1, ph::_2, ph::_3, ph::_4, ph::_5, ph::_6, ph::_7, ph::_8),

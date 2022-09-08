@@ -439,7 +439,7 @@ namespace detail {
       {
         Future<Future<T> >* self = static_cast<Future<Future<T> >*>(this);
 
-        namespace ph = std::placeholders;
+        namespace ph = boost::placeholders;
         Promise<T> promise(boost::bind(&AddUnwrap<Future<T> >::_cancel, ph::_1,
               boost::weak_ptr<FutureBaseTyped<Future<T> > >(self->_p)));
 
@@ -544,7 +544,7 @@ namespace detail {
     p.setup(boost::bind(&detail::futureCancelAdapter<AnyReference>,
           boost::weak_ptr<detail::FutureBaseTyped<AnyReference> >(f._p)));
     f.connect(boost::function<void(const qi::Future<AnyReference>&)>(
-          boost::bind(&detail::futureAdapter<R>, std::placeholders::_1, p)));
+          boost::bind(&detail::futureAdapter<R>, boost::placeholders::_1, p)));
   }
 
   template<typename FT, typename PT>
@@ -553,7 +553,7 @@ namespace detail {
     if (option == AdaptFutureOption_ForwardCancel)
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
-    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, std::placeholders::_1, p,
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, FutureValueConverter<FT, PT> >, boost::placeholders::_1, p,
       FutureValueConverter<FT, PT>()));
   }
 
@@ -563,7 +563,7 @@ namespace detail {
     if (option == AdaptFutureOption_ForwardCancel)
       p.setup(boost::bind(&detail::futureCancelAdapter<FT>,
             boost::weak_ptr<detail::FutureBaseTyped<FT> >(f._p)));
-    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, std::placeholders::_1, p, converter));
+    const_cast<Future<FT>&>(f).connect(boost::bind(detail::futureAdapter<FT, PT, CONV>, boost::placeholders::_1, p, converter));
   }
 
   template <typename T>
