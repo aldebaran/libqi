@@ -69,7 +69,7 @@ namespace qi {
     void onTransportSocketResult(qi::Future<MessageSocketPtr> value, long requestId);
 
     //ServiceDirectoryClient
-    void onAuthentication(const MessageSocket::SocketEventData& data, long requestId, MessageSocketPtr socket, ClientAuthenticatorPtr auth, SignalSubscriberPtr old);
+    void onAuthentication(const MessageSocket::SocketEventData& data, long requestId, MessageSocketPtr socket, ClientAuthenticatorPtr auth, boost::optional<SignalLink&> old);
 
     ServiceRequest *serviceRequest(long requestId);
     void            removeRequest(long requestId);
