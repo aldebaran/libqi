@@ -550,16 +550,11 @@ namespace qi {
 
         if (protocol != "")
         {
-          std::vector<qi::Url>::const_iterator it = si.endpoints().begin();
-
-          for (;
-               it != si.endpoints().end() && it->protocol() != protocol;
-               it++)
-          {
-            continue;
-          }
-
-          if (it == si.endpoints().end())
+          auto endpoints = si.endpoints();
+          const auto hasExpectedProtocol = [&](const auto& url) {
+            return url.protocol() == protocol;
+          };
+          if (std::none_of(endpoints.begin(), endpoints.end(), hasExpectedProtocol))
           {
             std::stringstream ss;
             ss << "No " << protocol << " endpoint available for service:" << sr->serviceInfo.name()
