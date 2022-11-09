@@ -1384,19 +1384,19 @@ TEST_P(TypeParameterizedAutoAnyReference, AutoAnyReferenceFromAnyReferenceShares
   const auto itf = GetParam();
 
   { // From AnyReference
-    AnyReference ref{ itf };
-    AutoAnyReference autoRef{ ref };
+    auto ref = ka::scoped(AnyReference{ itf }, [](auto ref){ ref.destroy(); });
+    AutoAnyReference autoRef(ref.value);
     EXPECT_EQ(itf->kind(), autoRef.kind());
   }
   { // From AnyValue
     AnyValue value{ itf };
-    AutoAnyReference autoRef{ value };
+    AutoAnyReference autoRef(value);
     EXPECT_EQ(itf->kind(), autoRef.kind());
   }
   { // From AutoAnyReference
-    AnyReference ref{ itf };
-    AutoAnyReference autoRef{ ref };
-    AutoAnyReference autoAutoRef{ autoRef };
+    auto ref = ka::scoped(AnyReference{ itf }, [](auto ref){ ref.destroy(); });
+    AutoAnyReference autoRef(ref.value);
+    AutoAnyReference autoAutoRef(autoRef);
     EXPECT_EQ(itf->kind(), autoAutoRef.kind());
   }
 }

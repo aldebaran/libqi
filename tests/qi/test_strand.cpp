@@ -380,14 +380,14 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
 
   int callcount = 0;
   {
-    boost::shared_ptr<MyActor> obj(new MyActor);
+    MyActor obj;
 
     qi::DynamicObjectBuilder builder;
     builder.setThreadingModel(qi::ObjectThreadingModel_SingleThread);
     builder.advertiseMethod("f",
-        boost::function<void(int, qi::Promise<void>)>(boost::bind(&MyActor::f, obj, _1, _2)));
-    builder.advertiseSignal("sig", &obj->sig);
-    builder.advertiseProperty("prop", &obj->prop);
+        boost::function<void(int, qi::Promise<void>)>(boost::bind(&MyActor::f, &obj, _1, _2)));
+    builder.advertiseSignal("sig", &obj.sig);
+    builder.advertiseProperty("prop", &obj.prop);
 
     qi::AnyObject aobj(builder.object());
 
@@ -397,13 +397,13 @@ TEST(TestStrand, AllFutureSignalPropertyPeriodicTaskAsyncTypeErasedDynamic)
       aobj.async<void>("f", TOTAL, finished);
     for (int i = 0; i < 50; ++i)
       aobj.setProperty("prop", distrib(randEngine));
-    QI_EMIT obj->sig(TOTAL);
+    QI_EMIT obj.sig(TOTAL);
     // we need one more call (the second test expects a periodic task to run at
     // least once)
     for (int i = 0; i < 26; ++i)
       aobj.async<void>("f", TOTAL, finished);
     finished.future().wait();
-    callcount = obj->callcount;
+    callcount = obj.callcount;
   }
   ASSERT_EQ(TOTAL + 1, callcount);
 }
@@ -451,7 +451,7 @@ KA_WARNING_POP()
     for (int i = 0; i < 50; ++i)
       signal.connect(&MyActor::f, obj.get(), _1, finished);
     for (int i = 0; i < 50; ++i)
-      aobj.connect("sig", boost::function<void(int)>(obj->stranded(boost::bind(&MyActor::f, obj, _1, finished))));
+      aobj.connect("sig", boost::function<void(int)>(obj->stranded(boost::bind(&MyActor::f, obj.get(), _1, finished))));
 
     per.start();
     for (int i = 0; i < 25; ++i)

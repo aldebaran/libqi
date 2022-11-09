@@ -766,8 +766,6 @@ TEST(TestCall, TestObjectPassing)
   unregisteredObj.reset();
   unregisteredObj = unregisteredWeakObj.lock();
   ASSERT_TRUE(unregisteredObj);
-  if (p.client() == p.server())
-    return; // test makes no sense in direct mode
 
   // This will delete the proxy
   qiLogInfo() << logPrefix << "Triggering 'fire(0)' event.";
@@ -778,9 +776,17 @@ TEST(TestCall, TestObjectPassing)
   eventValue = qi::Promise<int>();
   ASSERT_TRUE(test::isStillRunning(eventValue.future(), test::willDoNothing(), qi::MilliSeconds{0}));
 
-  qiLogInfo() << logPrefix << "Triggering 'fire(1)' event.";
-  unregisteredObj.post("fire", 1);
-  ASSERT_TRUE(test::isStillRunning(eventValue.future()));
+  // The following check is only useful if the mode is not "direct". Otherwise,
+  // the `unregisteredObj` is shared by the client and the server (since they
+  // are the same), therefore keeping it alive in this scope ensures that the
+  // signal callback is called. Consequently, in "direct" mode, the `eventValue`
+  // promise ends up being set with a value, which causes the test below to fail.
+  if (p.mode() != TestMode::Mode_Direct)
+  {
+    qiLogInfo() << logPrefix << "Triggering 'fire(1)' event.";
+    unregisteredObj.post("fire", 1);
+    ASSERT_TRUE(test::isStillRunning(eventValue.future()));
+  }
 
   // Check that unregisteredObj is no longer held
   unregisteredObj.reset();

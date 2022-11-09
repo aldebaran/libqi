@@ -118,9 +118,8 @@ TEST(EncodeJSON, EmptyValue) {
 }
 
 TEST(EncodeJSON, Dynamics) {
-  qi::AnyReference gv(qi::TypeInterface::fromSignature(qi::Signature("m")));
-  qi::AnyValue gvr = qi::AnyValue::from("plouf");
-  gv.setDynamic(gvr.asReference());
+  qi::AnyValue gv(qi::TypeInterface::fromSignature(qi::Signature("m")));
+  gv.setDynamic(qi::AnyReference::from("plouf"));
   EXPECT_EQ("\"plouf\"", qi::encodeJSON(gv));
 }
 
