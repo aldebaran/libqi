@@ -9,6 +9,7 @@
 #include <qi/type/objecttypebuilder.hpp>
 #include <src/type/signal_p.hpp>
 #include "boundobject.hpp"
+#include "qi/type/detail/typeinterface.hpp"
 
 const auto logCategory = "qimessaging.boundobject";
 qiLogCategory(logCategory);
@@ -272,8 +273,7 @@ namespace qi
       }
       funcId = msg.function();
 
-      qi::Signature sigparam;
-      GenericFunctionParameters mfp;
+      qi::Signature methodParametersSignature;
 
       // Validate call target
       if (msg.type() == qi::Message::Type_Call) {
@@ -284,17 +284,17 @@ namespace qi
           qiLogError() << ss.str();
           throw std::runtime_error(ss.str());
         }
-        sigparam = mm->parametersSignature();
+        methodParametersSignature = mm->parametersSignature();
       }
 
       else if (msg.type() == qi::Message::Type_Post) {
         const qi::MetaSignal *ms = obj.metaObject().signal(funcId);
         if (ms)
-          sigparam = ms->parametersSignature();
+          methodParametersSignature = ms->parametersSignature();
         else {
           const qi::MetaMethod *mm = obj.metaObject().method(funcId);
           if (mm)
-            sigparam = mm->parametersSignature();
+            methodParametersSignature = mm->parametersSignature();
           else {
             qiLogError() << "No such signal/method on event message " << msg.address();
             return DispatchStatus::MessageHandled_WithError;
@@ -314,51 +314,39 @@ namespace qi
         return DispatchStatus::MessageNotHandled;
       }
 
-      AnyReference ref;
+      qi::Signature messageValueSignature = methodParametersSignature;
+
+      // If the DynamicPayload flag is set, then the message value is a dynamic value instead.
       if (msg.flags() & Message::TypeFlag_DynamicPayload)
-        sigparam = "m";
-      // ReturnType flag appends a signature to the payload
-      Signature originalSignature;
+        messageValueSignature = qi::Signature::fromType(Signature::Type_Dynamic);
+
+      // If the ReturnType flag is set, the parameters tuple sent by the caller has
+      // its signature appended to it. In that case, we adapt the message value
+      // expected signature so that we may deserialize the signature of the tuple.
       bool hasReturnType = (msg.flags() & Message::TypeFlag_ReturnType) ? true : false;
       if (hasReturnType)
       {
-        originalSignature = sigparam;
-        sigparam = "(" + sigparam.toString() + "s)";
+        static const auto typeOfSignature = qi::typeOf<Signature>();
+        messageValueSignature = "(" + messageValueSignature.toString() + typeOfSignature->signature().toString() + ")";
       }
-      // Since the following code does some AnyReference juggling (assignment
-      // with its own sub-parts), it is simpler here to directly manipulate an
-      // AnyReference and achieve exception-safety through a scoped, than using
-      // an AnyValue.
-      bool mustDestroyRef = true;
-      ref = msg.value(sigparam, socket).release();
-      auto guard = ka::scoped([&]() {
-        if (mustDestroyRef)
-        {
-          ref.destroy();
-        }
-      });
+      // This value is kept alive so that we may reference its parts, which
+      // contain the list of the function parameters.
+      auto messageValue = msg.value(messageValueSignature, socket);
       std::string returnSignature;
+      // The reference to the tuple value containing the function parameters.
+      AnyReference parametersTuple;
       if (hasReturnType)
       {
-        returnSignature = ref[1].to<std::string>();
-        ref[1].destroy();
-        ref = ref[0];
-        sigparam = originalSignature;
+        // The value contained in the message is a tuple of 2 elements: the
+        // tuple of parameters and a string representation of the expected
+        // return value type signature.
+        parametersTuple = messageValue[0];
+        returnSignature = messageValue[1].to<std::string>();
       }
-      if (sigparam == "m")
-      {
-        // received dynamically typed argument pack, unwrap
-        AnyValue* content = ref.ptr<AnyValue>();
-        // steal it (`release` doesn't throw).
-        AnyReference pContent = content->release();
-
-        // free the object content
-        mustDestroyRef = false; // If next line throws, don't redestroy.
-        ref.destroy();
-        ref = pContent;
-        mustDestroyRef = true; // Reactivate destroy on scope exit.
-      }
-      mfp = ref.asTupleValuePtr();
+      else
+        // The value contained in the message is the tuple of parameters.
+        parametersTuple = messageValue.asReference();
+      GenericFunctionParameters parameters = parametersTuple.asTupleValuePtr();
       /* Because of 'global' _currentSocket, we cannot support parallel
       * executions at this point.
       * Both on self, and on obj which can use currentSocket() too.
@@ -385,7 +373,7 @@ namespace qi
         qi::MetaCallType callType = isUserDefinedFunction ? _callType : MetaCallType_Direct;
 
         qi::Signature sig = returnSignature.empty() ? Signature() : Signature(returnSignature);
-        qi::Future<AnyReference> fut = obj.metaCall(funcId, mfp, callType, sig);
+        qi::Future<AnyReference> fut = obj.metaCall(funcId, parameters, callType, sig);
         AtomicIntPtr cancelRequested = boost::make_shared<Atomic<int> >(0);
         {
           QI_LOG_DEBUG_BOUNDOBJECT()
@@ -406,9 +394,9 @@ namespace qi
         break;
       case Message::Type_Post: {
         if (obj == _self) // we need a sync call (see comment above), post does not provide it
-          obj.metaCall(funcId, mfp, MetaCallType_Direct);
+          obj.metaCall(funcId, parameters, MetaCallType_Direct);
         else
-          obj.metaPost(funcId, mfp);
+          obj.metaPost(funcId, parameters);
       }
         break;
       default:
