@@ -66,7 +66,10 @@ namespace qi
   AnyReference OptionalTypeInterfaceImpl<O>::value(void* storage)
   {
     auto& opt = *reinterpret_cast<O*>(ptrFromStorage(&storage));
-    return opt ? AutoAnyReference(opt.value()) : AnyReference(typeOf<void>());
+    if (!opt)
+      return AnyReference(typeOf<void>());
+    auto& value = opt.value(); // value must be a reference type.
+    return AnyReference::from(value);
   }
 
   template<typename O>
