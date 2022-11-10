@@ -7,11 +7,15 @@
 #include <qi/anyvalue.hpp>
 #include <iterator>
 #include <boost/lexical_cast.hpp>
+#include <cwchar>
 #ifdef WITH_BOOST_LOCALE
 // Disable deprecation warnings about `std::auto_ptr`.
 #  define BOOST_LOCALE_HIDE_AUTO_PTR
 #  include <boost/locale.hpp>
 #  undef BOOST_LOCALE_HIDE_AUTO_PTR
+#else
+#  include <locale>
+#  include <codecvt>
 #endif
 #include "jsoncodec_p.hpp"
 
@@ -230,7 +234,6 @@ namespace qi {
         case 'n' : tmpString += '\n'; _it += 2; break;
         case 'r' : tmpString += '\r'; _it += 2; break;
         case 't' : tmpString += '\t'; _it += 2; break;
-#ifdef WITH_BOOST_LOCALE
         case 'u' :
         {
           if (std::distance(_it, _end) <= 6)
@@ -239,18 +242,31 @@ namespace qi {
             return false;
           }
           std::istringstream ss(std::string(_it+2, _it+6));
-          int val;
+          wint_t val;
           ss >> std::hex >> val;
           if (!ss.eof())
           {
             _it = save;
             return false;
           }
+#ifdef WITH_BOOST_LOCALE
           tmpString += boost::locale::conv::utf_to_utf<char>(&val, &val + 1);
+#else
+          // `wint_t` either contains a value representable by `wchar_t` or `WEOF`.
+          if (val != WEOF)
+          {
+            const auto wCharVal = static_cast<wchar_t>(val);
+            std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+            tmpString += converter.to_bytes(wCharVal);
+          }
+          // else: `val` is `WEOF`.
+          // The character is skipped, which is the same behavior as
+          // `boost::locale::conv::utf_to_utf` with the default method (the
+          // last parameter of the function call).
+#endif
           _it += 6;
           break;
         }
-#endif
         default:
           _it = save;
           return false;
