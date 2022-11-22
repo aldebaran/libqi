@@ -1361,6 +1361,14 @@ TEST(Value, OptionalAnyValue)
   EXPECT_ANY_THROW(v.toOptional<std::string>());
 }
 
+TEST(Value, NullPtrThrowsExceptionWhenDereferenced)
+{
+  int* p = nullptr;
+  auto v = AnyValue::from(p);
+  EXPECT_THROW(*v, NullPtrException);
+  EXPECT_THROW(v.content(), NullPtrException);
+}
+
 class TypeParameterizedAutoAnyReference : public ::testing::TestWithParam<TypeInterface*> {};
 INSTANTIATE_TEST_SUITE_P(
     MostCommonInterfaces,

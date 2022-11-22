@@ -11,6 +11,10 @@
 
 namespace qi
 {
+  inline NullPtrException::NullPtrException()
+    : std::runtime_error("attempting to dereference a null pointer")
+  {}
+
   template<typename T> class PointerTypeInterfaceImpl: public PointerTypeInterface
   {
   public:
@@ -23,7 +27,9 @@ namespace qi
     AnyReference dereference(void* storage) override
     {
       // We are in DirectAccess mode, so storage is a T*.
-      void* value = pointedType()->initializeStorage(storage);
+      auto value = storage;
+      if (value == nullptr)
+        throw NullPtrException{};
       return AnyReference(pointedType(), value);
     }
 
@@ -54,9 +60,11 @@ namespace qi
     PointerKind pointerKind() override { return Shared; }
     AnyReference dereference(void* storage) override
     {
-      T* ptr = (T*)ptrFromStorage(&storage);
-      void *value = pointedType()->initializeStorage(ptr->get());
-      return AnyReference(pointedType(), value);
+      const auto& sharedPtr = *reinterpret_cast<T*>(ptrFromStorage(&storage));
+      auto* valuePtr = sharedPtr.get();
+      if (valuePtr == nullptr)
+        throw NullPtrException{};
+      return AnyReference(pointedType(), valuePtr);
     }
     void set(void** storage, AnyReference pointer) override
     {
