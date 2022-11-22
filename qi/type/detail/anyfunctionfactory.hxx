@@ -8,6 +8,7 @@
 #define _QITYPE_DETAIL_ANYFUNCTIONFACTORY_HXX_
 
 #include <type_traits>
+#include <functional>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/mpl/find_if.hpp>
@@ -229,46 +230,26 @@ KA_WARNING_DISABLE(, noexcept-type)
       }
     }
 
-    /** This class can be used to convert the return value of an arbitrary
-     * function into a AnyReference. It handles functions returning void.
-     *
-     * Usage:
-     *   ValueCopy val;
-     *   val(), functionCall(arg);
-     *
-     * in val(), parenthesis are useful to avoid compiler warning "val not used"
-     * when handling void.
-     */
-    class AnyReferenceCopy: public AnyReference
+    template<typename F, typename... Args>
+    AnyReference invokeAnyReferenceImpl(std::true_type /* is_void */, F&& f, Args&&... args)
     {
-    public:
-      AnyReferenceCopy &operator()() { return *this; }
-    };
+      std::forward<F>(f)(std::forward<Args>(args)...);
+      return AnyReference(qi::typeOf<void>());
+    }
 
-    template <typename T>
-    struct AssignAnyRef
+    template<typename F, typename... Args>
+    AnyReference invokeAnyReferenceImpl(std::false_type /* is_void */, F&& f, Args&&... args)
     {
-      template<class X>
-      static void assignAnyRef(AnyReference* ref, X&& any)
-      {
-        using CopyType = typename std::decay<T>::type;
-        *ref = AnyReference(qi::typeOf<T>(), new CopyType(std::forward<X>(any)));
-      }
-    };
+      return AnyReference::from(std::forward<F>(f)(std::forward<Args>(args)...)).clone();
+    }
 
-    template <typename T>
-    struct AssignAnyRef<T*>
+    template<typename F, typename... Args>
+    AnyReference invokeIntoAnyReference(F&& f, Args&&... args)
     {
-      static void assignAnyRef(AnyReference* ref, T* any)
-      {
-        *ref = AnyReference::from(any);
-      }
-    };
-
-    template <typename T>
-    void operator,(AnyReferenceCopy& g, T&& any)
-    {
-      AssignAnyRef<T>::assignAnyRef(&g, std::forward<T>(any));
+      using IsVoid = typename std::is_void<ka::ResultOf<F&&(Args&&...)>>::type;
+      return invokeAnyReferenceImpl(IsVoid {},
+                                    std::forward<F>(f),
+                                    std::forward<Args>(args)...);
     }
 
     // makeCall function family
@@ -277,14 +258,14 @@ KA_WARNING_DISABLE(, noexcept-type)
     // entirely ptrFromStorage.
 
 #define callArg(z, n, _) \
-  BOOST_PP_COMMA_IF(n) * (typename boost::remove_reference<P##n>::type*)args[n]
-#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma) \
-  template <typename R comma argstypedecl>                            \
-  void* makeCall(R (*f)(argstype), void** args)                       \
-  {                                                                   \
-    detail::AnyReferenceCopy val;                                     \
-    val(), f(BOOST_PP_REPEAT(n, callArg, _));                         \
-    return val.rawValue();                                            \
+  , * (typename boost::remove_reference<P##n>::type*)args[n]
+#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+  template <typename R comma argstypedecl>                                \
+  void* makeCall(R (*f)(argstype), void** args)                           \
+  {                                                                       \
+    const auto resRef                                                     \
+      = detail::invokeIntoAnyReference(f BOOST_PP_REPEAT(n, callArg, _)); \
+    return resRef.rawValue();                                             \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -300,17 +281,19 @@ KA_WARNING_DISABLE(, noexcept-type)
 #define declType(z, n, _)                  \
   STATIC_IF_SAFE TypeInterface* type_##n = \
       typeOf<typename boost::remove_reference<P##n>::type>();
-#define callArgBF(z, n, _)                                               \
-  BOOST_PP_COMMA_IF(n) * (typename boost::remove_reference<P##n>::type*) \
+#define callArgBF(z, n, _)                            \
+  , * (typename boost::remove_reference<P##n>::type*) \
       type_##n->ptrFromStorage(&args[n])
 
-#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma) \
-  template <typename R comma argstypedecl>                            \
-  void* makeCall(boost::function<R(argstype)> f, void** args)         \
-  {                                                                   \
-    BOOST_PP_REPEAT(n, declType, _) detail::AnyReferenceCopy val;     \
-    val(), f(BOOST_PP_REPEAT(n, callArgBF, _));                       \
-    return val.rawValue();                                            \
+#define makeCall(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
+  template <typename R comma argstypedecl>                                \
+  void* makeCall(boost::function<R(argstype)> f, void** args)             \
+  {                                                                       \
+    BOOST_PP_REPEAT(n, declType, _)                                       \
+    const auto resRef                                                     \
+      = detail::invokeIntoAnyReference(std::move(f)                       \
+                                       BOOST_PP_REPEAT(n, callArgBF, _)); \
+    return resRef.rawValue();                                             \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -319,10 +302,11 @@ KA_WARNING_DISABLE(, noexcept-type)
   template <typename R comma argstypedecl>                             \
   void* makeCall(R (Class::*f)(argstype), void* instance, void** args) \
   {                                                                    \
-    detail::AnyReferenceCopy val;                                      \
     Class* cptr = *(Class**)instance;                                  \
-    val(), ((*cptr).*f)(BOOST_PP_REPEAT(n, callArg, _));               \
-    return val.rawValue();                                             \
+    const auto resRef                                                  \
+      = detail::invokeIntoAnyReference(std::mem_fn(f), cptr            \
+          BOOST_PP_REPEAT(n, callArg, _));                             \
+    return resRef.rawValue();                                          \
   }
     QI_GEN(makeCall)
 #undef makeCall
@@ -543,10 +527,7 @@ KA_WARNING_DISABLE(, noexcept-type)
       C* inst = (C*)vargs.front().rawValue();
       if (!inst)
         qiLogWarning("qitype.AnyArgumentsBouncer") << "Null instance";
-      detail::AnyReferenceCopy output;
-      output(), (*inst.*fun)(nargs); // output clones
-      AnyValue* v = new AnyValue(output, false, true); // steal output
-      return AnyReference::fromPtr(v);
+      return invokeIntoAnyReference(std::mem_fn(fun), inst, nargs);
     }
 
     template<typename R>
@@ -561,10 +542,7 @@ KA_WARNING_DISABLE(, noexcept-type)
         for (unsigned i=0; i<vargs.size(); ++i)
           nargs.args()[i] = vargs[i];
       }
-      detail::AnyReferenceCopy output;
-      output(), f(nargs);
-      AnyValue* v = new AnyValue(output, false, true); // steal output
-      return AnyReference::fromPtr(v);
+      return invokeIntoAnyReference(std::move(f), nargs);
     }
 
     template<typename C, typename R>
