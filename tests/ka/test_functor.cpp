@@ -85,8 +85,7 @@ namespace {
     }
     template<typename G>
     auto operator==(G g) const -> testing::AssertionResult {
-      using ka::apply;
-      if (!test_eq(apply(f, args), apply(g, args))) return testing::AssertionFailure();
+      if (!test_eq(ka::apply(f, args), ka::apply(g, args))) return testing::AssertionFailure();
       return testing::AssertionSuccess();
     }
   };

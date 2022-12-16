@@ -1,4 +1,5 @@
 #include <string>
+#include <string_view>
 #include <vector>
 #include <gtest/gtest.h>
 #include <boost/function.hpp>
@@ -22,6 +23,14 @@ TEST(Empty, InitializerList) {
   ASSERT_TRUE(ka::empty(std::initializer_list<int>{}));
   ASSERT_FALSE(ka::empty(std::initializer_list<int>{1}));
   ASSERT_FALSE(ka::empty(std::initializer_list<int>{1, 2}));
+}
+
+TEST(Empty, StdStringView) {
+  auto s = "abcd";
+  ASSERT_TRUE(ka::empty(std::string_view()));
+  ASSERT_TRUE(ka::empty(std::string_view(s, 0)));
+  ASSERT_FALSE(ka::empty(std::string_view(s)));
+  ASSERT_FALSE(ka::empty(std::string_view(s, 1)));
 }
 
 TEST(Empty, BoostOptional) {

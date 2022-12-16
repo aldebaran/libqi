@@ -7,6 +7,7 @@
 #include <map>
 #include <functional>
 #include <tuple>
+#include <optional>
 #include <gtest/gtest.h>
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
@@ -1129,34 +1130,56 @@ TYPED_TEST(ConvertWithTypes, convertReferenceFromInvalidToOtherTypeInterfaceIsSa
   // depending on the type, the result may be invalid or not, let's not test the result
 }
 
-using boost::make_optional;
+template<typename O>
+struct ValueOptional : ::testing::Test {};
 
-TEST(Value, OptionalSetResetState)
+struct StdOptionalTag {};
+struct BoostOptionalTag {};
+
+using OptionalTypes = ::testing::Types<StdOptionalTag, BoostOptionalTag>;
+TYPED_TEST_SUITE(ValueOptional, OptionalTypes);
+
+template<typename T>
+auto make(StdOptionalTag, T t) -> std::optional<T> { return {std::move(t)}; }
+
+template<typename T>
+auto make(StdOptionalTag) -> std::optional<T> { return {}; }
+
+template<typename T>
+auto make(BoostOptionalTag, T t) -> boost::optional<T> { return {std::move(t)}; }
+
+template<typename T>
+auto make(BoostOptionalTag) -> boost::optional<T> { return {}; }
+
+TYPED_TEST(ValueOptional, SetResetState)
 {
-  AnyValue v{ boost::optional<int>{} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make<int>(optTag) };
   EXPECT_FALSE(v.optionalHasValue());
-  v.set(make_optional(42));
+  v.set(make(optTag, 42));
   EXPECT_TRUE(v.optionalHasValue());
   v.resetOptional();
   EXPECT_FALSE(v.optionalHasValue());
 }
 
-TEST(Value, OptionalSetInvalidTypeToUnsetOptionalDoesNotSetIt)
+TYPED_TEST(ValueOptional, SetInvalidTypeToUnsetOptionalDoesNotSetIt)
 {
-  AnyValue v{ boost::optional<int>{} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make<int>(optTag) };
   EXPECT_FALSE(v.optionalHasValue());
-  EXPECT_THROW(v.set(make_optional<std::string>("sarah connor ?")), std::exception);
+  EXPECT_THROW(v.set(make(optTag, std::string{"sarah connor ?"})), std::exception);
   EXPECT_FALSE(v.optionalHasValue());
 }
 
-TEST(Value, OptionalInt)
+TYPED_TEST(ValueOptional, Int)
 {
-  AnyValue v{ boost::optional<int>{42} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, 42) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(42, v.content().toInt());
 
   // different type of integer is allowed
-  v.set(make_optional(static_cast<unsigned short>(4323)));
+  v.set(make(optTag, static_cast<unsigned short>(4323)));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(4323, v.content().toInt());
 
@@ -1164,97 +1187,101 @@ TEST(Value, OptionalInt)
   EXPECT_THROW(v.set(0x100000000), std::exception);
 
   // conversion from double is allowed
-  v.set(make_optional(33.2));
+  v.set(make(optTag, 33.2));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(33, v.content().toInt()); // result is rounded
 
   // optional of same type is allowed
-  v.set(make_optional(51));
+  v.set(make(optTag, 51));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(51, v.content().toInt());
 
   // conversion from a totally different type is not allowed
-  EXPECT_THROW(v.set(make_optional<std::string>("foo")), std::exception);
+  EXPECT_THROW(v.set(make(optTag, std::string{"foo"})), std::exception);
 
   // it did not affect the value
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(51, v.content().toInt());
 }
 
-TEST(Value, OptionalDouble)
+TYPED_TEST(ValueOptional, Double)
 {
-  AnyValue v{ boost::optional<double>{3.14} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, 3.14) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_DOUBLE_EQ(3.14, v.content().toDouble());
 
   // conversion from float is allowed
-  v.set(make_optional(8.94f));
+  v.set(make(optTag, 8.94f));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_DOUBLE_EQ(static_cast<double>(8.94f), v.content().toDouble());
 
   // conversion from int is allowed
-  v.set(make_optional(67));
+  v.set(make(optTag, 67));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_DOUBLE_EQ(67., v.content().toDouble());
 
   // conversion from a totally different type is not allowed
-  EXPECT_THROW(v.set(make_optional<std::string>("cupcakes")), std::exception);
+  EXPECT_THROW(v.set(make(optTag, std::string{"cupcakes"})), std::exception);
 
   // it did not affect the value
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_DOUBLE_EQ(67., v.content().toDouble());
 }
 
-TEST(Value, OptionalBool)
+TYPED_TEST(ValueOptional, Bool)
 {
-  AnyValue v{ boost::optional<bool>{true} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, true) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_TRUE(v.content().to<bool>());
 
-  v.set(make_optional(false));
+  v.set(make(optTag, false));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_FALSE(v.content().to<bool>());
 
   // optional with a different type of int is allowed as long as it's 0 or 1.
-  EXPECT_NO_THROW(v.set(make_optional(0)));
-  EXPECT_NO_THROW(v.set(make_optional(1)));
-  EXPECT_THROW(v.set(make_optional(1337)), std::exception);
+  EXPECT_NO_THROW(v.set(make(optTag, 0)));
+  EXPECT_NO_THROW(v.set(make(optTag, 1)));
+  EXPECT_THROW(v.set(make(optTag, 1337)), std::exception);
 
   // conversion from a float is technically allowed as long as it's (close to) 0 or 1.
-  EXPECT_NO_THROW(v.set(make_optional(1.f)));
-  EXPECT_NO_THROW(v.set(make_optional(0.f)));
-  EXPECT_THROW(v.set(make_optional(3.14f)), std::exception);
+  EXPECT_NO_THROW(v.set(make(optTag, 1.f)));
+  EXPECT_NO_THROW(v.set(make(optTag, 0.f)));
+  EXPECT_THROW(v.set(make(optTag, 3.14f)), std::exception);
 
   // conversion from a non numeric type is not allowed
-  EXPECT_THROW(v.set(make_optional<std::string>("cookies")), std::exception);
+  EXPECT_THROW(v.set(make(optTag, std::string{"cookies"})), std::exception);
 
   // it did not affect the value
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_FALSE(v.content().to<bool>());
 }
 
-TEST(Value, OptionalString)
+TYPED_TEST(ValueOptional, String)
 {
-  AnyValue v{ boost::optional<std::string>{"foo"} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, std::string{"foo"}) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("foo", v.content().toString());
 
-  v.set(make_optional<std::string>("lolcats"));
+  v.set(make(optTag, std::string{"lolcats"}));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("lolcats", v.content().toString());
 
   // conversion from a totally different type is not allowed
-  EXPECT_THROW(v.set(make_optional(67)), std::exception);
-  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
+  EXPECT_THROW(v.set(make(optTag, 67)), std::exception);
+  EXPECT_THROW(v.set(make(optTag, 33.2)), std::exception);
 
   // it did not affect the value
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("lolcats", v.content().toString());
 }
 
-TEST(Value, OptionalList)
+TYPED_TEST(ValueOptional, List)
 {
-  AnyValue v{ boost::optional<std::vector<int>>{{1, 1, 2, 3, 5}} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, std::vector<int>{{1, 1, 2, 3, 5}}) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(5u, v.content().size());
   EXPECT_EQ(3, v.content().element<int>(3));
@@ -1265,9 +1292,9 @@ TEST(Value, OptionalList)
   EXPECT_EQ(8, v.content().element<int>(5));
 
   // conversion from a totally different type is not allowed
-  EXPECT_THROW(v.set(make_optional(67)), std::exception);
-  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
-  EXPECT_THROW(v.set(make_optional<std::string>("muffins")), std::exception);
+  EXPECT_THROW(v.set(make(optTag, 67)), std::exception);
+  EXPECT_THROW(v.set(make(optTag, 33.2)), std::exception);
+  EXPECT_THROW(v.set(make(optTag, std::string{"muffins"})), std::exception);
 
   // it did not affect the value
   ASSERT_TRUE(v.optionalHasValue());
@@ -1277,10 +1304,11 @@ TEST(Value, OptionalList)
   EXPECT_EQ(v.content().toList<int>(), expected);
 }
 
-TEST(Value, OptionalMap)
+TYPED_TEST(ValueOptional, Map)
 {
-  AnyValue v{ boost::optional<std::map<int, std::string>>{
-      { { 1, "one" }, { 3, "three" }, { 42, "the answer" } } } };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, std::map<int, std::string>{
+      { { 1, "one" }, { 3, "three" }, { 42, "the answer" } } }) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(3u, v.content().size());
   EXPECT_EQ("the answer", v.content().element<std::string>(42));
@@ -1291,9 +1319,9 @@ TEST(Value, OptionalMap)
   EXPECT_EQ("31ght", v.content().element<std::string>(8));
 
   // conversion from a totally different type is not allowed
-  EXPECT_THROW(v.set(make_optional(67)), std::exception);
-  EXPECT_THROW(v.set(make_optional(33.2)), std::exception);
-  EXPECT_THROW(v.set(make_optional<std::string>("donuts")), std::exception);
+  EXPECT_THROW(v.set(make(optTag, 67)), std::exception);
+  EXPECT_THROW(v.set(make(optTag, 33.2)), std::exception);
+  EXPECT_THROW(v.set(make(optTag, std::string{"donuts"})), std::exception);
 
   // it did not affect the value
   ASSERT_TRUE(v.optionalHasValue());
@@ -1303,9 +1331,10 @@ TEST(Value, OptionalMap)
   EXPECT_EQ(4u, convertedSize);
 }
 
-TEST(Value, OptionalTuple)
+TYPED_TEST(ValueOptional, Tuple)
 {
-  AnyValue v{ boost::optional<Foo>{Foo()} };
+  auto optTag = TypeParam{};
+  AnyValue v{ make(optTag, Foo()) };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(2u, v.content().size());
   EXPECT_EQ(2u, v.content().membersType().size());
@@ -1323,21 +1352,24 @@ TEST(Value, OptionalTuple)
   EXPECT_EQ(str, foo.str);
 }
 
-TEST(Value, OptionalToOptional)
+TYPED_TEST(ValueOptional, ToOptional)
 {
-  AnyValue v{ make_optional<std::string>("cupcakes") };
+  auto optTag = TypeParam{};
+  auto opt = make(optTag, std::string{"cupcakes"});
+  AnyValue v{ opt };
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("cupcakes", *v.toOptional<std::string>());
-  EXPECT_EQ("cupcakes", *v.to<boost::optional<std::string>>());
+  EXPECT_EQ("cupcakes", *v.to<decltype(opt)>());
 }
 
-TEST(Value, OptionalRawBuffer)
+TYPED_TEST(ValueOptional, RawBuffer)
 {
+  auto optTag = TypeParam{};
   const std::string data = "kikoolol";
   qi::Buffer buffer;
   buffer.write(data.c_str(), data.size() + 1);
 
-  AnyValue v{ make_optional(buffer) };
+  AnyValue v{ make(optTag, buffer) };
   ASSERT_TRUE(v.optionalHasValue());
 
   auto readBuffer = v.toOptional<qi::Buffer>();
@@ -1345,16 +1377,17 @@ TEST(Value, OptionalRawBuffer)
   EXPECT_EQ(*readBuffer, buffer);
 }
 
-TEST(Value, OptionalAnyValue)
+TYPED_TEST(ValueOptional, AnyValue)
 {
-  AnyValue v{ boost::optional<AnyValue>() };
+  auto optTag = TypeParam{};
+  AnyValue v{ make<AnyValue>(optTag) };
 
-  ASSERT_NO_THROW(v.set(make_optional(AnyValue{ "marshmallows" })));
+  ASSERT_NO_THROW(v.set(make(optTag, AnyValue{ "marshmallows" })));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ("marshmallows", v.toOptional<AnyValue>()->to<std::string>());
   EXPECT_EQ("marshmallows", v.toOptional<std::string>().value());
 
-  ASSERT_NO_THROW(v.set(make_optional(AnyValue{ 42329 })));
+  ASSERT_NO_THROW(v.set(make(optTag, AnyValue{ 42329 })));
   ASSERT_TRUE(v.optionalHasValue());
   EXPECT_EQ(42329, v.toOptional<AnyValue>()->to<int>());
   EXPECT_EQ(42329, v.toOptional<int>().value());
