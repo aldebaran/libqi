@@ -444,9 +444,13 @@ ServiceDirectoryProxy::Config ServiceDirectoryProxy::Config::createFromListening
     {
       throwError("Missing data: TLS file paths.");
     }
+    // Call functions that might throw out of aggregate initialization of struct to
+    // prevent a bug from GCC (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66139).
+    auto certChain = readCertChain(paths->certChain);
+    auto privateKey = readPrivateKey(paths->privateKey);
     config.serverSslConfig.certWithPrivKey = ssl::CertChainWithPrivateKey{
-      readCertChain(paths->certChain),
-      readPrivateKey(paths->privateKey)
+      std::move(certChain),
+      std::move(privateKey)
     };
     break;
   }
@@ -456,9 +460,13 @@ ServiceDirectoryProxy::Config ServiceDirectoryProxy::Config::createFromListening
     {
       throwError("Missing data: mTLS file paths.");
     }
+    // Call functions that might throw out of aggregate initialization of struct to
+    // prevent a bug from GCC (see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66139).
+    auto certChain = readCertChain(paths->certChain);
+    auto privateKey = readPrivateKey(paths->privateKey);
     config.serverSslConfig.certWithPrivKey = ssl::CertChainWithPrivateKey{
-      readCertChain(paths->certChain),
-      readPrivateKey(paths->privateKey)
+      std::move(certChain),
+      std::move(privateKey)
     };
     config.serverSslConfig.trustStore = { readCert(paths->trustedCert) };
     config.serverSslConfig.verifyPartialChain = true; // For certificate pinning.
