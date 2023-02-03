@@ -38,6 +38,7 @@
 #include <testsession/testsession.hpp>
 #include <qi/messaging/gateway.hpp>
 #include <qi/os.hpp>
+#include <testssl/testssl.hpp>
 
 const auto serviceWaitDefaultTimeout = qi::Seconds{ 1 };
 
@@ -78,8 +79,15 @@ public:
   qi::SessionPtr server() const;
   qi::SessionPtr sd() const;
   const qi::Gateway& gateway() const;
+
+  /// Returns the endpoints of the service directory ordered by preference (as defined by the
+  /// `qi::isPreferredEndpoint` predicate).
   std::vector<qi::Url> serviceDirectoryEndpoints() const;
+
+  /// Returns the endpoints of the gateway ordered by preference (as defined by the
+  /// `qi::isPreferredEndpoint` predicate).
   std::vector<qi::Url> gatewayEndpoints() const;
+
   TestMode::Mode mode() const
   {
     return _mode;
@@ -90,11 +98,11 @@ public:
     switch (_mode)
     {
     case(TestMode::Mode_Gateway):
-      return gatewayEndpoints().at(0);
+      return test::url(gateway());
     case(TestMode::Mode_SD):
     case(TestMode::Mode_SSL):
     case(TestMode::Mode_Direct):
-      return serviceDirectoryEndpoints().at(0);
+      return test::url(*sd());
 
     default:
       throw std::runtime_error("Unmanaged Mode: " + qi::os::to_string(static_cast<int>(_mode)));
@@ -105,7 +113,7 @@ public:
 private:
   TestMode::Mode _mode;
   qi::SessionPtr _sd;
-  std::unique_ptr<qi::Gateway> _gw;
+  qi::GatewayPtr _gw;
   std::unique_ptr<TestSession> _server;
   std::unique_ptr<TestSession> _client;
 };

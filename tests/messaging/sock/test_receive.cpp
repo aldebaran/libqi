@@ -118,10 +118,10 @@ namespace mock
   }
 
   template<typename H, typename T> // NetHandler H
-  std::thread callInAnotherThreadAfterFutureIsSet(H h, qi::Promise<T> promise)
+  std::thread callInAnotherThreadAfterFutureIsSet(H h, qi::Future<T> future)
   {
     return std::thread([=]{
-      promise.future().wait();
+      future.wait();
       h(N::error_code_type{}, 0u);
     });
   }
@@ -130,7 +130,8 @@ namespace mock
   {
     using namespace qi;
     using namespace qi::sock;
-    qi::Promise<void> nukingObject;
+    qi::Promise<void> nukingObjectProm;
+    auto nukingObject = nukingObjectProm.future();
     std::thread t;
     // The read is going to fail. Before calling the handler, we're going to
     // wait the ReceiveMessageContinuous object is destroyed.
@@ -172,7 +173,7 @@ KA_WARNING_POP()
     // The connecting object is now destroyed and on top of that we wipe out its memory.
     overwrite(&receive);
     // Now we unblock the handler.
-    nukingObject.setValue(0);
+    nukingObjectProm.setValue(0);
     // We wait for an error to occur.
     ASSERT_TRUE(futureError.hasValue());
     ASSERT_EQ(operationAborted<ErrorCode<N>>(), futureError.value());
@@ -196,13 +197,14 @@ namespace mock
   {
     using namespace qi;
     using namespace qi::sock;
-    Promise<void> nukingObject;
+    Promise<void> nukingObjectPromise;
+    auto nukingObject = nukingObjectPromise.future();
     std::thread t;
     // The read is going to fail. Before calling the handler, we're going to
     // wait the ReceiveMessageContinuous object is destroyed.
     int callCount = 0;
     auto readHeaderThenDataAfterParentHasBeenDestroyed =
-      [&](N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
+      [&, nukingObject](N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
         ++callCount;
         if (callCount == 1)
         { // read header
@@ -219,13 +221,13 @@ namespace mock
     if (*ssl)
     {
       N::SocketFunctions<S>::_async_read_socket
-          = [&](S&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
+          = [=](S&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
         readHeaderThenDataAfterParentHasBeenDestroyed(buf, h);
       };
     }
     else
     {
-      N::_async_read_next_layer = [&](S::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
+      N::_async_read_next_layer = [=](S::next_layer_type&, N::_mutable_buffer_sequence buf, N::_anyTransferHandler h) {
         readHeaderThenDataAfterParentHasBeenDestroyed(buf, h);
       };
     }
@@ -248,7 +250,7 @@ namespace mock
     // The connecting object is now destroyed and on top of that we wipe out its memory.
     overwrite(&receive);
     // Now we unblock the handler.
-    nukingObject.setValue(0);
+    nukingObjectPromise.setValue(0);
     // We wait for an error to occur.
     ASSERT_TRUE(futureError.hasValue());
     ASSERT_EQ(operationAborted<ErrorCode<N>>(), futureError.value());
@@ -515,7 +517,7 @@ TEST(NetReceiveMessage, Asio)
   // Connect client.
   using Side = HandshakeSide<S>;
   ConnectSocketFuture<N, S> connect{io};
-  connect(url(localEndpoint.future().value(), SslEnabled{false}), SslEnabled{false}, makeSocket,
+  connect(url(localEndpoint.future().value(), TcpScheme::Raw), makeSocket,
           IpV6Enabled{true}, Side::client);
   ASSERT_TRUE(connect.complete().hasValue()) << connect.complete().error();
   auto clientSideSocket = connect.complete().value();

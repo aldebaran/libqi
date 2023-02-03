@@ -31,7 +31,7 @@ public:
 
 private:
   TestMode::Mode      _mode;
-  SessionInitializer *_manager;
+  SessionInitializer  _manager;
   qi::SessionPtr      _session;
 };
 

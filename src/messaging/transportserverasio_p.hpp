@@ -14,6 +14,7 @@
 
 # include <qi/api.hpp>
 # include <qi/url.hpp>
+# include <qi/messaging/tcpscheme.hpp>
 # include "sock/networkasio.hpp"
 # include "sock/traits.hpp"
 # include "sock/socketptr.hpp"
@@ -32,21 +33,19 @@ namespace qi
         TransportServer* self,
         EventLoop* ctx);
 
+    TransportServerAsioPrivate();
     virtual ~TransportServerAsioPrivate();
 
     virtual qi::Future<void> listen(const qi::Url& listenUrl);
     virtual void close();
     void updateEndpoints();
+    void onAccept(const boost::system::error_code& erc, boost::asio::ip::tcp::socket peer);
     static bool isFatalAcceptError(int errorCode);
+
     TransportServer* _self;
     boost::asio::ip::tcp::acceptor* _acceptor;
-    void onAccept(const boost::system::error_code& erc,
-      sock::SocketWithContextPtr<sock::NetworkAsio> s);
-    TransportServerAsioPrivate();
     std::atomic<bool> _live;
-    sock::SslContextPtr<sock::NetworkAsio> _sslContext;
-    sock::SocketWithContextPtr<sock::NetworkAsio> _s;
-    bool _ssl;
+    TcpScheme _tcpScheme;
     unsigned short _port;
     boost::synchronized_value<qi::Future<void>> _asyncEndpoints;
     Url _listenUrl;

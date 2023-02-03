@@ -31,9 +31,16 @@ namespace qi {
     return *this;
   }
 
-  ServiceDirectoryClient::ServiceDirectoryClient(bool enforceAuth)
+  ServiceDirectoryClient::ServiceDirectoryClient(
+    ssl::ClientConfig sslConfig,
+    boost::optional<ClientAuthenticatorFactoryPtr> clientAuthFactory)
     : _remoteObject(RemoteObject::makePtr(qi::Message::Service_ServiceDirectory))
-    , _enforceAuth(enforceAuth)
+    // Even if authentication is disabled, the factory is used to instantiate an authenticator.
+    // We initialize the factory with one that creates authenticators that do nothing.
+    , _authFactory(std::move(clientAuthFactory)
+                     .value_or_eval(boost::make_shared<NullClientAuthenticatorFactory>))
+    , _sslConfig(std::move(sslConfig))
+    , _enforceAuth(clientAuthFactory.is_initialized())
   {
     _object = makeDynamicAnyObject(_remoteObject.get(), false);
 
@@ -345,9 +352,10 @@ namespace qi {
     {
       boost::mutex::scoped_lock lock(_mutex);
 
+      _stateData.url = serviceDirectoryURL;
       if (_stateData.sdSocket)
         _stateData.sdSocket->disconnect().async();
-      _stateData.sdSocket = qi::makeMessageSocket(serviceDirectoryURL.protocol());
+      _stateData.sdSocket = qi::makeMessageSocket(_sslConfig);
 
       if (!_stateData.sdSocket)
         return qi::makeFutureError<void>(std::string("unrecognized protocol '") + serviceDirectoryURL.protocol() + "' in url '" + serviceDirectoryURL.str() + "'");
@@ -413,7 +421,7 @@ namespace qi {
     boost::mutex::scoped_lock lock(_mutex);
     if (!_stateData.sdSocket)
       throw std::runtime_error("Session disconnected");
-    return _stateData.sdSocket->url();
+    return _stateData.url;
   }
 
   void                  ServiceDirectoryClient::setClientAuthenticatorFactory(ClientAuthenticatorFactoryPtr authFactory)

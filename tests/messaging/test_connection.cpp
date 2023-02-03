@@ -21,6 +21,7 @@
 #include <qi/os.hpp>
 #include <qi/binarycodec.hpp>
 #include <qi/testutils/testutils.hpp>
+#include <testssl/testssl.hpp>
 
 qiLogCategory("test");
 
@@ -198,23 +199,109 @@ TEST_F(Connection, testBuffer)
   }
 }
 
-TEST(ConnectionToStandalone, TcpThenTcps)
+namespace
+{
+  struct RemoteServiceOwner
+  {
+    std::unique_ptr<test::ScopedProcess> proc;
+
+    RemoteServiceOwner(qi::Url listenUrl)
+    {
+      const std::string remoteServiceOwnerPath = qi::path::findBin("remoteserviceowner");
+      proc.reset(
+        new test::ScopedProcess(remoteServiceOwnerPath,
+                                { "--qi-standalone", "--qi-listen-url=" + listenUrl.str() }));
+    }
+  };
+}
+
+TEST(ConnectionToStandalone, TcpEndpointInaccessibleWithTcpsOrTcpsm)
 {
   using namespace qi;
-  using namespace std::chrono;
-  using test::ScopedProcess;
 
-  // Register a service in another process.
-  const std::string remoteServiceOwnerPath = path::findBin("remoteserviceowner");
+  RemoteServiceOwner rso("tcp://127.0.0.1:54321");
 
-  ScopedProcess remoteServiceOwner{
-    remoteServiceOwnerPath, {"--qi-standalone", "--qi-listen-url=tcps://127.0.0.1:54321"}};
+  qi::Session::Config cfg;
+  cfg.clientSslConfig = test::ssl::clientConfig(test::ssl::client(), test::ssl::rootCA());
 
-  auto sessionTcp = qi::makeSession();
-  auto futTcp = test::attemptConnect(*sessionTcp, "tcp://127.0.0.1:54321");
-  ASSERT_TRUE(test::finishesWithError(futTcp));
+  // tcps => failure
+  {
+    auto session = qi::makeSession(cfg);
+    auto fut = test::attemptConnect(*session, "tcps://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithError(fut));
+  }
 
-  auto sessionTcps = qi::makeSession();
-  auto futTcps = test::attemptConnect(*sessionTcps, "tcps://127.0.0.1:54321");
-  ASSERT_TRUE(test::finishesWithValue(futTcps));
+  // tcpsm => failure
+  {
+    auto session = qi::makeSession(cfg);
+    auto fut = test::attemptConnect(*session, "tcpsm://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithError(fut));
+  }
+
+  // tcp => success
+  {
+    auto session = qi::makeSession(cfg);
+    auto fut = test::attemptConnect(*session, "tcp://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithValue(fut));
+  }
 }
+
+TEST(ConnectionToStandalone, TcpsEndpointInaccessibleWithTcpOrTcpsm)
+{
+  using namespace qi;
+
+  RemoteServiceOwner rso("tcps://127.0.0.1:54321");
+
+  // tcp => failure
+  {
+    auto session = qi::makeSession();
+    auto fut = test::attemptConnect(*session, "tcp://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithError(fut));
+  }
+
+  // tcpsm => failure
+  {
+    auto session = qi::makeSession();
+    auto fut = test::attemptConnect(*session, "tcpsm://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithError(fut));
+  }
+
+  // tcps => success
+  {
+    auto sessionTcps = qi::makeSession();
+    auto fut = test::attemptConnect(*sessionTcps, "tcps://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithValue(fut));
+  }
+}
+
+TEST(ConnectionToStandalone, TcpsmEndpointInaccessibleWithTcpOrTcps)
+{
+  using namespace qi;
+
+  RemoteServiceOwner rso("tcpsm://127.0.0.1:54321");
+
+  qi::Session::Config cfg;
+  cfg.clientSslConfig = test::ssl::clientConfig(test::ssl::client(), test::ssl::rootCA());
+
+  // tcp => failure
+  {
+    auto session = qi::makeSession(cfg);
+    auto fut = test::attemptConnect(*session, "tcp://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithError(fut));
+  }
+
+  // tcps => failure
+  {
+    auto session = qi::makeSession(cfg);
+    auto fut = test::attemptConnect(*session, "tcp://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithError(fut));
+  }
+
+  // tcpsm => success
+  {
+    auto session = qi::makeSession(cfg);
+    auto fut = test::attemptConnect(*session, "tcpsm://127.0.0.1:54321");
+    ASSERT_TRUE(test::finishesWithValue(fut));
+  }
+}
+

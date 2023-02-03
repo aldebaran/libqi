@@ -60,8 +60,8 @@ public:
     });
 
     // Prepare a client socket. The test fails whenever it is disconnected.
-    clientSocket = makeMessageSocket("tcp");
-    clientSocket->connect(server.endpoints()[0]);
+    clientSocket = makeMessageSocket();
+    clientSocket->connect(toUrl(server.endpoints()[0]));
     ASSERT_TRUE(clientSocket->isConnected());
     _clientDisconnectionLink =
         clientSocket->disconnected.connect([](const std::string& what)

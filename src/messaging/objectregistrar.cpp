@@ -27,8 +27,10 @@ namespace qi {
       qi::async(boost::bind(&qi::detail::hold<qi::AnyObject>, object));
   }
 
-  ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient *sdClient, bool enforceAuth)
-    : Server(enforceAuth)
+  ObjectRegistrar::ObjectRegistrar(ServiceDirectoryClient* sdClient,
+                                   ssl::ServerConfig sslConfig,
+                                   boost::optional<AuthProviderFactoryPtr> authProviderFactory)
+    : Server(std::move(sslConfig), std::move(authProviderFactory))
     , _sdClient(sdClient)
     , _id(qi::os::generateUuid())
   {
@@ -137,7 +139,7 @@ namespace qi {
   qi::Future<unsigned int> ObjectRegistrar::registerService(const std::string &name, qi::AnyObject obj)
   {
     qi::Promise<unsigned int> prom;
-    Server::endpoints().andThen(track([=](const UrlVector& endpoints) mutable {
+    Server::endpoints().andThen(track([=](const std::vector<qi::Uri>& endpoints) mutable {
       if (endpoints.empty()) {
         const auto error = "Could not register service: " + name + " because the current server has not endpoint";
         prom.setError(error);

@@ -47,7 +47,6 @@ public:
   // Regular:
     Config();
     ~Config();
-    KA_GENERATE_FRIEND_REGULAR_OPS_4(Config, _standalone, _opt, _sessionConfig, _name)
 
   // Config:
     /**

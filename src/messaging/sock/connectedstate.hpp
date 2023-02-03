@@ -25,10 +25,10 @@ namespace qi
     ///
     /// NetSslSocket S
     template<typename S>
-    Url remoteEndpoint(S& socket, bool ssl)
+    Url remoteEndpoint(S& socket, TcpScheme scheme)
     {
       const auto endpoint = socket.lowest_layer().remote_endpoint();
-      return url(endpoint, SslEnabled{ssl});
+      return url(endpoint, scheme);
     }
 
     /// Ouput of the connected state.
@@ -223,9 +223,9 @@ namespace qi
       {
         return _impl->_completePromise->future();
       }
-      Url remoteEndpoint(SslEnabled ssl) const
+      Url remoteEndpoint(TcpScheme scheme) const
       {
-        return sock::remoteEndpoint(*_impl->socket(), *ssl);
+        return sock::remoteEndpoint(*_impl->socket(), scheme);
       }
       void stop(Promise<void> disconnectedPromise = Promise<void>{})
       {

@@ -15,6 +15,9 @@
 #include <ka/typetraits.hpp>
 #include <ka/macroregular.hpp>
 #include <qi/url.hpp>
+#include <qi/assert.hpp>
+#include <qi/detail/future_fwd.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "message.hpp"
 #include "messagedispatcher.hpp"
 #include "messagesocket.hpp"
@@ -168,7 +171,7 @@ namespace qi {
   ///
   /// Example: client-side
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// auto socket = makeMessageSocket("tcps");
+  /// auto socket = makeMessageSocket();
   /// socket.messageReady.connect([](const Message& msg) {
   ///   // treat message
   /// });
@@ -183,7 +186,7 @@ namespace qi {
   ///
   /// Example: server-side
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// auto socket = boost::make_shared<TcpMessageSocket<>>(io, SslEnabled{true}, underlyingSocket);
+  /// auto socket = boost::make_shared<TcpMessageSocket<>>(underlyingSocket, TcpScheme::Tls, io);
   /// // connect signals
   /// socket->ensureReading();
   /// socket->disconnect();
@@ -209,11 +212,16 @@ namespace qi {
     using boost::enable_shared_from_this<TcpMessageSocket<N, S>>::shared_from_this;
     friend struct sock::HandleMessage<N, S>;
 
-    /// If the socket is not null, we consider we are on server side.
-    /// On server side, if SSL is enabled the connection only consist of the handshake.
-    /// On client side (null socket), the connection is done by calling `connect(Url)`.
+    /// Creates a client side socket. The connection is done by calling `connect(Url)`.
     explicit TcpMessageSocket(sock::IoService<N>& io = N::defaultIoService(),
-      sock::SslEnabled ssl = {false}, SocketPtr = {});
+                              ssl::ClientConfig sslConfig = {});
+
+    /// Creates a server side socket. If the TCP scheme denotes a TLS scheme,
+    /// then a SSL handshake is immediately performed.
+    /// @throws `std::runtime_error` if the socket pointer is null.
+    explicit TcpMessageSocket(SocketPtr socket,
+                              TcpScheme scheme = TcpScheme::Raw,
+                              sock::IoService<N>& io = N::defaultIoService());
 
     virtual ~TcpMessageSocket();
 
@@ -236,11 +244,6 @@ namespace qi {
       return getStatus();
     }
 
-    Url url() const override
-    {
-      return *_url;
-    }
-
     /// The remote endpoint is known only if the socket is connected.
     /// Otherwise, an empty optional is returned.
     boost::optional<Url> remoteEndpoint() const override
@@ -248,7 +251,7 @@ namespace qi {
       boost::recursive_mutex::scoped_lock lock(_stateMutex);
       if (getStatus() == Status::Connected)
       {
-        return asConnected(_state).remoteEndpoint(_ssl);
+        return asConnected(_state).remoteEndpoint(_scheme);
       }
       return {};
     }
@@ -279,9 +282,10 @@ namespace qi {
       }
     };
 
-    const sock::SslEnabled _ssl;
+    TcpScheme _scheme = TcpScheme::Raw;
     mutable boost::recursive_mutex _stateMutex;
     sock::IoService<N>& _ioService;
+    const boost::optional<ssl::ClientConfig> _clientSslConfig;
 
     void enterDisconnectedState(const SocketPtr& socket = {},
       Promise<void> promiseDisconnected = Promise<void>{});
@@ -294,7 +298,6 @@ namespace qi {
     // Do not change the order : it must match the Status enumeration order.
     using State = boost::variant<DisconnectedState, ConnectingState, ConnectedState, DisconnectingState>;
     State _state;
-    boost::synchronized_value<Url> _url;
 
     bool mustTreatAsServerAuthentication(const Message& msg) const;
     bool handleCapabilityMessage(const Message& msg);
@@ -335,18 +338,29 @@ namespace qi {
   using TcpMessageSocketPtr = boost::shared_ptr<TcpMessageSocket<N, S>>;
 
   template<typename N, typename S>
-  TcpMessageSocket<N, S>::TcpMessageSocket(sock::IoService<N>& io, sock::SslEnabled ssl,
-        SocketPtr socket)
+  TcpMessageSocket<N, S>::TcpMessageSocket(sock::IoService<N>& io,
+                                           ssl::ClientConfig sslConfig)
     : MessageSocket()
-    , _ssl(ssl)
     , _ioService(io)
-    , _state{DisconnectedState{}}
+    , _clientSslConfig(std::move(sslConfig))
+    , _state{ DisconnectedState{} }
   {
-    if (socket)
-    {
-      sock::setSocketOptions<N>(socket, getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds}));
-      _state = ConnectingState{io, ssl, socket, Handshake::server};
-    }
+  }
+
+  template<typename N, typename S>
+  TcpMessageSocket<N, S>::TcpMessageSocket(SocketPtr socket,
+                                           TcpScheme scheme,
+                                           sock::IoService<N>& io)
+    : MessageSocket()
+    , _scheme(scheme)
+    , _ioService(io)
+    , _state{ DisconnectedState{} }
+  {
+    if (!socket)
+      throw std::runtime_error("null server socket");
+
+    sock::setSocketOptions<N>(socket, getTcpPingTimeout(Seconds{sock::defaultTimeoutInSeconds}));
+    _state = ConnectingState{io, isWithTls(scheme), socket, Handshake::server};
   }
 
   template<typename N, typename S>
@@ -388,13 +402,14 @@ namespace qi {
       }();
       if (hasError(res))
       {
+        QI_LOG_WARNING_SOCKET(this) << "ensureReading: connection error: " << res.errorMessage;
         enterDisconnectedState(res.socket, res.disconnectedPromise);
         lock.unlock();
         res.disconnectedPromise.future().wait();
         return false;
       }
       auto self = shared_from_this();
-      _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N, S>{self});
+      _state = ConnectedState(res.socket, isWithTls(_scheme), maxPayload, sock::HandleMessage<N, S>{self});
       auto& connected = asConnected(_state);
       connected.complete().then(connected.ioServiceStranded(
         OnConnectedComplete{self, Future<void>{nullptr}}
@@ -409,6 +424,10 @@ namespace qi {
   /// The operation completes when the returned future is set.
   ///
   /// The object must be in the `disconnected` state.
+  ///
+  /// Returns a future in error if the URL is invalid or if the scheme
+  /// of the URL is not one of our supported TCP schemes (see the
+  /// `qi::TcpScheme` type).
   template<typename N, typename S>
   FutureSync<void> TcpMessageSocket<N, S>::connect(const Url& url)
   {
@@ -421,14 +440,34 @@ namespace qi {
       QI_LOG_WARNING_SOCKET(this) << "connect() but status is " << static_cast<int>(getStatus());
       return ConnectingState::connectError("Must be disconnected to connect().");
     }
-    // This changes the status so that concurrent calls will return in error.
+
+    // Return an error if the URL is invalid.
+    // Both the host and the port fields are required to attempt a connection.
+    // The resolver is guaranteed to fail later if the URL lacks a host and
+    // the connection will fail if the URL lacks a port. The scheme is
+    // theoretically optional but it is later checked if the URL is valid (meaning
+    // it includes a scheme) and an error is returned if it is not.
+    if (!url.isValid())
+    {
+      const auto error = std::string("invalid URL '") + url.str() + "' used to connect, "
+                           "this connection will result in an error";
+      return ConnectingState::connectError(error);
+    }
+
+    // Return an error if the scheme of the URL is not one of our TCP schemes.
+    const auto optTcpScheme = tcpScheme(url);
+    if (!optTcpScheme)
+      return ConnectingState::connectError("unsupported URL TCP scheme '" + url.str() + "'");
+
+    const auto scheme = *optTcpScheme;
+
     using Side = sock::HandshakeSide<S>;
 
     auto makeSocket = std::bind(
       InvokeCatchLogRethrowError{},
       sock::logCategory(),       // log category
       "could not create socket", // log prefix
-      [&]() {
+      [this, url, scheme]() {
         // The lowest authorized protocol is TLS1.2. This means SSL protocols
         // and TLS 1.1 are forbidden.
         auto contextPtr = sock::makeSslContextPtr<N>(Method::tlsv12);
@@ -439,14 +478,19 @@ namespace qi {
           | sock::SslContext<N>::no_tlsv1
           | sock::SslContext<N>::no_tlsv1_1
         );
+        const auto mode = sock::sslVerifyMode<N>(Side::client, scheme);
+        contextPtr->set_verify_mode(mode);
+        auto hostName = url.host();
+        QI_ASSERT(!hostName.empty());
+        N::applyConfig(*contextPtr, *_clientSslConfig, std::move(hostName));
         return sock::makeSocketWithContextPtr<N>(_ioService, contextPtr);
       }
     );
 
     _state =
-        ConnectingState{ _ioService, url, _ssl, makeSocket, !disableIpV6, Side::client,
+        ConnectingState{ _ioService, url, std::move(makeSocket), !disableIpV6, Side::client,
           getTcpPingTimeout(Seconds{ sock::defaultTimeoutInSeconds }) };
-    _url = url;
+    _scheme = scheme;
     auto self = shared_from_this();
 
     asConnecting(_state).complete().then([=](
@@ -472,7 +516,7 @@ namespace qi {
         // Connecting was successful, so we enter the connected state (to be able
         // send and receive messages).
         static const auto maxPayload = getMaxPayloadFromEnv();
-        _state = ConnectedState(res.socket, _ssl, maxPayload, sock::HandleMessage<N, S>{self});
+        _state = ConnectedState(res.socket, isWithTls(_scheme), maxPayload, sock::HandleMessage<N, S>{self});
         auto& connected = asConnected(_state);
         connected.complete().then(connected.ioServiceStranded(
           OnConnectedComplete{self, connectedPromise.future()}
@@ -655,7 +699,7 @@ namespace qi {
     }
     // NOTE: Should we specify an `onSent` callback and stop sending if an error
     // occurred?
-    asConnected(_state).send(std::move(msg), _ssl);
+    asConnected(_state).send(std::move(msg), isWithTls(_scheme));
     return true;
   }
 
@@ -663,21 +707,11 @@ namespace qi {
   /// With NetSslSocket S:
   ///   S is compatible with N
   template <typename N = sock::NetworkAsio, typename S = sock::SocketWithContext<N>>
-  TcpMessageSocketPtr<N, S> makeTcpMessageSocket(const std::string& protocol,
+  TcpMessageSocketPtr<N, S> makeTcpMessageSocket(ssl::ClientConfig sslConfig = {},
                                                  EventLoop* eventLoop = getNetworkEventLoop())
   {
     using Socket = TcpMessageSocket<N, S>;
-    if (protocol == "tcp")
-    {
-      return boost::make_shared<Socket>(*asIoServicePtr(eventLoop), false);
-    }
-    if (protocol == "tcps")
-    {
-      return boost::make_shared<Socket>(*asIoServicePtr(eventLoop), true);
-    }
-    qiLogError(qi::sock::logCategory()) << "Unrecognized protocol to create the TransportSocket: "
-                                        << protocol;
-    return {};
+    return boost::make_shared<Socket>(*asIoServicePtr(eventLoop), std::move(sslConfig));
   }
 
 } // namespace qi

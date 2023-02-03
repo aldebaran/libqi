@@ -6,6 +6,7 @@
 #include <openssl/ssl.h>
 #include <boost/predef.h>
 #include <qi/eventloop.hpp>
+#include <qi/messaging/ssl/ssl.hpp>
 #include "concept.hpp"
 
 /// @file
@@ -27,6 +28,7 @@ namespace qi { namespace sock {
     using error_code_type = boost::system::error_code;
     using io_service_type = boost::asio::io_service;
     using const_buffer_type = boost::asio::const_buffer;
+    using ssl_verify_mode_type = boost::asio::ssl::verify_mode;
     static io_service_type& defaultIoService()
     {
       return *static_cast<io_service_type*>(getNetworkEventLoop()->nativeHandle());
@@ -37,9 +39,17 @@ namespace qi { namespace sock {
       auto exec = socket.get_executor();
       return static_cast<io_service_type&>(exec.context());
     }
-    static boost::asio::ssl::verify_mode sslVerifyNone()
+    static ssl_verify_mode_type sslVerifyNone()
     {
       return boost::asio::ssl::verify_none;
+    }
+    static ssl_verify_mode_type sslVerifyPeer()
+    {
+      return boost::asio::ssl::verify_peer;
+    }
+    static ssl_verify_mode_type sslVerifyFailIfNoPeerCert()
+    {
+      return boost::asio::ssl::verify_fail_if_no_peer_cert;
     }
     template<typename T>
     static auto buffer(T* data, std::size_t maxBytes) -> decltype(boost::asio::buffer(data, maxBytes))
@@ -132,6 +142,14 @@ namespace qi { namespace sock {
       return
         SSL_CTX_set_cipher_list(context.native_handle(), cipherList) == 1;
     }
+
+    static void applyConfig(ssl_context_type& context,
+                            const ssl::ServerConfig& cfg,
+                            boost::asio::ip::tcp::endpoint clientEndpoint);
+
+    static void applyConfig(ssl_context_type& context,
+                            const ssl::ClientConfig& cfg,
+                            std::string expectedServerName);
   };
 }} // namespace qi::sock
 #endif // _QI_SOCK_NETWORKASIO_HPP

@@ -290,6 +290,9 @@ set(QIM_H qi/api.hpp
           qi/messaging/messagesocket_fwd.hpp
           qi/messaging/servicedirectoryproxy.hpp
           qi/messaging/serviceinfo.hpp
+          qi/messaging/ssl/detail/ssl.hxx
+          qi/messaging/ssl/ssl.hpp
+          qi/messaging/tcpscheme.hpp
           qi/applicationsession.hpp
           qi/session.hpp
           qi/uri.hpp
@@ -306,7 +309,6 @@ set(QIM_C
   src/messaging/boundobject.hpp
   src/messaging/clientauthenticator_p.hpp
   src/messaging/clientauthenticator.cpp
-  src/messaging/gateway.cpp
   src/messaging/message.hpp
   src/messaging/message.cpp
   src/messaging/messagedispatcher.hpp
@@ -331,6 +333,7 @@ set(QIM_C
   src/messaging/sessionservices.cpp
   src/messaging/server.hpp
   src/messaging/server.cpp
+  src/messaging/ssl/ssl.cpp
   src/messaging/streamcontext.hpp
   src/messaging/streamcontext.cpp
   src/messaging/transportserver.hpp
@@ -343,6 +346,7 @@ set(QIM_C
   src/messaging/transportsocketcache.hpp
   src/messaging/tcpmessagesocket.cpp
   src/messaging/tcpmessagesocket.hpp
+  src/messaging/tcpscheme.cpp
   src/messaging/uri.cpp
   src/messaging/url.cpp
   src/registration.cpp
@@ -368,6 +372,10 @@ set(QI_SOCKET_H
   src/messaging/sock/resolve.hpp
   src/messaging/sock/send.hpp
   src/messaging/sock/traits.hpp
+)
+
+set(QI_SOCKET_C
+  src/messaging/sock/networkasio.cpp
 )
 
 set(QIPERF_H
@@ -435,11 +443,11 @@ qi_stage_cmake(qimodule-config.cmake)
 include(qimodule-config.cmake)
 
 qi_create_lib(qi SHARED
-    ${QI_H}     ${QI_C}
-    ${QITYPE_H} ${QITYPE_C}
-    ${QIM_H}    ${QIM_C}
-    ${QIPERF_H} ${QIPERF_C}
-    ${QI_SOCKET_H}
+    ${QI_H}        ${QI_C}
+    ${QITYPE_H}    ${QITYPE_C}
+    ${QIM_H}       ${QIM_C}
+    ${QIPERF_H}    ${QIPERF_C}
+    ${QI_SOCKET_H} ${QI_SOCKET_C}
     ${KA_H}
   DEPENDS
     ASSUME_SYSTEM_INCLUDE

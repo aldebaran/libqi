@@ -23,9 +23,9 @@ namespace qi
     return status() == qi::MessageSocket::Status::Connected;
   }
 
-  MessageSocketPtr makeMessageSocket(const std::string &protocol, qi::EventLoop *eventLoop)
+  MessageSocketPtr makeMessageSocket(ssl::ClientConfig sslConfig, qi::EventLoop* eventLoop)
   {
-    return makeTcpMessageSocket(protocol, eventLoop);
+    return makeTcpMessageSocket(std::move(sslConfig), eventLoop);
   }
 
   MessageDispatchConnection::MessageDispatchConnection() noexcept = default;

@@ -1,7 +1,7 @@
 #include <qi/applicationsession.hpp>
 #include <qi/anymodule.hpp>
 #include <qi/log.hpp>
-
+#include <testssl/testssl.hpp>
 #include "remoteperformanceservice.hpp"
 
 qiLogCategory("RemoteServiceOwner");
@@ -27,9 +27,12 @@ QI_REGISTER_OBJECT(PingPongService, take, give)
 
 
 int main(int argc, char **argv) {
-  qi::ApplicationSession app(argc, argv);
-  app.session()->setIdentity(qi::path::findData("qi", "server.key"),
-    qi::path::findData("qi", "server.crt"));
+  qi::ApplicationSession::Config cfg;
+  qi::Session::Config sessionCfg;
+  sessionCfg.serverSslConfig = test::ssl::serverConfig(test::ssl::server(),
+                                                       test::ssl::rootCA());
+  cfg.setSessionConfig(sessionCfg);
+  qi::ApplicationSession app(argc, argv, cfg);
   qi::log::addFilter("qi*", qi::LogLevel_Debug);
 
   qiLogInfo() << "Attempting connection to " << app.url().str();

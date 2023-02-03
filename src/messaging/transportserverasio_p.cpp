@@ -10,8 +10,10 @@
 #include <boost/asio.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ka/memory.hpp>
+#include <ka/uri/io.hpp>
 #include <qi/log.hpp>
 #include <qi/eventloop.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "transportserver.hpp"
 #include "messagesocket.hpp"
 #include "tcpmessagesocket.hpp"
@@ -25,14 +27,31 @@ namespace qi
 {
   const int ifsMonitoringTimeout = 5 * 1000 * 1000; // in usec
   const int64_t TransportServerAsioPrivate::AcceptDownRetryTimerUs = 60 * 1000 * 1000; // 60 seconds in usec
+  constexpr const TcpScheme defaultTcpScheme = TcpScheme::Raw;
 
-  void _onAccept(TransportServerImplPtr p,
+  static void _onAccept(TransportServerImplPtr p,
                  const boost::system::error_code& erc,
-                 sock::SocketWithContextPtr<sock::NetworkAsio> s
-                 )
+                 boost::asio::ip::tcp::socket peer)
   {
     boost::shared_ptr<TransportServerAsioPrivate> ts = boost::dynamic_pointer_cast<TransportServerAsioPrivate>(p);
-    ts->onAccept(erc, s);
+    ts->onAccept(erc, std::move(peer));
+  }
+
+  // Diffie-Hellman parameters of size 3072 bits at `PEM` format.
+  //
+  // Generation example: `openssl dhparam -outform PEM -out dhparams.pem 3072`
+  static char const* diffieHellmanParameters()
+  {
+    // Hardcoded for security reasons.
+    return
+      "-----BEGIN DH PARAMETERS-----\n"
+      "MIIBCAKCAQEAxtYYmi/o+PGc1/j5SLb/kPRjSJj2ZlnFHI6OxYjU1sr36KuOz6x+\n"
+      "MuRYnUcHChATpZ88lbhyw7w/L+R+E9uuOkkU78zNXv5xsElsKfl2BQpdO8N+h3y4\n"
+      "SlN3P8F8TmAgmRG/LZaABycWONSeRXGPZ76dE79z+0UE+Ae7jHqRCfjsudpb/DfB\n"
+      "JnnMYOsONQnpYywEjIJ6H5voGoYR5QLZPqBRHZuZTb8cBg5psPzIIHB3h77f6Xe8\n"
+      "irSYKhLmM3WqwDPnIZq+NdBrYZOziOrQqTdtcuPTtxYhhodIHhDK9213/onRSqft\n"
+      "mOEHq1J6vhjsv1mCAcZDvJYRQEFN3/gSywIBAg==\n"
+      "-----END DH PARAMETERS-----";
   }
 
   void TransportServerAsioPrivate::restartAcceptor()
@@ -51,21 +70,18 @@ namespace qi
       qiLogWarning() << this << " No context available, acceptor will stay down.";
   }
 
-  void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc,
-    sock::SocketWithContextPtr<sock::NetworkAsio> s
-    )
+  void TransportServerAsioPrivate::onAccept(const boost::system::error_code& erc, boost::asio::ip::tcp::socket peer)
   {
     qiLogDebug() << this << " onAccept";
     boost::mutex::scoped_lock lock(_acceptCloseMutex);
     if (!_live)
     {
-      s.reset();
       return;
     }
     if (erc)
     {
       qiLogDebug() << "accept error " << erc.message();
-      s.reset();
+      peer.shutdown(boost::asio::socket_base::shutdown_both);
       self->acceptError(erc.value());
       if (isFatalAcceptError(erc.value()))
       {
@@ -80,19 +96,49 @@ namespace qi
     }
     else
     {
-        auto socket = boost::make_shared<qi::TcpMessageSocket<>>(*asIoServicePtr(context), _ssl, s);
-        qiLogDebug() << "New socket accepted: " << socket.get();
+      using N = sock::NetworkAsio;
+      using Method = sock::Method<sock::SslContext<N>>;
+      auto sslContext = sock::makeSslContextPtr<sock::NetworkAsio>(Method::tlsv12);
 
-        self->newConnection(std::pair<MessageSocketPtr, Url>{
-          socket, sock::remoteEndpoint(*s, _ssl)});
+      setCipherListTls12AndBelow<N>(*sslContext, N::serverCipherList());
 
-        if (socket.unique()) {
-            qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
-        }
+      // Protocols are explicitly forbidden to allow TLS 1.2 only.
+      // A white list interface would be preferable, but `Asio` lets us no
+      // choice.
+      sslContext->set_options(
+          boost::asio::ssl::context::default_workarounds
+        | boost::asio::ssl::context::no_sslv2
+        | boost::asio::ssl::context::no_sslv3
+        | boost::asio::ssl::context::no_tlsv1
+        | boost::asio::ssl::context::no_tlsv1_1
+      );
+
+      sslContext->use_tmp_dh(boost::asio::const_buffer(
+        diffieHellmanParameters(),
+        std::strlen(diffieHellmanParameters())
+      ));
+
+      const auto mode = sock::sslVerifyMode<N>(sock::HandshakeSide<sock::SslSocket<N>>::server, _tcpScheme);
+      sslContext->set_verify_mode(mode);
+
+      const auto peerEndpoint = peer.remote_endpoint();
+      const auto peerEndpointUrl = sock::url(peerEndpoint, _tcpScheme);
+
+      N::applyConfig(*sslContext, self->_sslConfig, peerEndpoint);
+
+      const auto ioServicePtr = asIoServicePtr(context);
+      auto sslSocket = sock::makeSocketWithContextPtr<N>(std::move(peer), std::move(sslContext));
+      auto socket = boost::make_shared<qi::TcpMessageSocket<>>(std::move(sslSocket), _tcpScheme, *ioServicePtr);
+      qiLogDebug() << "New socket accepted: " << socket.get();
+
+      self->newConnection(std::pair<MessageSocketPtr, Url>{socket, peerEndpointUrl});
+
+      if (socket.unique()) {
+        qiLogError() << "bug: socket not stored by the newConnection handler (usecount:" << socket.use_count() << ")";
+      }
     }
-    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(*asIoServicePtr(context), _sslContext);
-    _acceptor->async_accept(_s->lowest_layer(),
-                           boost::bind(_onAccept, shared_from_this(), _1, _s));
+
+    _acceptor->async_accept(boost::bind(_onAccept, shared_from_this(), _1, _2));
   }
 
   void TransportServerAsioPrivate::close() {
@@ -136,7 +182,7 @@ namespace qi
     // TODO: implement OS networking notifications
 
     qiLogDebug() << "Checking endpoints...";
-    std::vector<qi::Url> currentEndpoints;
+    std::vector<qi::Uri> currentEndpoints;
 
     auto updateEP = [&]
     {
@@ -153,63 +199,42 @@ namespace qi
       return;
     }
 
-    std::string protocol = _ssl ? "tcps://" : "tcp://";
+    const auto scheme = to_string(_tcpScheme);
     {
-      for (std::map<std::string, std::vector<std::string> >::iterator interfaceIt = ifsMap.begin();
-           interfaceIt != ifsMap.end();
-           ++interfaceIt)
+      for (const auto& interface : ifsMap)
       {
-        for (std::vector<std::string>::iterator addressIt = (*interfaceIt).second.begin();
-             addressIt != (*interfaceIt).second.end();
-             ++addressIt)
+        for (const auto& address : interface.second)
         {
-          std::stringstream ss;
-          ss << protocol << (*addressIt) << ":" << _port;
-          currentEndpoints.push_back(ss.str());
+          std::ostringstream ss;
+          ss << scheme << "://" << address << ":" << _port;
+          currentEndpoints.push_back(*qi::uri(ss.str()));
         }
       }
     }
 
     {
       boost::mutex::scoped_lock l(_endpointsMutex);
-      if (_endpoints.size() != currentEndpoints.size() ||
-          !std::equal(_endpoints.begin(), _endpoints.end(), currentEndpoints.begin()))
+      if (currentEndpoints != _endpoints)
       {
-        std::stringstream ss;
-        std::vector<qi::Url>::iterator it;
-        for (it = currentEndpoints.begin(); it != currentEndpoints.end(); ++it)
-          ss << "ep: " << it->str() << std::endl;
+        std::ostringstream ss;
+        for (const auto& ep : currentEndpoints)
+          ss << "ep: " << ep << std::endl;
         qiLogVerbose() << "Updating endpoints..." << this << std::endl << ss.str();
         _endpoints = currentEndpoints;
         _self->endpointsChanged();
       }
-
+      std::sort(_endpoints.begin(), _endpoints.end(), &isPreferredEndpoint);
     }
 
     *_asyncEndpoints = updateEP();
   }
 
-  // Diffie-Hellman parameters of size 3072 bits at `PEM` format.
-  //
-  // Generation example: `openssl dhparam -outform PEM -out dhparams.pem 3072`
-  static char const* diffieHellmanParameters()
-  {
-    // Hardcoded for security reasons.
-    return
-      "-----BEGIN DH PARAMETERS-----\n"
-      "MIIBCAKCAQEAxtYYmi/o+PGc1/j5SLb/kPRjSJj2ZlnFHI6OxYjU1sr36KuOz6x+\n"
-      "MuRYnUcHChATpZ88lbhyw7w/L+R+E9uuOkkU78zNXv5xsElsKfl2BQpdO8N+h3y4\n"
-      "SlN3P8F8TmAgmRG/LZaABycWONSeRXGPZ76dE79z+0UE+Ae7jHqRCfjsudpb/DfB\n"
-      "JnnMYOsONQnpYywEjIJ6H5voGoYR5QLZPqBRHZuZTb8cBg5psPzIIHB3h77f6Xe8\n"
-      "irSYKhLmM3WqwDPnIZq+NdBrYZOziOrQqTdtcuPTtxYhhodIHhDK9213/onRSqft\n"
-      "mOEHq1J6vhjsv1mCAcZDvJYRQEFN3/gSywIBAg==\n"
-      "-----END DH PARAMETERS-----";
-  }
-
   qi::Future<void> TransportServerAsioPrivate::listen(const qi::Url& url)
   {
+    qiLogCategory("qimessaging.server.listen");
+
     _listenUrl = url;
-    _ssl = _listenUrl.protocol() == "tcps";
+    _tcpScheme = tcpScheme(url).value_or(defaultTcpScheme);
     using namespace boost::asio;
 #ifndef ANDROID
     // resolve endpoint
@@ -262,7 +287,7 @@ namespace qi
     _acceptor->listen(socket_base::max_connections, ec);
     if (ec)
     {
-      qiLogError("qimessaging.server.listen") << ec.message();
+      qiLogError() << ec.message();
       return qi::makeFutureError<void>(ec.message());
     }
     _port = _acceptor->local_endpoint().port();// already in host byte orde
@@ -277,7 +302,7 @@ namespace qi
     if (_listenUrl.host() != "0.0.0.0")
     {
       boost::mutex::scoped_lock l(_endpointsMutex);
-      _endpoints.push_back(_listenUrl.str());
+      _endpoints.push_back(*qi::uri(_listenUrl.str()));
     }
     else
     {
@@ -286,48 +311,24 @@ namespace qi
 
     {
       boost::mutex::scoped_lock l(_endpointsMutex);
-      for (std::vector<qi::Url>::const_iterator it = _endpoints.begin();
-           it != _endpoints.end();
-           it++)
+      for (const auto& ep : _endpoints)
       {
-        qiLogVerbose() << "TransportServer will listen on: " << it->str();
+        qiLogVerbose() << "TransportServer will listen on: " << ep;
       }
     }
 
-    if (_ssl)
+    if (isWithTls(_tcpScheme))
     {
-      if (self->_identityCertificate.empty() || self->_identityKey.empty())
+      const auto& certWithPrivKey = self->_sslConfig.certWithPrivKey;
+      if (!certWithPrivKey || certWithPrivKey->certificateChain.empty() || !certWithPrivKey->privateKey)
       {
-        const char* s = "SSL certificates missing, please call Session::setIdentity first";
-        qiLogError("qimessaging.server.listen") << s;
+        const char* s = "SSL certificates/key missing, the SSL configuration is incomplete";
+        qiLogError() << s;
         return qi::makeFutureError<void>(s);
       }
-
-      using N = sock::NetworkAsio;
-      setCipherListTls12AndBelow<N>(*_sslContext, N::serverCipherList());
-
-      // Protocols are explicitly forbidden to allow TLS 1.2 only.
-      // A white list interface would be preferable, but `Asio` lets us no
-      // choice.
-      _sslContext->set_options(
-          boost::asio::ssl::context::default_workarounds
-        | boost::asio::ssl::context::no_sslv2
-        | boost::asio::ssl::context::no_sslv3
-        | boost::asio::ssl::context::no_tlsv1
-        | boost::asio::ssl::context::no_tlsv1_1
-      );
-      _sslContext->use_certificate_chain_file(self->_identityCertificate.c_str());
-      _sslContext->use_private_key_file(self->_identityKey.c_str(), boost::asio::ssl::context::pem);
-
-      _sslContext->use_tmp_dh(boost::asio::const_buffer(
-        diffieHellmanParameters(),
-        std::strlen(diffieHellmanParameters())
-      ));
     }
 
-    _s = sock::makeSocketWithContextPtr<sock::NetworkAsio>(*asIoServicePtr(context), _sslContext);
-    _acceptor->async_accept(_s->lowest_layer(),
-      boost::bind(_onAccept, shared_from_this(), _1, _s));
+    _acceptor->async_accept(boost::bind(_onAccept, shared_from_this(), _1, _2));
     _connectionPromise.setValue(0);
     return _connectionPromise.future();
   }
@@ -354,15 +355,12 @@ namespace qi
   }
 
   TransportServerAsioPrivate::TransportServerAsioPrivate(TransportServer* self,
-                                                                 EventLoop* ctx)
+                                                         EventLoop* ctx)
     : TransportServerImpl(self, ctx)
     , _self(self)
     , _acceptor(new boost::asio::ip::tcp::acceptor(*asIoServicePtr(ctx)))
     , _live(true)
-    , _sslContext(sock::makeSslContextPtr<sock::NetworkAsio>(
-                    sock::SslContext<sock::NetworkAsio>::tlsv12))
-    , _s()
-    , _ssl(false)
+    , _tcpScheme(defaultTcpScheme)
     , _port(0)
   {
   }

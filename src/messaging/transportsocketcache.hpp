@@ -38,7 +38,7 @@ namespace qi
   class TransportSocketCache : public Trackable<TransportSocketCache>
   {
   public:
-    TransportSocketCache();
+    TransportSocketCache(ssl::ClientConfig sslConfig = {});
     ~TransportSocketCache();
 
     void init();
@@ -60,6 +60,7 @@ namespace qi
     /// The returned future is set when the socket has been disconnected and
     /// effectively removed from the cache.
     FutureSync<void> disconnect(MessageSocketPtr socket);
+
   private:
     enum State
     {
@@ -101,6 +102,7 @@ namespace qi
 
     using MachineId = std::string;
     using ConnectionMap = std::map<MachineId, std::map<Uri, ConnectionAttemptPtr>>;
+    const ssl::ClientConfig _sslConfig;
     ConnectionMap _connections;
     std::list<MessageSocketPtr> _allPendingConnections;
     boost::synchronized_value<std::vector<DisconnectInfo>> _disconnectInfos;

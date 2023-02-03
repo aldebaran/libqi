@@ -8,8 +8,6 @@
 include_directories(".")
 
 qi_stage_dir(".")
-qi_install_data("share/qi/server.crt" SUBFOLDER qi)
-qi_install_data("share/qi/server.key" SUBFOLDER qi)
 
 function(qimessaging_create_session_test name)
   if ((DEFINED BUILD_TESTS AND NOT BUILD_TESTS) OR NOT QI_WITH_TESTS)
@@ -61,7 +59,9 @@ qi_create_lib(
   testsession
   STATIC
   ${TESTSESSION_H} ${TESTSESSION_C}
-  DEPENDS QI
+  DEPENDS
+    qi
+    testssl
 )
 
 qi_stage_lib(testsession)

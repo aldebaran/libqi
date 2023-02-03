@@ -5,12 +5,12 @@
 #include <algorithm>
 #include <sstream>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 
 #include <qi/log.hpp>
 #include <qi/numeric.hpp>
 #include <qi/uri.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 
 #include "messagesocket.hpp"
 #include "transportsocketcache.hpp"
@@ -24,8 +24,9 @@ qiLogCategory(LOG_CATEGORY);
 
 namespace qi
 {
-TransportSocketCache::TransportSocketCache()
-  : _dying(false)
+TransportSocketCache::TransportSocketCache(ssl::ClientConfig sslConfig)
+  : _sslConfig(std::move(sslConfig))
+  , _dying(false)
 {
 }
 
@@ -109,10 +110,6 @@ void TransportSocketCache::close()
   releaseDisconnectInfoPromises(*sync);
 }
 
-bool isLocalHost(const std::string& host)
-{
-  return boost::algorithm::starts_with(host, "127.") || host == "localhost";
-}
 
 static std::vector<Uri> localhost_only(const std::vector<Uri>& input)
 {
@@ -175,16 +172,15 @@ Future<MessageSocketPtr> TransportSocketCache::socket(const ServiceInfo& servInf
     auto& uriMap = _connections[machineId];
     for (const auto& uri: connectionCandidates)
     {
-      const auto scheme = uri.scheme();
-      // Only these protocols are supported for message sockets.
-      if (scheme != "tcp" && scheme != "tcps")
+      // We only support our TCP schemes for message sockets.
+      if (!tcpSchemeFromUriScheme(uri.scheme()))
         continue;
 
       if (!local && isLoopbackAddress((*uri.authority()).host()))
         continue; // Do not try to connect on localhost when it is a remote!
 
       uriMap[uri] = couple;
-      MessageSocketPtr socket = makeMessageSocket(scheme);
+      MessageSocketPtr socket = makeMessageSocket(_sslConfig);
       _allPendingConnections.push_back(socket);
       Future<void> sockFuture = socket->connect(toUrl(uri));
       qiLogDebug() << "Inserted [" << machineId << "][" << uri << "]";

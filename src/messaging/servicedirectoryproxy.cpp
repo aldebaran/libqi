@@ -12,8 +12,10 @@
 #include <qi/log.hpp>
 #include <qi/messaging/clientauthenticatorfactory.hpp>
 #include <qi/messaging/servicedirectoryproxy.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include <qi/url.hpp>
 #include <qi/macro.hpp>
+#include <qi/future.hpp>
 
 #include <boost/version.hpp>
 #include <boost/predef/version_number.h>
@@ -41,10 +43,6 @@ const std::string cannotMirrorServiceMsgSuffix = ", cannot mirror service";
 const std::string cannotUnmirrorServiceMsgSuffix = ", cannot unmirror service";
 const std::string skippedErrorMsg = "the service was skipped";
 
-const std::string notListeningMirrorErrorMsg = notListeningMsgPrefix
-                                               + cannotMirrorServiceMsgSuffix;
-const std::string notConnectedMirrorErrorMsg = notConnectedMsgPrefix
-                                               + cannotMirrorServiceMsgSuffix;
 const std::string notListeningUnmirrorErrorMsg = notListeningMsgPrefix
                                                  + cannotUnmirrorServiceMsgSuffix;
 const std::string notConnectedUnmirrorErrorMsg = notConnectedMsgPrefix
@@ -54,26 +52,25 @@ using FutureMaybeMirroredIdMap = boost::container::flat_map<std::string, Future<
 
 void logAnyMirroringFailure(const FutureMaybeMirroredIdMap& ids)
 {
-  using namespace boost::adaptors;
-  const auto filterNonSkipError = filtered([](const FutureMaybeMirroredIdMap::value_type& pairMaybeId) {
-      auto fut = pairMaybeId.second;
-      // Do not log mirroring failures caused by service skipping.
-      return fut.hasError() && fut.error() != skippedErrorMsg;
-    });
-  const auto concatFutureError = transformed([](const FutureMaybeMirroredIdMap::value_type& pairMaybeId) {
-      return pairMaybeId.first + " ('" + pairMaybeId.second.error() + "')";
-    });
-  const auto serviceErrors = ids | filterNonSkipError | concatFutureError;
-  if (!boost::empty(serviceErrors))
-    qiLogWarning() << "Failed to mirror the following services: "
-                   << boost::algorithm::join(serviceErrors, ", ") << ".";
-}
-
-AuthProviderFactoryPtr placeholderIfNull(AuthProviderFactoryPtr factory)
-{
-  if (!factory)
-    return boost::make_shared<NullAuthProviderFactory>();
-  return factory;
+  FutureBarrier<unsigned int> barrier;
+  for (const auto& id : ids)
+    barrier.addFuture(id.second);
+  // Wait for all futures to end then log if failures occurred.
+  barrier.future().then([ids](const Future<std::vector<Future<unsigned int>>>&) {
+    using namespace boost::adaptors;
+    const auto filterNonSkipError = filtered([](const FutureMaybeMirroredIdMap::value_type& pairMaybeId) {
+        auto fut = pairMaybeId.second;
+        // Do not log mirroring failures caused by service skipping.
+        return fut.hasError() && fut.error() != skippedErrorMsg;
+      });
+    const auto concatFutureError = transformed([](const FutureMaybeMirroredIdMap::value_type& pairMaybeId) {
+        return pairMaybeId.first + " ('" + pairMaybeId.second.error() + "')";
+      });
+    const auto serviceErrors = ids | filterNonSkipError | concatFutureError;
+    if (!boost::empty(serviceErrors))
+      qiLogWarning() << "Failed to mirror the following services: "
+                     << boost::algorithm::join(serviceErrors, ", ") << ".";
+  });
 }
 
 /// Procedure<Future<T>()> Proc
@@ -100,11 +97,6 @@ auto invokeLogProgress(const std::string& prefix, Proc&& proc)
   return res;
 }
 
-static const ServiceDirectoryProxy::Status totallyDisconnected{
-  ServiceDirectoryProxy::ConnectionStatus::NotConnected,
-  ServiceDirectoryProxy::ListenStatus::NotListening
-};
-
 /// Repeats an operation returning a Future until it succeeds or is cancelled, with a delay between
 /// each try.
 ///
@@ -130,7 +122,7 @@ Fut repeatWhileError(ProcOp op,
         qiLogVerbose()
           << "Retrying to " << opDesc << " in "
           << boost::chrono::duration_cast<MilliSeconds>(delay).count()
-          << "msec.";
+          << "msec (last operation failed: " << fut.error() << ").";
         return strand.asyncDelay(
             [=, &strand] {
               return repeatWhileError(op, strand, opDesc, delay);
@@ -141,7 +133,79 @@ Fut repeatWhileError(ProcOp op,
     })).unwrap();
 }
 
+/// Enables printing containers elements in an output stream, with the following format:
+///   `[e1, e2, ..., en]`
+template<typename C>
+struct Prettified
+{
+  const C* c;
+  friend std::ostream& operator<<(std::ostream& os, const Prettified& p)
+  {
+    if (p.c == nullptr)
+      return os << "<null>";
+    os << "[";
+    bool delim = false;
+    for (const auto& v : *p.c)
+    {
+      if (delim)
+        os << ", ";
+      else
+        delim = true;
+      os << v;
+    }
+    os << "]";
+    return os;
+  }
+};
+
+template<typename C>
+Prettified<C> prettified(const C* c)
+{
+  return { c };
 }
+
+/// Procedure<_(std::ostream&)> P
+template<typename P>
+boost::optional<std::string> unexpectedState(Property<ServiceDirectoryProxy::Status>& property,
+                                             ServiceDirectoryProxy::Status expected,
+                                             P logAction)
+{
+  const auto currentStatus = property.get().value();
+  if (currentStatus != expected)
+  {
+    std::ostringstream oss;
+    oss << "unexpected proxy state before ";
+    logAction(oss);
+    oss << ": expected state " << expected << " but current state is "
+        << currentStatus;
+    return oss.str();
+  }
+  return {};
+}
+
+/// Constructs the configuration of the service directory client according to
+/// the configuration of the proxy.
+Session::Config sdClientConfig(const ServiceDirectoryProxy::Config& cfg)
+{
+  Session::Config sessCfg;
+  sessCfg.connectUrl = cfg.serviceDirectoryUrl;
+  sessCfg.clientAuthenticatorFactory = cfg.clientAuthenticatorFactory;
+  sessCfg.clientSslConfig = cfg.clientSslConfig;
+  return sessCfg;
+}
+
+/// Constructs the configuration of the server according to the configuration
+/// of the proxy.
+Session::Config serverConfig(const ServiceDirectoryProxy::Config& cfg)
+{
+  Session::Config sessCfg;
+  sessCfg.listenUrls = cfg.listenUrls;
+  sessCfg.authProviderFactory = cfg.authProviderFactory;
+  sessCfg.serverSslConfig = cfg.serverSslConfig;
+  return sessCfg;
+}
+
+} // anonymous namespace
 
 // To implement the proxy, we use a session that listens and provides endpoints for connections and
 // another session that connects to the service directory. The first session is referenced as
@@ -149,32 +213,34 @@ Fut repeatWhileError(ProcOp op,
 class ServiceDirectoryProxy::Impl
 {
 public:
+  using Config = ServiceDirectoryProxy::Config;
   static const Seconds retryAttachDelay;
   static const MilliSeconds retryServiceDelay;
 
-  explicit Impl(bool enforceAuth);
+  explicit Impl(Config config, Promise<void> ready);
   ~Impl();
 
-  Property<bool> connected;
-
-  Property<Status> status;
-
-  Future<void> close();
   Future<UrlVector> endpoints() const;
-  Future<ListenStatus> listenAsync(const Url& url);
-  Future<IdValidationStatus> setValidateIdentity(const std::string& key, const std::string& crt);
-  Future<void> setAuthProviderFactory(AuthProviderFactoryPtr provider);
-  Future<void> attachToServiceDirectory(const Url& sdUrl);
-  Future<ServiceFilter> setServiceFilter(ServiceFilter filter);
 
 private:
   // Precondition synchronized():
   // Concurrent calls of functions with the same precondition on the same object must be sequenced.
 
   // Precondition: synchronized()
-  void closeUnsync();
+  //
+  // Resets the state of the proxy and launches a new starting sequence.
+  // Returns a future set once the proxy is connected to the service directory and
+  // it started listening on its endpoints.
+  Future<void> restartUnsync();
 
-  Future<void> mirrorAllServices();
+  // Precondition: synchronized()
+  //
+  // Launches the server of the proxy, and returns a future set once the server is
+  // listening on its endpoints.
+  Future<void> listenUnsync();
+
+  // Precondition: synchronized()
+  Future<void> mirrorAllServicesUnsync();
 
   // Precondition: synchronized()
   Future<unsigned int> mirrorServiceFromSDUnsync(unsigned int remoteId,
@@ -188,22 +254,17 @@ private:
   // Precondition: synchronized()
   Future<void> unmirrorServiceFromSDUnsync(const std::string& service);
 
-  // Precondition: synchronized() && _sdUrl.isValid()
+  // Precondition: synchronized() && _config.serviceDirectoryUrl.isValid()
   //
-  // Attaches the proxy to a service directory at _sdUrl. Returns a future set
-  // when the attachment is successful.
-  Future<void> doAttachUnsync();
+  // Attaches the proxy to a service directory at `_config.serviceDirectoryUrl`. Returns a future set
+  // when the connection is successful.
+  Future<void> connectUnsync();
 
   // Precondition: synchronized()
   //
   // Instantiates a server (as a session) and initializes it with the current state of the proxy.
   // Returns the pointer the new server.
   SessionPtr createServerUnsync();
-
-  // Precondition: synchronized()
-  //
-  // Resets this object by closing it then trying to reattach it to the service directory.
-  void resetUnsync();
 
   // Precondition: synchronized()
   //
@@ -229,50 +290,7 @@ private:
   // returns a empty optional.
   boost::optional<std::string> immediateMirroringFailureUnsync(const std::string& name) const;
 
-  struct Identity
-  {
-    std::string key;
-    std::string crt;
-  };
-
-  // Owns the current status value and dispatch the value through the associated property when changed.
-  // This is to help maintenance (makes impossible to change the value without setting the property).
-  // TODO: Will be replaced by direct usage of the property once we can make
-  // the property use the same strand as the one used here
-  // (to avoid some issues with concurrency and thread abuse).
-  class StatusKeeper
-  {
-    Status _currentStatus;
-    Property<Status>& _publisher;
-  public:
-    StatusKeeper(Status initialStatus, Property<Status>& publisher)
-      : _currentStatus(initialStatus)
-      , _publisher(publisher)
-    {}
-
-    void set(const Status& newStatus)
-    {
-      _currentStatus = newStatus;
-      _publisher.set(_currentStatus).async();
-    }
-
-    void set(ConnectionStatus newValue)
-    {
-      set({newValue, _currentStatus.listen});
-    }
-
-    void set(ListenStatus newValue)
-    {
-      set({ _currentStatus.connection, newValue });
-    }
-
-    const Status& current() const { return _currentStatus; }
-
-  } _status{totallyDisconnected, status};
-
-  SessionPtr _server; // ptr because we have to recreate it every time we listen
-  SessionPtr _sdClient;
-
+private:
   struct MirroredFromServiceDirectoryServiceId
   {
     Future<unsigned int> local;
@@ -286,41 +304,211 @@ private:
   using MirroredServiceId = boost::variant<MirroredFromServiceDirectoryServiceId,
                                            MirroredFromProxyServiceId>;
   using MirroredServiceIdMap = std::unordered_map<std::string, MirroredServiceId>;
-  MirroredServiceIdMap _servicesIdMap;
-  Url _listenUrl;
-  Url _sdUrl;
-  boost::optional<Identity> _identity;
-  AuthProviderFactoryPtr _authProviderFactory;
-  bool _isEnforcedAuth;
-  ServiceFilter _serviceFilter;
 
   mutable Strand _strand;
+
+public:
+  Property<Status> status;
+
+private:
+  const Config _config;
+  SessionPtr _server; // ptr because we have to recreate it every time we listen
+  SessionPtr _sdClient;
+  MirroredServiceIdMap _servicesIdMap;
 };
 
 const Seconds ServiceDirectoryProxy::Impl::retryAttachDelay { 1 };
 const MilliSeconds ServiceDirectoryProxy::Impl::retryServiceDelay { 500 };
 
-QI_WARNING_PUSH()
-QI_WARNING_DISABLE(4996, deprecated-declarations) // ignore connected deprecation warnings
-ServiceDirectoryProxy::ServiceDirectoryProxy(bool enforceAuth)
-  : _p(new Impl(enforceAuth))
-  , connected(_p->connected)
-  , status(_p->status)
+ServiceDirectoryProxy::ServiceDirectoryProxy(Config config, Promise<void> ready)
+  : _p(new Impl(std::move(config), std::move(ready)))
 {
 }
-QI_WARNING_POP()
+
+namespace
+{
+  void throwRuntimeError(const ssl::Error& e, const char* prefix, const boost::filesystem::path& p)
+  {
+    std::ostringstream oss;
+    oss << prefix << "'" << p << "'. Details: " << e.what();
+    throw std::runtime_error(oss.str());
+  }
+
+  void throwRuntimeError(const char* prefix, const boost::filesystem::path& p)
+  {
+    std::ostringstream oss;
+    oss << prefix << "'" << p << "'.";
+    throw std::runtime_error(oss.str());
+  }
+
+  // Throws a `std::runtime_error` iff reading the file failed or no
+  // certificate was found in it.
+  std::vector<ssl::Certificate> readCertChain(const boost::filesystem::path& p)
+  {
+    auto certs = std::vector<ssl::Certificate>{};
+    try
+    {
+      certs = ssl::Certificate::chainFromPemFile(p);
+    }
+    catch (const ssl::Error& e)
+    {
+      throwRuntimeError(e, "Could not read certificate chain from file ", p);
+    }
+    if (certs.empty())
+    {
+      throwRuntimeError("No certificate found in file ", p);
+    }
+    return certs;
+  }
+
+  // Throws a `std::runtime_error` iff reading the file failed or no
+  // private key was found in it.
+  ssl::PKey readPrivateKey(const boost::filesystem::path& p)
+  {
+    auto optPrivateKey = boost::optional<ssl::PKey>{};
+    try
+    {
+      optPrivateKey = ssl::PKey::privateFromPemFile(p);
+    }
+    catch (const ssl::Error& e)
+    {
+      throwRuntimeError(e, "Could not read private key from file ", p);
+    }
+    if (! optPrivateKey.has_value())
+    {
+      throwRuntimeError("No private key found in file ", p);
+    }
+    return optPrivateKey.value();
+  };
+
+  // Returns the certificate read in the given file path, or throws a
+  // `std::runtime_error` iff reading failed or no certificate was found in it.
+  // Factorizing with `readPrivateKey` does not worth the trouble.
+  ssl::Certificate readCert(const boost::filesystem::path& p)
+  {
+    auto optCert = boost::optional<ssl::Certificate>{};
+    try
+    {
+      optCert = ssl::Certificate::fromPemFile(p);
+    }
+    catch (const ssl::Error& e)
+    {
+      throwRuntimeError(e, "Could not read certificate from file ", p);
+    }
+    if (! optCert.has_value())
+    {
+      throwRuntimeError("No certificate found in file ", p);
+    }
+    return optCert.value();
+  }
+} // anonymous namespace
+
+ServiceDirectoryProxy::Config ServiceDirectoryProxy::Config::createFromListeningProtocol(
+    Url sdUrl,
+    Url listenUrl,
+    ServiceDirectoryProxy::FilterService filterService,
+    ServiceDirectoryProxy::Filepaths filepaths,
+    boost::optional<boost::shared_ptr<AuthProviderFactory>> authProviderFactory
+  )
+{
+  auto throwError = [](std::string message) {
+    throw std::invalid_argument(ka::mv(message));
+  };
+  auto optScheme = tcpScheme(listenUrl);
+  if (! optScheme.has_value())
+  {
+    throwError("Unsupported protocol. Scheme = " + listenUrl.protocol());
+  }
+  auto config = ServiceDirectoryProxy::Config{
+    ka::mv(sdUrl),
+    std::vector<Url>{ listenUrl },
+    ka::mv(authProviderFactory),
+    boost::optional<ClientAuthenticatorFactoryPtr>{},
+    ka::mv(filterService),
+    ssl::ClientConfig{},
+    ssl::ServerConfig{}
+  };
+  switch (optScheme.value())
+  {
+  case TcpScheme::Raw: {
+    const auto hasFilepaths = boost::get<ka::unit_t>(&filepaths) == nullptr;
+    if (hasFilepaths)
+    {
+      throwError("Extra data: TLS or mTLS file paths provided while listening with TCP.");
+    }
+    break;
+  }
+  case TcpScheme::Tls: {
+    const auto* paths = boost::get<ServiceDirectoryProxy::TlsFilepaths>(&filepaths);
+    if (paths == nullptr)
+    {
+      throwError("Missing data: TLS file paths.");
+    }
+    config.serverSslConfig.certWithPrivKey = ssl::CertChainWithPrivateKey{
+      readCertChain(paths->certChain),
+      readPrivateKey(paths->privateKey)
+    };
+    break;
+  }
+  case TcpScheme::MutualTls: {
+    const auto* paths = boost::get<ServiceDirectoryProxy::MTlsFilepaths>(&filepaths);
+    if (paths == nullptr)
+    {
+      throwError("Missing data: mTLS file paths.");
+    }
+    config.serverSslConfig.certWithPrivKey = ssl::CertChainWithPrivateKey{
+      readCertChain(paths->certChain),
+      readPrivateKey(paths->privateKey)
+    };
+    config.serverSslConfig.trustStore = { readCert(paths->trustedCert) };
+    config.serverSslConfig.verifyPartialChain = true; // For certificate pinning.
+    break;
+  }
+  default:
+    throwError("Unsupported protocol. Scheme = " + listenUrl.protocol());
+  }
+  return config;
+}
+
+Future<ServiceDirectoryProxyPtr> ServiceDirectoryProxy::createFromListeningProtocol(
+    Url sdUrl,
+    Url listenUrl,
+    ServiceDirectoryProxy::FilterService filterService,
+    ServiceDirectoryProxy::Filepaths filepaths,
+    boost::optional<boost::shared_ptr<AuthProviderFactory>> authProviderFactory
+  )
+{
+  return ServiceDirectoryProxy::create(
+    Config::createFromListeningProtocol(
+      ka::mv(sdUrl),
+      ka::mv(listenUrl),
+      ka::mv(filterService),
+      ka::mv(filepaths),
+      ka::mv(authProviderFactory)
+    )
+  );
+}
+
+Future<ServiceDirectoryProxyPtr> ServiceDirectoryProxy::create(Config config)
+{
+  // The cancel callback for this promise is set by the proxy constructor.
+  Promise<void> readyPromise;
+  auto ready = readyPromise.future();
+  ServiceDirectoryProxyPtr proxy(
+    new ServiceDirectoryProxy(std::move(config), std::move(readyPromise)));
+  return ready.andThen([proxy](void*) mutable { return std::move(proxy); });
+}
 
 ServiceDirectoryProxy::~ServiceDirectoryProxy() = default;
 
-void ServiceDirectoryProxy::close()
+Property<ServiceDirectoryProxy::Status>& ServiceDirectoryProxy::status()
 {
-  _p->close().value();
+  return _p->status;
 }
 
-Future<ServiceDirectoryProxy::ServiceFilter> ServiceDirectoryProxy::setServiceFilter(
-    ServiceFilter filter)
+const Property<ServiceDirectoryProxy::Status>& ServiceDirectoryProxy::status() const
 {
-  return _p->setServiceFilter(std::move(filter));
+  return _p->status;
 }
 
 UrlVector ServiceDirectoryProxy::endpoints() const
@@ -328,50 +516,38 @@ UrlVector ServiceDirectoryProxy::endpoints() const
   return _p->endpoints().value();
 }
 
-Future<ServiceDirectoryProxy::ListenStatus> ServiceDirectoryProxy::listenAsync(const Url& url)
+ServiceDirectoryProxy::Impl::Impl(Config config, Promise<void> readyPromise)
+  : status{ Status::Initializing, _strand, Property<Status>::Getter{}, util::SetAndNotifyIfChanged{}}
+  , _config{ std::move(config) }
 {
-  return _p->listenAsync(url);
-}
+  if (!_config.serviceDirectoryUrl.isValid())
+  {
+    readyPromise.setError("service directory proxy: invalid service directory url '" +
+                          _config.serviceDirectoryUrl.str() + "'");
+    return;
+  }
 
-Future<ServiceDirectoryProxy::IdValidationStatus> ServiceDirectoryProxy::setValidateIdentity(
-    const std::string& key,
-    const std::string& crt)
-{
-  return _p->setValidateIdentity(key, crt);
-}
+  const auto listenUrlEnd = _config.listenUrls.end();
+  const auto invalidListenUrlIt = std::find_if(_config.listenUrls.begin(), listenUrlEnd,
+                                               [](const Url& url) { return !url.isValid(); });
+  if (invalidListenUrlIt != listenUrlEnd)
+  {
+    readyPromise.setError("service directory proxy: invalid listen URL '" +
+                          invalidListenUrlIt->str() + "'");
+    return;
+  }
 
-void ServiceDirectoryProxy::setAuthProviderFactory(AuthProviderFactoryPtr provider)
-{
-  _p->setAuthProviderFactory(std::move(provider)).value();
-}
+  auto start = restartUnsync();
+  start.then(_strand.schedulerFor([readyPromise](Future<void> start) mutable {
+      adaptFuture(start, readyPromise);
+    }));
 
-qi::Future<void> ServiceDirectoryProxy::attachToServiceDirectory(const Url& serviceDirectoryUrl)
-{
-  return _p->attachToServiceDirectory(serviceDirectoryUrl);
-}
-
-ServiceDirectoryProxy::Impl::Impl(bool enforceAuth)
-  : connected{ false, Property<bool>::Getter{}, util::SetAndNotifyIfChanged{}}
-  , status{ totallyDisconnected, Property<Status>::Getter{}, util::SetAndNotifyIfChanged{}}
-  ,_isEnforcedAuth(enforceAuth)
-  , _serviceFilter{ ka::constant_function(false) }
-{
-  status.connect(_strand.schedulerFor([this](const Status& newStatus) {
-    connected.set(newStatus.isConnected()).async();
-
-    if (newStatus.isReady())
-      mirrorAllServices();
-
-    // Because we close the server if we get disconnected from the SD, automatically restart
-    // the server if _listenUrl is valid when we reconnect
-    if (newStatus.isConnected()
-      && newStatus.listen == ListenStatus::NotListening
-      && _listenUrl.isValid())
+  readyPromise.setOnCancel(
+    [start](Promise<void>&) mutable
     {
-      listenAsync(_listenUrl);
-    }
-
-  }));
+      start.cancel();
+      // The promise will be set by the continuation of the start future.
+    });
 }
 
 ServiceDirectoryProxy::Impl::~Impl()
@@ -381,25 +557,7 @@ ServiceDirectoryProxy::Impl::~Impl()
                         "Exception caught during destruction of implementation class: "),
     [&] {
       _strand.join();
-      closeUnsync();
     });
-}
-
-
-void ServiceDirectoryProxy::Impl::closeUnsync()
-{
-  qiLogVerbose() << "Closing proxy.";
-  auto sdClient = ka::exchange(_sdClient, nullptr); // will be destroyed at end of scope
-  auto server = ka::exchange(_server, nullptr);     // idem
-  qiLogVerbose() << "Setting the status of the proxy to disconnected.";
-  _status.set(totallyDisconnected);
-  qiLogVerbose() << "Clearing the list of known services.";
-  _servicesIdMap.clear();
-}
-
-Future<void> ServiceDirectoryProxy::Impl::close()
-{
-  return _strand.async([&] { closeUnsync(); });
 }
 
 Future<UrlVector> ServiceDirectoryProxy::Impl::endpoints() const
@@ -407,137 +565,115 @@ Future<UrlVector> ServiceDirectoryProxy::Impl::endpoints() const
   return _strand.async([&] { return _server ? _server->endpoints() : UrlVector{}; });
 }
 
-Future<ServiceDirectoryProxy::ListenStatus> ServiceDirectoryProxy::Impl::listenAsync(
-    const Url& url)
+Future<void> ServiceDirectoryProxy::Impl::restartUnsync()
 {
-  return _strand.async([=] {
-      if (_status.current().listen != ListenStatus::NotListening && _listenUrl == url)
-      {
-        // listen is already establishing / ongoing.
-        return futurize(_status.current().listen);
-      }
+  qiLogVerbose() << "Resetting.";
+  _sdClient.reset();
+  _server.reset();
+  qiLogVerbose() << "Clearing the list of known services.";
+  _servicesIdMap.clear();
+  qiLogVerbose() << "Starting.";
 
-      _listenUrl = url;
+  const auto setReady =
+    _strand.unwrappedSchedulerFor([this](void*) {
+      // There is a probability that the connection to the service directory
+      // is lost before the `listen` future finished. This would normally be racy, but this
+      // callback is executed from inside the strand, and so are the property accessors.
+      const auto stateError =
+        unexpectedState(status, Status::Connected,
+                        [](std::ostream& os) { os << "changing state to " << Status::Ready; });
+      if (stateError)
+        return makeFutureError<void>(*stateError);
+      status.set(Status::Ready);
+      // Run the mirroring asynchronously, do not return the future.
+      // The proxy is considered started and ready before the services are mirrored.
+      mirrorAllServicesUnsync();
+      return futurize();
+    });
 
-      if (!_status.current().isConnected())
-      {
-        qiLogVerbose() << "ServiceDirectoryProxy is not connected to the service directory, it "
-                          "will start listening once the connection is established.";
-        _status.set(ListenStatus::PendingConnection);
-        return futurize(_status.current().listen);
-      }
+  const auto listen =
+    _strand.unwrappedSchedulerFor([this, setReady](void*) {
+      const auto stateError =
+        unexpectedState(status, Status::Connecting,
+                        [](std::ostream& os) { os << "changing state to " << Status::Connected; });
+      if (stateError)
+        return makeFutureError<void>(*stateError);
+      status.set(Status::Connected);
+      return listenUnsync();
+    });
 
-      constexpr auto errorMsgPrefix =
-        "Exception caught while trying to instantiate the server, reason: ";
+  status.set(Status::Connecting);
 
-      using namespace ka::functional_ops;
-      const auto instantiateServerSession = [&]() -> boost::optional<std::string> {
-        qiLogVerbose() << "Instantiating server session.";
-        _status.set(ListenStatus::NotListening);
-        _servicesIdMap.clear();
-        _server.reset();
-        _server = createServerUnsync();
-        _status.set(ListenStatus::Starting);
-        return {};
-      };
-      const auto logError = ka::exception_message_t{}
-          | [&](const std::string& msg) -> boost::optional<std::string> {
-            const auto error = errorMsgPrefix + msg;
-            qiLogVerbose() << error;
-            return error;
-          };
-      const auto maybeError = ka::invoke_catch(logError, instantiateServerSession);
-      if (maybeError)
-      {
-        _status.set(ListenStatus::NotListening);
-        return makeFutureError<ListenStatus>(*maybeError);
-      }
-
-      qiLogVerbose() << "Starting server session listening on URL '" << url.str() << "'.";
-      return _server->listenStandalone(url).async()
-        .then(_strand.unwrappedSchedulerFor([=](Future<void> listenFut) {
-          if (listenFut.hasError())
-          {
-            _status.set(ListenStatus::NotListening);
-            std::ostringstream oss;
-            oss << "Error while trying to listen at '" << url.str() << "': " << listenFut.error();
-            const auto error = oss.str();
-            qiLogVerbose() << error;
-            return makeFutureError<ListenStatus>(error);
-          }
-          _status.set(ListenStatus::Listening);
-          return futurize(_status.current().listen);
-        })).unwrap();
-    }).unwrap();
+  // Connect then listen.
+  return connectUnsync()
+    .andThen(FutureCallbackType_Sync, listen).unwrap()
+    .andThen(FutureCallbackType_Sync, setReady).unwrap();
 }
 
-Future<ServiceDirectoryProxy::IdValidationStatus>
-ServiceDirectoryProxy::Impl::setValidateIdentity(const std::string& key, const std::string& crt)
+Future<void> ServiceDirectoryProxy::Impl::listenUnsync()
 {
-  return _strand.async([=] {
-        if (key.empty() || crt.empty())
-        {
-          _identity.reset();
-          return makeFutureError<IdValidationStatus>(
-              "Either the key or the certificate path is empty.");
-        }
-        _identity = Identity{ key, crt };
-        if (!_server)
-          return futurize(IdValidationStatus::PendingCheckOnListen);
-        return _server->setIdentity(key, crt) ?
-                   futurize(IdValidationStatus::Done) :
-                   makeFutureError<IdValidationStatus>(
-                       "ServiceDirectoryProxy identity was not accepted by the server.");
-      }).unwrap();
+  const auto stateError =
+    unexpectedState(status, Status::Connected,
+                    [](std::ostream& os) { os << "a call to listen"; });
+  if (stateError)
+  {
+    qiLogVerbose() << "Listen failure: " << *stateError;
+    return makeFutureError<void>(*stateError);
+  }
+
+  constexpr auto errorMsgPrefix =
+    "Exception caught while trying to instantiate the server, reason: ";
+
+  // The optional represents a potential error (here, there is none).
+  // This is for invocation through `invoke_catch`.
+  const auto instantiateServerSession = [&]() -> boost::optional<std::string> {
+    qiLogVerbose() << "Instantiating server session.";
+    _servicesIdMap.clear();
+    _server.reset();
+    _server = createServerUnsync();
+    return {};
+  };
+  const auto logError = ka::compose(
+      [&](const std::string& msg) -> boost::optional<std::string> {
+        const auto error = errorMsgPrefix + msg;
+        qiLogVerbose() << error;
+        return error;
+      }, ka::exception_message_t{});
+  const auto maybeError = ka::invoke_catch(logError, instantiateServerSession);
+  if (maybeError)
+  {
+    return makeFutureError<void>(*maybeError);
+  }
+
+  qiLogVerbose() << "Starting server session listening on URLs '"
+                 << prettified(&_config.listenUrls) << "'.";
+  return _server->listenStandalone().async();
 }
 
-Future<void> ServiceDirectoryProxy::Impl::setAuthProviderFactory(AuthProviderFactoryPtr provider)
+Future<void> ServiceDirectoryProxy::Impl::connectUnsync()
 {
-  return _strand.async([=] {
-    _authProviderFactory = provider;
-    if (_server)
-      _server->setAuthProviderFactory(placeholderIfNull(provider));
-  });
-}
-
-Future<void> ServiceDirectoryProxy::Impl::attachToServiceDirectory(const Url& sdUrl)
-{
-  if (!sdUrl.isValid()) return makeFutureError<void>("Invalid service directory URL");
-
-  return _strand.async([=] {
-      if (_status.current().connection != ConnectionStatus::NotConnected &&
-          _sdClient && sdUrl == _sdUrl)
-      {
-        return futurize();
-      }
-
-      _sdUrl = sdUrl;
-      return doAttachUnsync();
-    }).unwrap();
-}
-
-Future<void> ServiceDirectoryProxy::Impl::doAttachUnsync()
-{
-  if (!_sdUrl.isValid())
-    return makeFutureError<void>(
-      "Cannot attach to the service directory, the URL is invalid");
+  const auto stateError =
+    unexpectedState(status, Status::Connecting,
+                    [](std::ostream& os) { os << "a call to connect"; });
+  if (stateError)
+  {
+    qiLogVerbose() << "Connect failure: " << *stateError;
+    return makeFutureError<void>(*stateError);
+  }
 
   const auto disconnect = [=] {
     _sdClient.reset();
-    _status.set(ConnectionStatus::NotConnected);
   };
 
   const auto connect = [=] {
     return invokeLogProgress(
-      "Attaching to service directory at URL '" + _sdUrl.str() + "'", [&] {
+      "Attaching to service directory at URL '" + _config.serviceDirectoryUrl.str() + "'", [&] {
         disconnect();
 
         qiLogVerbose() << "Instantiating new service directory client session.";
-        _sdClient = makeSession();
-        _status.set(ConnectionStatus::Starting);
+        _sdClient = makeSession(sdClientConfig(_config));
 
-        return _sdClient->connect(_sdUrl)
-          .async()
+        return _sdClient->connect().async()
           .then(_strand.unwrappedSchedulerFor([=](Future<void> connectFut) {
             if (connectFut.hasError())
             {
@@ -546,7 +682,6 @@ Future<void> ServiceDirectoryProxy::Impl::doAttachUnsync()
             else
             {
               bindToServiceDirectoryUnsync();
-              _status.set(ConnectionStatus::Connected);
             }
             return connectFut;
           })).unwrap();
@@ -558,35 +693,30 @@ Future<void> ServiceDirectoryProxy::Impl::doAttachUnsync()
                           retryAttachDelay);
 }
 
-Future<ServiceDirectoryProxy::ServiceFilter> ServiceDirectoryProxy::Impl::setServiceFilter(
-    ServiceFilter filter)
+Future<void> ServiceDirectoryProxy::Impl::mirrorAllServicesUnsync()
 {
-  return _strand.async([=]() mutable {
-    swap(_serviceFilter, filter);
-    return filter;
-  });
-}
+  const auto stateError =
+    unexpectedState(status, Status::Ready,
+                    [](std::ostream& os) { os << "mirroring services"; });
+  if (stateError)
+    return makeFutureError<void>(*stateError);
 
-Future<void> ServiceDirectoryProxy::Impl::mirrorAllServices()
-{
-  return _strand.async([=] {
-        if (!_sdClient)
-          return makeFutureError<FutureMaybeMirroredIdMap>(notConnectedMirrorErrorMsg);
-        return invokeLogProgress(
-          "Mirroring services: requesting list of services from ServiceDirectory",
-          [&]{
-            return _sdClient->services().async();
-          }).andThen(_strand.unwrappedSchedulerFor([=](const std::vector<ServiceInfo>& services) {
-              using namespace boost::adaptors;
-              const auto mirroredIds =
-                services | transformed(([&](const ServiceInfo& serviceInfo) {
-                  const auto name = serviceInfo.name();
-                  return std::make_pair(name,
-                                        mirrorServiceFromSDUnsync(serviceInfo.serviceId(), name));
-                }));
-              return FutureMaybeMirroredIdMap{ begin(mirroredIds), end(mirroredIds) };
-            })).unwrap();
-      }).unwrap().andThen(&logAnyMirroringFailure);
+  QI_ASSERT_NOT_NULL(_sdClient);
+
+  return invokeLogProgress(
+      "Mirroring services: requesting list of services from ServiceDirectory",
+      [&]{
+        return _sdClient->services().async();
+      }).andThen(_strand.unwrappedSchedulerFor([=](const std::vector<ServiceInfo>& services) {
+          using namespace boost::adaptors;
+          const auto mirroredIds =
+            services | transformed(([&](const ServiceInfo& serviceInfo) {
+              const auto name = serviceInfo.name();
+              return std::make_pair(name,
+                                    mirrorServiceFromSDUnsync(serviceInfo.serviceId(), name));
+            }));
+          logAnyMirroringFailure(FutureMaybeMirroredIdMap{ begin(mirroredIds), end(mirroredIds) });
+        })).unwrap();
 }
 
 Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceFromSDUnsync(
@@ -615,7 +745,7 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync()
 {
   using ka::scoped;
   QI_ASSERT_TRUE(_sdClient);
-  qiLogVerbose() << "Binding to service directory at url '" << _sdUrl.str() << "'";
+  qiLogVerbose() << "Binding to service directory at url '" << _config.serviceDirectoryUrl.str() << "'";
 
   bool bindingSucceeded = false;
 
@@ -654,7 +784,7 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync()
                    qiLogVerbose()
                     << "The connection to the service directory has been lost (reason: '"
                     << reason << "').";
-                   resetUnsync();
+                   restartUnsync();
                  })),
              [&](const SignalSubscriber& sigSub) {
                if (!bindingSucceeded)
@@ -664,16 +794,9 @@ void ServiceDirectoryProxy::Impl::bindToServiceDirectoryUnsync()
   bindingSucceeded = true;
 }
 
-void ServiceDirectoryProxy::Impl::resetUnsync()
-{
-  qiLogVerbose() << "Resetting.";
-  closeUnsync();
-  doAttachUnsync();
-}
-
 bool ServiceDirectoryProxy::Impl::shouldMirrorServiceFromSDUnsync(const std::string& name) const
 {
-  return name != Session::serviceDirectoryServiceName() && !_serviceFilter(name);
+  return name != Session::serviceDirectoryServiceName() && !_config.filterService(name);
 }
 
 Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceToSDUnsync(
@@ -745,18 +868,16 @@ boost::optional<std::string> ServiceDirectoryProxy::Impl::immediateMirroringFail
     return skippedErrorMsg;
   }
 
-  if (!_status.current().isListening())
+  const auto currentStatus = status.get().value();
+  if (currentStatus != Status::Ready)
   {
-    qiLogVerbose() << notListeningMirrorErrorMsg;
-    return notListeningMirrorErrorMsg;
+    std::ostringstream oss;
+    oss << "proxy state is not " << Status::Ready << ", current state is " << currentStatus;
+    const auto error = oss.str();
+    qiLogVerbose() << "Cannot mirror service '" << name << "': " << error;
+    return error;
   }
   QI_ASSERT_TRUE(_server);
-
-  if (!_status.current().isConnected())
-  {
-    qiLogVerbose() << notConnectedMirrorErrorMsg;
-    return notConnectedMsgPrefix;
-  }
   QI_ASSERT_TRUE(_sdClient);
 
   return {};
@@ -844,14 +965,8 @@ Future<unsigned int> ServiceDirectoryProxy::Impl::mirrorServiceUnsync(
 SessionPtr ServiceDirectoryProxy::Impl::createServerUnsync()
 {
   using ka::scoped;
-  auto server = makeSession(_isEnforcedAuth);
 
-  if (_identity && !server->setIdentity(_identity->key, _identity->crt))
-  {
-    throw std::runtime_error{ "Invalid identity parameters : key: '" + _identity->key +
-                              "', crt: '" + _identity->crt + "'." };
-  }
-  server->setAuthProviderFactory(placeholderIfNull(_authProviderFactory));
+  auto server = makeSession(serverConfig(_config));
 
   bool connectSucceeded = false;
 
@@ -889,41 +1004,16 @@ namespace
   }
 }
 
-std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::IdValidationStatus status)
+std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::Status status)
 {
-  using Status = ServiceDirectoryProxy::IdValidationStatus;
+  using Status = ServiceDirectoryProxy::Status;
   switch (status)
   {
-    case Status::Done:                 out << "Done";                         break;
-    case Status::PendingCheckOnListen: out << "PendingCheckOnListen";         break;
-    default:                           printUnexpectedEnumValue(out, status); break;
-  }
-  return out;
-}
-
-std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::ListenStatus status)
-{
-  using Status = ServiceDirectoryProxy::ListenStatus;
-  switch (status)
-  {
-    case Status::NotListening:      out << "NotListening";                 break;
-    case Status::Listening:         out << "Listening";                    break;
-    case Status::Starting:          out << "Starting";                     break;
-    case Status::PendingConnection: out << "PendingConnection";            break;
-    default:                        printUnexpectedEnumValue(out, status); break;
-  }
-  return out;
-}
-
-std::ostream& operator<<(std::ostream& out, ServiceDirectoryProxy::ConnectionStatus status)
-{
-  using Status = ServiceDirectoryProxy::ConnectionStatus;
-  switch (status)
-  {
-    case Status::NotConnected: out << "NotConnected";                 break;
-    case Status::Connected:    out << "Connected";                    break;
-    case Status::Starting:     out << "Starting";                     break;
-    default:                   printUnexpectedEnumValue(out, status); break;
+    case Status::Initializing: out << "Initializing"; break;
+    case Status::Connecting:   out << "Connecting";   break;
+    case Status::Connected:    out << "Connected";    break;
+    case Status::Ready:        out << "Ready";        break;
+    default: printUnexpectedEnumValue(out, status); break;
   }
   return out;
 }

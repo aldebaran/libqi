@@ -6,6 +6,8 @@
 #include <ka/moveoncopy.hpp>
 #include <ka/utility.hpp>
 #include <ka/macroregular.hpp>
+#include <ka/opt.hpp>
+#include <ka/empty.hpp>
 #include <qi/url.hpp>
 #include <qi/future.hpp>
 #include <qi/clock.hpp>
@@ -21,21 +23,6 @@
 /// Contains functions and types related to socket connection.
 
 namespace qi { namespace sock {
-
-  /// Network N,
-  /// With NetSslSocket S and Mutable<S> M:
-  ///   S is compatible with N,
-  ///   Procedure<M ()> Proc
-  template<typename N, typename Proc>
-  auto createSocket(SslEnabled ssl, Proc makeSocket) -> decltype(makeSocket())
-  {
-    auto socket = makeSocket();
-    if (*ssl)
-    {
-      (*socket).set_verify_mode(N::sslVerifyNone());
-    }
-    return socket;
-  }
 
   /// Network N,
   /// With NetSslSocket S and Mutable<S> M:
@@ -106,8 +93,8 @@ namespace qi { namespace sock {
   /// Usage:
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// ConnectSocket<N, S> connect{ioService};
-  /// connect(Url{"tcp://1.2.3.4:9876"}, handler,
-  ///   SslEnabled{false}, IpV6Enabled{false});
+  /// connect(Url{"tcp://1.2.3.4:9876"}, makeSocket,
+  ///   IpV6Enabled{false}, HandshakeSide<S>::Client, handler);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///
   /// The handler signature must be callable as:
@@ -120,9 +107,9 @@ namespace qi { namespace sock {
   /// The object must be alive until the connecting process is complete.
   /// That is, you must _not_ write:
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  /// void connectNonSsl(IoService& io, Url url, Handler handler) {
+  /// void connect(IoService& io, Url url, M makeSocket) {
   ///   ConnectSocket connect{io};
-  ///   connect(url, handler, SslEnabled{false}, IpV6Enabled{false});
+  ///   connect(url, makeSocket, ...);
   /// }
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// because the connecting process could exceed in time the ConnectSocket
@@ -131,9 +118,10 @@ namespace qi { namespace sock {
   /// Example: stopping connection
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   /// Promise<void> promiseStop;
-  /// ConnectSocket<N> connect{ioService};
-  /// connect(Url{"tcp://1.2.3.4:9876"}, handler,
-  ///   SslEnabled{false}, IpV6Enabled{false},
+  /// ConnectSocket<N, S> connect{ioService};
+  /// connect(Url{"tcp://1.2.3.4:9876"}, makeSocket,
+  ///   IpV6Enabled{false}, HandshakeSide<S>::Client,
+  ///   handler, qi::Seconds{ 2 },
   ///   makeSetupConnectionStop<N>{promiseStop.future());
   /// // ...
   /// promiseStop.setValue(nullptr);
@@ -167,12 +155,13 @@ namespace qi { namespace sock {
     ///   Procedure<void (ErrorCode<N>, M)> Proc1,
     ///   Procedure<void (Resolver<N>& || M)> Proc2
     template<typename Proc0, typename Proc1, typename Proc2 = ka::constant_function_t<void>>
-    void operator()(const Url& url, SslEnabled ssl, Proc0 makeSocket,
+    void operator()(const Url& url, Proc0 makeSocket,
         IpV6Enabled ipV6, Handshake side, Proc1 onComplete,
         const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
         Proc2 setupStop = Proc2{})
     {
       using namespace ka;
+      SslEnabled ssl = isWithTls(tcpScheme(url).value_or(TcpScheme::Raw));
       _resolve(url, ipV6,
         [=](const ErrorCode<N>& erc, const OptionalEntry& entry) mutable { // onResolved
           if (erc)
@@ -186,7 +175,7 @@ namespace qi { namespace sock {
             return;
           }
           auto createAndConnectSocket = [&]() {
-            auto socket = createSocket<N>(ssl, makeSocket);
+            auto socket = makeSocket();
             connect<N>(socket, entry.value(), onComplete, ssl, side, tcpPingTimeout, setupStop);
           };
 
@@ -295,12 +284,11 @@ namespace qi { namespace sock {
     ///   Procedure<M ()> Proc0,
     ///   Procedure<void (Resolver<N>& || M)> Proc1
     template<typename Proc0, typename Proc1 = ka::constant_function_t<void>>
-    void operator()(const Url& url, SslEnabled ssl, Proc0 makeSocket, IpV6Enabled ipV6,
+    void operator()(const Url& url, Proc0 makeSocket, IpV6Enabled ipV6,
       Handshake side, const boost::optional<Seconds>& tcpPingTimeout = boost::optional<Seconds>{},
       Proc1 setupStop = {})
     {
-      _connect(url, ssl, makeSocket, ipV6, side, ConnectHandler<N, S>{_complete},
-               tcpPingTimeout, setupStop);
+      _connect(url, makeSocket, ipV6, side, ConnectHandler<N, S>{_complete}, tcpPingTimeout, setupStop);
     }
 
     /// Use this overload if the socket is available _and_ already connected (this

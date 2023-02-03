@@ -17,13 +17,18 @@ KA_WARNING_DISABLE(4355, )
 qiLogCategory("qimessaging.sessionservice");
 
 namespace qi {
-
-  Session_Service::Session_Service(TransportSocketCache* socketCache,
-                                   ServiceDirectoryClient* sdClient, ObjectRegistrar* server, bool enforceAuth)
+  Session_Service::Session_Service(
+    TransportSocketCache* socketCache,
+    ServiceDirectoryClient* sdClient,
+    ObjectRegistrar* server,
+    boost::optional<ClientAuthenticatorFactoryPtr> clientAuthenticatorFactory)
     : _socketCache(socketCache)
     , _sdClient(sdClient)
     , _server(server)
-    , _enforceAuth(enforceAuth)
+    // Even if authentication is disabled, the factory is used to instantiate an authenticator.
+    // We initialize the factory with one that creates authenticators that do nothing.
+    , _authFactory(clientAuthenticatorFactory.value_or_eval(boost::make_shared<NullClientAuthenticatorFactory>))
+    , _enforceAuth(clientAuthenticatorFactory.has_value())
   {
     _sdClient->serviceRemoved.connect(track([this](unsigned int index, const std::string& service) -> void
     {

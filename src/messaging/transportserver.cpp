@@ -14,6 +14,7 @@ KA_WARNING_DISABLE(4355, )
 #include <queue>
 #include <qi/log.hpp>
 #include <qi/os.hpp>
+#include <qi/messaging/ssl/ssl.hpp>
 #include <cerrno>
 
 #ifdef _WIN32
@@ -31,7 +32,8 @@ qiLogCategory("qimessaging.transportserver");
 
 namespace qi
 {
-  TransportServer::TransportServer()
+  TransportServer::TransportServer(ssl::ServerConfig sslConfig)
+    : _sslConfig(std::move(sslConfig))
   {
   }
 
@@ -42,17 +44,15 @@ namespace qi
 
   qi::Future<void> TransportServer::listen(const qi::Url &url, qi::EventLoop* ctx)
   {
-    TransportServerImplPtr impl;
-    if (url.protocol() == "tcp" || url.protocol() == "tcps")
+    const auto scheme = tcpScheme(url);
+    if (!scheme)
     {
-      impl = TransportServerAsioPrivate::make(this, ctx);
-    }
-    else
-    {
-      const char* s = "Unrecognized protocol to create the TransportServer.";
+      const std::string s = "cannot create TCP server from unrecognized scheme in URL '" + url.str() + "'";
       qiLogError() << s;
       return qi::makeFutureError<void>(s);
     }
+
+    auto impl = TransportServerAsioPrivate::make(this, ctx);
     {
       boost::mutex::scoped_lock l(_implMutex);
       _impl.push_back(impl);
@@ -60,37 +60,14 @@ namespace qi
     return impl->listen(url);
   }
 
-  bool TransportServer::setIdentity(const std::string& key, const std::string& crt)
+  std::vector<qi::Uri> TransportServer::endpoints() const
   {
-    struct ::stat status;
-    if (qi::os::stat(key.c_str(), &status) != 0)
-    {
-      qiLogError() << "stat of \"" << key << "\": " << strerror(errno);
-      return false;
-    }
-
-    if (qi::os::stat(crt.c_str(), &status) != 0)
-    {
-      qiLogError() << "stat of \"" << crt << "\": " << strerror(errno);
-      return false;
-    }
-
-    _identityCertificate = crt;
-    _identityKey = key;
-
-    return true;
-  }
-
-  std::vector<qi::Url> TransportServer::endpoints() const
-  {
-    std::vector<qi::Url> r;
+    std::vector<qi::Uri> r;
     boost::mutex::scoped_lock l(_implMutex);
-    for (std::vector<TransportServerImplPtr>::const_iterator it = _impl.begin();
-         it != _impl.end();
-         it++)
+    for (const auto& impl : _impl)
     {
-      boost::mutex::scoped_lock l((*it)->_endpointsMutex);
-      r.insert(r.end(), (*it)->_endpoints.begin(), (*it)->_endpoints.end());
+      boost::mutex::scoped_lock l(impl->_endpointsMutex);
+      r.insert(r.end(), impl->_endpoints.begin(), impl->_endpoints.end());
     }
 
     return r;

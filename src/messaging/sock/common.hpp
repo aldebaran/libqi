@@ -10,6 +10,7 @@
 #include <qi/trackable.hpp>
 #include <qi/future.hpp>
 #include <qi/url.hpp>
+#include <qi/messaging/tcpscheme.hpp>
 #include "concept.hpp"
 #include "traits.hpp"
 #include "option.hpp"
@@ -25,12 +26,52 @@ namespace qi { namespace sock {
   /// The URL of the endpoint
   /// NetEndpoint E
   template<typename E>
-  Url url(const E& ep, SslEnabled ssl)
+  Url url(const E& ep, TcpScheme scheme)
   {
     return Url{
       ep.address().to_string(),
-      *ssl ? "tcps" : "tcp",
+      to_string(scheme),
       ep.port()};
+  }
+
+  /// Returns the verify mode for SSL according to the type of peer and the target TCP scheme.
+  /// Verifications are disabled in raw TCP and TCP with TLS, but enabled on both sides
+  /// when targeting TCP with mutual authentication TLS.
+  ///
+  /// Network N,
+  /// With NetSslSocket S and Mutable<S> M:
+  ///   S is compatible with N,
+  ///   HandshakeSide<S> H,
+  template<typename N, typename H>
+  SslVerifyMode<N> sslVerifyMode(H side, TcpScheme tcpScheme)
+  {
+    switch (side)
+    {
+      // Even though server-side and client-side semantics are identical for now, the client-side
+      // semantics may diverge in the future. The client case is unusual (in TLS, it's unusual to not
+      // at least verify the server certificate) and should not be thought as identical to the server
+      // case.
+      // Currently, both the server and the client only verify the certificate of the peer in mutual
+      // authentication TLS. The client could also check the certificate of the server in standard
+      // TLS, but in order to keep a backward compatibility with our current tools, we disable it.
+      case H::server:
+      case H::client:
+        switch (tcpScheme)
+        {
+          case TcpScheme::Raw:
+          case TcpScheme::Tls:
+            return N::sslVerifyNone();
+          case TcpScheme::MutualTls:
+            return N::sslVerifyPeer() | N::sslVerifyFailIfNoPeerCert();
+          default:
+            QI_ASSERT_UNREACHABLE();
+            throw std::domain_error("unexpected TcpScheme value");
+        }
+        break;
+      default:
+        QI_ASSERT_UNREACHABLE();
+        throw std::domain_error("unexpected HandshakeSide value");
+    }
   }
 
   /// A polymorphic transformation that takes a procedure and returns a

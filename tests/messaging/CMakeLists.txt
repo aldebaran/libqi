@@ -1,3 +1,5 @@
+add_subdirectory(libtestssl)
+
 # A helper library to test two sessions communicating in various modes
 add_subdirectory(libtestsession)
 
@@ -10,11 +12,11 @@ if(QI_WITH_TESTS)
 
   # A separate binary that runs a simple service directory
   # Takes arguments supported by qi::ApplicationSession
-  qi_create_test_helper(simplesd "simplesd.cpp" DEPENDS qi)
+  qi_create_test_helper(simplesd "simplesd.cpp" DEPENDS qi testssl)
 
   # A separate binary that runs a service directory mirroring the target
   # Takes arguments supported by qi::ApplicationSession
-  qi_create_test_helper(mirrorsd "mirrorsd.cpp" DEPENDS qi)
+  qi_create_test_helper(mirrorsd "mirrorsd.cpp" DEPENDS qi testssl)
 
   # A separate binary that registers a service on a service directory
   # Takes arguments supported by qi::ApplicationSession
@@ -24,6 +26,7 @@ if(QI_WITH_TESTS)
     "remoteserviceowner.cpp"
   DEPENDS
     qi
+    testssl
   )
 
   qi_stage_dir(".")
@@ -41,6 +44,7 @@ if(QI_WITH_TESTS)
     "test_messaging.cpp" # main
     "test_metavalue_argument.cpp"
     "test_sd.cpp"
+    "test_ssl.cpp"
     "test_uri.cpp"
     "test_url.cpp"
 #    "test_with_gateway.cpp" # TODO: repair
@@ -52,7 +56,7 @@ if(QI_WITH_TESTS)
     DEPENDS
     qi
     qitestutils
-
+    testssl
     TIMEOUT 120
   )
 
@@ -119,6 +123,8 @@ set(MESSAGING_SOURCES
   "../../src/messaging/transportsocketcache.cpp"
   "../../src/messaging/servicedirectory.cpp"
   "../../src/messaging/server.cpp"
+  "../../src/messaging/tcpscheme.cpp"
+  "../../src/messaging/sock/networkasio.cpp"
 )
 
 qi_create_gmock(
@@ -126,6 +132,7 @@ qi_create_gmock(
 
   "test_messaging_internal.cpp"
   "test_remoteobject.cpp"
+  "test_tcpscheme.cpp"
   "test_transportsocketcache.cpp"
   "sock/networkmock.cpp"
   "sock/networkmock.hpp"
@@ -144,7 +151,16 @@ qi_create_gmock(
   DEPENDS
   qi
   qitestutils
+  testssl
+  TIMEOUT 120
+)
 
+qi_create_gmock(
+  test_url
+    "test_url.cpp"
+  DEPENDS
+    qi
+    qitestutils
   TIMEOUT 120
 )
 

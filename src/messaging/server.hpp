@@ -222,7 +222,8 @@ namespace qi
   class Server : private boost::noncopyable
   {
   public:
-    Server(bool enforceAuth = false);
+    Server(ssl::ServerConfig sslConfig,
+           boost::optional<AuthProviderFactoryPtr> authProviderFactory);
     ~Server();
 
     /// @see `TransportServer::listen`
@@ -236,9 +237,6 @@ namespace qi
     /// Notifies the server that it's up again.
     /// @post The server is not dying.
     Future<bool> open();
-
-    /// @see `TransportServer::setIdentity`
-    Future<bool> setIdentity(const std::string& key, const std::string& crt);
 
     /// @returns True if the object is not null, an object did not exist already for this service id
     /// and the object was succesfully added.
@@ -257,7 +255,7 @@ namespace qi
     Future<bool> addOutgoingSocket(MessageSocketPtr socket);
 
     /// @see `TransportServer::endpoints`
-    Future<UrlVector> endpoints() const;
+    Future<std::vector<qi::Uri>> endpoints() const;
 
     Future<void> setAuthProviderFactory(AuthProviderFactoryPtr factory);
 

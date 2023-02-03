@@ -124,7 +124,7 @@ TEST(NetAcceptConnectionContinuous, SuccessWithListenAsio)
   );
   using Side = HandshakeSide<S>;
   ConnectSocketFuture<N, S> connect{io};
-  connect(url(localEndpoint.future().value(), SslEnabled{false}), SslEnabled{false}, makeSocket,
+  connect(url(localEndpoint.future().value(), TcpScheme::Raw), makeSocket,
           IpV6Enabled{false}, Side::client);
   ASSERT_EQ(FutureState_FinishedWithValue, connect.complete().waitFor(defaultTimeout)) << connect.complete().error();
 

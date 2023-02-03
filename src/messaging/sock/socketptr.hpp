@@ -25,20 +25,20 @@ namespace qi { namespace sock {
   /// lifetime of the SslContext.
   ///
   /// Network N
-  template<typename N>
-  SslSocketPtr<N> makeSslSocketPtr(IoService<N>& io, SslContext<N>& context)
+  template<typename N, typename Arg>
+  SslSocketPtr<N> makeSslSocketPtr(Arg&& arg, SslContext<N>& context)
   {
-    return boost::make_shared<SslSocket<N>>(io, context);
+    return boost::make_shared<SslSocket<N>>(std::forward<Arg>(arg), context);
   }
 
   /// Constructs a SocketWithContext that will ensure that the SslContext shares the
   /// lifetime of the socket.
   ///
   /// Network N
-  template<typename N>
-  SocketWithContextPtr<N> makeSocketWithContextPtr(IoService<N>& io, const SslContextPtr<N>& context)
+  template<typename N, typename... Args>
+  SocketWithContextPtr<N> makeSocketWithContextPtr(Args&&... args)
   {
-    return boost::make_shared<SocketWithContext<N>>(io, context);
+    return boost::make_shared<SocketWithContext<N>>(std::forward<Args>(args)...);
   }
 }} // namespace qi::sock
 
