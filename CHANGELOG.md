@@ -1,6 +1,13 @@
 libqi Change Log
 =================
 
+libqi 3.0.1
+-----------
+
+This version fixes a number of internal memory errors, including bad accesses
+and leaks. It also corrects an error concerning Unicode characters and locales
+in JSON serialization.
+
 libqi 3.0.0
 -----------
 
