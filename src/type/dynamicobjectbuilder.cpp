@@ -19,21 +19,24 @@ namespace qi
   public:
     DynamicObjectBuilderPrivate()
       : _object(new DynamicObject())
-      , _deleteOnDestroy(true)
+      , _isObjectOwner(true)
       , _objptr()
     {}
 
-    DynamicObjectBuilderPrivate(DynamicObject *dynobject, bool deleteOnDestroy)
+    DynamicObjectBuilderPrivate(DynamicObject *dynobject, bool isObjectOwner)
       : _object(dynobject)
-      , _deleteOnDestroy(deleteOnDestroy)
+      , _isObjectOwner(isObjectOwner)
       , _objptr()
     {}
 
     ~DynamicObjectBuilderPrivate()
-    {}
+    {
+      if (_isObjectOwner)
+        delete _object;
+    }
 
     DynamicObject* _object;
-    bool           _deleteOnDestroy;
+    bool           _isObjectOwner;
     AnyObject      _objptr;
   };
 
@@ -42,8 +45,8 @@ namespace qi
   {
   }
 
-  DynamicObjectBuilder::DynamicObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy)
-    : _p(new DynamicObjectBuilderPrivate(dynobject, deleteOnDestroy))
+  DynamicObjectBuilder::DynamicObjectBuilder(DynamicObject *dynobject, bool isObjectOwner)
+    : _p(new DynamicObjectBuilderPrivate(dynobject, isObjectOwner))
   {}
 
   DynamicObjectBuilder::~DynamicObjectBuilder()
@@ -188,8 +191,11 @@ namespace qi
   {
     if (!_p->_objptr)
     {
-      _p->_objptr = makeDynamicAnyObject(_p->_object, _p->_deleteOnDestroy,
-                                         boost::optional<ObjectUid>{}, onDelete);
+      _p->_objptr = makeDynamicAnyObject(_p->_object,
+                                         _p->_isObjectOwner,
+                                         _p->_object->uid(), onDelete);
+      // The ownership of the object is moved from the builder to the constructed `AnyObject`.
+      _p->_isObjectOwner = false;
       _p->_object->setManageable(_p->_objptr.asGenericObject());
     }
     return _p->_objptr;

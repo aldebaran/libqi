@@ -101,17 +101,16 @@ qi::AnyObject makeStaticObjWithThreadModel(EventObject &obj, qi::ObjectThreading
 
 TEST(TestEventLoop, Basic)
 {
-  void* mainId = new TID(boost::this_thread::get_id());
+  auto mainId = boost::this_thread::get_id();
   qi::AnyObject o1 = makeDynamicObj();
   // Call is synchronous, no reason not to
-  ASSERT_TRUE(o1.call<bool>("sameThread", reinterpret_cast<RawTID>(mainId)));
+  ASSERT_TRUE(o1.call<bool>("sameThread", reinterpret_cast<RawTID>(&mainId)));
   // FIXME more!
 }
 
 
 TEST(TestThreadModel, notThreadSafe)
 {
-  new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObjWithThreadModel(qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
   qi::Future<void> f1 = o1.async<void>("delayms", qi::MilliSeconds{ 150 });
@@ -124,7 +123,6 @@ TEST(TestThreadModel, notThreadSafe)
 
 TEST(TestThreadModel, ThreadSafe)
 {
-  new TID(boost::this_thread::get_id());
   qi::AnyObject o1 = makeDynamicObjWithThreadModel(qi::ObjectThreadingModel_MultiThread);
   qi::int64_t start = qi::os::ustime();
   qi::Future<void> f1 = o1.async<void>("delaymsThreadSafe", qi::MilliSeconds{ 150 });
@@ -155,7 +153,6 @@ TEST(TestThreadModel, MethodModel)
 
 TEST(TestThreadModelStatic, notThreadSafeObjectStatic)
 {
-  new TID(boost::this_thread::get_id());
   EventObject e;
   qi::AnyObject o1 = makeStaticObjWithThreadModel(e, qi::ObjectThreadingModel_SingleThread);
   qi::int64_t start = qi::os::ustime();
@@ -169,7 +166,6 @@ TEST(TestThreadModelStatic, notThreadSafeObjectStatic)
 
 TEST(TestThreadModelStatic, ThreadSafe)
 {
-  new TID(boost::this_thread::get_id());
   EventObject e;
   qi::AnyObject o1 = makeStaticObjWithThreadModel(e, qi::ObjectThreadingModel_MultiThread);
   qi::int64_t start = qi::os::ustime();

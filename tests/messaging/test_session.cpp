@@ -456,7 +456,12 @@ TEST(TestSession, GetCallInConnect)
 
   client->close();
   Promise<bool> callbackFinishedPromise;
+  auto weakClient = ka::weak_ptr(client);
   client->connected.connect([=]() mutable {
+    auto client = weakClient.lock();
+    if (!client)
+      return;
+
     const bool result = client->services().hasValue();
     callbackFinishedPromise.setValue(result);
   });

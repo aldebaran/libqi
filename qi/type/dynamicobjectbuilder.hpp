@@ -19,7 +19,7 @@ namespace qi {
   {
   public:
     DynamicObjectBuilder();
-    DynamicObjectBuilder(DynamicObject *dynobject, bool deleteOnDestroy = true);
+    DynamicObjectBuilder(DynamicObject *dynobject, bool isObjectOwner = true);
 
     ~DynamicObjectBuilder();
 

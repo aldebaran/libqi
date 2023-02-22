@@ -436,9 +436,8 @@ TEST(SendObject, connect_to_object_taken_from_connect)
   actuation.connect("humanProperty",
                     boost::function<void(qi::AnyObject)>([=](qi::AnyObject human) mutable
   {
-    // explicitly capture human in the lambda to keep it alive
     human.connect("name",
-                  boost::function<void(const std::string&)>([named, human](const std::string&) mutable
+                  boost::function<void(const std::string&)>([named](const std::string&) mutable
     {
       named.setValue(true);
     }));

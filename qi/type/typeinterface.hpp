@@ -148,12 +148,19 @@ namespace qi{
     /// Get the type of the pointed element
     virtual TypeInterface* pointedType() = 0;
     /// Get the pointed element (must not be destroyed)
+    /// @throws A `NullPtrException` if the pointer is null.
     virtual AnyReference dereference(void* storage) = 0;
     /// Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void set(void** storage, AnyReference pointer) = 0;
     /// Set new pointee value. pointer must be a *pointer* to type pointedType()
     virtual void setPointee(void** storage, void* pointer) = 0;
     TypeKind kind() override { return TypeKind_Pointer; }
+  };
+
+  /// This exception type denotes an attempt at dereferencing a null pointer.
+  struct NullPtrException : std::runtime_error
+  {
+    NullPtrException();
   };
 
   /**
