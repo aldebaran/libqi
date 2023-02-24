@@ -46,13 +46,13 @@ void onFire2(const int& pl)
   payload2->setValue(pl);
 }
 
-void callbackCounter(const int& value)
+void callbackCounter(const int&)
 {
   ++i;
   std::cout << "callback called " << i._value <<" times" << std::endl;
 }
 
-void callbackCounterBis(const int& value, std::string secondValue)
+void callbackCounterBis(const int&, std::string)
 {
   ++i;
   std::cout << "callback called " << i.load() <<" times" << std::endl;

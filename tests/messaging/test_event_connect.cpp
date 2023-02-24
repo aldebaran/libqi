@@ -16,12 +16,12 @@ static qi::Atomic<int> lastPayload;
 static qi::Atomic<int> lastPayload2;
 static qi::Atomic<int> completed;
 
-void onFire(const int& pl, qi::Promise<void>& p)
+void onFire(const int& /*pl*/, qi::Promise<void>& p)
 {
   ++lastPayload;
   p.setValue(0);
 }
-void onFire2(const int& pl, qi::Promise<void>& p)
+void onFire2(const int& /*pl*/, qi::Promise<void>& p)
 {
   ++lastPayload2;
   p.setValue(0);

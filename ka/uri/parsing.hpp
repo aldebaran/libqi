@@ -413,7 +413,7 @@ namespace detail {
   }
 
   template<typename R, typename F, typename... T> constexpr
-  auto fold_impl(R val, F&& op, ka::product_t<T...> const& t, index_sequence<>) -> R {
+  auto fold_impl(R val, F&&, ka::product_t<T...> const&, index_sequence<>) -> R {
     return val;
   }
 

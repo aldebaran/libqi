@@ -366,7 +366,7 @@ namespace detail {
   }
 
   constexpr
-  auto unwrap_product(product_t<> prod) noexcept -> ka::product_t<> {
+  auto unwrap_product(product_t<>) noexcept -> ka::product_t<> {
     return {};
   }
 } // namespace detail

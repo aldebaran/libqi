@@ -81,7 +81,7 @@ namespace qi {
     trackMap.erase(it);
   }
 
-  Future<bool> SignalBasePrivate::disconnectAllStep(bool overallSuccess)
+  Future<bool> SignalBasePrivate::disconnectAllStep(bool /*overallSuccess*/)
   {
     FutureBarrier<bool> barrier;
     while (true)

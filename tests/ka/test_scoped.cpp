@@ -258,7 +258,7 @@ TEST(Scoped, NoMoveOperationWhenValueOrFunctionIsNotMoveableVoid) {
 
 struct dummy_t {
   KA_GENERATE_FRIEND_REGULAR_OPS_0(dummy_t)
-  void operator()(int i) const {
+  void operator()(int) const {
   }
 };
 

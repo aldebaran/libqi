@@ -743,7 +743,7 @@ TYPED_TEST(NetMessageSocket, ConnectFailsOnVerifyModeSetFailure)
   // Next verify mode set will fail.
   auto _ = ka::scoped_set_and_restore(
     N::ssl_context_type::set_verify_mode,
-    [](SslVerifyMode<N> newMode) {
+    [](SslVerifyMode<N>) {
       throw std::runtime_error("failed to set the verify mode");
     }
   );
@@ -1347,7 +1347,7 @@ TEST_F(NetMessageSocketAsioTcpMutualTls,
       test::ssl::serverConfig(test::ssl::server(), test::ssl::rootCA()),
       []{
         auto cfg = test::ssl::clientConfig(test::ssl::client(), test::ssl::rootCA());
-        cfg.verifyCallback = [](bool ok, ::X509_STORE_CTX&, const std::string&) -> bool {
+        cfg.verifyCallback = [](bool /*ok*/, ::X509_STORE_CTX&, const std::string&) -> bool {
           throw 42;
         };
         return cfg;
@@ -1364,7 +1364,7 @@ TEST_F(NetMessageSocketAsioTcpMutualTls,
   const auto connect = connectClientToServer(
       []{
         auto cfg = test::ssl::serverConfig(test::ssl::server(), test::ssl::rootCA());
-        cfg.verifyCallback = [](bool ok, ::X509_STORE_CTX&, boost::asio::ip::tcp::endpoint) -> bool {
+        cfg.verifyCallback = [](bool /*ok*/, ::X509_STORE_CTX&, boost::asio::ip::tcp::endpoint) -> bool {
           throw 42;
         };
         return cfg;

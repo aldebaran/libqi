@@ -450,12 +450,12 @@ namespace qi
     reinterpret_cast<DynamicObject*>(instance)->metaPost(context, signal, params);
   }
 
-  qi::Future<SignalLink> DynamicObjectTypeInterface::connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber)
+  qi::Future<SignalLink> DynamicObjectTypeInterface::connect(void* instance, AnyObject /*context*/, unsigned int event, const SignalSubscriber& subscriber)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaConnect(event, subscriber);
   }
 
-  qi::Future<void> DynamicObjectTypeInterface::disconnect(void* instance, AnyObject context, SignalLink linkId)
+  qi::Future<void> DynamicObjectTypeInterface::disconnect(void* instance, AnyObject /*context*/, SignalLink linkId)
   {
     return reinterpret_cast<DynamicObject*>(instance)->metaDisconnect(linkId);
   }

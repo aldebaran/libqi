@@ -69,7 +69,7 @@ TestSessionPair::TestSessionPair(TestMode::Mode mode, std::string sdUrl)
   }
 }
 
-TestSessionPair::TestSessionPair(ShareServiceDirectory_tag t,
+TestSessionPair::TestSessionPair(ShareServiceDirectory_tag,
                                  const TestSessionPair& other,
                                  TestMode::Mode mode)
   : TestSessionPair(mode == TestMode::Mode_Gateway ?

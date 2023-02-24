@@ -237,7 +237,7 @@ struct FutureValueConverter<T, qi::AnyValue>
 template <>
 struct FutureValueConverter<void, qi::AnyValue>
 {
-  void operator()(void *in, qi::AnyValue &out)
+  void operator()(void* /*in*/, qi::AnyValue& out)
   {
     out = qi::AnyValue::make<void>();
   }

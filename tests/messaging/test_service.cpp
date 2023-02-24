@@ -215,7 +215,8 @@ public:
   qi::Property<int> prop;
 };
 
-void inc (qi::Atomic<int>* daInt, int unused)
+// Second parameter is unused, increment step is always 1.
+void inc (qi::Atomic<int>* daInt, int)
 {
   ++(*daInt);
 }

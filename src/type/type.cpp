@@ -152,12 +152,12 @@ namespace qi {
     QI_THROW_OP_NOT_IMPL(methods);
   }
 
-  FieldInfo       AnyType::method(const uint32_t id) {
+  FieldInfo       AnyType::method(const uint32_t /*id*/) {
     return FieldInfo();
     QI_THROW_OP_NOT_IMPL(method);
   }
 
-  FieldInfoVector AnyType::methodOverloads(const std::string& name) {
+  FieldInfoVector AnyType::methodOverloads(const std::string& /*name*/) {
     FieldInfoVector ret;
     return ret;
     QI_THROW_OP_NOT_IMPL(methodOverloads);
@@ -175,7 +175,7 @@ namespace qi {
     QI_THROW_OP_NOT_IMPL(sigs);
   }
 
-  FieldInfo       AnyType::signal(const uint32_t id) {
+  FieldInfo       AnyType::signal(const uint32_t /*id*/) {
     switch(kind()) {
     case TypeKind_Object:
       //TODO
@@ -186,7 +186,7 @@ namespace qi {
     QI_THROW_OP_NOT_IMPL(signal);
   }
 
-  FieldInfo       AnyType::signal(const std::string& id) {
+  FieldInfo       AnyType::signal(const std::string& /*id*/) {
     switch(kind()) {
     case TypeKind_Object:
       //TODO
@@ -210,7 +210,7 @@ namespace qi {
     QI_THROW_OP_NOT_IMPL(properties);
   }
 
-  FieldInfo       AnyType::property(const uint32_t id) {
+  FieldInfo       AnyType::property(const uint32_t /*id*/) {
     switch(kind()) {
     case TypeKind_Object:
       //TODO
@@ -221,7 +221,7 @@ namespace qi {
     QI_THROW_OP_NOT_IMPL(property);
   }
 
-  FieldInfo       AnyType::property(const std::string& name) {
+  FieldInfo       AnyType::property(const std::string& /*name*/) {
     switch(kind()) {
     case TypeKind_Object:
       return FieldInfo();

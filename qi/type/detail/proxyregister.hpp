@@ -58,22 +58,22 @@ public:
     return ptr->asObject().uid();
   }
 
-  qi::Future<AnyReference> metaCall(void* instance, AnyObject context, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override
+  qi::Future<AnyReference> metaCall(void* instance, AnyObject /*context*/, unsigned int method, const GenericFunctionParameters& params, MetaCallType callType, Signature returnSignature) override
   {
     Proxy* ptr = toProxy(instance);
     return ptr->asObject().metaCall(method, params, callType, returnSignature);
   }
-  void metaPost(void* instance, AnyObject context, unsigned int signal, const GenericFunctionParameters& params) override
+  void metaPost(void* instance, AnyObject /*context*/, unsigned int signal, const GenericFunctionParameters& params) override
   {
     Proxy* ptr = toProxy(instance);
     ptr->asObject().metaPost(signal, params);
   }
-  qi::Future<SignalLink> connect(void* instance, AnyObject context, unsigned int event, const SignalSubscriber& subscriber) override
+  qi::Future<SignalLink> connect(void* instance, AnyObject /*context*/, unsigned int event, const SignalSubscriber& subscriber) override
   {
     Proxy* ptr = toProxy(instance);
     return ptr->asObject().connect(event, subscriber);
   }
-  qi::Future<void> disconnect(void* instance, AnyObject context, SignalLink linkId) override
+  qi::Future<void> disconnect(void* instance, AnyObject /*context*/, SignalLink linkId) override
   {
      Proxy* ptr = toProxy(instance);
      return ptr->asObject().disconnect(linkId);

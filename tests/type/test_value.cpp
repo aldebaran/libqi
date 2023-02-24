@@ -948,7 +948,7 @@ struct ColorA
 };
 
 // only allow drop of a if it equals 1
-bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& fields,
+bool colorDropHandler(std::map<std::string, ::qi::AnyValue>& /*fields*/,
                       const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
                       const std::map<std::string, ::qi::AnyReference>& dropfields)
 {

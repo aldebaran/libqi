@@ -636,7 +636,7 @@ namespace qi
     /* Logs data for level #LEVEL */                                     \
     /* TODO: Make variadic when C++ version >= 17. */                    \
     template<typename T, typename U, typename V, typename W>             \
-    void exceptionLogImpl(ka::int_constant_t<LogLevel_ ## LEVEL> x,      \
+    void exceptionLogImpl(ka::int_constant_t<LogLevel_ ## LEVEL> /* level*/, \
       const T& category, const U& prefix, const V& except, const W& msg) \
     {                                                                    \
       qiLog ## LEVEL(category) << prefix << except << msg;               \

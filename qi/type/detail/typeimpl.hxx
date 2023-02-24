@@ -38,7 +38,7 @@ namespace qi
     struct TypeTraitCreate<T, false>
     {
       static void* create() { typeFail(qi::typeId<T>().name(), "default constructor"); return 0;}
-      static void createInPlace(void* ptr) {typeFail(qi::typeId<T>().name(), "default constructor");}
+      static void createInPlace(void* /*ptr*/) {typeFail(qi::typeId<T>().name(), "default constructor");}
     };
 
     template<typename T, bool b>
@@ -53,9 +53,9 @@ namespace qi
     struct TypeTraitCopy<T, false>
     {
       template<typename T1, typename T2>
-      static void copy(const T1& d, const T2&s) {typeFail(qi::typeId<T>().name(), "copy operator");}
-      static void* clone(void* src) { typeFail(qi::typeId<T>().name(), "clone"); return 0;}
-      static void cloneInPlace(void* ptr, void* src) { typeFail(qi::typeId<T>().name(), "clone");}
+      static void copy(const T1&, const T2&) {typeFail(qi::typeId<T>().name(), "copy operator");}
+      static void* clone(void* /*src*/) { typeFail(qi::typeId<T>().name(), "clone"); return 0;}
+      static void cloneInPlace(void* /*ptr*/, void* /*src*/) { typeFail(qi::typeId<T>().name(), "clone");}
     };
 
     template<typename T, bool b>
@@ -68,7 +68,7 @@ namespace qi
     struct TypeTraitDestroy<T, false>
     {
       template<typename U>
-      static void destroy(const U& ptr) {typeFail(qi::typeId<T>().name(), "destructor");}
+      static void destroy(const U& /*ptr*/) {typeFail(qi::typeId<T>().name(), "destructor");}
     };
 
     /* Use a two-stage override mechanism.
@@ -315,9 +315,9 @@ namespace qi
     void* initializeStorage(void* ptr) override { return ptr; }
     void* ptrFromStorage(void** storage) override { return (void*)storage; }
     void* clone(void* storage) override { return storage; }
-    void destroy(void* ptr) override {}
+    void destroy(void*) override {}
     TypeKind kind() override { return TypeKind_Void; }
-    bool less(void* a, void* b) override { return false; }
+    bool less(void*, void*) override { return false; }
   };
 
   //reference

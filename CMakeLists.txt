@@ -7,6 +7,11 @@ project(LibQi)
 find_package(qibuild)
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
+if(UNIX OR MINGW)
+  # Add back a warning that "qi_sanitize_compile_flags" removed.
+  add_compile_options(-Wunused-parameter)
+endif()
+
 include(CheckSymbolExists)
 check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
 set_source_files_properties(src/os_posix.cpp

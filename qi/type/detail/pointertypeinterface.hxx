@@ -72,7 +72,7 @@ namespace qi
       T* otherPtr = (T*)pointer.rawValue();
       *ptr = *otherPtr;
     }
-    void setPointee(void** storage, void* pointer) override
+    void setPointee(void** /*storage*/, void* /*pointer*/) override
     {
       // we can't do that as it means that we would take ownership of pointer
       throw std::runtime_error("cannot convert to shared_ptr");

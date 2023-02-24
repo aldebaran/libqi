@@ -386,8 +386,8 @@ KA_WARNING_POP()
       _applyClientConfig(ctx, cfg, hostname);
     }
 
-    static void applyConfig(ssl_context_type& ctx,
-                            const qi::ssl::ServerConfig& cfg,
+    static void applyConfig(ssl_context_type&,
+                            const qi::ssl::ServerConfig&,
                             ssl_socket_type::lowest_layer_type::endpoint_type)
     {
       // Unused at the moment in our tests.
@@ -523,14 +523,14 @@ namespace mock
   }
 
   template<typename NetSslSocket>
-  inline void defaultAsyncReadSocket(NetSslSocket&, N::_mutable_buffer_sequence b, N::_anyTransferHandler h)
+  inline void defaultAsyncReadSocket(NetSslSocket&, N::_mutable_buffer_sequence, N::_anyTransferHandler h)
   {
     std::thread{[=] {
       h(N::error_code_type{}, 0u);
     }}.detach();
   }
 
-  inline void defaultAsyncReadNextLayer(N::ssl_socket_type::next_layer_type&, N::_mutable_buffer_sequence b, N::_anyTransferHandler h)
+  inline void defaultAsyncReadNextLayer(N::ssl_socket_type::next_layer_type&, N::_mutable_buffer_sequence, N::_anyTransferHandler h)
   {
     std::thread{[=] {
       h(N::error_code_type{}, 0u);

@@ -151,7 +151,7 @@ namespace qi
     inline typename boost::disable_if<
         boost::is_base_of<Actor, typename detail::Unwrap<ARG0>::type>,
         void>::type
-        _connectMaybeActor(const ARG0& arg0)
+        _connectMaybeActor(const ARG0&)
     {
       setStrand(0);
     }

@@ -58,7 +58,7 @@ namespace qi
       return ManagedRawString(RawString((char*)storage, strlen((char*)storage)),
           Deleter());
     }
-    void set(void** storage, const char* ptr, size_t sz) override
+    void set(void** storage, const char* ptr, size_t /*sz*/) override
     {
       *(char**)storage = qi::os::strdup(ptr);
     }
@@ -97,7 +97,7 @@ namespace qi
       return ManagedRawString(RawString((char*)storage, I-1),
           Deleter());
     }
-    void set(void** storage, const char* ptr, size_t sz) override
+    void set(void** /*storage*/, const char* /*ptr*/, size_t /*sz*/) override
     {
       qiLogCategory("qitype.typestring");
       // haha...no

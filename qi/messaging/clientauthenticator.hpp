@@ -36,7 +36,7 @@ protected:
    * @return A map of data that the server will use in the authentication process.
    * For example, a resolved challenge.
    */
-  virtual CapabilityMap _processAuth(const CapabilityMap& authData)
+  virtual CapabilityMap _processAuth(const CapabilityMap& /*authData*/)
   {
     return CapabilityMap();
   }

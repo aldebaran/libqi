@@ -830,7 +830,7 @@ namespace {
   }
 
   template<typename T>
-  void try_set_impl(T& t, int i, false_t /* is NOT int/float-assignable */) {
+  void try_set_impl(T&, int, false_t /* is NOT int/float-assignable */) {
     // nothing.
   }
 

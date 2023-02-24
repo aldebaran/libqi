@@ -17,7 +17,7 @@ namespace qi {
         : val(*val)
       {}
 
-      template<typename T> void operator()(T *x) {
+      template<typename T> void operator()(T* /*x*/) {
         val += qi::typeOf<T>()->signature().toString();
       }
 

@@ -695,7 +695,7 @@ TEST(FutureTestThen, ThenCancel)
   ASSERT_TRUE(f.hasValue());
 }
 
-int fail(int f)
+int fail(int)
 {
   throw std::runtime_error("fail");
 }

@@ -462,7 +462,7 @@ namespace detail {
           adaptFuture(future.value(), promise);
       }
 
-      static void _cancel(Promise<T>& promise,
+      static void _cancel(Promise<T>& /*promise*/,
           const boost::weak_ptr<FutureBaseTyped<Future<T> > >& wfuture)
       {
         if (boost::shared_ptr<FutureBaseTyped<Future<T> > > fbt =
@@ -517,7 +517,7 @@ namespace detail {
   template <>
   struct FutureValueConverter<void, void>
   {
-    void operator()(void* in, void* out)
+    void operator()(void* /*in*/, void* /*out*/)
     {
     }
   };
@@ -525,7 +525,7 @@ namespace detail {
   template <typename T>
   struct FutureValueConverter<T, void>
   {
-    void operator()(const T& in, void* out)
+    void operator()(const T& /*in*/, void* /*out*/)
     {
     }
   };
@@ -533,7 +533,7 @@ namespace detail {
   template <typename T>
   struct FutureValueConverter<void, T>
   {
-    void operator()(void* in, const T& out)
+    void operator()(void* /*in*/, const T& /*out*/)
     {
     }
   };
