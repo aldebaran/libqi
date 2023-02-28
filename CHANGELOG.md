@@ -1,6 +1,28 @@
 libqi Change Log
 =================
 
+libqi 4.0.0
+-----------
+
+This release sets the version of C++ supported by libqi to C++17. Prior
+versions of C++ are not supported anymore.
+
+### API Changes
+
+- If the `[[fallthrough]]` attribute is available (introduced in C++17),
+`QI_FALLTHROUGH` expands to it. Before the attribute was available, it
+was, in most cases, expanded to ((void)0).
+
+- `qi::AnyValue` can now contain `std::optional` values. More generally,
+the `std::optional` types are now supported in the type system of
+`qi`.
+
+- The conversion operator of `qi::Future<T>` and `qi::FutureSync<T>` to
+`const T&` has been removed. It has been deprecated for several years and
+is considered harmful. In order to access the result of a future, user code
+must now either create a continuation with `then` or `andThen` or
+explicitly block until the result is available with `value` or `wait`.
+
 libqi 3.0.1
 -----------
 
