@@ -276,7 +276,7 @@ namespace qi
     template<typename N, typename S>
     template<typename Proc>
     void Connected<N, S>::Impl::start(SslEnabled ssl, size_t maxPayload, Proc onReceive,
-        qi::int64_t messageHandlingTimeoutInMus)
+        qi::int64_t /*messageHandlingTimeoutInMus*/)
     {
       auto self = shared_from_this();
       auto life = lifetimeTransfo();

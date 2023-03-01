@@ -7,7 +7,7 @@
 #include <thread>
 #include <chrono>
 
-int main(int argc, char* argv[])
+int main(int, char**)
 {
   int i = 0;
   while(i < 30) // 30 secs to be killed

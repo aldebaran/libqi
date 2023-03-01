@@ -884,7 +884,7 @@ namespace ka {
   /// };
   ///
   /// // ...
-  /// auto f2 = apply(f); // helper function that returns a `apply_t<Decay<decltype(f)>>`
+  /// auto f2 = ka::apply(f); // helper function that returns a `apply_t<Decay<decltype(f)>>`
   /// int res0 = f2(std::make_tuple(4454, 7));
   /// int res1 = f2(std::make_pair(5, 12));
   /// int res2 = f2(std::array<int, 2>{98, 99});
@@ -902,17 +902,17 @@ namespace ka {
     KA_GENERATE_FRIEND_REGULAR_OPS_1(apply_t, proc)
   // Procedure:
     template<typename Args>
-    auto operator()(Args&& args) KA_NOEXCEPT_EXPR(apply(proc, fwd<Args>(args)))
+    auto operator()(Args&& args) KA_NOEXCEPT_EXPR(ka::apply(proc, fwd<Args>(args)))
         // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
-        -> decltype(apply(proc, fwd<Args>(args))) {
-      return apply(proc, fwd<Args>(args));
+        -> decltype(ka::apply(proc, fwd<Args>(args))) {
+      return ka::apply(proc, fwd<Args>(args));
     }
 
     template<typename Args> constexpr
-    auto operator()(Args&& args) const KA_NOEXCEPT_EXPR(apply(proc, fwd<Args>(args)))
+    auto operator()(Args&& args) const KA_NOEXCEPT_EXPR(ka::apply(proc, fwd<Args>(args)))
         // TODO: replace the trailing return by a `decltype(auto)` when c++14 is available
-        -> decltype(apply(proc, fwd<Args>(args))) {
-      return apply(proc, fwd<Args>(args));
+        -> decltype(ka::apply(proc, fwd<Args>(args))) {
+      return ka::apply(proc, fwd<Args>(args));
     }
   };
 
@@ -929,10 +929,10 @@ namespace ka {
   /// auto args = std::make_pair(34, 45);
   ///
   /// // immediate call version
-  /// auto res0 = apply(f, args);
+  /// auto res0 = ka::apply(f, args);
   ///
   /// // currified version (this version)
-  /// auto f2 = apply(f);
+  /// auto f2 = ka::apply(f);
   /// auto res1 = f2(args);
   /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ///

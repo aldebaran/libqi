@@ -84,13 +84,13 @@ public:
   void cancel(boost::shared_ptr<Callback> cbStruct);
   bool isInThisContext() const override;
 
-  void postImpl(boost::function<void()> callback, ExecutionOptions options) override
+  void postImpl(boost::function<void()> /*callback*/, ExecutionOptions /*options*/) override
   { QI_ASSERT(false); throw 0; }
 
-  qi::Future<void> async(const boost::function<void()>& callback, qi::SteadyClockTimePoint tp) override
+  qi::Future<void> async(const boost::function<void()>& /*callback*/, qi::SteadyClockTimePoint /*tp*/) override
   { QI_ASSERT(false); throw 0; }
 
-  qi::Future<void> async(const boost::function<void()>& callback, qi::Duration delay) override
+  qi::Future<void> async(const boost::function<void()>& /*callback*/, qi::Duration /*delay*/) override
   { QI_ASSERT(false); throw 0; }
 
   using ExecutionContext::async;

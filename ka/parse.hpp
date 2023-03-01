@@ -366,7 +366,7 @@ namespace detail {
   }
 
   constexpr
-  auto unwrap_product(product_t<> prod) noexcept -> ka::product_t<> {
+  auto unwrap_product(product_t<>) noexcept -> ka::product_t<> {
     return {};
   }
 } // namespace detail
@@ -377,8 +377,8 @@ namespace detail {
 /// Parser<A>... PA
 template<typename... PA> constexpr
 auto flat_product(PA&&... pa) noexcept
-  -> decltype(apply(product, std::tuple_cat(detail::unwrap_product(fwd<PA>(pa))...))) {
-  return apply(product, std::tuple_cat(detail::unwrap_product(fwd<PA>(pa))...));
+  -> decltype(ka::apply(product, std::tuple_cat(detail::unwrap_product(fwd<PA>(pa))...))) {
+  return ka::apply(product, std::tuple_cat(detail::unwrap_product(fwd<PA>(pa))...));
 }
 
 /// Convenience type for the value type of the result of a sum of parsers.
@@ -510,8 +510,8 @@ namespace detail {
 /// Parser<A>... PA
 template<typename... PA> constexpr
 auto flat_sum(PA&&... pa) noexcept
-  -> decltype(apply(sum, std::tuple_cat(detail::unwrap_sum(fwd<PA>(pa))...))) {
-  return apply(sum, std::tuple_cat(detail::unwrap_sum(fwd<PA>(pa))...));
+  -> decltype(ka::apply(sum, std::tuple_cat(detail::unwrap_sum(fwd<PA>(pa))...))) {
+  return ka::apply(sum, std::tuple_cat(detail::unwrap_sum(fwd<PA>(pa))...));
 }
 
 namespace detail {

@@ -293,16 +293,16 @@ namespace qi{
     */
 
     /// Fill missing fields caused by conversion from a different struct. Return whether fill succeeded.
-    virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& fields,
-                             const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
-                             const std::map<std::string, ::qi::AnyReference>& dropfields)
+    virtual bool convertFrom(std::map<std::string, ::qi::AnyValue>& /*fields*/,
+                             const std::vector<std::tuple<std::string, TypeInterface*>>& /*missing*/,
+                             const std::map<std::string, ::qi::AnyReference>& /*dropfields*/)
     {
       return false;
     }
     /// Fill missing fields caused by conversion to a different struct. Return whether fill succeeded.
-    virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& fields,
-                           const std::vector<std::tuple<std::string, TypeInterface*>>& missing,
-                           const std::map<std::string, ::qi::AnyReference>& dropfields)
+    virtual bool convertTo(std::map<std::string, ::qi::AnyValue>& /*fields*/,
+                           const std::vector<std::tuple<std::string, TypeInterface*>>& /*missing*/,
+                           const std::map<std::string, ::qi::AnyReference>& /*dropfields*/)
     {
       return false;
     }

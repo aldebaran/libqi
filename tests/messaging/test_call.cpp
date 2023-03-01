@@ -1141,7 +1141,7 @@ TEST(TestCall, TestInvalidFuture)
   }
 }
 
-void arrrg(int v) {
+void arrrg(int) {
 }
 
 TEST(TestCall, BadArguments)

@@ -71,7 +71,7 @@ namespace qi {
     return boost::make_shared<NullAuthProvider>();
   }
 
-  CapabilityMap NullAuthProvider::_processAuth(const CapabilityMap &authData)
+  CapabilityMap NullAuthProvider::_processAuth(const CapabilityMap& /*authData*/)
   {
     CapabilityMap reply;
     reply[State_Key] = AnyValue::from<unsigned int>(State_Done);

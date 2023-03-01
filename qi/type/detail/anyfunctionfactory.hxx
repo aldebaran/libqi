@@ -36,6 +36,7 @@
 #include <boost/thread/mutex.hpp>
 #include <qi/atomic.hpp>
 #include <qi/anyvalue.hpp>
+#include <qi/macro.hpp>
 #include <ka/macro.hpp>
 #include <ka/typetraits.hpp>
 
@@ -263,6 +264,7 @@ KA_WARNING_DISABLE(, noexcept-type)
   template <typename R comma argstypedecl>                                \
   void* makeCall(R (*f)(argstype), void** args)                           \
   {                                                                       \
+    QI_IGNORE_UNUSED(args);                                               \
     const auto resRef                                                     \
       = detail::invokeIntoAnyReference(f BOOST_PP_REPEAT(n, callArg, _)); \
     return resRef.rawValue();                                             \
@@ -289,6 +291,7 @@ KA_WARNING_DISABLE(, noexcept-type)
   template <typename R comma argstypedecl>                                \
   void* makeCall(boost::function<R(argstype)> f, void** args)             \
   {                                                                       \
+    QI_IGNORE_UNUSED(args);                                               \
     BOOST_PP_REPEAT(n, declType, _)                                       \
     const auto resRef                                                     \
       = detail::invokeIntoAnyReference(std::move(f)                       \
@@ -302,6 +305,7 @@ KA_WARNING_DISABLE(, noexcept-type)
   template <typename R comma argstypedecl>                             \
   void* makeCall(R (Class::*f)(argstype), void* instance, void** args) \
   {                                                                    \
+    QI_IGNORE_UNUSED(args);                                            \
     Class* cptr = *(Class**)instance;                                  \
     const auto resRef                                                  \
       = detail::invokeIntoAnyReference(std::mem_fn(f), cptr            \
@@ -598,12 +602,12 @@ KA_WARNING_DISABLE(, noexcept-type)
     {
     private:
       template<typename U>
-      static AnyFunction dispatch(U&& func, ka::true_t is_function_object)
+      static AnyFunction dispatch(U&& func, ka::true_t /*is_function_object*/)
       {
         return AnyFunctionMaker<boost::function<ka::Function<T>>>::make(std::forward<U>(func));
       }
       template<typename U>
-      static AnyFunction dispatch(U&& func, ka::false_t is_function_object)
+      static AnyFunction dispatch(U&& func, ka::false_t /*is_function_object*/)
       {
         return makeAnyFunctionBare(std::forward<U>(func));
       }

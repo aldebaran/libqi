@@ -45,19 +45,19 @@ namespace detail {
 
   /// ContiguousLikeSequence<T> S, Predicate<T> P
   template<typename S, typename P>
-  void erase_if_dispatch(S& s, P const& p, true_t is_contiguous_like, false_t is_list) {
+  void erase_if_dispatch(S& s, P const& p, true_t /*is_contiguous_like*/, false_t /*is_list*/) {
     erase_if_contiguous_like(s, p);
   }
 
   /// ListSequence<T> S, Predicate<T> P
   template<typename S, typename P>
-  void erase_if_dispatch(S& s, P const& p, false_t is_contiguous_like, true_t is_list) {
+  void erase_if_dispatch(S& s, P const& p, false_t /*is_contiguous_like*/, true_t /*is_list*/) {
     erase_if_list(s, p);
   }
 
   /// Sequence<T> S, Predicate<T> P
   template<typename S, typename P>
-  void erase_if_dispatch(S& s, P const& p, false_t is_contiguous_like, false_t is_list) {
+  void erase_if_dispatch(S& s, P const& p, false_t /*is_contiguous_like*/, false_t /*is_list*/) {
     erase_if_default(s, p);
   }
 } // namespace detail

@@ -7,13 +7,18 @@ project(LibQi)
 find_package(qibuild)
 qi_sanitize_compile_flags(HIDDEN_SYMBOLS)
 
+if(UNIX OR MINGW)
+  # Add back a warning that "qi_sanitize_compile_flags" removed.
+  add_compile_options(-Wunused-parameter)
+endif()
+
 include(CheckSymbolExists)
 check_symbol_exists(_SC_HOST_NAME_MAX "unistd.h" HAVE_SC_HOST_NAME_MAX)
 set_source_files_properties(src/os_posix.cpp
   PROPERTIES
     COMPILE_DEFINITIONS HAVE_SC_HOST_NAME_MAX)
 
-set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ standard to be used")
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to be used")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE CACHE BOOL "Boolean describing whether the value of CXX_STANDARD is a requirement.")
 set(CMAKE_CXX_EXTENSIONS TRUE CACHE BOOL "Boolean specifying whether compiler specific extensions are requested.")
 

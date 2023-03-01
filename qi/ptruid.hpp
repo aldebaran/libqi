@@ -89,7 +89,7 @@ namespace qi
       return sizeof(Digest) / sizeof(uint8_t);
     }
 
-    friend BOOST_CONSTEXPR bool empty(const PtrUid& a) BOOST_NOEXCEPT
+    friend BOOST_CONSTEXPR bool empty(const PtrUid&) BOOST_NOEXCEPT
     {
       return false;
     }

@@ -41,7 +41,7 @@ bool TrafficGenerator::generateCommonTraffic(const std::vector<qi::SessionPtr> &
   return true;
 }
 
-bool TrafficGenerator::generateSpam(std::vector<qi::SessionPtr> &sessions)
+bool TrafficGenerator::generateSpam(std::vector<qi::SessionPtr>&)
 {
   return false;
 }

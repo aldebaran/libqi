@@ -33,7 +33,7 @@ namespace qi
 
 namespace
 {
-  static void dropIt(GenericObject* ptr, const AnyValue& v)
+  static void dropIt(GenericObject* ptr, const AnyValue& /*v*/)
   {
     qiLogDebug() << "dropIt";
     delete ptr;

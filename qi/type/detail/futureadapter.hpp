@@ -15,7 +15,7 @@ namespace qi
 namespace detail
 {
 
-template<typename T> void hold(T data) {}
+template<typename T> void hold(T) {}
 
 template <typename T>
 inline T extractFuture(const qi::Future<qi::AnyReference>& metaFut);

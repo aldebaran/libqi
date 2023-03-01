@@ -120,7 +120,7 @@ namespace qi
     ObjectHost::clear();
   }
 
-  qi::AnyObject BoundObject::createBoundObjectType(BoundObject *self, bool bindTerminate) {
+  qi::AnyObject BoundObject::createBoundObjectType(BoundObject *self, bool /*bindTerminate*/) {
     static qi::ObjectTypeBuilder<BoundObject>* ob = nullptr;
 
     static boost::mutex* mutex = nullptr;
@@ -153,7 +153,7 @@ namespace qi
   }
 
   // Bound Method
-  qi::Future<SignalLink> BoundObject::registerEvent(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId) {
+  qi::Future<SignalLink> BoundObject::registerEvent(unsigned int /*objectId*/, unsigned int eventId, SignalLink remoteSignalLinkId) {
     // fetch signature
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
@@ -170,7 +170,7 @@ namespace qi
     });
   }
 
-  qi::Future<SignalLink> BoundObject::registerEventWithSignature(unsigned int objectId, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
+  qi::Future<SignalLink> BoundObject::registerEventWithSignature(unsigned int /*objectId*/, unsigned int eventId, SignalLink remoteSignalLinkId, const std::string& signature) {
     // fetch signature
     const MetaSignal* ms = _object.metaObject().signal(eventId);
     if (!ms)
@@ -216,7 +216,7 @@ namespace qi
   }
 
   // Bound Method
-  qi::MetaObject BoundObject::metaObject(unsigned int objectId) {
+  qi::MetaObject BoundObject::metaObject(unsigned int /*objectId*/) {
     // we inject specials methods here
     return qi::MetaObject::merge(_self.metaObject(), _object.metaObject());
   }
@@ -427,7 +427,7 @@ namespace qi
       return DispatchStatus::MessageHandled_WithError;
   }
 
-  void BoundObject::cancelCall(MessageSocketPtr socket, const Message& cancelMessage, MessageId origMsgId)
+  void BoundObject::cancelCall(MessageSocketPtr socket, const Message& /*cancelMessage*/, MessageId origMsgId)
   {
     QI_LOG_DEBUG_BOUNDOBJECT() << "Canceling call: " << origMsgId << " on client " << socket.get();
     std::pair<Future<AnyReference>, AtomicIntPtr > fut;

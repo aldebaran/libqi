@@ -2,6 +2,9 @@
 #define KA_EMPTY_HPP
 #pragma once
 #include <initializer_list>
+// In C++17, the <iterator> defines `std::empty` for standard containers
+// and `std::initializer_list`.
+#include <iterator>
 #include "macro.hpp"
 #include "macroregular.hpp"
 #include "utility.hpp"
@@ -12,12 +15,14 @@
 /// - raw pointers (a pointer is 'empty' if it is null)
 /// - std::unique_ptr, std::shared_ptr, boost::shared_ptr (in `memory.hpp`)
 /// - std::initializer_list
+/// - std::string_view
 /// - boost::optional (in `opt.hpp`)
 /// - std::function (in `functional.hpp`)
 /// - any type that defines a member function `empty` (in this case `ka::empty`
 ///   simply forwards to the member function). This includes standard
 ///   containers, `boost::function`, etc.
 ///
+/// Note that `std::optional` and `std::any` are not currently supported.
 /// `ka::empty` is defined as a polymorphic *function object*, that calls a free
 /// function `empty` through `ADL`. The benefits of this approach are that:
 ///
@@ -46,7 +51,8 @@ namespace detail {
   }
 
 // MSVC already defines `std::empty(std::initializer_list<T>)`.
-#if !BOOST_COMP_MSVC
+// It is also defined in C++17 and is checkable through the following macro.
+#if !(BOOST_COMP_MSVC || __cpp_lib_nonmember_container_access)
   template<typename T> KA_CONSTEXPR
   bool empty(std::initializer_list<T> x) KA_NOEXCEPT(true) {
     return x.size() == 0;

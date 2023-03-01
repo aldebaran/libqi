@@ -251,27 +251,27 @@ namespace qi {
       out << "}";
     }
 
-    void visitObject(GenericObject value)
+    void visitObject(GenericObject)
     {
       // TODO: implement?
       qiLogError() << "JSON Error: Serializing an object without a shared pointer";
       out << "\"Error: no serialization for object\"";
     }
 
-    void visitAnyObject(AnyObject& value)
+    void visitAnyObject(AnyObject&)
     {
       // TODO: implement?
       qiLogError() << "JSON Error: Serializing an object without a shared pointer";
       out << "\"Error: no serialization for object\"";
     }
 
-    void visitPointer(AnyReference pointee)
+    void visitPointer(AnyReference)
     {
       qiLogError() << "JSON Error: error a pointer!!!";
       out << "\"Error: no serialization for pointer\"";
     }
 
-    void visitTuple(const std::string &name, const AnyReferenceVector &vals, const std::vector<std::string> &annotations)
+    void visitTuple(const std::string& /*name*/, const AnyReferenceVector &vals, const std::vector<std::string> &annotations)
     {
       //is the tuple is annotated serialize as an object
       if (annotations.size()) {
@@ -311,7 +311,7 @@ namespace qi {
       }
     }
 
-    void visitRaw(AnyReference raw)
+    void visitRaw(AnyReference)
     {
       //TODO: implement buffer support
       qiLogError() << "JSON Error: raw data encoder not implemented!!!";

@@ -102,7 +102,7 @@ namespace qi {
   }
 
   //should be done in the object thread
-  void RemoteObject::onSocketDisconnected(std::string error)
+  void RemoteObject::onSocketDisconnected(std::string /*error*/)
   {
     close("Socket Disconnected", true);
     throw PointerLockException();
@@ -263,7 +263,7 @@ namespace qi {
   }
 
 
-  qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType callType, Signature returnSignature)
+  qi::Future<AnyReference> RemoteObject::metaCall(AnyObject, unsigned int method, const qi::GenericFunctionParameters &in, MetaCallType /*callType*/, Signature returnSignature)
   {
     MetaMethod *mm = metaObject().method(method);
     if (!mm) {
@@ -433,7 +433,7 @@ namespace qi {
     }
   }
 
-  static void onEventConnected(RemoteObject* ro, qi::Future<SignalLink> fut, qi::Promise<SignalLink> prom, SignalLink id) {
+  static void onEventConnected(RemoteObject* /*ro*/, qi::Future<SignalLink> fut, qi::Promise<SignalLink> prom, SignalLink id) {
     if (fut.hasError()) {
       prom.setError(fut.error());
       return;
@@ -598,14 +598,14 @@ namespace qi {
     //          cant be reconnected
   }
 
- qi::Future<AnyValue> RemoteObject::metaProperty(qi::AnyObject context, unsigned int id)
+ qi::Future<AnyValue> RemoteObject::metaProperty(qi::AnyObject /*context*/, unsigned int id)
  {
    QI_LOG_DEBUG_REMOTEOBJECT() << "bouncing property";
    // FIXME: perform some validations on this end?
    return _self.async<AnyValue>("property", id);
  }
 
- qi::Future<void> RemoteObject::metaSetProperty(qi::AnyObject context, unsigned int id, AnyValue val)
+ qi::Future<void> RemoteObject::metaSetProperty(qi::AnyObject /*context*/, unsigned int id, AnyValue val)
  {
    QI_LOG_DEBUG_REMOTEOBJECT() << "bouncing setProperty";
    return _self.async<void>("setProperty", id, val);

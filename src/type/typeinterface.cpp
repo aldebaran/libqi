@@ -217,7 +217,7 @@ namespace qi {
       result = qi::makeListSignature(sigFirst.isValid()?sigFirst:esig);
     }
 
-    void visitVarArgs(AnyIterator it, AnyIterator iend)
+    void visitVarArgs(AnyIterator /*it*/, AnyIterator /*iend*/)
     {
       qi::Signature esig = static_cast<ListTypeInterface*>(_value.type())->elementType()->signature();
       result = qi::makeVarArgsSignature(esig);

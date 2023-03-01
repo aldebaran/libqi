@@ -1258,7 +1258,7 @@ TEST(FunctionalApply, Tuple) {
     return std::make_tuple(i, c, f);
   };
   auto const args = std::make_tuple(5, 'a', 3.14f);
-  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, ka::apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
   auto const h = apply(g);
   ASSERT_EQ(args, h(args));
@@ -1270,7 +1270,7 @@ TEST(FunctionalApply, Pair) {
     return std::make_pair(i, c);
   };
   auto const args = std::make_pair(5, 'a');
-  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, ka::apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
   auto const h = apply(g);
   ASSERT_EQ(args, h(args));
@@ -1282,7 +1282,7 @@ TEST(FunctionalApply, Array) {
     return std::array<int, 4>{{i, j, k, l}};
   };
   std::array<int, 4> const args {{0, 1, 2, 3}};
-  ASSERT_EQ(args, apply(g, args));
+  ASSERT_EQ(args, ka::apply(g, args));
   ASSERT_EQ(args, apply(g)(args));
   auto const h = apply(g);
   ASSERT_EQ(args, h(args));
@@ -1309,10 +1309,10 @@ TEST(FunctionalApply, MoveOnly) {
   auto const res = std::make_tuple(5, 'a', 3.14f);
   {
     auto args = std::make_tuple(move_only_t<int>{5}, move_only_t<char>{'a'}, move_only_t<float>{3.14f});
-    ASSERT_EQ(res, apply(g, std::move(args)));
+    ASSERT_EQ(res, ka::apply(g, std::move(args)));
   } {
     auto args = std::make_tuple(move_only_t<int>{5}, move_only_t<char>{'a'}, move_only_t<float>{3.14f});
-    ASSERT_EQ(res, apply(g)(std::move(args)));
+    ASSERT_EQ(res, ka::apply(g)(std::move(args)));
   } {
     auto args = std::make_tuple(move_only_t<int>{5}, move_only_t<char>{'a'}, move_only_t<float>{3.14f});
     auto const h = apply(g);

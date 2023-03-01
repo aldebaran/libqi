@@ -124,7 +124,7 @@ namespace {
   class MultiStepProvider : public qi::AuthProvider {
   public:
     MultiStepProvider(int nstep = 2) { step = nstep; }
-    qi::CapabilityMap _processAuth(const qi::CapabilityMap& ad)
+    qi::CapabilityMap _processAuth(const qi::CapabilityMap& /*ad*/)
     {
       qi::CapabilityMap result;
 
@@ -159,7 +159,7 @@ namespace {
 
   class HarshProvider : public qi::AuthProvider {
   public:
-    qi::CapabilityMap _processAuth(const qi::CapabilityMap& ad)
+    qi::CapabilityMap _processAuth(const qi::CapabilityMap& /*ad*/)
     {
        qi::CapabilityMap result;
 

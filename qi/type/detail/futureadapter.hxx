@@ -176,7 +176,7 @@ inline bool handleFuture(AnyReference val, Promise<T> promise)
     ao->call<void>("_connect", cb);
 
     promise.setOnCancel(
-      [=](Promise<T>& promise) {
+      [=](Promise<T>&) {
         // Keep the reference to the future alive until we're done using it as a GenericObject.
         if (auto val = weakVal.lock())
         {

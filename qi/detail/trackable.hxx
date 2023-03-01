@@ -137,7 +137,7 @@ namespace qi
       template <typename F>
       using wrap_type = typename std::decay<F>::type;
       template <typename F>
-      static wrap_type<F> wrap(const T& arg, F&& func, boost::function<void()> onFail)
+      static wrap_type<F> wrap(const T& /*arg*/, F&& func, boost::function<void()> /*onFail*/)
       {
         return std::forward<F>(func);
       }
@@ -188,7 +188,7 @@ namespace qi
       template <typename F>
       using wrap_type = typename std::decay<F>::type;
       template <typename F>
-      static wrap_type<F> wrap(T arg, F&& func, boost::function<void()> onFail)
+      static wrap_type<F> wrap(T /*arg*/, F&& func, boost::function<void()> /*onFail*/)
       {
         return std::forward<F>(func);
       }

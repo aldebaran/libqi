@@ -69,7 +69,7 @@ namespace qi
     return boost::make_shared<NullClientAuthenticator>();
   }
 
-  CapabilityMap NullClientAuthenticator::_processAuth(const CapabilityMap &authData)
+  CapabilityMap NullClientAuthenticator::_processAuth(const CapabilityMap& /*authData*/)
   {
     return CapabilityMap();
   }

@@ -38,7 +38,7 @@ StaticObjectTypeBase::metaObject(void* )
 
 namespace {
   template <typename T>
-  void noopDeleter(T* obj)
+  void noopDeleter(T*)
   {}
 }
 

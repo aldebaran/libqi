@@ -242,7 +242,7 @@ public:
 }
 
 qi::Future<AnyReference> metaCall(ExecutionContext* el,
-  ObjectThreadingModel objectThreadingModel,
+  ObjectThreadingModel /*objectThreadingModel*/,
   MetaCallType methodThreadingModel,
   MetaCallType callType,
   AnyObject context,

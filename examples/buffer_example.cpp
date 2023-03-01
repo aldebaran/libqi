@@ -9,7 +9,7 @@
 #include <qi/buffer.hpp>
 #include <qi/types.hpp>
 
-int main(int argc, char **argv)
+int main(int, char **)
 {
   // Create a buffer and add a string in it.
   qi::Buffer buffer;
