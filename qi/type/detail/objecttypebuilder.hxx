@@ -7,12 +7,16 @@
 #ifndef _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_
 #define _QITYPE_DETAIL_OBJECTTYPEBUILDER_HXX_
 
-#include <boost/function_types/is_member_function_pointer.hpp>
-#include <boost/mpl/front.hpp>
+#include <boost/callable_traits.hpp>
+#include <boost/algorithm/string.hpp>
 #include <qi/type/objecttypebuilder.hpp>
 #include <qi/type/metamethod.hpp>
+#include <qi/type/detail/functionsignature.hxx>
+#include <qi/type/detail/accessor.hxx>
 #include <qi/actor.hpp>
 #include <ka/macro.hpp>
+#include <string_view>
+#include <type_traits>
 
 namespace qi {
 
@@ -110,15 +114,13 @@ KA_WARNING_DISABLE(, noexcept-type)
 
   namespace detail
   {
-    template<typename F, typename T> void checkRegisterParent(
-      ObjectTypeBuilder<T>& , boost::false_type) {}
-    template<typename F, typename T> void checkRegisterParent(
-      ObjectTypeBuilder<T>& builder, boost::true_type)
+    template <typename F, typename T>
+    void checkRegisterParent(ObjectTypeBuilder<T>& builder)
     {
-      using ArgsType = typename boost::function_types::parameter_types<F>::type;
-      using DecoratedClassType = typename boost::mpl::front<ArgsType>::type;
-      using ClassType = typename boost::remove_reference<DecoratedClassType>::type;
-      builder.template inherits<ClassType>();
+      if constexpr (std::is_member_function_pointer_v<F>) {
+        using ClassType = boost::callable_traits::class_of_t<F>;
+        builder.template inherits<ClassType>();
+      }
     }
   };
 
@@ -129,9 +131,7 @@ KA_WARNING_DISABLE(, noexcept-type)
     // Intercept advertise to auto-register parent type if this is a parent method
     // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it
     // as a child
-    detail::checkRegisterParent<FUNCTION_TYPE>(
-      *this,
-      typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+    detail::checkRegisterParent<FUNCTION_TYPE>(*this);
 
     // throw on error
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
@@ -144,9 +144,7 @@ KA_WARNING_DISABLE(, noexcept-type)
     // Intercept advertise to auto-register parent type if this is a parent method
     // Note: if FUNCTION_TYPE is a grandparent method, we will incorrectly add it
     // as a child
-    detail::checkRegisterParent<FUNCTION_TYPE>(
-      *this,
-      typename boost::function_types::is_member_function_pointer<FUNCTION_TYPE >::type());
+    detail::checkRegisterParent<FUNCTION_TYPE>(*this);
 
     // throw on error
     return ObjectTypeBuilderBase::advertiseMethod(name, function, threadingModel, id);
@@ -158,7 +156,6 @@ KA_WARNING_DISABLE(, noexcept-type)
     return ObjectTypeBuilderBase::object(static_cast<void*>(ptr), onDestroy);
   }
 
-
   template<typename T>
   void ObjectTypeBuilder<T>::registerType()
   {
@@ -166,43 +163,32 @@ KA_WARNING_DISABLE(, noexcept-type)
   }
 
   template<typename A>
-  typename boost::enable_if<typename detail::Accessor<A>::is_accessor, SignalBase*>::type
-  signalAccess(A acc, void* instance)
-  {
-    using class_type = typename detail::Accessor<A>::class_type;
-    return &detail::Accessor<A>::access((class_type*)instance, acc);
-  }
-
-  template<typename A>
-  typename boost::enable_if<typename detail::Accessor<A>::is_accessor, PropertyBase*>::type
-  propertyAccess(A acc, void* instance)
-  {
-    using class_type = typename detail::Accessor<A>::class_type;
-    return &detail::Accessor<A>::access((class_type*)instance, acc);
-  }
-
-  template<typename A>
   unsigned int
   ObjectTypeBuilderBase::advertiseSignal(const std::string& eventName, A accessor, int id, bool isSignalProperty)
   {
-    SignalMemberGetter fun = boost::bind(&signalAccess<A>, accessor, _1);
-    using FunctionType = typename detail::Accessor<A>::value_type::FunctionType;
-    return xAdvertiseSignal(eventName,
-      detail::FunctionSignature<FunctionType>::signature(), fun, id, isSignalProperty);
+    auto fun = [accessor = std::move(accessor)](void* instance) mutable {
+      return &detail::accessor::invoke(accessor, instance);
+    };
+    using ValueType = detail::accessor::ValueType<A>;
+    using FunctionType = typename ValueType::FunctionType;
+    return xAdvertiseSignal(eventName, detail::functionArgumentsSignature<FunctionType>(), fun, id, isSignalProperty);
   }
 
   template <typename A>
   unsigned int ObjectTypeBuilderBase::advertiseProperty(const std::string& name, A accessor)
   {
     unsigned int id = advertiseSignal(name, accessor, -1, true);
-    PropertyMemberGetter pg = boost::bind(&propertyAccess<A>, accessor, _1);
-    using PropertyType = typename detail::Accessor<A>::value_type::PropertyType;
-    return xAdvertiseProperty(name, typeOf<PropertyType>()->signature(), pg, id);
+    auto fun = [accessor = std::move(accessor)](void* instance) mutable {
+      return &detail::accessor::invoke(accessor, instance);
+    };
+    using ValueType = detail::accessor::ValueType<A>;
+    using PropertyType = typename ValueType::PropertyType;
+    return xAdvertiseProperty(name, typeOf<PropertyType>()->signature(), fun, id);
   }
 
   template <typename T> unsigned int ObjectTypeBuilderBase::advertiseSignal(const std::string& name, SignalMemberGetter getter, int id, bool isSignalProperty)
   {
-    return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature(), getter, id, isSignalProperty);
+    return xAdvertiseSignal(name, detail::functionArgumentsSignature<T>(), getter, id, isSignalProperty);
   }
 
   template<typename T>
@@ -211,78 +197,47 @@ KA_WARNING_DISABLE(, noexcept-type)
     return xAdvertiseProperty(eventName, typeOf<T>()->signature(), getter);
   }
 
-
-  namespace detail
-  {
-    static const char* interfaceMarker = "_interface_";
-    static const auto interfaceMarkerLength = strlen(interfaceMarker);
-
-    // Trait that detect inheritance from PropertyBase SignalBase or none of the above.
-
-    template<typename T, bool b> struct SigPropInheritsSignal
-    {};
-    template<typename T, bool b> struct SigPropInheritsProperty
-    {};
-
-    template<typename T> struct SigProp : public
-    SigPropInheritsProperty<T, boost::is_base_of<PropertyBase, T>::value> {};
-
-    template<typename T> struct SigPropInheritsProperty<T, true>
-    {
-      static const unsigned value = 2;
-    };
-    template<typename T> struct SigPropInheritsProperty<T, false>
-    : public SigPropInheritsSignal<T, boost::is_base_of<SignalBase, T>::value> {};
-
-    template<typename T> struct SigPropInheritsSignal<T, true>
-    {
-       static const unsigned value = 1;
-    };
-    template<typename T> struct SigPropInheritsSignal<T, false>
-    {
-       static const unsigned value = 0;
-    };
-
-    template<unsigned> struct Dummy {};
-    template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<0>)
-    {
-      return builder->advertiseMethod(name, accessor);
-    }
-    template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<1>)
-    {
-      std::string n = name;
-      if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
-        n = name.substr(interfaceMarkerLength);
-      return builder->advertiseSignal(n, accessor);
-    }
-    template<typename A> unsigned int advertise(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, Dummy<2>)
-    {
-      std::string n = name;
-      if (n.size() > interfaceMarkerLength && n.substr(0, interfaceMarkerLength) == interfaceMarker)
-        n = name.substr(interfaceMarkerLength);
-      return builder->advertiseProperty(n, accessor);
-    }
-    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, boost::true_type)
-    {
-      return advertise(builder, name, accessor,
-        Dummy<detail::SigProp<typename detail::Accessor<A>::value_type>::value>());
-    }
-    template<typename A> unsigned int advertiseBounce(ObjectTypeBuilderBase* builder, const std::string& name, A accessor, boost::false_type)
-    {
-      return builder->advertiseMethod(name, accessor);
-    }
-  }
   template<typename T>
   unsigned int
   ObjectTypeBuilderBase::advertiseId(const std::string& name, T element)
   {
-    return detail::advertiseBounce(this, name, element, typename detail::Accessor<T>::is_accessor());
+    // Most properties are also signals, but signals are not properties.
+    // Therefore we must check if the function is a property accessor before
+    // checking if it is a signal accessor, otherwise we might advertise a
+    // property as a signal only.
+    constexpr auto isPropertyAccessor = detail::accessor::IsAccessor<T>() &&
+        std::is_base_of_v<qi::PropertyBase, detail::accessor::ValueType<T>>;
+    [[maybe_unused]]
+    constexpr auto interfaceMarker = std::string_view("_interface_");
+
+    if constexpr (isPropertyAccessor) {
+      std::string_view nameView(name);
+      if (boost::algorithm::starts_with(nameView, interfaceMarker)) {
+        nameView.remove_prefix(interfaceMarker.size());
+      }
+      return advertiseProperty(std::string(nameView), std::move(element));
+    }
+    else {
+      constexpr auto isSignalAccessor = detail::accessor::IsAccessor<T>() &&
+          std::is_base_of_v<qi::SignalBase, detail::accessor::ValueType<T>>;
+      if constexpr (isSignalAccessor) {
+        std::string_view nameView(name);
+        if (boost::algorithm::starts_with(nameView, interfaceMarker)) {
+          nameView.remove_prefix(interfaceMarker.size());
+        }
+        return advertiseSignal(std::string(nameView), std::move(element));
+      }
+      else {
+        return advertiseMethod(name, std::move(element));
+      }
+    }
   }
+
   template<typename T>
   ObjectTypeBuilderBase&
   ObjectTypeBuilderBase::advertise(const std::string& name, T element)
   {
-    detail::advertiseBounce(this, name, element, typename detail::Accessor<T>::is_accessor());
+    advertiseId(name, std::move(element));
     return *this;
   }
 

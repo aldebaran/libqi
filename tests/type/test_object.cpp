@@ -224,6 +224,15 @@ TEST(TestFunction, Typing)
   ASSERT_TRUE(checkValue(res, 42));
 }
 
+TEST(TestFunction, BindType)
+{
+  int fun(char, float, std::string);
+  using Bind = decltype(boost::bind(fun, boost::placeholders::_3, 3.14, boost::placeholders::_1));
+  using BindFnType = typename qi::detail::bind::boost_bind_function_type<Bind>::type;
+  static_assert(std::is_same_v<BindFnType, int(std::string, char)>);
+  SUCCEED();
+}
+
 TEST(TestFunction, ABI)
 {
   using namespace qi;
@@ -347,6 +356,32 @@ TEST(TestFunction, Call)
   f = qi::AnyFunction::from(&getobj);
   qi::AnyWeakObject obj = f.call<qi::AnyObject>();
   ASSERT_FALSE(obj.lock());
+}
+
+TEST(TestObject, Accessors)
+{
+  struct Object
+  {
+    int i;
+    int& getI();
+    const int& getConstI() const;
+  };
+  using AccessorFreeFn = int& (&) (Object*);
+  using MissingInstance = int& (&) ();
+  using InstanceIsNotAClass = int& (&) (int*);
+  using TooManyArgs = int& (&) (Object*, int);
+  using ReturnTypeNotRValueRef = int (&) (Object*);
+
+  using namespace qi::detail::accessor;
+  static_assert( IsAccessor<decltype(&Object::i)>());
+  static_assert( IsAccessor<decltype(&Object::getI)>());
+  static_assert( IsAccessor<decltype(&Object::getConstI)>());
+  static_assert( IsAccessor<AccessorFreeFn>());
+  static_assert(!IsAccessor<MissingInstance>());
+  static_assert(!IsAccessor<InstanceIsNotAClass>());
+  static_assert(!IsAccessor<TooManyArgs>());
+  static_assert(!IsAccessor<ReturnTypeNotRValueRef>());
+  SUCCEED();
 }
 
 TEST(TestObject, Methods) {

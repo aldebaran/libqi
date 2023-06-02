@@ -14,7 +14,6 @@
 #include <boost/bind.hpp>
 #undef BOOST_BIND_GLOBAL_PLACEHOLDERS
 #include <boost/weak_ptr.hpp>
-#include <boost/function_types/result_type.hpp>
 
 namespace qi
 {

@@ -8,7 +8,6 @@
 #define _QI_TYPE_DETAIL_OBJECT_HXX_
 
 #include <functional>
-#include <boost/mpl/if.hpp>
 
 #include <qi/future.hpp>
 #include <qi/type/typeinterface.hpp>
@@ -259,7 +258,7 @@ public:
   // We use None to disable it. The method must be instantiable because when we
   // export the class under windows, all functions are instanciated
   // Future cast operator
-  using MaybeAnyObject = typename boost::mpl::if_<typename boost::is_same<T, Empty>::type, None, Object<Empty>>::type;
+  using MaybeAnyObject = std::conditional_t<std::is_same_v<T, Empty>, None, Object<Empty>>;
   Object(const qi::Future<MaybeAnyObject>& fobj);
   Object(const qi::FutureSync<MaybeAnyObject>& fobj);
 

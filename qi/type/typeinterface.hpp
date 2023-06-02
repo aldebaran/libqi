@@ -12,8 +12,6 @@
 
 #include <boost/preprocessor.hpp>
 #include <boost/function.hpp>
-#include <boost/type_traits/is_function.hpp>
-#include <boost/mpl/if.hpp>
 
 #include <qi/log.hpp>
 #include <qi/api.hpp>

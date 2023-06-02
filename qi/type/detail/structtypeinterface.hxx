@@ -188,25 +188,25 @@ namespace qi
 
     /* Helpers around accessors
      */
-    template<typename A> TypeInterface* fieldType(A)
+    template<typename A>
+    TypeInterface* fieldType(A)
     {
-      static TypeInterface* res = 0;
-      QI_ONCE(res = qi::typeOf<typename detail::Accessor<A>::value_type>());
+      static TypeInterface* const res = qi::typeOf<detail::accessor::ValueType<A>>();
       return res;
     }
 
-    template<typename C, typename A> void* fieldStorage(C* inst, A accessor)
+    template<typename C, typename A>
+    void* fieldStorage(C* inst, A accessor)
     {
-      return fieldType(accessor)->initializeStorage(
-        (void*)&detail::Accessor<A>::access(inst, accessor));
+      auto& value = detail::accessor::invoke(accessor, inst);
+      return fieldType(accessor)->initializeStorage(const_cast<void*>(static_cast<const void*>(&value)));
     }
 
     template<typename C, typename A>
-    typename detail::Accessor<A>::value_type&
-    fieldValue(C* /*instance*/, A accessor, void** data)
+    detail::accessor::ValueType<A>& fieldValue(C* /*instance*/, A accessor, void** data)
     {
-      using T = typename detail::Accessor<A>::value_type;
-      return *(T*)fieldType(accessor)->ptrFromStorage(data);
+      using T = detail::accessor::ValueType<A>;
+      return *reinterpret_cast<T*>(fieldType(accessor)->ptrFromStorage(data));
     }
   }
 }
