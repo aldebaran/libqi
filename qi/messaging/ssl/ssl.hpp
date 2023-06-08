@@ -138,11 +138,15 @@ struct QI_API PemPasswordCallback
 
 // Regular:
   PemPasswordCallback() noexcept = default;
-  KA_GENERATE_FRIEND_REGULAR_OPS_2(
-    PemPasswordCallback,
-      callback,
-      userData
-  )
+
+  friend bool operator==(const PemPasswordCallback& a,
+                         const PemPasswordCallback& b)
+  {
+    return std::tie(a.callback, a.userData)
+        == std::tie(b.callback, b.userData);
+  }
+
+  friend KA_GENERATE_REGULAR_OP_DIFFERENT(PemPasswordCallback)
 
   inline explicit PemPasswordCallback(CallbackPointer cb,
                                       void* userData = nullptr) noexcept
