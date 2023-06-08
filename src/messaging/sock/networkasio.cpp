@@ -4,6 +4,7 @@
 */
 
 #include "networkasio.hpp"
+#include <ka/macro.hpp>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 #include <boost/predef/os.h>
@@ -38,10 +39,13 @@ struct VerifyCertificateHandleException
 {
   std::string logCategory;
 
+KA_WARNING_PUSH()
+KA_WARNING_DISABLE(,unused-function)
   KA_GENERATE_FRIEND_REGULAR_OPS_1(
     VerifyCertificateHandleException,
       logCategory
   );
+KA_WARNING_POP()
 
   template<typename... E>
   bool operator()(E&&... ex) const noexcept

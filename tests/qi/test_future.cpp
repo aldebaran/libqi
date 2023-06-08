@@ -66,13 +66,6 @@ void SetValue2::delayExchangeP(qi::MilliSeconds delay, int value, qi::Promise<in
   result.setValue(delayExchange(delay, value));
 }
 
-qi::Future<int> SetValue2::asyncDelayExchange(qi::MilliSeconds delay, int value)
-{
-  qi::Promise<int> promise;
-  std::thread(&SetValue2::delayExchangeP, this, delay, value, promise);
-  return promise.future();
-}
-
 int block(int /*i*/, qi::Future<void> f)
 {
   f.wait();
@@ -216,8 +209,9 @@ TEST_F(FutureFixture, PromiseSetWhileWaitingOnFuture)
 {
   qi::Promise<void> p;
   auto f = p.future();
-  std::async(std::launch::async, [&]{ p.setValue(nullptr); });
+  auto setValue = std::async(std::launch::async, [&]{ p.setValue(nullptr); });
   ASSERT_EQ(qi::FutureState_FinishedWithValue, f.waitFor(qi::MilliSeconds{300}));
+  setValue.get();
 }
 
 void producer(qi::Promise<int> pro) {

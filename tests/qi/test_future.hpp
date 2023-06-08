@@ -22,7 +22,6 @@ public:
   SetValue2(std::atomic<int>& target);
   ~SetValue2();
   void delayExchangeP(qi::MilliSeconds delay, int value, qi::Promise<int> result);
-  qi::Future<int> asyncDelayExchange(qi::MilliSeconds delay, int value);
 };
 
 int block(int i, qi::Future<void> f);

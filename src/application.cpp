@@ -148,7 +148,6 @@ namespace qi {
                                                  const bfs::path& currentDirectory,
                                                  std::vector<bfs::path> environmentPaths)
   {
-    boost::system::error_code err;
     const bfs::path boostPath(path);
     if (boostPath.is_relative() && !boostPath.has_parent_path())
     {

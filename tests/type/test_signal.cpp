@@ -499,7 +499,7 @@ TEST(TestSignal, Dynamic)
   s.connect((boost::function<void(int, std::string)>) boost::bind(&dynTest3, boost::ref(trig), _1, _2));
   s.connect(qi::AnyFunction::fromDynamicFunction(boost::bind(&dynTestN2, boost::ref(trig), _1)));
   s.connect((boost::function<void(const qi::AnyArguments&)>)(boost::bind(&dynTestN, boost::ref(trig), _1)));
-  int a, b;
+  int a = 0, b = 0;
   std::string c;
   qi::GenericFunctionParameters params;
   s.trigger(params);

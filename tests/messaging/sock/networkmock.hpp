@@ -335,7 +335,6 @@ KA_WARNING_POP()
     {
 KA_WARNING_PUSH()
 KA_WARNING_DISABLE(4068, pragmas)
-KA_WARNING_DISABLE(, undefined-var-template)
       SocketFunctions<NetSslSocket>::_async_read_socket(s, b, h);
 KA_WARNING_POP()
     }
@@ -345,7 +344,6 @@ KA_WARNING_POP()
     {
 KA_WARNING_PUSH()
 KA_WARNING_DISABLE(4068, pragmas)
-KA_WARNING_DISABLE(, undefined-var-template)
       SocketFunctions<NetSslSocket>::_async_write_socket(s, b, h);
 KA_WARNING_POP()
     }
@@ -402,6 +400,20 @@ KA_WARNING_POP()
       // Unused at the moment in our tests.
     }
   };
+
+  template <>
+  Network::_anyAsyncReaderSocket<Network::ssl_socket_type>
+    Network::SocketFunctions<Network::ssl_socket_type>::_async_read_socket;
+  template <>
+  Network::_anyAsyncReaderSocket<qi::sock::SocketWithContext<Network>>
+    Network::SocketFunctions<qi::sock::SocketWithContext<Network>>::_async_read_socket;
+
+  template <>
+  Network::_anyAsyncWriterSocket<Network::ssl_socket_type>
+    Network::SocketFunctions<Network::ssl_socket_type>::_async_write_socket;
+  template <>
+  Network::_anyAsyncWriterSocket<qi::sock::SocketWithContext<Network>>
+      Network::SocketFunctions<qi::sock::SocketWithContext<Network>>::_async_write_socket;
 
 } // namespace mock
 

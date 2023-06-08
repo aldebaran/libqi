@@ -118,15 +118,7 @@ namespace qi
   namespace detail
   {
 
-  template<typename T> class BounceToSignalBase
-  {
-    // This default should not be instanciated
-    static_assert(sizeof(T) < 0, "You can't instanciate BounceToSignalBase");
-    public:
-    BounceToSignalBase(SignalBase& sb)
-    {
-    }
-  };
+  template<typename T> class BounceToSignalBase;
   #define pushArg(z, n, _) \
     args.push_back(AutoAnyReference(p ##n));
   #define makeBounce(n, argstypedecl, argstype, argsdecl, argsues, comma)     \
