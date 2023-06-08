@@ -725,10 +725,6 @@ struct QI_API ConfigBase
   /// though they are not self-signed.
   /// @see `X509_VERIFY_PARAM_set_flags` and `X509_V_FLAG_PARTIAL_CHAIN`
   bool verifyPartialChain = false;
-
-// This type is only destructible from subtypes.
-protected:
-  ~ConfigBase() = default;
 };
 
 struct QI_API ClientConfig : ConfigBase
