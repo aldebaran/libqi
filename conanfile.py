@@ -137,6 +137,14 @@ class QiConan(ConanFile):
         self.version = version
 
     def layout(self):
+        # Configure the format of the build folder name, based on the value of some variables.
+        self.folders.build_folder_vars = [
+            "settings.os",
+            "settings.arch",
+            "settings.compiler",
+            "settings.build_type",
+        ]
+
         # The cmake_layout() sets the folders and cpp attributes to follow the
         # structure of a typical CMake project.
         cmake_layout(self)
