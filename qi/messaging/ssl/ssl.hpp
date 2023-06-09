@@ -505,16 +505,17 @@ public:
     return privateFromPemRange(begin(range), end(range), std::move(cb));
   }
 
-  /// Compares the public key components and parameters (if present) of two keys.
+  /// Compares the public and private key components and parameters (if
+  /// present) of two keys.
   ///
   /// Returns 1 if the keys match, 0 if they don't match, -1 if the key types
   /// are different and -2 if the operation is not supported.
   ///
-  /// This behavior differs from the comparison of two keys using `operator==`, which
-  /// compares the value of pointers and not the content of the pointees.
+  /// This behavior differs from the comparison of two keys using `operator==`,
+  /// which compares the value of pointers and not the content of the pointees.
   ///
-  /// @see `EVP_PKEY_cmp`
-  int cmp(const PKey& o) const;
+  /// @see `EVP_PKEY_eq`
+  int eq(const PKey& o) const;
 
   /// Loads this key into the SSL context.
   /// It must refer to a private key.

@@ -62,7 +62,7 @@ class QiConan(ConanFile):
 
     requires = [
         "boost/[~1.78]",
-        "openssl/[~1.1.1s]",
+        "openssl/[~3]",
     ]
 
     test_requires = [

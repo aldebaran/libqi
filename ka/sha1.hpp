@@ -4,7 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <type_traits>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 #include "scoped.hpp"
 #include "typetraits.hpp"
 
@@ -30,8 +30,8 @@ namespace ka {
     // I == T*, with T having the size of one byte (e.g. int8_t, uint8_t,
     // unsigned char on some platforms, etc.)
     template<typename I>
-    int sha1_update(SHA_CTX& s, I b, I e, std::true_type /* is_pointer */) {
-      return SHA1_Update(&s, b, e - b);
+    int digest_update(EVP_MD_CTX& ctx, I b, I e, std::true_type /* is_pointer */) {
+      return EVP_DigestUpdate(&ctx, b, e - b);
     }
 
     // With non-pointer iterators, we update byte by byte.
@@ -40,11 +40,11 @@ namespace ka {
     //
     // InputIterator<T> I, with T having the size of one byte
     template<typename I>
-    int sha1_update(SHA_CTX& s, I b, I e, std::false_type /* is_pointer */) {
+    int digest_update(EVP_MD_CTX& ctx, I b, I e, std::false_type /* is_pointer */) {
       int res = 1;
       while (b != e) {
         auto const c = *b;
-        res = SHA1_Update(&s, &c, 1u);
+        res = EVP_DigestUpdate(&ctx, &c, 1u);
         if (res == 0) {
           return res;
         }
@@ -66,25 +66,20 @@ namespace ka {
   sha1_digest_t sha1(I b, I e) {
     static_assert(sizeof(Decay<decltype(*b)>) == 1,
       "sha1: element size is different than 1.");
-    SHA_CTX x;
-    if (!SHA1_Init(&x)) {
-      throw std::runtime_error("Can't initialize the sha1 context. "
+
+    std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> ctx(
+        EVP_MD_CTX_new(), &EVP_MD_CTX_free);
+
+    if (!EVP_DigestInit_ex2(ctx.get(), EVP_sha1(), nullptr)) {
+      throw std::runtime_error("Can't initialize the sha1 digest context. "
                                "data=\"" + std::string(b, e) + "\"");
     }
-    bool release = false;
-    auto _ = scoped([&]() {
-      if (!release) {
-        // `SHA1_Final` both computes and frees the context.
-        // Here we just want to free, but there's no other way...
-        SHA1_Final(sha1_digest_t{{0}}.data(), &x);
-      }
-    });
-    if (!detail::sha1_update(x, b, e, std::is_pointer<I>{})) {
+
+    if (!detail::digest_update(*ctx, b, e, std::is_pointer<I>{})) {
       throw std::runtime_error("Can't update sha1 on \"" + std::string(b, e) + "\"");
     }
     sha1_digest_t d;
-    release = true;
-    if (!SHA1_Final(d.data(), &x)) {
+    if (!EVP_DigestFinal_ex(ctx.get(), d.data(), nullptr)) {
       throw std::runtime_error("Can't compute sha1 on \"" + std::string(b, e) + "\"");
     }
     return d;
