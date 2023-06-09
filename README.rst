@@ -75,7 +75,7 @@ You can then invoke tests using CTest:
 
 .. code-block:: console
 
-  ctest --preset conan-debug --output-on-failure
+  ctest --preset conan-linux-x86_64-gcc-debug --output-on-failure
 
 Finally, you can install the project in the directory of your choice.
 
@@ -89,11 +89,11 @@ The project defines 2 install components:
 .. code-block:: console
 
    # "cmake --install" does not support preset sadly.
-   cmake --install build/Debug --component runtime --prefix ~/my-libqi-install-runtime
-   cmake --install build/Debug --component devel --prefix ~/my-libqi-install-devel
+   cmake --install build/linux-x86_64-gcc-debug --component runtime --prefix ~/my-libqi-install-runtime
+   cmake --install build/linux-x86_64-gcc-debug --component devel --prefix ~/my-libqi-install-devel
 
    # This is equivalent to installing all components.
-   cmake --install build/Debug --prefix ~/my-libqi-install-all-components
+   cmake --install build/linux-x86_64-gcc-debug --prefix ~/my-libqi-install-all-components
 
 Create a Conan package
 ^^^^^^^^^^^^^^^^^^^^^^
