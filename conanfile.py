@@ -117,6 +117,7 @@ class QiConan(ConanFile):
         version = self.cfg["version"]
 
         # For development version, try adding a suffix with the revision SHA1.
+        revision = None
         if version.endswith('-dev'):
             git = tools.scm.Git(self)
             try:
