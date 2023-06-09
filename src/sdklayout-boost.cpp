@@ -338,7 +338,7 @@ namespace detail {
       if (bin.exists() && !bin.isDir())
         return bin.str();
 
-      for (const qi::Path& path : _p->_sdkPrefixes)
+      for (qi::Path path : _p->_sdkPrefixes)
       {
         const boost::filesystem::path p(path / "bin");
 

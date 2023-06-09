@@ -13,16 +13,7 @@
 #include <map>
 #include <vector>
 #include <list>
-#include <qi/type/detail/bindtype.hxx>
-#include <boost/thread/mutex.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/mpl/transform_view.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/add_pointer.hpp>
-#include <boost/function_types/parameter_types.hpp>
-#include <boost/function_types/result_type.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/is_member_pointer.hpp>
+#include <type_traits>
 
 /* This file contains the default-provided Type specialisations
  *

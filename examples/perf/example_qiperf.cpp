@@ -8,9 +8,10 @@
  * This is a simple QiPerf example
  */
 
+#include <chrono>
 #include <iostream>
+#include <thread>
 #include <qi/perf/dataperfsuite.hpp>
-#include <qi/os.hpp>
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
   dp.start(std::string("My_Stupid_Bench"), count);
 
   for (unsigned int i = 0; i < count; ++i) {
-    qi::os::msleep(500);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
   dp.stop();
   out << dp;

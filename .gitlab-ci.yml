@@ -1,0 +1,110 @@
+include:
+  - project: framework/workflow
+    ref: c77b1db3582e780dbc0f1493f8706735dcacafe0
+    file:
+      - /gitlab-ci/rules.gitlab-ci.yml
+      - /gitlab-ci/misc.gitlab-ci.yml
+      - /gitlab-ci/conan.gitlab-ci.yml
+
+variables:
+  IMAGE_LINUX_X86_64: "$FRAMEWORK_DOCKER_REGISTRY/workflow-linux-x86_64\
+                       @sha256:f88068cd74ec2ec9821a18b1a68dbbf632e787790e772877e845c8c9e6a365b8"
+  IMAGE_ANDROID_ARM64: "$FRAMEWORK_DOCKER_REGISTRY/workflow-android-arm64\
+                        @sha256:d680cf6dcf983eb8dee127d31f7736112b0da8dd801f3fe0a4291fc83ebcb611"
+  TAG_PREFIX: "qi-framework-v"
+
+default:
+  tags:
+    - docker
+  image: "$IMAGE_LINUX_X86_64"
+
+stages:
+  - build
+  - analysis
+  - package
+  - release
+
+.script-build-dev: &script-build-dev
+  - conan install .
+      -pr:b=build
+      -pr:h=host
+      -s build_type=RelWithDebInfo
+      --build=missing
+      --conf tools.cmake.cmake_layout:build_folder_vars=[\"settings.build_type\"]
+  - cmake
+      --preset conan-relwithdebinfo
+  - cmake --build
+      --preset conan-relwithdebinfo
+      -j"$BUILD_PARALLEL_JOBS"
+       > >(tee -a build.out)
+      2> >(tee -a build.err)
+
+.check-warnings:
+  script: |
+    ERR_FILE="build.err"
+    echo "Checking $ERR_FILE file"
+    test -f "$ERR_FILE"
+    if grep -iq warning "$ERR_FILE"; then
+      cat "$ERR_FILE";
+      exit 1;
+    fi
+  allow_failure: true
+
+.rules-if-qi-tag:
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^${TAG_PREFIX}.*/"
+
+#############################################################################
+# Linux x86_64
+#############################################################################
+build-dev:linux-x86_64:
+  stage: build
+  extends:
+    - .rules-if-push-develop-or-mr-feature-branch-manual
+    - .interruptible
+  script:
+    - *script-build-dev
+    - 'ctest
+        --preset conan-relwithdebinfo
+        --output-on-failure
+        --output-junit $PWD/test-results.xml
+        || echo "warning: tests failed" >> build.err'
+  artifacts:
+    paths:
+      - build.out
+      - build.err
+    reports:
+      junit: test-results.xml
+
+check-warnings-dev:linux-x86_64:
+  stage: analysis
+  extends:
+    - .check-warnings
+    - .rules-if-push-develop-or-mr-feature-branch
+  needs:
+    - build-dev:linux-x86_64
+
+#############################################################################
+# Android ARM64
+#############################################################################
+build-dev:android-arm64:
+  image: "$IMAGE_ANDROID_ARM64"
+  stage: build
+  extends:
+    - .rules-if-push-develop-or-mr-feature-branch-manual
+    - .interruptible
+  script:
+    - *script-build-dev
+  artifacts:
+    paths:
+      - build.out
+      - build.err
+
+check-warnings-dev:android-arm64:
+  image: "$IMAGE_ANDROID_ARM64"
+  stage: analysis
+  extends:
+    - .check-warnings
+    - .rules-if-push-develop-or-mr-feature-branch
+  needs:
+    - build-dev:android-arm64

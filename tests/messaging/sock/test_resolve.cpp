@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 #include <gtest/gtest.h>
 #include <src/messaging/sock/resolve.hpp>

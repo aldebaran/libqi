@@ -503,12 +503,19 @@
 /// Such a type is useful in testing generic code to ensure there is no typing
 /// mistake. On the opposite, builtin types (`int`, `bool`, `char`, etc.) are
 /// poor candidates for such a task, due to their implicit conversions.
-#define KA_DERIVE_REGULAR_TEST_TYPE(type)         \
-  struct type {                                   \
-    int value;                                    \
-    inline explicit type(int i = 0) : value(i) {} \
-  /* Regular: */                                  \
-    KA_GENERATE_FRIEND_REGULAR_OPS_1(type, value) \
+///
+/// Warning: This type is not an archetype for Regular: it exposes an integer
+///   and is output streamable.
+#define KA_DERIVE_REGULAR_TEST_TYPE(type)                              \
+  struct type {                                                        \
+    int value;                                                         \
+    inline explicit type(int i = 0) : value(i) {}                      \
+  /* Regular: */                                                       \
+    KA_GENERATE_FRIEND_REGULAR_OPS_1(type, value)                      \
+  /* OStreamable: */                                                   \
+    friend std::ostream& operator<<(std::ostream& os, const type& v) { \
+      return os << #type "(" << v.value << ")";                        \
+    }                                                                  \
   }
 
 #endif  // KA_MACROREGULAR_HPP

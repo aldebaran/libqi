@@ -241,7 +241,7 @@ QI_GEN(genCall)
     static AnyFunction from(F&& func);
     /// @return a AnyFunction binding instance to member function func
     template<typename F, typename C>
-    static AnyFunction from(F func, C instance);
+    static AnyFunction from(F&& func, C instance);
 
 
     /** @return a AnyFunction that takes arguments as a list of unconverted

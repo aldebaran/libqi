@@ -1,0 +1,34 @@
+@PACKAGE_INIT@
+
+# Find dependencies
+include(CMakeFindDependencyMacro)
+
+# - Boost
+find_dependency(
+  Boost @BOOST_VERSION@ EXACT REQUIRED
+  COMPONENTS @BOOST_COMPONENTS@
+)
+
+# - OpenSSL
+find_dependency(OpenSSL @OPENSSL_VERSION@ EXACT REQUIRED)
+
+# - Threads
+if(@UNIX@)
+  find_dependency(Threads REQUIRED)
+endif()
+
+# - systemd
+if(@WITH_SYSTEMD@)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(SYSTEMD systemd)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PACKAGE_NAME@-targets.cmake")
+
+set(
+  "${CMAKE_FIND_PACKAGE_NAME}_LIBRARIES"
+  @PACKAGE_NAME@::@PACKAGE_NAME@
+  CACHE INTERNAL "" FORCE
+)
+
+check_required_components(@PACKAGE_NAME@)

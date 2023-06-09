@@ -4,13 +4,5 @@ PREDEFINED= QI_API= \
             DOXYGEN=1
 MACRO_EXPANSION=YES
 EXCLUDE_SYMBOLS = \
-  qi::detail::Accessor \
-  qi::detail::AnyFunctionMaker \
-  qi::detail::ArgLess \
-  qi::detail::ArgReslover \
-  qi::detail::BilistToSeq \
-  qi::detail::MapItemIndexIs \
-  qi::detail::RawFunctionSignature \
-  qi::detail::RefMasqBuilderHelper \
   qi::detail::VoidFunctionType \
   boost::*

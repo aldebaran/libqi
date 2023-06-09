@@ -175,18 +175,12 @@ namespace
       }
     };
 
-    // Warning: The comparison `qi::ssl::PKey::cmp` is partial. It does not
-    // compare private keys by themselves, but instead their public components
-    // and parameters. The public component may not be available when the
-    // `PKey` is constructed from a private key and the algorithm does not allow
-    // for public key derivation. Consequently, this type's behavior is
-    // best-effort only.
     struct EqPKey
     {
       AssertionResult operator()(const qi::ssl::PKey& a, const qi::ssl::PKey& b) const
       {
         // Beware: `0` does not mean "equal", contrary to comparison of certificates.
-        switch (a.cmp(b))
+        switch (a.eq(b))
         {
         case 0:
           return AssertionFailure() << "PKey not equal: " << &a << " != " << &b;

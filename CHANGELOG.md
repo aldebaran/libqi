@@ -1,6 +1,42 @@
 libqi Change Log
 =================
 
+libqi 4.0.1
+-----------
+
+This release focuses on fixing some bugs, rewriting and improving the
+project build definition, and porting library code to OpenSSL 3 and
+Boost 1.78.
+
+### Build
+
+The definition of the build of libqi as be rewritten to remove the
+dependency to qibuild and qi toolchains and instead use more standard
+tools and conventions.
+
+The CMakeLists.txt files have been completely refactored to use an approach
+closer to what is referred to as "modern CMake". The project now requires
+CMake 3.23 or greater.
+
+A Conan 2 project definition file has also been added so that Conan 2 may
+be used to fetch the dependencies of the project or to create a package.
+
+### OpenSSL 3
+
+The library used to depend on OpenSSL 1, which will soon no longer be
+maintained. It now depends on OpenSSL 3.
+
+### Boost 1.78
+
+The library now supports Boost 1.78.
+
+### Fixes
+
+- Member functions that are declared `noexcept` are now advertised
+  properly. #SW-2913
+- Build errors have been fixed when compiling with Clang 12 and more.
+- Some compiler warnings have been fixed.
+
 libqi 4.0.0
 -----------
 

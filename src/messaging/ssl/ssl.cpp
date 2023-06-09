@@ -3,7 +3,8 @@
 **  See COPYING for the license
 */
 
-#include "openssl/bio.h"
+#include <openssl/bio.h>
+#include <openssl/err.h>
 #include <qi/messaging/ssl/ssl.hpp>
 #include <qi/log.hpp>
 
@@ -108,9 +109,14 @@ boost::optional<PKey> BIO::readPemPrivateKey(PemPasswordCallback passwordCb)
   if (key == nullptr)
   {
     const auto err =  ::ERR_peek_error();
-    if (ERR_GET_LIB(err) == ERR_LIB_PEM
-        // No start line means there is no more key in the PEM.
-        && ERR_GET_REASON(err) == PEM_R_NO_START_LINE)
+    if (
+        // Sometimes, `PEM_read_bio_PrivateKey` returns null but without
+        // an active error. In these cases, we consider that there was no
+        // key in the file.
+        err == 0
+        || (ERR_GET_LIB(err) == ERR_LIB_PEM
+          // No start line means there is no more key in the PEM.
+          && ERR_GET_REASON(err) == PEM_R_NO_START_LINE))
     {
       ::ERR_clear_error();
       return {};
@@ -142,9 +148,9 @@ BIO BIO::fromFile(boost::filesystem::path path, const char* mode)
   return BIO(bio);
 }
 
-int PKey::cmp(const PKey& o) const
+int PKey::eq(const PKey& o) const
 {
-  return ::EVP_PKEY_cmp(get(), o.get());
+  return ::EVP_PKEY_eq(get(), o.get());
 }
 
 void PKey::usePrivateIn(::SSL_CTX& ctx) const

@@ -20,7 +20,7 @@ namespace qi {
                                                      MetaCallType threadingModel)
   {
     MetaMethodBuilder builder;
-    AnyFunction f = AnyFunction::from(function).dropFirstArgument();
+    AnyFunction f = AnyFunction::from(std::move(function)).dropFirstArgument();
     builder.setName(name);
     builder.setSignature(f);
     builder.setDescription(desc);
@@ -36,7 +36,7 @@ namespace qi {
                                                             MetaCallType threadingModel)
   {
     MetaMethodBuilder builder;
-    AnyFunction f = AnyFunction::from(method, object).dropFirstArgument();
+    AnyFunction f = AnyFunction::from(std::move(method), std::move(object)).dropFirstArgument();
     builder.setName(name);
     builder.setSignature(f);
     builder.setDescription(desc);
@@ -49,7 +49,7 @@ namespace qi {
                                                             FUNCTION_TYPE function,
                                                             MetaCallType threadingModel)
   {
-    AnyFunction f = AnyFunction::from(function).dropFirstArgument();
+    AnyFunction f = AnyFunction::from(std::move(function)).dropFirstArgument();
     builder.setSignature(f);
     // throw on error
     return xAdvertiseMethod(builder, f, threadingModel);
@@ -61,7 +61,7 @@ namespace qi {
                                                             METHOD_TYPE method,
                                                             MetaCallType threadingModel)
   {
-    AnyFunction f = AnyFunction::from(method, object).dropFirstArgument();
+    AnyFunction f = AnyFunction::from(std::move(method), std::move(object)).dropFirstArgument();
     builder.setSignature(f);
     // throw on error
     return xAdvertiseMethod(builder, f, threadingModel);
@@ -75,7 +75,7 @@ namespace qi {
 
   template <typename T> unsigned int DynamicObjectBuilder::advertiseSignalF(const std::string& name)
   {
-    return xAdvertiseSignal(name, detail::FunctionSignature<T>::signature());
+    return xAdvertiseSignal(name, detail::functionArgumentsSignature<T>());
   }
 
   template <typename T> unsigned int DynamicObjectBuilder::advertiseProperty(const std::string& name)

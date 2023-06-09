@@ -143,6 +143,9 @@ namespace mock
         bool is_v6() const {return _isV6;}
         std::string to_string() const {return _value;}
         KA_GENERATE_FRIEND_REGULAR_OPS_2(_address, _isV6, _value)
+        friend std::ostream& operator<<(std::ostream& os, const _address& a) {
+          return os << "address(isV6=" << a._isV6 << ", value=" << a._value << ")";
+        }
       } _addr;
       _endpoint() = default;
       _address address() const {return _addr;}
@@ -150,12 +153,18 @@ namespace mock
       struct protocol_t {};
       protocol_t protocol() const {return {};}
       KA_GENERATE_FRIEND_REGULAR_OPS_1(_endpoint, _addr)
+      friend std::ostream& operator<<(std::ostream& os, const _endpoint& e) {
+        return os << "endpoint(address=" << e._addr << ")";
+      }
     };
     struct _resolver_entry
     {
       _endpoint _e;
       _endpoint endpoint() const {return _e;}
       KA_GENERATE_FRIEND_REGULAR_OPS_1(_resolver_entry, _e)
+      friend std::ostream& operator<<(std::ostream& os, const _resolver_entry& e) {
+        return os << "entry(endpoint=" << e._e << ")";
+      }
     };
     using _anyHandler = std::function<void (error_code_type)>;
     struct ssl_socket_type
@@ -326,7 +335,6 @@ KA_WARNING_POP()
     {
 KA_WARNING_PUSH()
 KA_WARNING_DISABLE(4068, pragmas)
-KA_WARNING_DISABLE(, undefined-var-template)
       SocketFunctions<NetSslSocket>::_async_read_socket(s, b, h);
 KA_WARNING_POP()
     }
@@ -336,7 +344,6 @@ KA_WARNING_POP()
     {
 KA_WARNING_PUSH()
 KA_WARNING_DISABLE(4068, pragmas)
-KA_WARNING_DISABLE(, undefined-var-template)
       SocketFunctions<NetSslSocket>::_async_write_socket(s, b, h);
 KA_WARNING_POP()
     }
@@ -393,6 +400,20 @@ KA_WARNING_POP()
       // Unused at the moment in our tests.
     }
   };
+
+  template <>
+  Network::_anyAsyncReaderSocket<Network::ssl_socket_type>
+    Network::SocketFunctions<Network::ssl_socket_type>::_async_read_socket;
+  template <>
+  Network::_anyAsyncReaderSocket<qi::sock::SocketWithContext<Network>>
+    Network::SocketFunctions<qi::sock::SocketWithContext<Network>>::_async_read_socket;
+
+  template <>
+  Network::_anyAsyncWriterSocket<Network::ssl_socket_type>
+    Network::SocketFunctions<Network::ssl_socket_type>::_async_write_socket;
+  template <>
+  Network::_anyAsyncWriterSocket<qi::sock::SocketWithContext<Network>>
+      Network::SocketFunctions<qi::sock::SocketWithContext<Network>>::_async_write_socket;
 
 } // namespace mock
 

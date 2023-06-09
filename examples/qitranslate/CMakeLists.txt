@@ -2,11 +2,5 @@
 ## Use of this source code is governed by a BSD-style license that can be
 ## found in the COPYING file.
 
-cmake_minimum_required(VERSION 3.16) # Ubuntu 20.04 comes with CMake 3.16.3
-project(translate)
-find_package(qibuild)
-
-qi_create_bin(test_translate main.cpp NO_INSTALL)
-qi_use_lib(test_translate qi)
-
-qi_create_trad(test_translate "po")
+add_executable(example_translate EXCLUDE_FROM_ALL main.cpp)
+target_link_libraries(example_translate PRIVATE qi::qi)

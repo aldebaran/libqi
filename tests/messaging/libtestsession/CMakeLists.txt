@@ -5,77 +5,41 @@
 ## Copyright (C) 2012 Aldebaran Robotics
 ##
 
-include_directories(".")
-
-qi_stage_dir(".")
-
 function(qimessaging_create_session_test name)
-  if ((DEFINED BUILD_TESTS AND NOT BUILD_TESTS) OR NOT QI_WITH_TESTS)
-    return()
-  endif()
   cmake_parse_arguments(ARG "" "TIMEOUT" "ARGUMENTS;SRC;DEPENDS" ${ARGN})
 
-  MATH( EXPR ARG_TIMEOUT_SSL "${ARG_TIMEOUT} * 2" )
+  add_executable("${name}")
+  target_sources("${name}" PRIVATE ${ARG_SRC})
+  target_link_libraries("${name}" PRIVATE ${ARG_DEPENDS} GTest::gmock)
+  add_test(NAME "${name}_direct" COMMAND "${name}" --mode=direct ${ARG_ARGUMENTS})
+  add_test(NAME "${name}_sd" COMMAND "${name}" --mode=sd ${ARG_ARGUMENTS})
+  add_test(NAME "${name}_gateway" COMMAND "${name}" --mode=gateway ${ARG_ARGUMENTS})
+  add_test(NAME "${name}_ssl" COMMAND "${name}" --mode=ssl ${ARG_ARGUMENTS})
+  #add_test(NAME "${name}_nightmare" COMMAND "${name}" --mode=nightmare ${ARG_ARGUMENTS})
 
-  qi_create_gmock(${name} SRC ${ARG_SRC} DEPENDS ${ARG_DEPENDS} NO_ADD_TEST)
-  qi_add_test(${name}_direct ${name} ARGUMENTS --mode=direct ${ARG_ARGUMENTS}
-    TIMEOUT ${ARG_TIMEOUT} GMOCK_TEST)
-  #qi_add_test(${name}_nightmare ${name} ARGUMENTS --mode=nightmare ${ARG_ARGUMENTS}
-  #  TIMEOUT ${ARG_TIMEOUT} GMOCK_TEST)
-  qi_add_test(${name}_sd ${name} ARGUMENTS --mode=sd ${ARG_ARGUMENTS}
-    TIMEOUT ${ARG_TIMEOUT} GMOCK_TEST)
-  qi_add_test(${name}_gateway ${name} ARGUMENTS --mode=gateway ${ARG_ARGUMENTS}
-    TIMEOUT ${ARG_TIMEOUT} GMOCK_TEST)
-  qi_add_test(${name}_ssl ${name} ARGUMENTS --mode=ssl ${ARG_ARGUMENTS}
-    TIMEOUT ${ARG_TIMEOUT_SSL} GMOCK_TEST)
+  math(EXPR ARG_TIMEOUT_SSL "${ARG_TIMEOUT} * 2")
+  set_tests_properties(
+    "${name}_direct"
+    "${name}_sd"
+    "${name}_gateway"
+    PROPERTIES
+      TIMEOUT "${ARG_TIMEOUT}"
+  )
+  set_tests_properties(
+    "${name}_ssl"
+    PROPERTIES
+      TIMEOUT "${ARG_TIMEOUT_SSL}"
+  )
 endfunction()
 
+qi_create_test(
+  test_testsession
 
-set(TESTSESSION_H
-  testsession/testsession.hpp
-  testsession/testsessionpair.hpp
-)
+  test/test_testsession.cpp
 
-set(TESTSESSION_C
-  src/testmode.cpp
-  src/testsessionpair.cpp
-  src/testsession.cpp
-  src/testsession_p.hpp
-  src/testsession_p.cpp
-  src/testsessionerror.cpp
-  src/trafficgenerator.hpp
-  src/trafficgenerator.cpp
-  src/populationgenerator.cpp
-  src/populationgenerator.cpp
-  src/sessioninitializer.hpp
-  src/sessioninitializer.cpp
-  src/defaultservice.hpp
-  src/defaultservice.cpp
-)
-
-qi_install_header(${TESTSESSION_H} KEEP_RELATIVE_PATHS)
-
-qi_create_lib(
-  testsession
-  STATIC
-  ${TESTSESSION_H} ${TESTSESSION_C}
   DEPENDS
-    qi
-    testssl
+  qi::qi
+  qi::testsession
+
+  TIMEOUT 30
 )
-
-qi_stage_lib(testsession)
-
-if(QI_WITH_TESTS)
-  qi_create_gtest(
-    test_testsession
-
-    "test/test_testsession.cpp"
-
-    DEPENDS
-    qi
-    testsession
-
-    TIMEOUT 30
-  )
-endif()

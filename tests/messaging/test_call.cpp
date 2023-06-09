@@ -308,6 +308,38 @@ TEST(TestCall, CallVoid)
   p.server()->unregisterService(serviceID);
 }
 
+struct Add
+{
+  int a;
+  Add(int a) : a(a) {}
+  inline int add(int b) const noexcept { return a + b; }
+};
+QI_REGISTER_OBJECT(Add, add);
+
+TEST(TestCall, CallNoExcept)
+{
+  TestSessionPair p;
+  p.server()->registerService("Add", boost::make_shared<Add>(329)).value();
+  const auto clientAdd = p.client()->service("Add").value();
+  const auto res = clientAdd.call<int>("add", 938);
+  EXPECT_EQ(res, 1267);
+}
+
+TEST(TestCall, CallNoExceptFunctionObject)
+{
+  TestSessionPair p;
+  qi::DynamicObjectBuilder builder;
+  auto add = boost::make_shared<Add>(321);
+  builder.advertiseMethod("addImpl", add.get(), &Add::add);
+  builder.advertiseMethod("add", [](const qi::AnyObject& self, int b) noexcept {
+    return self.call<int>("add", b);
+  });
+  p.server()->registerService("Add", builder.object(add)).value();
+  const auto clientAdd = p.client()->service("Add").value();
+  const auto res = clientAdd.call<int>("add", add, 123);
+  EXPECT_EQ(res, 444);
+}
+
 TEST(TestCall, CallVoidErr)
 {
   std::list<std::pair<std::string, int> >  robots;

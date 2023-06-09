@@ -154,14 +154,14 @@ static boost::filesystem::path writeTmpFile(const std::string& content)
 
 TEST(SslError, FromCurrentErrorContainsWhatString)
 {
-  ::ERR_put_error(10, 11, 12, "thisfile.cpp", 42);
+  ERR_raise(10, 11);
   auto ex = qi::ssl::Error::fromCurrentError("a custom error");
   EXPECT_THAT(ex.what(), testing::HasSubstr("a custom error"));
 }
 
 TEST(SslError, FromCurrentErrorClearsError)
 {
-  ::ERR_put_error(10, 11, 12, "thisfile.cpp", 42);
+  ERR_raise(10, 11);
   EXPECT_NE(0u, ::ERR_peek_error());
   auto ex = qi::ssl::Error::fromCurrentError("err");
   EXPECT_EQ(0u, ::ERR_peek_error());
@@ -169,11 +169,13 @@ TEST(SslError, FromCurrentErrorClearsError)
 
 TEST(SslError, FromCurrentErrorHasPreviousErrorCode)
 {
-  ::ERR_put_error(10, 11, 12, "thisfile.cpp", 42);
-  const auto errnum = ERR_PACK(10, 11, 12);
-  ASSERT_EQ(errnum, ::ERR_peek_error());
+  static const int libCode = ERR_get_next_error_library();
+  ERR_raise(libCode, ERR_R_PASSED_INVALID_ARGUMENT);
+  auto err = ::ERR_peek_error();
+  ASSERT_EQ(libCode, ERR_GET_LIB(err));
+  ASSERT_EQ(ERR_R_PASSED_INVALID_ARGUMENT, ERR_GET_REASON(err));
   auto ex = qi::ssl::Error::fromCurrentError("err");
-  EXPECT_EQ(std::error_code(errnum, ssl::errorCategory()), ex.code());
+  EXPECT_EQ(std::error_code(err, ssl::errorCategory()), ex.code());
 }
 
 namespace {

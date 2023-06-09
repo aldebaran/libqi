@@ -1,15 +1,3 @@
 <project version="3">
-  <maintainer email="jlamotte@softbankrobotics.com">Joël Lamotte</maintainer>
-  <maintainer email="jmonnon@softbankrobotics.com">Jérémy Monnon</maintainer>
-  <maintainer email="philippe.martin@softbankrobotics.com">Philippe Martin</maintainer>
-  <maintainer email="vincent.palancher@softbankrobotics.com">Vincent Palancher</maintainer>
-  <maintainer email="julien.bernard@external.softbankrobotics.com">Julien Bernard</maintainer>
-  <qibuild name="libqi">
-    <depends buildtime="true" runtime="true" names="dl boost pthread systemd openssl" />
-    <depends testtime="true" buildtime="true" names="gtest gmock" />
-  </qibuild>
-  <project src="dox" />
-
-  <project src="compat/cqit"/>
-  <project src="compat/cqim"/>
-</project>
+  <project src="dox">
+<project>

@@ -1,4 +1,4 @@
-qi_create_gmock(
+qi_create_test(
   test_type
 
   SRC
@@ -20,12 +20,18 @@ qi_create_gmock(
   "test_optional.cpp"
 
   DEPENDS
-  qi
+  qi::qi
+  qi::testutils
+  GTest::gmock
 
   TIMEOUT 30
 )
 
-if(QI_WITH_TESTS)
-  qi_create_module(qi_test_anymodule SRC cat.hpp qi_test_anymodule.cpp SHARED DEPENDS QI NO_INSTALL)
-  install(TARGETS qi_test_anymodule DESTINATION lib COMPONENT test)
-endif()
+qi_create_module(
+  qi_test_anymodule
+  SRC
+    cat.hpp
+    qi_test_anymodule.cpp
+  NO_INSTALL
+)
+add_dependencies(test_type qi_test_anymodule)

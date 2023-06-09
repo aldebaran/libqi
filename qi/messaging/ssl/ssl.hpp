@@ -138,11 +138,15 @@ struct QI_API PemPasswordCallback
 
 // Regular:
   PemPasswordCallback() noexcept = default;
-  KA_GENERATE_FRIEND_REGULAR_OPS_2(
-    PemPasswordCallback,
-      callback,
-      userData
-  )
+
+  friend bool operator==(const PemPasswordCallback& a,
+                         const PemPasswordCallback& b)
+  {
+    return std::tie(a.callback, a.userData)
+        == std::tie(b.callback, b.userData);
+  }
+
+  friend KA_GENERATE_REGULAR_OP_DIFFERENT(PemPasswordCallback)
 
   inline explicit PemPasswordCallback(CallbackPointer cb,
                                       void* userData = nullptr) noexcept
@@ -501,16 +505,17 @@ public:
     return privateFromPemRange(begin(range), end(range), std::move(cb));
   }
 
-  /// Compares the public key components and parameters (if present) of two keys.
+  /// Compares the public and private key components and parameters (if
+  /// present) of two keys.
   ///
   /// Returns 1 if the keys match, 0 if they don't match, -1 if the key types
   /// are different and -2 if the operation is not supported.
   ///
-  /// This behavior differs from the comparison of two keys using `operator==`, which
-  /// compares the value of pointers and not the content of the pointees.
+  /// This behavior differs from the comparison of two keys using `operator==`,
+  /// which compares the value of pointers and not the content of the pointees.
   ///
-  /// @see `EVP_PKEY_cmp`
-  int cmp(const PKey& o) const;
+  /// @see `EVP_PKEY_eq`
+  int eq(const PKey& o) const;
 
   /// Loads this key into the SSL context.
   /// It must refer to a private key.
@@ -725,10 +730,6 @@ struct QI_API ConfigBase
   /// though they are not self-signed.
   /// @see `X509_VERIFY_PARAM_set_flags` and `X509_V_FLAG_PARTIAL_CHAIN`
   bool verifyPartialChain = false;
-
-// This type is only destructible from subtypes.
-protected:
-  ~ConfigBase() = default;
 };
 
 struct QI_API ClientConfig : ConfigBase

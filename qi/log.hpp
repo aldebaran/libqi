@@ -632,14 +632,15 @@ namespace qi
 
   namespace detail {
 
-#define QI_DERIVE_EXCEPTIONLOGIMPL(LEVEL)                                \
-    /* Logs data for level #LEVEL */                                     \
-    /* TODO: Make variadic when C++ version >= 17. */                    \
-    template<typename T, typename U, typename V, typename W>             \
+#define QI_DERIVE_EXCEPTIONLOGIMPL(LEVEL)                                    \
+    /* Logs data for level #LEVEL */                                         \
+    /* TODO: Make variadic when C++ version >= 17. */                        \
+    template<typename T, typename U, typename V, typename W>                 \
     void exceptionLogImpl(ka::int_constant_t<LogLevel_ ## LEVEL> /* level*/, \
-      const T& category, const U& prefix, const V& except, const W& msg) \
-    {                                                                    \
-      qiLog ## LEVEL(category) << prefix << except << msg;               \
+      [[maybe_unused]] const T& category, const U& prefix,                   \
+      const V& except, const W& msg)                                         \
+    {                                                                        \
+      qiLog ## LEVEL(category) << prefix << except << msg;                   \
     }
 
     // Empty version for the 'silent' log level.

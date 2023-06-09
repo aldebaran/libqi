@@ -107,15 +107,12 @@ namespace qi
 
     // TypeManager is accessed by this interface.
     // Only things for which we are sure are marked constructible and clonable
-    template<typename T>
+    template <typename T>
     struct TypeManager
-        : public boost::mpl::if_c<
-        boost::is_function<T>::value,
-          TypeManagerNull<T>,
-          typename boost::mpl::if_c< boost::is_pod<T>::value,
-                 TypeManagerDefaultStruct<T>,
-                 TypeManagerDefaultInterface<T> >
-          ::type>::type {};
+        : public std::conditional_t<
+              std::is_function_v<T>, TypeManagerNull<T>,
+              std::conditional_t<std::is_pod_v<T>, TypeManagerDefaultStruct<T>,
+                                 TypeManagerDefaultInterface<T>>> {};
 
     // Except for boost::function which matches is_function and is copyable
     template<typename T>

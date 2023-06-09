@@ -8,6 +8,7 @@
 #include <src/messaging/applicationsession_internal.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <gmock/gmock.h>
 
 using namespace qi;
