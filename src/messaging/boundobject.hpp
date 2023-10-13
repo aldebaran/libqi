@@ -275,8 +275,13 @@ namespace qi
         KA_GENERATE_FRIEND_REGULAR_DERIVED_OPS(SocketBinding)
 
       // SocketBinding:
+        /// Create a binding for this object to this socket. If the object is
+        /// already bound to this socket, return an empty optional and no
+        /// additional binding is created.
+        ///
         /// @pre `object != nullptr && socket != nullptr`
-        SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept;
+        static std::optional<SocketBinding> make(BoundObjectPtr object, MessageSocketPtr socket) noexcept;
+
         ~SocketBinding();
 
         BoundObjectPtr object() const noexcept { return _object; }
@@ -284,6 +289,8 @@ namespace qi
         MessageSocketPtr socket() const noexcept { return _socket.lock(); }
 
       private:
+        SocketBinding(BoundObjectPtr object, MessageSocketPtr socket) noexcept;
+
         void reset() noexcept;
 
         BoundObjectPtr _object;

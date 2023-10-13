@@ -45,10 +45,15 @@ namespace qi
         throw std::logic_error("This BoundObject already exists in this host.");
     }
 
-    // Create the value outside of the lock of the list to avoid potential deadlocks.
-    detail::boundObject::SocketBinding binding(std::move(obj), std::move(socket));
-    _objSockBindings->emplace_back(std::move(binding));
-
+    // Create the value outside of the lock of the list to avoid potential
+    // deadlocks.
+    qiLogDebug() << "Binding object (id=" << id << ") to socket " << socket;
+    if (auto binding = detail::boundObject::SocketBinding::make(std::move(obj), std::move(socket));
+        binding)
+      _objSockBindings->emplace_back(std::move(*binding));
+    else
+      qiLogDebug() << "Object (id=" << id << ") is already bound to socket "
+                   << socket << ", no new binding has been created.";
     return id;
   }
 
