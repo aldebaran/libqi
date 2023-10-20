@@ -3,6 +3,7 @@
 #include <qi/path.hpp>
 #include <src/application_p.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
