@@ -171,7 +171,15 @@ namespace qi
                      << ".";
 
         for (const auto& boundObject : _boundObjects)
-          _bindings.emplace_back(boundObject.second, socket);
+        {
+          if (auto binding = boundObject::SocketBinding::make(boundObject.second, socket);
+              binding)
+            _bindings.push_back(std::move(*binding));
+          else
+            qiLogDebug() << "Object (service=" << boundObject.first << ", id="
+                         << boundObject.second->id() << ") is already bound to the socket "
+                         << socket << ", no new binding has been created.";
+        }
         return _boundObjects.size();
       }
 
@@ -181,7 +189,11 @@ namespace qi
                      << ".";
 
         for (const auto& socketInfo : _socketsInfo)
-          _bindings.emplace_back(object, socketInfo->socket());
+        {
+          if (auto binding = boundObject::SocketBinding::make(object, socketInfo->socket());
+              binding)
+            _bindings.push_back(std::move(*binding));
+        }
         return _socketsInfo.size();
       }
 

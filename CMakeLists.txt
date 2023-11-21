@@ -663,7 +663,7 @@ endif()
 #
 # Refer to the "config.hpp.in" file to see what parameters the file defines.
 set(config_hpp_file_path "${CMAKE_CURRENT_BINARY_DIR}/qi/config.hpp")
-configure_file(qi/config.hpp.in "${config_hpp_file_path}")
+configure_file(qi/config.hpp.in "${config_hpp_file_path}" @ONLY)
 target_sources(
   qi_objects
   PUBLIC
@@ -951,7 +951,7 @@ set(
 configure_file(
   cmake/qimodule-config.cmake
   "${qimodule_config_file_path}"
-  @ONLY
+  COPYONLY
 )
 
 install(

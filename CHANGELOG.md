@@ -1,6 +1,19 @@
 libqi Change Log
 =================
 
+libqi 4.0.2
+-----------
+
+This minor release focuses on fixing bugs.
+
+### Fixes
+
+- An assertion failed occurs at the restart of services. #SW-4667
+- Gateway is stuck at startup if IP interface is not up, even if it comes later.
+  #SW-1331
+- Fix build error in tests when building with Boost 1.79.
+- conan: Fix function defining version and update GTest dependency to v1.14.
+
 libqi 4.0.1
 -----------
 

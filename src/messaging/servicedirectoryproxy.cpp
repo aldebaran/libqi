@@ -504,7 +504,31 @@ Future<ServiceDirectoryProxyPtr> ServiceDirectoryProxy::create(Config config)
   auto ready = readyPromise.future();
   ServiceDirectoryProxyPtr proxy(
     new ServiceDirectoryProxy(std::move(config), std::move(readyPromise)));
-  return ready.andThen([proxy](void*) mutable { return std::move(proxy); });
+  return ready.then(FutureCallbackType::FutureCallbackType_Sync,
+      [proxy = std::move(proxy)](Future<void> readyFuture) mutable {
+        // Move the capture in a local variable so that the proxy gets
+        // destroyed immediately in case the ready future is in error.
+        // Otherwise the shared pointer could keep the proxy alive as
+        // long as a copy of the continuation exists somewhere (such as
+        // in the event loop).
+        auto localProxy = ka::exchange(proxy, nullptr);
+        switch (readyFuture.wait(0))
+        {
+          case FutureState::FutureState_Canceled:
+          {
+            Promise<ServiceDirectoryProxyPtr> prom;
+            prom.setCanceled();
+            return prom.future();
+          }
+          case FutureState::FutureState_FinishedWithError:
+            return makeFutureError<ServiceDirectoryProxyPtr>(readyFuture.error());
+          case FutureState::FutureState_FinishedWithValue:
+            return futurize(std::move(localProxy));
+          default:
+            QI_ASSERT_UNREACHABLE();
+        }
+        return Future<ServiceDirectoryProxyPtr>();
+      }).unwrap();
 }
 
 ServiceDirectoryProxy::~ServiceDirectoryProxy() = default;

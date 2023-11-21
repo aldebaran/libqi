@@ -66,7 +66,7 @@ class QiConan(ConanFile):
     ]
 
     test_requires = [
-        "gtest/cci.20210126",
+        "gtest/[~1.14]",
     ]
 
     exports = "project.json"
@@ -117,6 +117,7 @@ class QiConan(ConanFile):
         version = self.cfg["version"]
 
         # For development version, try adding a suffix with the revision SHA1.
+        revision = None
         if version.endswith('-dev'):
             git = tools.scm.Git(self)
             try:

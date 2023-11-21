@@ -4,6 +4,7 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <optional>
 
 #include <qi/anyobject.hpp>
 #include <qi/type/objecttypebuilder.hpp>
@@ -557,8 +558,11 @@ namespace qi
       std::find_if(syncConnectionList->begin(), end,
                    [&](const MessageDispatchConnection& conn) { return conn.socket() == socket; });
     if (connectionIt != end)
+    {
       // This object is already accepting messages from this socket, do nothing.
+      QI_LOG_DEBUG_BOUNDOBJECT() << "Object is already bound to socket " << socket;
       return false;
+    }
 
     MessageDispatcher::MessageHandler handler =
       track([this, socket](const Message& msg) { return onMessage(msg, socket); }, weak_from_this());
@@ -871,11 +875,17 @@ namespace qi
         : _object(object)
         , _socket(socket)
       {
-        QI_ASSERT_NOT_NULL(_object);
+        QI_ASSERT_NOT_NULL(object);
         QI_ASSERT_NOT_NULL(socket);
-        const auto res = _object->bindToSocket(socket);
-        QI_IGNORE_UNUSED(res);
-        QI_ASSERT_TRUE(res);
+      }
+
+      std::optional<SocketBinding> SocketBinding::make(BoundObjectPtr object, MessageSocketPtr socket) noexcept
+      {
+        QI_ASSERT_NOT_NULL(object);
+        QI_ASSERT_NOT_NULL(socket);
+        if (object->bindToSocket(socket))
+          return SocketBinding(object, socket);
+        return std::nullopt;
       }
 
       SocketBinding::SocketBinding(SocketBinding&&) noexcept = default;
