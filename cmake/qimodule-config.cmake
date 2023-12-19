@@ -52,7 +52,7 @@ function(qi_create_module name)
   cmake_parse_arguments(
     qi_create_module
     # Options
-    "NO_INSTALL;EXCLUDE_FROM_ALL"
+    "SHARED;NO_INSTALL;EXCLUDE_FROM_ALL"
     # Single value arguments
     ""
     # Multi value arguments
@@ -113,14 +113,14 @@ function(qi_create_module name)
       # Not a target, try finding a package with this name.
       string(TOUPPER "${dep}" dep)
       find_package("${dep}")
-      if("${dep}_FOUND")
-        if("${dep}_LIBRARIES")
+      if(${dep}_FOUND)
+        if(${dep}_LIBRARIES)
           target_link_libraries("${target}" PRIVATE ${${dep}_LIBRARIES})
         endif()
-        if("${dep}_INCLUDE_DIRS")
+        if(${dep}_INCLUDE_DIRS)
           target_include_directories(${target} PRIVATE ${${dep}_INCLUDE_DIRS})
         endif()
-        if("${dep}_DEFINITIONS")
+        if(${dep}_DEFINITIONS)
           target_compile_definitions(${target} PRIVATE ${${dep}_DEFINITIONS})
         endif()
       endif()
