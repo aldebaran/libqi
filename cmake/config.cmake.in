@@ -5,12 +5,12 @@ include(CMakeFindDependencyMacro)
 
 # - Boost
 find_dependency(
-  Boost @BOOST_VERSION@ EXACT REQUIRED
+  Boost @BOOST_VERSION@ REQUIRED
   COMPONENTS @BOOST_COMPONENTS@
 )
 
 # - OpenSSL
-find_dependency(OpenSSL @OPENSSL_VERSION@ EXACT REQUIRED)
+find_dependency(OpenSSL @OPENSSL_VERSION@ REQUIRED)
 
 # - Threads
 if(@UNIX@)
