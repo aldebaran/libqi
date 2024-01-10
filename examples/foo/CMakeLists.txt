@@ -1,4 +1,4 @@
-qi_create_module(foo foo.cpp NO_INSTALL EXCLUDE_FROM_ALL)
+qi_add_module(foo EXCLUDE_FROM_ALL foo.cpp)
 
 add_executable(example_foo EXCLUDE_FROM_ALL footest.cpp)
 target_link_libraries(example_foo PRIVATE qi::qi)

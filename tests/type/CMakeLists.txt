@@ -27,11 +27,9 @@ qi_create_test(
   TIMEOUT 30
 )
 
-qi_create_module(
+qi_add_module(
   qi_test_anymodule
-  SRC
-    cat.hpp
-    qi_test_anymodule.cpp
-  NO_INSTALL
+  cat.hpp
+  qi_test_anymodule.cpp
 )
 add_dependencies(test_type qi_test_anymodule)
