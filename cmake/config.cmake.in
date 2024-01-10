@@ -23,7 +23,7 @@ check_required_components(@PACKAGE_NAME@)
 
 # qibuild compatiblity variables.
 # These variables are deprecated and will be removed in the future.
-string(TOUPPER PACKAGE_NAME_UPPER @PACKAGE_NAME@)
+string(TOUPPER @PACKAGE_NAME@ PACKAGE_NAME_UPPER)
 
 get_target_property(
   ${PACKAGE_NAME_UPPER}_INCLUDE_DIRS
