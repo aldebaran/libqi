@@ -25,38 +25,23 @@ check_required_components(@PACKAGE_NAME@)
 # These variables are deprecated and will be removed in the future.
 string(TOUPPER @PACKAGE_NAME@ PACKAGE_NAME_UPPER)
 
-get_target_property(
-  ${PACKAGE_NAME_UPPER}_INCLUDE_DIRS
-  @PACKAGE_NAME@::@PACKAGE_NAME@
-  INTERFACE_INCLUDE_DIRECTORIES
+# Create a global imported interface library so that any project can link to
+# it, even projects in other directories. This is required because qibuild saves
+# if a package has already been found by any CMake subproject as a global
+# property, meaning it will not retry to find the package in other
+# subdirectories. Consequently, the target needs to stay available in any
+# directory.
+add_library(
+  "@PACKAGE_NAME@::@PACKAGE_NAME@_global"
+  INTERFACE IMPORTED GLOBAL
 )
-
-set(${PACKAGE_NAME_UPPER}_LIBRARIES)
-get_target_property(${PACKAGE_NAME_UPPER}_LIBRARIES_GENERAL @PACKAGE_NAME@::@PACKAGE_NAME@ IMPORTED_LOCATION)
-if(${PACKAGE_NAME_UPPER}_LIBRARIES_GENERAL)
-  list(APPEND ${PACKAGE_NAME_UPPER}_LIBRARIES general ${${PACKAGE_NAME_UPPER}_LIBRARIES_GENERAL})
-endif()
-get_target_property(${PACKAGE_NAME_UPPER}_LIBRARIES_DEBUG @PACKAGE_NAME@::@PACKAGE_NAME@ IMPORTED_LOCATION_DEBUG)
-if(${PACKAGE_NAME_UPPER}_LIBRARIES_DEBUG)
-  list(APPEND ${PACKAGE_NAME_UPPER}_LIBRARIES debug ${${PACKAGE_NAME_UPPER}_LIBRARIES_DEBUG})
-endif()
-get_target_property(${PACKAGE_NAME_UPPER}_LIBRARIES_OPTIMIZED @PACKAGE_NAME@::@PACKAGE_NAME@ IMPORTED_LOCATION_RELEASE)
-if(${PACKAGE_NAME_UPPER}_LIBRARIES_OPTIMIZED)
-  list(APPEND ${PACKAGE_NAME_UPPER}_LIBRARIES optimized ${${PACKAGE_NAME_UPPER}_LIBRARIES_OPTIMIZED})
-endif()
-
-set(${PACKAGE_NAME_UPPER}_INCLUDE_DIRS ${${PACKAGE_NAME_UPPER}_INCLUDE_DIRS} CACHE INTERNAL "" FORCE)
-set(${PACKAGE_NAME_UPPER}_LIBRARIES ${${PACKAGE_NAME_UPPER}_LIBRARIES} CACHE INTERNAL "" FORCE )
-
-set(${PACKAGE_NAME_UPPER}_DEPENDS OPENSSL)
-
-if(@WITH_SYSTEMD)
-  list(APPEND ${PACKAGE_NAME_UPPER}_DEPENDS SYSTEMD)
-endif()
-
-foreach(component IN ITEMS @BOOST_COMPONENTS@)
-  string(TOUPPER ${component} component_upper)
-  list(APPEND ${PACKAGE_NAME_UPPER}_DEPENDS BOOST_${component_upper})
-endforeach()
-
-set(${PACKAGE_NAME_UPPER}_DEPENDS ${${PACKAGE_NAME_UPPER}_DEPENDS} CACHE INTERNAL "" FORCE)
+target_link_libraries(
+  "@PACKAGE_NAME@::@PACKAGE_NAME@_global"
+  INTERFACE
+    "@PACKAGE_NAME@::@PACKAGE_NAME@"
+)
+set(
+  "${PACKAGE_NAME_UPPER}_LIBRARIES"
+  "@PACKAGE_NAME@::@PACKAGE_NAME@_global"
+  CACHE INTERNAL "" FORCE
+)
