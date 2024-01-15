@@ -7,7 +7,7 @@ endif()
 # The format of a module name is:
 # [<PKG>.]<MODULE>
 function(
-  qi_module_name_split
+  _qi_module_name_split
     name
     module_name_var
     pkg_name_var
@@ -26,6 +26,45 @@ function(
   set("${module_name_var}" ${module_name} PARENT_SCOPE)
   set("${pkg_name_var}" ${pkg_name} PARENT_SCOPE)
   set("${pkg_subdir_var}" ${pkg_subdir} PARENT_SCOPE)
+endfunction()
+
+# Lookup a dependency and add it to the module target, recursively.
+#
+# This is a compatibility function for to mimic the behavior of `qi_use_lib` for
+# `qi_create_module`.
+#
+# Modules declared with `qi_use_module` should link the module target directly
+# to its dependencies with `target_link_libraries`.
+function(
+  _qi_module_add_dependency
+    target
+    dependency
+)
+  # Dependencies names are not case sensitive, try both.
+  string(TOLOWER ${dependency} dependency_lower)
+
+  if(TARGET ${dependency})
+    target_link_libraries(${target} ${dependency})
+  elseif(TARGET ${dependency_lower})
+    target_link_libraries(${target} ${dependency_lower})
+  else()
+    # Not a target, try finding a package with this name.
+    string(TOUPPER ${dependency} dependency)
+    find_package(${dependency} QUIET REQUIRED)
+    if(${dependency}_LIBRARIES)
+      target_link_libraries(${target} ${${dependency}_LIBRARIES})
+    endif()
+    if(${dependency}_INCLUDE_DIRS)
+      target_include_directories(${target} PRIVATE ${${dependency}_INCLUDE_DIRS})
+    endif()
+    if(${dependency}_DEFINITIONS)
+      target_compile_definitions(${target} PRIVATE ${${dependency}_DEFINITIONS})
+    endif()
+    # Recursive into dependencies of the dependency.
+    foreach(dependency_depend IN LISTS ${dependency}_DEPENDS)
+      _qi_module_add_dependency(${target} ${dependency_depend})
+    endforeach()
+  endif()
 endfunction()
 
 #[=======================================================================[.rst:
@@ -69,7 +108,7 @@ function(qi_create_module name)
   list(APPEND qi_create_module_SRC ${qi_create_module_UNPARSED_ARGUMENTS})
 
   message(STATUS "Module: ${name}")
-  qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
+  _qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
 
   set(target "${name}")
   add_library("${target}" MODULE ${add_library_args})
@@ -87,28 +126,7 @@ function(qi_create_module name)
   )
 
   foreach(dep IN LISTS qi_create_module_DEPENDS)
-    # Dependencies names are not case sensitive, try both.
-    string(TOLOWER "${dep}" ldep)
-    if(TARGET "${dep}")
-      target_link_libraries("${target}" "${dep}")
-    elseif(TARGET "${ldep}")
-      target_link_libraries("${target}" "${ldep}")
-    else()
-      # Not a target, try finding a package with this name.
-      string(TOUPPER "${dep}" dep)
-      find_package("${dep}")
-      if(${dep}_FOUND)
-        if(${dep}_LIBRARIES)
-          target_link_libraries("${target}" ${${dep}_LIBRARIES})
-        endif()
-        if(${dep}_INCLUDE_DIRS)
-          target_include_directories("${target}" PRIVATE ${${dep}_INCLUDE_DIRS})
-        endif()
-        if(${dep}_DEFINITIONS)
-          target_compile_definitions("${target}" PRIVATE ${${dep}_DEFINITIONS})
-        endif()
-      endif()
-    endif()
+    _qi_module_add_dependency(${target} ${dep})
   endforeach()
 
   set(mod_file_name "${name}.mod")
@@ -177,7 +195,6 @@ endfunction()
 
   - lib/naoqi/agility/libmotion.so
   - share/qi/module/naoqi.agility.motion.mod
-
 #]=======================================================================]
 function(qi_add_module name)
   include(GNUInstallDirs)
@@ -191,7 +208,7 @@ function(qi_add_module name)
     ""
     ${ARGN}
   )
-  qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
+  _qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
 
   add_library("${name}" MODULE ${arg_UNPARSED_ARGUMENTS})
   target_link_libraries("${name}" PRIVATE qi::qi)
