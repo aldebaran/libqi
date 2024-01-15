@@ -28,12 +28,13 @@ function(
   set("${pkg_subdir_var}" ${pkg_subdir} PARENT_SCOPE)
 endfunction()
 
+
 # Lookup a dependency and add it to the module target, recursively.
 #
-# This is a compatibility function for to mimic the behavior of `qi_use_lib` for
+# This is a compatibility function to mimic the behavior of `qi_use_lib` for
 # `qi_create_module`.
 #
-# Modules declared with `qi_use_module` should link the module target directly
+# Modules declared with `qi_add_module` should link the module target directly
 # to its dependencies with `target_link_libraries`.
 function(
   _qi_module_add_dependency
@@ -61,10 +62,38 @@ function(
       target_compile_definitions(${target} PRIVATE ${${dependency}_DEFINITIONS})
     endif()
     # Recursive into dependencies of the dependency.
-    foreach(dependency_depend IN LISTS ${dependency}_DEPENDS)
-      _qi_module_add_dependency(${target} ${dependency_depend})
-    endforeach()
+    _qi_module_add_dependencies(${target} ${dependency}_DEPENDS)
   endif()
+endfunction()
+
+# Adds each of the arguments as a dependency of the module target.
+#
+# Consumes but ignores the `ASSUME_SYSTEM_INCLUDE` option that is occasionnally found in
+# DEPENDS arguments of `qi_use_lib` or similar functions (including `qi_create_module`).
+#
+# This is a compatibility function to mimic the behavior of `qi_use_lib` for
+# `qi_create_module`.
+#
+# Modules declared with `qi_add_module` should link the module target directly
+# to its dependencies with `target_link_libraries`.
+function(
+  _qi_module_add_dependencies
+    target
+)
+  cmake_parse_arguments(
+    _qi_module_add_dependencies
+    # Options
+    "ASSUME_SYSTEM_INCLUDE"
+    # Single value arguments
+    ""
+    # Multi value arguments
+    ""
+    ${ARGN}
+  )
+  set(dependencies _qi_module_add_dependencies_UNPARSED_ARGUMENTS)
+  foreach(dependency IN LISTS dependencies)
+    _qi_module_add_dependency(${target} ${dependency})
+  endforeach()
 endfunction()
 
 #[=======================================================================[.rst:
@@ -125,9 +154,7 @@ function(qi_create_module name)
       LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/sdk/lib/${pkg_subdir}"
   )
 
-  foreach(dep IN LISTS qi_create_module_DEPENDS)
-    _qi_module_add_dependency(${target} ${dep})
-  endforeach()
+  _qi_module_add_dependencies(${target} ${qi_create_module_DEPENDS})
 
   set(mod_file_name "${name}.mod")
   set(mod_file_subdir "share/qi/module")
