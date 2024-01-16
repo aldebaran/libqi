@@ -61,8 +61,8 @@ function(
     if(${dependency}_DEFINITIONS)
       target_compile_definitions(${target} PRIVATE ${${dependency}_DEFINITIONS})
     endif()
-    # Recursive into dependencies of the dependency.
-    _qi_module_add_dependencies(${target} ${dependency}_DEPENDS)
+    # Recurse into dependencies of the dependency.
+    _qi_module_add_dependencies(${target} ${${dependency}_DEPENDS})
   endif()
 endfunction()
 
@@ -90,7 +90,7 @@ function(
     ""
     ${ARGN}
   )
-  set(dependencies _qi_module_add_dependencies_UNPARSED_ARGUMENTS)
+  set(dependencies ${_qi_module_add_dependencies_UNPARSED_ARGUMENTS})
   foreach(dependency IN LISTS dependencies)
     _qi_module_add_dependency(${target} ${dependency})
   endforeach()
