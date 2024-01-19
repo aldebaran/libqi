@@ -28,74 +28,6 @@ function(
   set("${pkg_subdir_var}" ${pkg_subdir} PARENT_SCOPE)
 endfunction()
 
-
-# Lookup a dependency and add it to the module target, recursively.
-#
-# This is a compatibility function to mimic the behavior of `qi_use_lib` for
-# `qi_create_module`.
-#
-# Modules declared with `qi_add_module` should link the module target directly
-# to its dependencies with `target_link_libraries`.
-function(
-  _qi_module_add_dependency
-    target
-    dependency
-)
-  # Dependencies names are not case sensitive, try both.
-  string(TOLOWER ${dependency} dependency_lower)
-
-  if(TARGET ${dependency})
-    target_link_libraries(${target} ${dependency})
-  elseif(TARGET ${dependency_lower})
-    target_link_libraries(${target} ${dependency_lower})
-  else()
-    # Not a target, try finding a package with this name.
-    string(TOUPPER ${dependency} dependency)
-    find_package(${dependency} QUIET REQUIRED)
-    if(${dependency}_LIBRARIES)
-      target_link_libraries(${target} ${${dependency}_LIBRARIES})
-    endif()
-    if(${dependency}_INCLUDE_DIRS)
-      target_include_directories(${target} PRIVATE ${${dependency}_INCLUDE_DIRS})
-    endif()
-    if(${dependency}_DEFINITIONS)
-      target_compile_definitions(${target} PRIVATE ${${dependency}_DEFINITIONS})
-    endif()
-    # Recurse into dependencies of the dependency.
-    _qi_module_add_dependencies(${target} ${${dependency}_DEPENDS})
-  endif()
-endfunction()
-
-# Adds each of the arguments as a dependency of the module target.
-#
-# Consumes but ignores the `ASSUME_SYSTEM_INCLUDE` option that is occasionnally found in
-# DEPENDS arguments of `qi_use_lib` or similar functions (including `qi_create_module`).
-#
-# This is a compatibility function to mimic the behavior of `qi_use_lib` for
-# `qi_create_module`.
-#
-# Modules declared with `qi_add_module` should link the module target directly
-# to its dependencies with `target_link_libraries`.
-function(
-  _qi_module_add_dependencies
-    target
-)
-  cmake_parse_arguments(
-    _qi_module_add_dependencies
-    # Options
-    "ASSUME_SYSTEM_INCLUDE"
-    # Single value arguments
-    ""
-    # Multi value arguments
-    ""
-    ${ARGN}
-  )
-  set(dependencies ${_qi_module_add_dependencies_UNPARSED_ARGUMENTS})
-  foreach(dependency IN LISTS dependencies)
-    _qi_module_add_dependency(${target} ${dependency})
-  endforeach()
-endfunction()
-
 #[=======================================================================[.rst:
 .. command:: qi_create_module
 
@@ -154,7 +86,11 @@ function(qi_create_module name)
       LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/sdk/lib/${pkg_subdir}"
   )
 
-  _qi_module_add_dependencies(${target} ${qi_create_module_DEPENDS})
+  # Use qibuild macros for compatibility.
+  if(NOT COMMAND qi_use_lib)
+    find_package(qibuild REQUIRED)
+  endif()
+  qi_use_lib("${target}" ${qi_create_module_DEPENDS})
 
   set(mod_file_name "${name}.mod")
   set(mod_file_subdir "share/qi/module")
