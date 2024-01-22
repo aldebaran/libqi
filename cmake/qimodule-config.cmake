@@ -86,11 +86,26 @@ function(qi_create_module name)
       LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/sdk/lib/${pkg_subdir}"
   )
 
-  # Use qibuild macros for compatibility.
-  if(NOT COMMAND qi_use_lib)
-    find_package(qibuild REQUIRED)
+  if(qi_create_module_DEPENDS)
+    # Use qibuild macros if available for compatibility.
+    if(COMMAND qi_use_lib)
+      qi_use_lib("${target}" ${qi_create_module_DEPENDS})
+    else()
+      message(
+        AUTHOR_WARNING
+        "Using DEPENDS on `qi_create_module` without importing qibuild "
+        "macros (with `find_package(qibuild)`) is not supported anymore, "
+        "as `qi_create_module` only exists as a compatibility function "
+        "for projects still using `qibuild`.\n"
+        "Please use `qi_add_module` and manually link with required "
+        "libraries with `target_link_libraries` instead.\n"
+        "This function falls back to using `target_link_libraries` "
+        "with your `DEPENDS` arguments which might fail if they're not "
+        "existing target or library names."
+      )
+      target_link_libraries("${target}" ${qi_create_module_DEPENDS})
+    endif()
   endif()
-  qi_use_lib("${target}" ${qi_create_module_DEPENDS})
 
   set(mod_file_name "${name}.mod")
   set(mod_file_subdir "share/qi/module")
