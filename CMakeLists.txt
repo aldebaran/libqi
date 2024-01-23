@@ -938,7 +938,7 @@ find_package(
 )
 
 set(
-  qimodule_install_cmakedir
+  qimodule_INSTALL_CMAKEDIR
   "${CMAKE_INSTALL_LIBDIR}/cmake/qimodule"
   CACHE STRING
   "Path where qimodule CMake files are to be installed."
@@ -958,7 +958,7 @@ configure_file(
 install(
   FILES
     "${qimodule_config_file_path}"
-  DESTINATION "${qimodule_install_cmakedir}"
+  DESTINATION "${qimodule_INSTALL_CMAKEDIR}"
   COMPONENT devel
 )
 

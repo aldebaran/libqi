@@ -1,0 +1,115 @@
+###############################################################################
+# qibuild compatiblity variables.
+#
+# These variables are deprecated and will be removed in the future. Do not
+# use them, use the imported libraries instead.
+#
+# Expected cache variables, according to `cmake/qibuild/find.cmake`:
+# - <PACKAGE>_INCLUDE_DIRS
+# - <PACKAGE>_LIBRARIES
+# - <PACKAGE>_DEFINITIONS
+# - <PACKAGE>_DEPENDS
+# - <PACKAGE>_SEARCHED
+# - <PACKAGE>_PACKAGE_FOUND
+###############################################################################
+function(set_compat_variables pkg)
+  set(include_dirs)
+  set(libraries)
+  set(definitions)
+  set(depends)
+  foreach(lib_target IN LISTS ARGN)
+    # Include directories
+    get_target_property(
+        lib_target_include_dirs
+        ${lib_target}
+        INTERFACE_INCLUDE_DIRECTORIES
+    )
+    if(lib_target_include_dirs)
+      list(APPEND include_dirs ${lib_target_include_dirs})
+    endif()
+
+    # Libraries
+    # Appends the result of the given location property on the current
+    # target to the "libraries" variable.
+    macro(append_libraries type location_property)
+      get_target_property(
+        lib_target_location
+        ${lib_target}
+        ${location_property}
+      )
+      if(lib_target_location)
+        list(APPEND libraries ${type} ${lib_target_location})
+      endif()
+    endmacro()
+    append_libraries(general IMPORTED_LOCATION)
+    append_libraries(debug IMPORTED_LOCATION_DEBUG)
+    append_libraries(optimized IMPORTED_LOCATION_RELEASE)
+
+    # Definitions
+    get_target_property(
+      lib_target_definitions
+      ${lib_target}
+      INTERFACE_COMPILE_DEFINITIONS
+    )
+    if(lib_target_definitions)
+      list(APPEND definitions ${lib_target_definitions})
+    endif()
+  endforeach()
+
+  foreach(comp IN ITEMS @BOOST_COMPONENTS@)
+    string(TOUPPER ${comp} comp_upper)
+    list(APPEND depends BOOST_${comp_upper})
+  endforeach()
+  list(APPEND depends OPENSSL)
+  if(@UNIX@)
+    list(APPEND depends PTHREAD)
+  endif()
+
+  list(REMOVE_DUPLICATES include_dirs)
+  # Do not remove duplicates in libraries because it might remove keywords
+  # such as "debug" or "optimized".
+  list(REMOVE_DUPLICATES definitions)
+
+  set(
+    ${pkg}_INCLUDE_DIRS
+    ${include_dirs}
+    CACHE INTERNAL
+    "${pkg} include directories (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_LIBRARIES
+    ${libraries}
+    CACHE INTERNAL
+    "${pkg} libraries (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_DEFINITIONS
+    ${definitions}
+    CACHE INTERNAL
+    "${pkg} definitions (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_DEPENDS
+    ${depends}
+    CACHE INTERNAL
+    "${pkg} dependencies (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_SEARCHED
+    TRUE
+    CACHE INTERNAL
+    "Whether ${pkg} has been searched or not (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_PACKAGE_FOUND
+    TRUE
+    CACHE INTERNAL
+    "Whether ${pkg} has been found or not (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+endfunction()
