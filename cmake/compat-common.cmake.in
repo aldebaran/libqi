@@ -1,3 +1,47 @@
+# Gets the location of imported target for a specific configuration, with
+# support of imported configuration mapping.
+function(_qi_get_imported_target_location out target cfg)
+  set(property IMPORTED_LOCATION_${cfg})
+  get_target_property(
+    map_cfg
+    ${target}
+    MAP_IMPORTED_CONFIG_${cfg}
+  )
+  if(map_cfg)
+    set(property IMPORTED_LOCATION_${map_cfg})
+  endif()
+  get_target_property(location ${target} ${property})
+  set(${out} ${location} PARENT_SCOPE)
+endfunction()
+
+function(_qi_get_imported_target_libraries out target)
+  get_target_property(
+    location
+    ${target}
+    IMPORTED_LOCATION
+  )
+
+  _qi_get_imported_target_location(location_debug ${target} DEBUG)
+  _qi_get_imported_target_location(location_release ${target} RELEASE)
+  if(NOT location_release)
+    _qi_get_imported_target_location(location_release ${target} RELWITHDEBINFO)
+  endif()
+  if(NOT location_release)
+    _qi_get_imported_target_location(location_release ${target} MINSIZEREL)
+  endif()
+
+  if(location_release)
+    if(location_debug)
+      set(location optimized "${location_release}" debug "${location_debug}")
+    else()
+      set(location "${location_release}")
+    endif()
+  elseif(location_debug)
+    set(location "${location_debug}")
+  endif()
+  set(${out} ${location} PARENT_SCOPE)
+endfunction()
+
 ###############################################################################
 # qibuild compatiblity variables.
 #
@@ -12,7 +56,7 @@
 # - <PACKAGE>_SEARCHED
 # - <PACKAGE>_PACKAGE_FOUND
 ###############################################################################
-function(set_compat_variables pkg)
+function(_qi_set_compat_variables pkg)
   set(include_dirs)
   set(libraries)
   set(definitions)
@@ -29,21 +73,13 @@ function(set_compat_variables pkg)
     endif()
 
     # Libraries
-    # Appends the result of the given location property on the current
-    # target to the "libraries" variable.
-    macro(append_libraries type location_property)
-      get_target_property(
-        lib_target_location
-        ${lib_target}
-        ${location_property}
-      )
-      if(lib_target_location)
-        list(APPEND libraries ${type} ${lib_target_location})
-      endif()
-    endmacro()
-    append_libraries(general IMPORTED_LOCATION)
-    append_libraries(debug IMPORTED_LOCATION_DEBUG)
-    append_libraries(optimized IMPORTED_LOCATION_RELEASE)
+    _qi_get_imported_target_libraries(
+      lib_target_libraries
+      ${lib_target}
+    )
+    if(lib_target_libraries)
+      list(APPEND libraries ${lib_target_libraries})
+    endif()
 
     # Definitions
     get_target_property(
@@ -63,6 +99,9 @@ function(set_compat_variables pkg)
   list(APPEND depends OPENSSL)
   if(@UNIX@)
     list(APPEND depends PTHREAD)
+  endif()
+  if(@WITH_SYSTEMD@)
+    list(APPEND depends SYSTEMD)
   endif()
 
   list(REMOVE_DUPLICATES include_dirs)

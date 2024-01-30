@@ -72,19 +72,24 @@ function(qi_create_module name)
   _qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
 
   set(target "${name}")
-  add_library("${target}" MODULE ${add_library_args})
+  # Create a SHARED library instead of MODULE because qibuild does
+  # not handle MODULE libraries correctly.
+  add_library("${target}" SHARED ${add_library_args})
   target_sources(
     "${target}"
     PRIVATE
       ${qi_create_module_SRC}
   )
   target_link_libraries("${target}" qi::qi)
+  set(sdk_dir "${CMAKE_BINARY_DIR}/sdk")
+  set(lib_dir "${sdk_dir}/lib/${pkg_subdir}")
   set_target_properties(
     "${target}"
     PROPERTIES
       OUTPUT_NAME "${module_name}"
-      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/sdk/lib/${pkg_subdir}"
+      LIBRARY_OUTPUT_DIRECTORY "${lib_dir}"
   )
+
 
   if(qi_create_module_DEPENDS)
     # Use qibuild macros if available for compatibility.
@@ -109,7 +114,7 @@ function(qi_create_module name)
 
   set(mod_file_name "${name}.mod")
   set(mod_file_subdir "share/qi/module")
-  set(mod_file_build_path "${CMAKE_BINARY_DIR}/sdk/${mod_file_subdir}/${mod_file_name}")
+  set(mod_file_build_path "${sdk_dir}/${mod_file_subdir}/${mod_file_name}")
   file(WRITE "${mod_file_build_path}" "cpp\n")
 
   if(NOT qi_create_module_NO_INSTALL)
@@ -191,11 +196,12 @@ function(qi_add_module name)
   add_library("${name}" MODULE ${arg_UNPARSED_ARGUMENTS})
   target_link_libraries("${name}" PRIVATE qi::qi)
   set(sdk_dir "${CMAKE_BINARY_DIR}/sdk")
+  set(lib_dir "${sdk_dir}/lib/${pkg_subdir}")
   set_target_properties(
     "${name}"
     PROPERTIES
       OUTPUT_NAME "${module_name}"
-      LIBRARY_OUTPUT_DIRECTORY "${sdk_dir}/lib/${pkg_subdir}"
+      LIBRARY_OUTPUT_DIRECTORY "${lib_dir}"
   )
 
   set(mod_file_name "${name}.mod")

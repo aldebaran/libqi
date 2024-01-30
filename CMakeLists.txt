@@ -743,7 +743,7 @@ endif()
 if(WITH_SYSTEMD)
   target_compile_definitions(
     qi_objects
-    PUBLIC
+    PRIVATE
       WITH_SYSTEMD
   )
   target_link_libraries(
