@@ -61,7 +61,7 @@ class QiConan(ConanFile):
     description = "Middle-ware framework for NAOqi"
 
     requires = [
-        "boost/[~1.78]",
+        "boost/[~1.83]",
         "openssl/[~3]",
     ]
 

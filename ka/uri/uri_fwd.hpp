@@ -4,6 +4,7 @@
 
 #include "../macroregular.hpp"
 #include "../opt.hpp"
+#include <cstdint>
 #include <string>
 
 //@file For the `meaning` clauses, see `spec:/sbre/framework/2020/b`.
