@@ -81,7 +81,7 @@ class QiConan(ConanFile):
         "tests/*"
     ]
 
-    generators = "CMakeToolchain"
+    generators = "CMakeToolchain", "CMakeDeps"
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
