@@ -1,6 +1,12 @@
 libqi Change Log
 =================
 
+libqi 4.0.3
+-----------
+
+This minor release rewrites parts of the exported configuration CMake files
+and updates Boost version used by Conan to 1.83.
+
 libqi 4.0.2
 -----------
 
