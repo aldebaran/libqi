@@ -3,48 +3,50 @@ if(NOT TARGET qi::qi)
   find_dependency(qi)
 endif()
 
+# Splits the name of a module between the package name and the module name.
+# The format of a module name is:
+# [<PKG>.]<MODULE>
+function(
+  _qi_module_name_split
+    name
+    module_name_var
+    pkg_name_var
+    pkg_subdir_var
+)
+  set(module_name ${name})
+  set(pkg_name)
+  string(FIND ${name} . name_dot_index REVERSE)
+  if(name_dot_index GREATER_EQUAL 0)
+    # The full name includes a package name with the module name.
+    string(SUBSTRING "${name}" 0 ${name_dot_index} pkg_name)
+    math(EXPR name_index "${name_dot_index} + 1") # Pass the dot
+    string(SUBSTRING "${name}" ${name_index} -1 module_name)
+  endif()
+  string(REPLACE . / pkg_subdir "${pkg_name}")
+  set("${module_name_var}" ${module_name} PARENT_SCOPE)
+  set("${pkg_name_var}" ${pkg_name} PARENT_SCOPE)
+  set("${pkg_subdir_var}" ${pkg_subdir} PARENT_SCOPE)
+endfunction()
+
 #[=======================================================================[.rst:
-Creates a qi module.
+.. command:: qi_create_module
 
-.. code-block:: cmake
+  .. note::
 
-  qi_create_module(
-    [name]
-    [EXCLUDE_FROM_ALL]
-    [NO_INSTALL]
-    <src>...
-    [SRC <src>...]
-    [DEPENDS <dep>...]
-  )
+    This command is kept for compatiblity reasons and is considered deprecated.
+    Use :command:`qi_add_module` instead.
 
-It creates a shared library meant to be loaded dynamically by libqi.
+  Creates a qi module. See :command:`qi_add_module` for more details.
 
-The name may contain a dot (".") as a separator between the package name and
-the module name. If multiple dots exist in the name, the last one is the
-separator and the previous are considered part of the package name.
-
-The package name is used as an installation subdirectory for the module. If the
-package name contains dots, they are replaced by a directory separator in the
-destination path.
-
-Additionally, a "<name>.mod" file describing the module is created and
-installed in a "qi/module" subdirectory of the installation data directory.
-
-Example
-^^^^^^^
-
-.. code-block:: cmake
-
-  qi_create_module(
-    naoqi.agility.motion ...
-  )
-
-Creates a module named "motion" for the "naoqi.agility" package.
-On a typical Linux distribution, this will install the following files in
-the installation directory:
-
-- lib/naoqi/agility/libmotion.so
-- share/qi/module/naoqi.agility.motion.mod
+  .. signature::
+    qi_create_module(
+      [name]
+      [EXCLUDE_FROM_ALL]
+      [NO_INSTALL]
+      <src>...
+      [SRC <src>...]
+      [DEPENDS <dep>...]
+    )
 #]=======================================================================]
 function(qi_create_module name)
   include(GNUInstallDirs)
@@ -52,7 +54,7 @@ function(qi_create_module name)
   cmake_parse_arguments(
     qi_create_module
     # Options
-    "NO_INSTALL;EXCLUDE_FROM_ALL"
+    "SHARED;NO_INSTALL;EXCLUDE_FROM_ALL"
     # Single value arguments
     ""
     # Multi value arguments
@@ -66,70 +68,53 @@ function(qi_create_module name)
   endif()
   list(APPEND qi_create_module_SRC ${qi_create_module_UNPARSED_ARGUMENTS})
 
-  set(name_with_pkg "${name}")
-  message(STATUS "Module: ${name_with_pkg}")
+  message(STATUS "Module: ${name}")
+  _qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
 
-  string(FIND "${name_with_pkg}" . name_dot_index REVERSE)
-
-  # The full name is only the module name.
-  if(name_dot_index EQUAL -1)
-    set(pkg_name)
-  # The full name includes a package name with the module name.
-  else()
-    string(SUBSTRING "${name_with_pkg}" 0 "${name_dot_index}" pkg_name)
-    math(EXPR name_index "${name_dot_index} + 1") # Pass the dot
-    string(SUBSTRING "${name_with_pkg}" "${name_index}" -1 name)
-  endif()
-
-  string(REPLACE . / pkg_subdir "${pkg_name}")
-
-  set(target "${name_with_pkg}")
-  add_library("${target}" MODULE ${add_library_args})
+  set(target "${name}")
+  # Create a SHARED library instead of MODULE because qibuild does
+  # not handle MODULE libraries correctly.
+  add_library("${target}" SHARED ${add_library_args})
   target_sources(
     "${target}"
     PRIVATE
       ${qi_create_module_SRC}
   )
-  target_link_libraries(
-    "${target}"
-    PRIVATE
-      qi::qi
-  )
+  target_link_libraries("${target}" qi::qi)
+  set(sdk_dir "${CMAKE_BINARY_DIR}/sdk")
+  set(lib_dir "${sdk_dir}/lib/${pkg_subdir}")
   set_target_properties(
     "${target}"
     PROPERTIES
-      OUTPUT_NAME "${name}"
-      LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/sdk/lib/${pkg_subdir}"
+      OUTPUT_NAME "${module_name}"
+      LIBRARY_OUTPUT_DIRECTORY "${lib_dir}"
   )
 
-  foreach(dep IN LISTS qi_create_module_DEPENDS)
-    # Dependencies names are not case sensitive, try both.
-    string(TOLOWER "${dep}" ldep)
-    if(TARGET "${dep}")
-      target_link_libraries("${target}" PRIVATE "${dep}")
-    elseif(TARGET "${ldep}")
-      target_link_libraries("${target}" PRIVATE "${ldep}")
-    else()
-      # Not a target, try finding a package with this name.
-      string(TOUPPER "${dep}" dep)
-      find_package("${dep}")
-      if("${dep}_FOUND")
-        if("${dep}_LIBRARIES")
-          target_link_libraries("${target}" PRIVATE ${${dep}_LIBRARIES})
-        endif()
-        if("${dep}_INCLUDE_DIRS")
-          target_include_directories(${target} PRIVATE ${${dep}_INCLUDE_DIRS})
-        endif()
-        if("${dep}_DEFINITIONS")
-          target_compile_definitions(${target} PRIVATE ${${dep}_DEFINITIONS})
-        endif()
-      endif()
-    endif()
-  endforeach()
 
-  set(mod_file_name "${name_with_pkg}.mod")
+  if(qi_create_module_DEPENDS)
+    # Use qibuild macros if available for compatibility.
+    if(COMMAND qi_use_lib)
+      qi_use_lib("${target}" ${qi_create_module_DEPENDS})
+    else()
+      message(
+        AUTHOR_WARNING
+        "Using DEPENDS on `qi_create_module` without importing qibuild "
+        "macros (with `find_package(qibuild)`) is not supported anymore, "
+        "as `qi_create_module` only exists as a compatibility function "
+        "for projects still using `qibuild`.\n"
+        "Please use `qi_add_module` and manually link with required "
+        "libraries with `target_link_libraries` instead.\n"
+        "This function falls back to using `target_link_libraries` "
+        "with your `DEPENDS` arguments which might fail if they're not "
+        "existing target or library names."
+      )
+      target_link_libraries("${target}" ${qi_create_module_DEPENDS})
+    endif()
+  endif()
+
+  set(mod_file_name "${name}.mod")
   set(mod_file_subdir "share/qi/module")
-  set(mod_file_build_path "${CMAKE_BINARY_DIR}/sdk/${mod_file_subdir}/${mod_file_name}")
+  set(mod_file_build_path "${sdk_dir}/${mod_file_subdir}/${mod_file_name}")
   file(WRITE "${mod_file_build_path}" "cpp\n")
 
   if(NOT qi_create_module_NO_INSTALL)
@@ -141,6 +126,99 @@ function(qi_create_module name)
     install(
       FILES "${mod_file_build_path}"
       DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${mod_file_subdir}"
+      COMPONENT runtime
+    )
+  endif()
+endfunction()
+
+#[=======================================================================[.rst:
+.. command:: qi_add_module
+
+  This command has the same semantics as :command:`add_library` with `MODULE`
+  adds a dependency to target `qi::qi`, and takes care of qi module
+  files creation and (optionally) installation.
+
+  .. signature::
+    qi_add_module(
+      [name]
+      [INSTALL]
+      [<src>...]
+    )
+
+  It creates a shared library meant to be loaded dynamically by libqi.
+
+  The name may contain a dot (".") as a separator between the package name and
+  the module name. If multiple dots exist in the name, the last one is the
+  separator and the previous are considered part of the package name.
+
+  The package name is used as an installation subdirectory for the module. If the
+  package name contains dots, they are replaced by a directory separator in the
+  destination path.
+
+  Additionally, a "<name>.mod" file describing the module is created and
+  installed in a "qi/module" subdirectory of the installation data directory.
+
+  By default, the target is not installed. The `INSTALL` option enables installation
+  rules for the module and some additional files.
+
+  Any additional argument is passed as-if to to the call to :command:`add_library`.
+
+  Example
+  ^^^^^^^
+
+  .. code-block:: cmake
+
+    qi_add_module(
+      naoqi.agility.motion ...
+    )
+
+  Creates a module named "motion" for the "naoqi.agility" package.
+  On a typical Linux distribution, this will install the following files in
+  the installation directory:
+
+  - lib/naoqi/agility/libmotion.so
+  - share/qi/module/naoqi.agility.motion.mod
+#]=======================================================================]
+function(qi_add_module name)
+  include(GNUInstallDirs)
+  cmake_parse_arguments(
+    arg
+    # Options
+    "INSTALL"
+    # Single value arguments
+    ""
+    # Multi value arguments
+    ""
+    ${ARGN}
+  )
+  _qi_module_name_split("${name}" module_name pkg_name pkg_subdir)
+
+  add_library("${name}" MODULE ${arg_UNPARSED_ARGUMENTS})
+  target_link_libraries("${name}" PRIVATE qi::qi)
+  set(sdk_dir "${CMAKE_BINARY_DIR}/sdk")
+  set(lib_dir "${sdk_dir}/lib/${pkg_subdir}")
+  set_target_properties(
+    "${name}"
+    PROPERTIES
+      OUTPUT_NAME "${module_name}"
+      LIBRARY_OUTPUT_DIRECTORY "${lib_dir}"
+  )
+
+  set(mod_file_name "${name}.mod")
+  set(mod_file_subdir "share/qi/module")
+  set(mod_file_build_path "${sdk_dir}/${mod_file_subdir}/${mod_file_name}")
+  file(WRITE "${mod_file_build_path}" "cpp\n")
+
+  if(arg_INSTALL)
+    install(
+      TARGETS "${name}"
+      DESTINATION "${CMAKE_INSTALL_LIBDIR}/${pkg_subdir}"
+      COMPONENT runtime
+    )
+    install(
+      FILES "${mod_file_build_path}"
+      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${mod_file_subdir}"
+      COMPONENT runtime
     )
   endif()
 endfunction()

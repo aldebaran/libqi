@@ -61,7 +61,7 @@ function(qi_create_test name)
   endif()
   add_test(NAME "${name}" COMMAND "${name}" ${args})
   if(qct_TIMEOUT)
-    set_target_properties(
+    set_tests_properties(
       "${name}"
       PROPERTIES TIMEOUT "${qct_TIMEOUT}"
     )

@@ -15,7 +15,9 @@
 
 // TODO: Remove once we migrate to a non-deprecated boost timer type.
 #define BOOST_ALLOW_DEPRECATED_HEADERS
+#define BOOST_TIMER_ENABLE_DEPRECATED // Since Boost 1.83
 #include <boost/timer.hpp>
+#undef BOOST_TIMER_ENABLE_DEPRECATED
 #undef BOOST_ALLOW_DEPRECATED_HEADERS
 
 namespace qi

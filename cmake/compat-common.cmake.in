@@ -1,0 +1,154 @@
+# Gets the location of imported target for a specific configuration, with
+# support of imported configuration mapping.
+function(_qi_get_imported_target_location out target cfg)
+  set(property IMPORTED_LOCATION_${cfg})
+  get_target_property(
+    map_cfg
+    ${target}
+    MAP_IMPORTED_CONFIG_${cfg}
+  )
+  if(map_cfg)
+    set(property IMPORTED_LOCATION_${map_cfg})
+  endif()
+  get_target_property(location ${target} ${property})
+  set(${out} ${location} PARENT_SCOPE)
+endfunction()
+
+function(_qi_get_imported_target_libraries out target)
+  get_target_property(
+    location
+    ${target}
+    IMPORTED_LOCATION
+  )
+
+  _qi_get_imported_target_location(location_debug ${target} DEBUG)
+  _qi_get_imported_target_location(location_release ${target} RELEASE)
+  if(NOT location_release)
+    _qi_get_imported_target_location(location_release ${target} RELWITHDEBINFO)
+  endif()
+  if(NOT location_release)
+    _qi_get_imported_target_location(location_release ${target} MINSIZEREL)
+  endif()
+
+  if(location_release)
+    if(location_debug)
+      set(location optimized "${location_release}" debug "${location_debug}")
+    else()
+      set(location "${location_release}")
+    endif()
+  elseif(location_debug)
+    set(location "${location_debug}")
+  endif()
+  set(${out} ${location} PARENT_SCOPE)
+endfunction()
+
+###############################################################################
+# qibuild compatiblity variables.
+#
+# These variables are deprecated and will be removed in the future. Do not
+# use them, use the imported libraries instead.
+#
+# Expected cache variables, according to `cmake/qibuild/find.cmake`:
+# - <PACKAGE>_INCLUDE_DIRS
+# - <PACKAGE>_LIBRARIES
+# - <PACKAGE>_DEFINITIONS
+# - <PACKAGE>_DEPENDS
+# - <PACKAGE>_SEARCHED
+# - <PACKAGE>_PACKAGE_FOUND
+###############################################################################
+function(_qi_set_compat_variables pkg)
+  set(include_dirs)
+  set(libraries)
+  set(definitions)
+  set(depends)
+  foreach(lib_target IN LISTS ARGN)
+    # Include directories
+    get_target_property(
+        lib_target_include_dirs
+        ${lib_target}
+        INTERFACE_INCLUDE_DIRECTORIES
+    )
+    if(lib_target_include_dirs)
+      list(APPEND include_dirs ${lib_target_include_dirs})
+    endif()
+
+    # Libraries
+    _qi_get_imported_target_libraries(
+      lib_target_libraries
+      ${lib_target}
+    )
+    if(lib_target_libraries)
+      list(APPEND libraries ${lib_target_libraries})
+    endif()
+
+    # Definitions
+    get_target_property(
+      lib_target_definitions
+      ${lib_target}
+      INTERFACE_COMPILE_DEFINITIONS
+    )
+    if(lib_target_definitions)
+      list(APPEND definitions ${lib_target_definitions})
+    endif()
+  endforeach()
+
+  foreach(comp IN ITEMS @BOOST_COMPONENTS@)
+    string(TOUPPER ${comp} comp_upper)
+    list(APPEND depends BOOST_${comp_upper})
+  endforeach()
+  list(APPEND depends OPENSSL)
+  if(@UNIX@)
+    list(APPEND depends PTHREAD)
+  endif()
+  if(@WITH_SYSTEMD@)
+    list(APPEND depends SYSTEMD)
+  endif()
+
+  list(REMOVE_DUPLICATES include_dirs)
+  # Do not remove duplicates in libraries because it might remove keywords
+  # such as "debug" or "optimized".
+  list(REMOVE_DUPLICATES definitions)
+
+  set(
+    ${pkg}_INCLUDE_DIRS
+    ${include_dirs}
+    CACHE INTERNAL
+    "${pkg} include directories (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_LIBRARIES
+    ${libraries}
+    CACHE INTERNAL
+    "${pkg} libraries (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_DEFINITIONS
+    ${definitions}
+    CACHE INTERNAL
+    "${pkg} definitions (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_DEPENDS
+    ${depends}
+    CACHE INTERNAL
+    "${pkg} dependencies (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_SEARCHED
+    TRUE
+    CACHE INTERNAL
+    "Whether ${pkg} has been searched or not (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+  set(
+    ${pkg}_PACKAGE_FOUND
+    TRUE
+    CACHE INTERNAL
+    "Whether ${pkg} has been found or not (deprecated: qibuild compatibility variable)"
+    FORCE
+  )
+endfunction()

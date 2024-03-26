@@ -1,15 +1,13 @@
 # A helper library to test two sessions communicating in various modes
 add_subdirectory(libtestsession)
 
-qi_create_module(
+qi_add_module(
   naoqi.testanymodule
-  SRC testanymodule.cpp
-  NO_INSTALL
+  testanymodule.cpp
 )
-qi_create_module(
+qi_add_module(
   naoqi.testanymodulesession
-  SRC testanymodulesession.cpp
-  NO_INSTALL
+  testanymodulesession.cpp
 )
 
 # A separate binary that runs a simple service directory.
