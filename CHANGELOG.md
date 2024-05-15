@@ -1,6 +1,12 @@
 libqi Change Log
 =================
 
+libqi 4.0.4
+-----------
+
+This minor release fixes an issue on the installation path of qimodule '.mod'
+files. It also fixes a build error that occurred on Boost 1.84.
+
 libqi 4.0.3
 -----------
 

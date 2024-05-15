@@ -125,7 +125,7 @@ function(qi_create_module name)
     )
     install(
       FILES "${mod_file_build_path}"
-      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${mod_file_subdir}"
+      DESTINATION "${mod_file_subdir}"
       COMPONENT runtime
     )
   endif()
@@ -217,7 +217,7 @@ function(qi_add_module name)
     )
     install(
       FILES "${mod_file_build_path}"
-      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/${mod_file_subdir}"
+      DESTINATION "${mod_file_subdir}"
       COMPONENT runtime
     )
   endif()

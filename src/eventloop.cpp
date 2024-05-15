@@ -9,7 +9,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/program_options.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/basic_waitable_timer.hpp>
 #include <boost/thread/synchronized_value.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/algorithm/cxx11/any_of.hpp>
@@ -711,9 +711,9 @@ namespace qi {
 
     if (delay > Duration::zero())
     {
-      boost::shared_ptr<boost::asio::steady_timer> timer = boost::make_shared<boost::asio::steady_timer>(_io);
-      timer->expires_from_now(boost::chrono::duration_cast<boost::asio::steady_timer::duration>(delay));
-      auto prom = detail::makeCancelingPromise(options, boost::bind(&boost::asio::steady_timer::cancel, timer));
+      boost::shared_ptr<SteadyTimer> timer = boost::make_shared<SteadyTimer>(_io);
+      timer->expires_from_now(delay);
+      auto prom = detail::makeCancelingPromise(options, boost::bind(&SteadyTimer::cancel, timer));
       timer->async_wait([=](const boost::system::error_code& erc) {
         invoke_maybe(cb, id, prom, erc, countTotalTask, update);
       });
