@@ -120,7 +120,7 @@ function(qi_create_module name)
   if(NOT qi_create_module_NO_INSTALL)
     install(
       TARGETS "${target}"
-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/${pkg_subdir}"
+      DESTINATION "lib/${pkg_subdir}"
       COMPONENT runtime
     )
     install(
@@ -212,7 +212,7 @@ function(qi_add_module name)
   if(arg_INSTALL)
     install(
       TARGETS "${name}"
-      DESTINATION "${CMAKE_INSTALL_LIBDIR}/${pkg_subdir}"
+      DESTINATION "lib/${pkg_subdir}"
       COMPONENT runtime
     )
     install(
