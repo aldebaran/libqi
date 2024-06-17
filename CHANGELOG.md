@@ -1,6 +1,12 @@
 libqi Change Log
 =================
 
+libqi 4.0.5
+-----------
+
+This minor release fixes an issue on the installation path of qimodule library
+files.
+
 libqi 4.0.4
 -----------
 
